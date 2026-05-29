@@ -20,6 +20,35 @@
 
 ---
 
+## 2026-05-30 · Güvenlik + gözlemlenebilirlik temeli (T0.12 + T0.13)
+- **Görev(ler):** T0.12, T0.13 (tamam) · dal `feat/security-observability`
+- **Ne yapıldı:**
+  - **T0.12** Serilog (`Serilog.AspNetCore`, Console sink) + `CorrelationIdMiddleware`
+    (X-Correlation-ID üret/echo + LogContext) + `UseSerilogRequestLogging` +
+    **redaksiyon iskeleti** (`SensitiveDataDestructuringPolicy`: password/token/
+    secret/email içeren nesnelerde `***`, dar etki). Health: `/health` (liveness,
+    predicate false) + `/health/ready` (`AddDbContextCheck`, tag "ready").
+  - **T0.13** Global hata maskeleme (`GlobalExceptionHandler : IExceptionHandler` +
+    `AddExceptionHandler`/`UseExceptionHandler`): istemciye sözleşmeli
+    `{error:{code:"INTERNAL_ERROR",message}}`, stack/iç detay yalnız log'da
+    (04 §2, 11 §4). CORS allow-list (`Cors:AllowedOrigins`, `*` yok). Secret:
+    `dotnet user-secrets init` (UserSecretsId), parola repoda değil (env/secrets).
+- **Dokunulan dosyalar:** `Finans.Api/Program.cs` (Serilog+health+CORS+exception+
+  correlation boru hattı), `Finans.Api/ErrorHandling/{ApiError,GlobalExceptionHandler}.cs`,
+  `Finans.Api/Observability/{CorrelationIdMiddleware,SensitiveDataDestructuringPolicy}.cs`,
+  `appsettings.json`+`.Development.json` (Cors), `Finans.Api.csproj` (paketler+UserSecretsId),
+  `tests/.../ObservabilitySecurityTests.cs`, `tests/.../AssemblyInfo.cs`.
+- **Test:** `dotnet test` **10/10 yeşil** (3 ardışık koşu — flaky değil). Yeni: liveness
+  health, correlation üret/echo, hata maskeleme (stack sızmaz), redaksiyon (hassas
+  maskelenir/diğerleri korunur). **Canlı doğrulama:** /health & /health/ready (DB)
+  Healthy, correlation header, CORS 5174 kabul / evil.com red, Serilog request log.
+- **Karar/Not:** Integration testleri **sıralı** koşar (`DisableTestParallelization`)
+  — statik `Log.Logger`+`CloseAndFlush` paralel host'larda çakışıyordu. Güvenlik
+  başlıkları/rate-limit/TLS reverse proxy'de (T2.9). Redaksiyon alan listesi Faz 1'de genişler.
+- **Durum:** tamamlandı (T0.12, T0.13)
+- **Sıradaki:** T0.14 (Docker: API Dockerfile non-root + compose api+postgres) +
+  T0.11 kalanı → Faz 0 kapanışı.
+
 ## 2026-05-30 · Tasarım token'ları + fontlar (DESIGN.md → web)
 - **Görev(ler):** T0.9 (tamam) · dal `feat/design-tokens`
 - **Ne yapıldı:**
