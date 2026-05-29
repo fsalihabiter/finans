@@ -20,6 +20,102 @@
 
 ---
 
+## 2026-05-30 · Güvenlik + gözlemlenebilirlik temeli (T0.12 + T0.13)
+- **Görev(ler):** T0.12, T0.13 (tamam) · dal `feat/security-observability`
+- **Ne yapıldı:**
+  - **T0.12** Serilog (`Serilog.AspNetCore`, Console sink) + `CorrelationIdMiddleware`
+    (X-Correlation-ID üret/echo + LogContext) + `UseSerilogRequestLogging` +
+    **redaksiyon iskeleti** (`SensitiveDataDestructuringPolicy`: password/token/
+    secret/email içeren nesnelerde `***`, dar etki). Health: `/health` (liveness,
+    predicate false) + `/health/ready` (`AddDbContextCheck`, tag "ready").
+  - **T0.13** Global hata maskeleme (`GlobalExceptionHandler : IExceptionHandler` +
+    `AddExceptionHandler`/`UseExceptionHandler`): istemciye sözleşmeli
+    `{error:{code:"INTERNAL_ERROR",message}}`, stack/iç detay yalnız log'da
+    (04 §2, 11 §4). CORS allow-list (`Cors:AllowedOrigins`, `*` yok). Secret:
+    `dotnet user-secrets init` (UserSecretsId), parola repoda değil (env/secrets).
+- **Dokunulan dosyalar:** `Finans.Api/Program.cs` (Serilog+health+CORS+exception+
+  correlation boru hattı), `Finans.Api/ErrorHandling/{ApiError,GlobalExceptionHandler}.cs`,
+  `Finans.Api/Observability/{CorrelationIdMiddleware,SensitiveDataDestructuringPolicy}.cs`,
+  `appsettings.json`+`.Development.json` (Cors), `Finans.Api.csproj` (paketler+UserSecretsId),
+  `tests/.../ObservabilitySecurityTests.cs`, `tests/.../AssemblyInfo.cs`.
+- **Test:** `dotnet test` **10/10 yeşil** (3 ardışık koşu — flaky değil). Yeni: liveness
+  health, correlation üret/echo, hata maskeleme (stack sızmaz), redaksiyon (hassas
+  maskelenir/diğerleri korunur). **Canlı doğrulama:** /health & /health/ready (DB)
+  Healthy, correlation header, CORS 5174 kabul / evil.com red, Serilog request log.
+- **Karar/Not:** Integration testleri **sıralı** koşar (`DisableTestParallelization`)
+  — statik `Log.Logger`+`CloseAndFlush` paralel host'larda çakışıyordu. Güvenlik
+  başlıkları/rate-limit/TLS reverse proxy'de (T2.9). Redaksiyon alan listesi Faz 1'de genişler.
+- **Durum:** tamamlandı (T0.12, T0.13)
+- **Sıradaki:** T0.14 (Docker: API Dockerfile non-root + compose api+postgres) +
+  T0.11 kalanı → Faz 0 kapanışı.
+
+## 2026-05-30 · Tasarım token'ları + fontlar (DESIGN.md → web)
+- **Görev(ler):** T0.9 (tamam) · dal `feat/design-tokens`
+- **Ne yapıldı:**
+  - `@finans/shared/theme`: DESIGN.md §2-4 token'ları **tek kaynak** TS objesi
+    (`tokens`: color/font/radius/space/shadow) + `cssVariables()` üretici
+    (camelCase→kebab, grup önekleri: `--font-*`/`--radius-*`/`--space-*`/`--shadow-*`).
+  - Web: `@fontsource-variable/fraunces` + `hanken-grotesk` (self-hosted, CDN yok);
+    `applyTheme()` token'ları paint öncesi `:root`'a enjekte ediyor; `index.css`
+    atmosfer (iki radial-gradient) + Fraunces başlık + Hanken gövde + tabular-nums;
+    `App.css` token'lara taşındı (gold/mint/coral, panel, hero gölge).
+  - Font ailesi `'Fraunces Variable'` (web) + `'Fraunces'` fallback (mobil expo-font).
+- **Dokunulan dosyalar:** `packages/shared/src/theme/index.ts` (+`theme.test.ts`),
+  `web/src/lib/applyTheme.ts` (+test), `web/src/main.tsx`, `web/src/index.css`,
+  `web/src/App.css`, `web/src/vite-env.d.ts`, `web/package.json`.
+- **Test:** `pnpm test` yeşil — shared 8 (format 4 + theme 4), web 2 (render + applyTheme).
+  `pnpm --filter @finans/web build` yeşil. **Görsel doğrulama:** Vite dev (5180)
+  Chrome screenshot — Fraunces/Hanken, altın aksan, mint pozitif, coral health
+  hatası, atmosfer halesi DESIGN.md ile uyumlu.
+- **Karar/Not:** Token'lar runtime'da `:root`'a enjekte (FOUC yok, render öncesi);
+  fontsource side-effect import'u için `declare module "@fontsource-variable/*"`.
+- **Durum:** tamamlandı
+- **Sıradaki:** T0.12 (Serilog + /health,/health/ready) / T0.13 (güvenlik+CORS) /
+  T0.14 (Docker compose) + T0.11 kalanı → Faz 0 kapanışı.
+
+## 2026-05-29 · Veri katmanı: EF Core + entity'ler + migration + tutarlı seed
+- **Görev(ler):** T0.4, T0.5, T0.6, T0.6b (tamam) · dal `feat/data-layer`
+- **Ne yapıldı:**
+  - **T0.4** EF Core + Npgsql (`Npgsql.EntityFrameworkCore.PostgreSQL`) +
+    `FinansDbContext` (Infrastructure). Global convention'lar: decimal→numeric(18,6),
+    enum→varchar (HasConversion<string>). citext eklentisi. `AddInfrastructure` DI +
+    `DesignTimeDbContextFactory` (env `ConnectionStrings__Postgres`).
+  - **T0.5** Domain entity'leri: portföy (Asset, Holding, Transaction, BesDetails,
+    PriceSnapshot, FxRate, InflationRate) + kimlik/audit (User, Role,
+    UserRoleAssignment, RefreshToken, AuditLog). Base `Entity` (UUIDv7 default).
+    Konfigürasyonlar: check constraint'ler (numeric>=0, enum allow-list),
+    unique/index'ler, soft-delete query filter, xmin concurrency (xid shadow),
+    citext Email, inet IP, FK delete davranışları (User→Holdings cascade,
+    Asset→Holdings restrict, AuditLog→User SetNull).
+  - **T0.6** `InitialCreate` migration üretildi ve **gerçek Postgres'te (Docker)
+    `database update` ile uygulandı** → 12 tablo + 19 check constraint doğrulandı.
+  - **T0.6b** `SeedData.cs` — idempotent (deterministik MD5-tabanlı GUID +
+    Users.Any guard), `dotnet run -- seed` ile migrate+seed. Sayılar **birebir
+    tutarlı**: TotalCost 422.970,00 / Value 641.403,00 / Profit +218.433,00 /
+    Return %51,6 (SQL ile doğrulandı). İkinci çalıştırma çoğaltmadı.
+- **Dokunulan dosyalar:** `backend/src/Finans.Domain/**` (Common, Enums, Portfolio,
+  Identity), `backend/src/Finans.Infrastructure/**` (Persistence/FinansDbContext,
+  Configurations, DesignTimeDbContextFactory, DependencyInjection, Seed/SeedData,
+  Persistence/Migrations), `Finans.Api/Program.cs` (DI + `-- seed`), `appsettings.json`,
+  `tests/Finans.Integration.Tests/SeedConsistencyTests.cs`.
+- **Test:** `dotnet test` **4/4 yeşil** — HealthEndpoint (WebApplicationFactory) +
+  SeedConsistency (EF InMemory): toplamlar, idempotency, BES devlet katkısı ayrı.
+  Testler DB'siz koşar (CI-uyumlu). Canlı doğrulama: migration apply + seed totals
+  gerçek Postgres'te SQL ile teyit.
+- **Karar/Not (kalıcı):**
+  - **xmin concurrency** `UseXminAsConcurrencyToken()` bu Npgsql sürümünde yok →
+    `Property<uint>("Version").HasColumnName("xmin").HasColumnType("xid").IsConcurrencyToken()`.
+  - **EF paket hizalama:** Npgsql provider Relational 10.0.4 çekiyordu, Design 10.0.8
+    → açık `Microsoft.EntityFrameworkCore.Relational 10.0.8` referansıyla birleştirildi
+    (MSB3277 giderildi). Test InMemory de 10.0.8.
+  - **Seed yeri/şekli:** `dotnet run -- seed` (migrate+seed+çık). Eğitim (C) tabloları
+    Faz 5'e ertelendi (§13.3) — T0.5 yalnızca A+B.
+  - **Bağlantı dizesi:** parola repoda yok; appsettings parolasız, env/User Secrets
+    ile verilir (CLAUDE.md §13). Doğrulama Docker Postgres (5433) ile yapıldı, container temizlendi.
+- **Durum:** tamamlandı (T0.4/T0.5/T0.6/T0.6b)
+- **Sıradaki:** T0.9 (DESIGN.md token'ları) + T0.12/T0.13/T0.14 (Serilog/güvenlik/Docker)
+  → Faz 0 kapanışı.
+
 ## 2026-05-29 · Faz 0 iskelet: monorepo + .NET backend + web ayağa kalktı
 - **Görev(ler):** T0.1, T0.2, T0.3, T0.7, T0.8, T0.10 (tamam); T0.11 (kısmen)
 - **Ne yapıldı:**
