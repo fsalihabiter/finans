@@ -12,11 +12,12 @@
 .NET çözümü (`net10.0`, `.slnx`) + `GET /api/health` + web (Vite/Router/Query) +
 **EF Core/Npgsql veri katmanı** (12 tablo + kimlik/audit, InitialCreate migration
 gerçek Postgres'te uygulandı, **tutarlı idempotent seed 422.970/641.403/+%51,6**).
-Testler yeşil (`dotnet test` 4/4, `pnpm test`). T0.1-T0.8/T0.10 ve T0.4-T0.6b [x];
-T0.11 [~] (Sqlite fixture + Playwright kaldı).
++ **tasarım token'ları** (DESIGN.md → `@finans/shared/theme`, Fraunces/Hanken
+web'de uygulandı, görsel doğrulandı). Testler yeşil (`dotnet test` 4/4, `pnpm test`
+shared 8 + web 2). T0.1-T0.10 ve T0.4-T0.6b [x]; T0.11 [~] (Sqlite + Playwright kaldı).
 
-**Sıradaki adım → `T0.9` (DESIGN.md token'ları) + güvenlik/gözlemlenebilirlik/
-Docker kapıları (`T0.12`-`T0.14`).** Faz 0'ı kapatmaya bunlar kaldı.
+**Sıradaki adım → güvenlik/gözlemlenebilirlik/Docker kapıları (`T0.12`-`T0.14`).**
+Faz 0'ı kapatmaya bunlar (+ T0.11 kalanı) kaldı.
 
 ---
 
@@ -33,7 +34,7 @@ Docker kapıları (`T0.12`-`T0.14`).** Faz 0'ı kapatmaya bunlar kaldı.
 | T0.6b | **Kapsamlı, tutarlı seeder** (`SeedData.cs`, idempotent): kullanıcı/rol, kur+enflasyon, varlık kataloğu, **tutarlı pozisyonlar (641.403/422.970/+%51,6)**, BesDetails, fiyat geçmişi | T0.6 | `03` §12 | [x] |
 | T0.7 | `GET /api/health` → `{status:"ok"}` | T0.3 | `04` §3 | [x] |
 | T0.8 | **Web iskeleti (★):** Vite React-TS uygulaması (`web/`) + React Router + TanStack Query + `@finans/shared` bağlı | T0.2 | `13` §3, `06` §2 | [x] |
-| T0.9 | Tasarım token'ları `@finans/shared/theme` (DESIGN.md → TS + CSS değişkeni) + web'de uygula + fontlar (Fraunces/Hanken) | T0.8 | `13` §3, `DESIGN.md` | [ ] |
+| T0.9 | Tasarım token'ları `@finans/shared/theme` (DESIGN.md → TS + CSS değişkeni) + web'de uygula + fontlar (Fraunces/Hanken) | T0.8 | `13` §3, `DESIGN.md` | [x] |
 | T0.10 | **Web mini deneme:** 2-3 route geçişi + `/api/health`'ten veri çekip gösterme | T0.7, T0.9 | `06` §2 | [x] |
 | T0.11 | **Test altyapısı:** `Finans.Integration.Tests` (WebApplicationFactory + Sqlite) + FluentAssertions; web'de **Vitest + RTL** (+ Playwright iskeleti); `dotnet test`/`pnpm test` yeşil | T0.3, T0.8 | `09` §2-3 | [~] |
 | T0.12 | **Gözlemlenebilirlik temeli:** Serilog yapılandırılmış log (Console + CorrelationId enricher) + redaksiyon politikası iskeleti; `/health` & `/health/ready` (ASP.NET HealthChecks) | T0.3 | `12` §3,§8 | [ ] |

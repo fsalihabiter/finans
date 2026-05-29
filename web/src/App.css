@@ -1,4 +1,4 @@
-/* Faz 0 iskelet stilleri — tam tasarım token'ları (DESIGN.md) T0.9'da gelir. */
+/* AppShell + Faz 0 demo stilleri — DESIGN.md token'larını kullanır. */
 
 .app-shell {
   min-height: 100dvh;
@@ -10,31 +10,38 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--line, #2a2a33);
+  padding: 0.75rem var(--space-screen-x, 20px);
+  border-bottom: 1px solid var(--line, #322b22);
 }
 
 .app-brand {
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--accent, #d4af37);
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+  color: var(--gold, #e0b255);
 }
 
 .app-nav {
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .app-nav a {
-  color: var(--text-muted, #9aa0aa);
+  color: var(--muted, #a89c89);
   text-decoration: none;
   padding: 0.25rem 0;
   border-bottom: 2px solid transparent;
+  transition: color 0.15s ease;
+}
+
+.app-nav a:hover {
+  color: var(--text, #f3ede2);
 }
 
 .app-nav a.active {
-  color: var(--text, #f2f2f5);
-  border-bottom-color: var(--accent, #d4af37);
+  color: var(--text, #f3ede2);
+  border-bottom-color: var(--gold, #e0b255);
 }
 
 .app-content {
@@ -42,7 +49,7 @@
   width: 100%;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem;
+  padding: var(--space-section-top, 26px) var(--space-screen-x, 20px);
 }
 
 /* Health rozeti */
@@ -51,42 +58,50 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--text-muted, #9aa0aa);
+  font-size: 0.8rem;
+  color: var(--muted, #a89c89);
 }
 
 .health-dot {
   width: 0.5rem;
   height: 0.5rem;
-  border-radius: 50%;
-  background: var(--text-muted, #9aa0aa);
+  border-radius: var(--radius-pill, 100px);
+  background: var(--muted-2, #6f6557);
 }
 
 .health-badge[data-tone="ok"] .health-dot {
-  background: #3ecf8e;
+  background: var(--mint, #5fc9a0);
 }
 .health-badge[data-tone="error"] .health-dot {
-  background: #e5484d;
+  background: var(--coral, #e58e6e);
 }
 
-/* Demo figürleri (format util sergisi) */
+/* Hero/demo figürleri — Faz 1'de gerçek HeroCard gelir */
 .demo-figures {
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+  padding: 1.25rem var(--space-screen-x, 20px);
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-card, 22px);
+  box-shadow: var(--shadow-hero, 0 18px 40px -22px rgba(0, 0, 0, 0.9));
 }
 .demo-figures > div {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 .demo-figures strong {
-  font-size: 1.4rem;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 .muted {
-  color: var(--text-muted, #9aa0aa);
+  color: var(--muted, #a89c89);
+  font-size: 0.8rem;
 }
 .pos {
-  color: #3ecf8e;
+  color: var(--mint, #5fc9a0);
 }
