@@ -20,6 +20,30 @@
 
 ---
 
+## 2026-05-30 · Tasarım token'ları + fontlar (DESIGN.md → web)
+- **Görev(ler):** T0.9 (tamam) · dal `feat/design-tokens`
+- **Ne yapıldı:**
+  - `@finans/shared/theme`: DESIGN.md §2-4 token'ları **tek kaynak** TS objesi
+    (`tokens`: color/font/radius/space/shadow) + `cssVariables()` üretici
+    (camelCase→kebab, grup önekleri: `--font-*`/`--radius-*`/`--space-*`/`--shadow-*`).
+  - Web: `@fontsource-variable/fraunces` + `hanken-grotesk` (self-hosted, CDN yok);
+    `applyTheme()` token'ları paint öncesi `:root`'a enjekte ediyor; `index.css`
+    atmosfer (iki radial-gradient) + Fraunces başlık + Hanken gövde + tabular-nums;
+    `App.css` token'lara taşındı (gold/mint/coral, panel, hero gölge).
+  - Font ailesi `'Fraunces Variable'` (web) + `'Fraunces'` fallback (mobil expo-font).
+- **Dokunulan dosyalar:** `packages/shared/src/theme/index.ts` (+`theme.test.ts`),
+  `web/src/lib/applyTheme.ts` (+test), `web/src/main.tsx`, `web/src/index.css`,
+  `web/src/App.css`, `web/src/vite-env.d.ts`, `web/package.json`.
+- **Test:** `pnpm test` yeşil — shared 8 (format 4 + theme 4), web 2 (render + applyTheme).
+  `pnpm --filter @finans/web build` yeşil. **Görsel doğrulama:** Vite dev (5180)
+  Chrome screenshot — Fraunces/Hanken, altın aksan, mint pozitif, coral health
+  hatası, atmosfer halesi DESIGN.md ile uyumlu.
+- **Karar/Not:** Token'lar runtime'da `:root`'a enjekte (FOUC yok, render öncesi);
+  fontsource side-effect import'u için `declare module "@fontsource-variable/*"`.
+- **Durum:** tamamlandı
+- **Sıradaki:** T0.12 (Serilog + /health,/health/ready) / T0.13 (güvenlik+CORS) /
+  T0.14 (Docker compose) + T0.11 kalanı → Faz 0 kapanışı.
+
 ## 2026-05-29 · Veri katmanı: EF Core + entity'ler + migration + tutarlı seed
 - **Görev(ler):** T0.4, T0.5, T0.6, T0.6b (tamam) · dal `feat/data-layer`
 - **Ne yapıldı:**
