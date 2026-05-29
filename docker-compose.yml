@@ -1,0 +1,43 @@
+# Lokal geliştirme yığını (02 §6): API + PostgreSQL.
+# `docker compose up --build` → migrate+seed'li API http://localhost:8080.
+# Parola: env/.env ile ver (repoda yok — 11 §6); dev varsayılanı finans_dev.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: finans
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finans_dev}
+      POSTGRES_DB: finans
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Dev'de host'tan erişim için; prod'da KALDIR (iç ağda kalsın — 11 §5).
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finans -d finans"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=finans;Username=finans;Password=${POSTGRES_PASSWORD:-finans_dev}"
+      # Container HTTP servis eder (TLS proxy'de — 11 §5); başlangıçta migrate+seed.
+      Security__UseHttpsRedirection: "false"
+      Database__ApplyMigrationsOnStartup: "true"
+      Database__Seed: "true"
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+      Cors__AllowedOrigins__1: "http://localhost:5174"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:

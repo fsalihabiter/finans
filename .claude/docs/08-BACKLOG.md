@@ -16,10 +16,12 @@ gerçek Postgres'te uygulandı, **tutarlı idempotent seed 422.970/641.403/+%51,
 web'de uygulandı, görsel doğrulandı). Testler yeşil (`dotnet test` 4/4, `pnpm test`
 shared 8 + web 2) + **güvenlik/gözlemlenebilirlik temeli** (Serilog+CorrelationId+
 redaksiyon, `/health`+`/health/ready`, hata maskeleme middleware, CORS allow-list,
-User Secrets). T0.1-T0.13 [x]; T0.11 [~] (Sqlite + Playwright kaldı).
+User Secrets) + **Docker** (Dockerfile non-root + compose api+postgres; `docker
+compose up --build` ile migrate+seed'li API doğrulandı). T0.1-T0.10, T0.12-T0.14 [x];
+T0.11 [~] (Sqlite fixture + Playwright iskeleti kaldı).
 
-**Sıradaki adım → `T0.14` (Docker: API Dockerfile non-root + compose api+postgres)**
-+ T0.11 kalanı → **Faz 0 kapanışı**.
+**Sıradaki adım → `T0.11` kalanı (Sqlite integration fixture + Playwright iskeleti)
+→ Faz 0 TAM kapanış.** Sonra Faz 1 (Portföy MVP).
 
 ---
 
@@ -41,7 +43,7 @@ User Secrets). T0.1-T0.13 [x]; T0.11 [~] (Sqlite + Playwright kaldı).
 | T0.11 | **Test altyapısı:** `Finans.Integration.Tests` (WebApplicationFactory + Sqlite) + FluentAssertions; web'de **Vitest + RTL** (+ Playwright iskeleti); `dotnet test`/`pnpm test` yeşil | T0.3, T0.8 | `09` §2-3 | [~] |
 | T0.12 | **Gözlemlenebilirlik temeli:** Serilog yapılandırılmış log (Console + CorrelationId enricher) + redaksiyon politikası iskeleti; `/health` & `/health/ready` (ASP.NET HealthChecks) | T0.3 | `12` §3,§8 | [x] |
 | T0.13 | **Güvenlik temeli:** secret yönetimi (User Secrets/env, repoda sır yok) + `.gitignore` sır kalıpları; global hata maskeleme middleware (sözleşmeli hata, stack trace sızmaz); CORS web origin allow-list | T0.3 | `11` §4,§6, `13` §5 | [x] |
-| T0.14 | **Docker temeli:** API için Dockerfile (non-root, minimal imaj) + `docker-compose.yml` (api + postgres); lokal `docker compose up` çalışıyor | T0.4 | `02` §6, `11` §8 | [ ] |
+| T0.14 | **Docker temeli:** API için Dockerfile (non-root, minimal imaj) + `docker-compose.yml` (api + postgres); lokal `docker compose up` çalışıyor | T0.4 | `02` §6, `11` §8 | [x] |
 
 **Faz 0 DoD:** **Web** `/api/health`'i gösteriyor; `dotnet ef migrations` ile DB
 oluşuyor; tasarım token'ları (`@finans/shared`) web'de kullanılıyor; **test

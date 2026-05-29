@@ -20,6 +20,31 @@
 
 ---
 
+## 2026-05-30 · Docker temeli — compose ile migrate+seed'li API (T0.14)
+- **Görev(ler):** T0.14 (tamam) · dal `feat/docker`
+- **Ne yapıldı:**
+  - `backend/Dockerfile`: çok aşamalı (sdk:10.0 build → aspnet:10.0-alpine runtime),
+    csproj-önce restore (cache), **non-root** (`USER $APP_UID` → uid 1654), düz HTTP
+    8080, busybox wget HEALTHCHECK (`/health`). `backend/.dockerignore`.
+  - `docker-compose.yml` (kök): postgres (healthcheck + volume + dev 5433) + api
+    (depends_on healthy, env ile connstr/CORS/migrate+seed). Parola env/`.env`
+    (dev varsayılan finans_dev; repoda gerçek sır yok).
+  - Program.cs: bayrakla **başlangıçta migration (+ops. seed)** (`Database__Apply
+    MigrationsOnStartup`/`Database__Seed`; testlerde varsayılan kapalı → DB'siz) +
+    **koşullu HttpsRedirection** (`Security__UseHttpsRedirection`, container'da false).
+- **Dokunulan dosyalar:** `backend/Dockerfile`, `backend/.dockerignore`,
+  `docker-compose.yml`, `Finans.Api/Program.cs`, `appsettings.json`.
+- **Test:** `dotnet test` 10/10 yeşil (değişmedi; startup-migration varsayılan kapalı).
+  **Canlı `docker compose up --build`:** /health & /health/ready (DB) Healthy,
+  /api/health 200; başlangıç migrate+seed → cost=422.970/value=641.403/holdings=4;
+  `docker exec api id` → uid=1654(app) (non-root doğrulandı).
+- **Karar/Not:** Container düz HTTP servis eder, TLS reverse proxy'de sonlanır
+  (T2.9); postgres host portu (5433) dev için, prod'da kaldırılır (iç ağ — 11 §5).
+  Startup-migration yalnız dev/compose kolaylığı; prod'da kapalı.
+- **Durum:** tamamlandı
+- **Sıradaki:** T0.11 kalanı (Sqlite integration fixture + Playwright iskeleti) →
+  Faz 0 TAM kapanış.
+
 ## 2026-05-30 · Güvenlik + gözlemlenebilirlik temeli (T0.12 + T0.13)
 - **Görev(ler):** T0.12, T0.13 (tamam) · dal `feat/security-observability`
 - **Ne yapıldı:**

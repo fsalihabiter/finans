@@ -57,6 +57,17 @@ try
         return;
     }
 
+    // Compose/dev kolaylığı: bayrak açıksa başlangıçta migration (+ ops. seed) uygula.
+    // Varsayılan kapalı → testler (WebApplicationFactory) DB'siz koşar. Prod'da kapalı tut.
+    if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
+        await db.Database.MigrateAsync();
+        if (app.Configuration.GetValue<bool>("Database:Seed"))
+            await SeedData.SeedAsync(db);
+    }
+
     // Boru hattı: hata yakalama (en dış) → korelasyon → istek log'u.
     app.UseExceptionHandler();
     app.UseMiddleware<CorrelationIdMiddleware>();
@@ -65,7 +76,11 @@ try
     if (app.Environment.IsDevelopment())
         app.MapOpenApi();
 
-    app.UseHttpsRedirection();
+    // Container'da API düz HTTP servis eder (TLS reverse proxy'de — 11 §5);
+    // bayrakla kapatılabilir. Lokal `dotnet run` (https profili) için varsayılan açık.
+    if (app.Configuration.GetValue("Security:UseHttpsRedirection", true))
+        app.UseHttpsRedirection();
+
     app.UseCors(corsPolicy);
     app.UseAuthorization();
 

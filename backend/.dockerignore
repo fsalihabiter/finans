@@ -1,0 +1,9 @@
+# Build çıktıları ve gereksiz dosyalar imaj bağlamına girmesin.
+**/bin/
+**/obj/
+**/.vs/
+tests/
+*.user
+*.sln.DotSettings.user
+**/appsettings.*.local.json
+**/*.env
