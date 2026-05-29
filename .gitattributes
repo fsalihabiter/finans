@@ -1,0 +1,33 @@
+# Satır sonlarını normalize et: repoda LF, çalışma kopyasında da LF (Windows'ta
+# tekrarlayan "LF will be replaced by CRLF" uyarılarını önler).
+* text=auto eol=lf
+
+# Açıkça metin
+*.cs       text
+*.ts       text
+*.tsx      text
+*.js       text
+*.mjs      text
+*.json     text
+*.css      text
+*.html     text
+*.md       text
+*.yaml     text
+*.yml      text
+*.svg      text
+*.csproj   text
+*.slnx     text
+*.props    text
+*.targets  text
+
+# İkili dosyalar (normalize edilmez)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
