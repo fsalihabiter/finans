@@ -1,0 +1,77 @@
+# ───────────────────────────── Finans monorepo .gitignore ─────────────────────────────
+# Kural (CLAUDE.md §8, §13): build çıktıları ve SIRLAR asla commit edilmez.
+
+# ───────────── .NET / backend ─────────────
+bin/
+obj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+artifacts/
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coverlet.json
+coverage/
+
+# ───────────── Node / JS / TS (web, mobile, packages) ─────────────
+node_modules/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+.vite/
+coverage/
+.nyc_output/
+
+# pnpm
+.pnpm-store/
+.pnpm-debug.log*
+
+# Test araçları
+/web/playwright-report/
+/web/test-results/
+/web/blob-report/
+.playwright/
+
+# ───────────── Expo / React Native (FAZ M) ─────────────
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# ───────────── Sırlar / config (REPODA YOK — CLAUDE.md §13, 11 §6) ─────────────
+*.env
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+appsettings.Local.json
+secrets.json
+*.pfx
+.user-secrets/
+
+# ───────────── Loglar ─────────────
+*.log
+logs/
+npm-debug.log*
+yarn-error.log*
+
+# ───────────── İşletim sistemi / editör ─────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+*.iml
+
+# ───────────── Docker / lokal veri ─────────────
+.docker-data/
+postgres-data/
