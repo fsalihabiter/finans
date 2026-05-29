@@ -1,0 +1,25 @@
+{
+  "name": "@finans/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Platform-bağımsız paylaşılan paket: API tipleri (04), tasarım token'ları (DESIGN.md), format util'leri (tr-TR). HESAP YOK — o backend'de.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./api": "./src/api/index.ts",
+    "./theme": "./src/theme/index.ts",
+    "./format": "./src/format/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  }
+}

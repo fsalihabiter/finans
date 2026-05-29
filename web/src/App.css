@@ -1,0 +1,92 @@
+/* Faz 0 iskelet stilleri — tam tasarım token'ları (DESIGN.md) T0.9'da gelir. */
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--line, #2a2a33);
+}
+
+.app-brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent, #d4af37);
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.app-nav a {
+  color: var(--text-muted, #9aa0aa);
+  text-decoration: none;
+  padding: 0.25rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+.app-nav a.active {
+  color: var(--text, #f2f2f5);
+  border-bottom-color: var(--accent, #d4af37);
+}
+
+.app-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem;
+}
+
+/* Health rozeti */
+.health-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #9aa0aa);
+}
+
+.health-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--text-muted, #9aa0aa);
+}
+
+.health-badge[data-tone="ok"] .health-dot {
+  background: #3ecf8e;
+}
+.health-badge[data-tone="error"] .health-dot {
+  background: #e5484d;
+}
+
+/* Demo figürleri (format util sergisi) */
+.demo-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.demo-figures > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.demo-figures strong {
+  font-size: 1.4rem;
+}
+.muted {
+  color: var(--text-muted, #9aa0aa);
+}
+.pos {
+  color: #3ecf8e;
+}

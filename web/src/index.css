@@ -1,0 +1,32 @@
+/* Faz 0 temel — koyu tema iskeleti. Tam DESIGN.md token seti T0.9'da. */
+:root {
+  --bg: #0e0e12;
+  --text: #f2f2f5;
+  --text-muted: #9aa0aa;
+  --line: #2a2a33;
+  --accent: #d4af37;
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 0.5rem;
+}
+
+a {
+  color: var(--accent);
+}
