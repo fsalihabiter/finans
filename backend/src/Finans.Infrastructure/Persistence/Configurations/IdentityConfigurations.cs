@@ -12,8 +12,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         b.ToTable("Users", t =>
             t.HasCheckConstraint("CK_Users_BaseCurrency", Check.EnumIn<CurrencyCode>("BaseCurrency")));
 
-        // citext = case-insensitive (Email karşılaştırması). Faz 5'te zorunlu olur.
-        b.Property(x => x.Email).HasColumnType("citext");
+        // Not: Email citext (case-insensitive) PostgreSQL'e özgü → FinansDbContext.
+        // OnModelCreating'de sağlayıcı-koşullu. Unique index her sağlayıcıda geçerli.
         b.HasIndex(x => x.Email).IsUnique(); // PostgreSQL'de birden çok NULL'a izin verir
         b.Property(x => x.IsActive).HasDefaultValue(true);
     }

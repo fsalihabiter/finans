@@ -38,12 +38,8 @@ internal sealed class HoldingConfiguration : IEntityTypeConfiguration<Holding>
             t.HasCheckConstraint("CK_Holdings_AvgCost", "\"AvgCost\" >= 0");
         });
 
-        // Optimistic concurrency: PostgreSQL xmin sistem kolonu (03 §1).
-        b.Property<uint>("Version")
-            .HasColumnName("xmin")
-            .HasColumnType("xid")
-            .ValueGeneratedOnAddOrUpdate()
-            .IsConcurrencyToken();
+        // Not: xmin optimistic concurrency PostgreSQL'e özgü → FinansDbContext.
+        // OnModelCreating'de sağlayıcı-koşullu eklenir (Sqlite test fixture'ı kırmasın).
 
         // Soft-delete: varsayılan sorgu filtresi (03 §1, 11 §3 ile birlikte).
         b.HasQueryFilter(h => !h.IsDeleted);

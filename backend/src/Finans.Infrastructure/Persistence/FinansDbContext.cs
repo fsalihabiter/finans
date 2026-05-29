@@ -1,7 +1,9 @@
+using System.Net;
 using Finans.Domain.Enums;
 using Finans.Domain.Identity;
 using Finans.Domain.Portfolio;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Finans.Infrastructure.Persistence;
 
@@ -45,8 +47,29 @@ public class FinansDbContext(DbContextOptions<FinansDbContext> options) : DbCont
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // citext (case-insensitive Email) için PostgreSQL eklentisi.
-        modelBuilder.HasPostgresExtension("citext");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinansDbContext).Assembly);
+
+        // Sağlayıcıya özgü eşlemeler. Prod = PostgreSQL; test fixture = Sqlite/InMemory.
+        if (Database.IsNpgsql())
+        {
+            modelBuilder.HasPostgresExtension("citext"); // case-insensitive Email
+            modelBuilder.Entity<User>().Property(u => u.Email).HasColumnType("citext");
+            // Optimistic concurrency: PostgreSQL xmin sistem kolonu (03 §1).
+            modelBuilder.Entity<Holding>()
+                .Property<uint>("Version")
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate()
+                .IsConcurrencyToken();
+        }
+        else
+        {
+            // Sqlite/InMemory'de inet/IPAddress yerel eşlemesi yok → string'e çevir.
+            var ipConverter = new ValueConverter<IPAddress, string>(
+                ip => ip.ToString(),
+                text => IPAddress.Parse(text));
+            modelBuilder.Entity<RefreshToken>().Property(x => x.CreatedByIp).HasConversion(ipConverter);
+            modelBuilder.Entity<AuditLog>().Property(x => x.IpAddress).HasConversion(ipConverter);
+        }
     }
 }

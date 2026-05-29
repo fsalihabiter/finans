@@ -8,20 +8,18 @@
 
 ## ⭐ ŞU ANKİ DURUM & SIRADAKİ ADIM
 
-**Durum:** İskelet + veri katmanı ayakta. Monorepo (pnpm) + `@finans/shared` +
-.NET çözümü (`net10.0`, `.slnx`) + `GET /api/health` + web (Vite/Router/Query) +
-**EF Core/Npgsql veri katmanı** (12 tablo + kimlik/audit, InitialCreate migration
-gerçek Postgres'te uygulandı, **tutarlı idempotent seed 422.970/641.403/+%51,6**).
-+ **tasarım token'ları** (DESIGN.md → `@finans/shared/theme`, Fraunces/Hanken
-web'de uygulandı, görsel doğrulandı). Testler yeşil (`dotnet test` 4/4, `pnpm test`
-shared 8 + web 2) + **güvenlik/gözlemlenebilirlik temeli** (Serilog+CorrelationId+
-redaksiyon, `/health`+`/health/ready`, hata maskeleme middleware, CORS allow-list,
-User Secrets) + **Docker** (Dockerfile non-root + compose api+postgres; `docker
-compose up --build` ile migrate+seed'li API doğrulandı). T0.1-T0.10, T0.12-T0.14 [x];
-T0.11 [~] (Sqlite fixture + Playwright iskeleti kaldı).
+**Durum:** ✅ **FAZ 0 TAMAMLANDI (T0.1-T0.14 [x]).** Monorepo (pnpm) +
+`@finans/shared` (tip/api/theme/format) + .NET çözümü (`net10.0`, `.slnx`, 4 katman) +
+`GET /api/health` + web (Vite/Router/Query + DESIGN.md token'ları/fontlar) +
+**EF Core/Npgsql** (12 tablo, migration, tutarlı seed 422.970/641.403/+%51,6) +
+**güvenlik/gözlemlenebilirlik** (Serilog+CorrelationId+redaksiyon, /health(+ready),
+hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
+`docker compose up --build` doğrulandı) + **test altyapısı** (Sqlite integration
+fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
+web 2, shared 8, e2e 1.
 
-**Sıradaki adım → `T0.11` kalanı (Sqlite integration fixture + Playwright iskeleti)
-→ Faz 0 TAM kapanış.** Sonra Faz 1 (Portföy MVP).
+**Sıradaki adım → FAZ 1 (Portföy MVP): `T1.1` `PortfolioCalculationService`**
+(saf hesap fonksiyonları, altın test verisi 40gr/4.546→181.851/+%43 — birim testli).
 
 ---
 
@@ -40,7 +38,7 @@ T0.11 [~] (Sqlite fixture + Playwright iskeleti kaldı).
 | T0.8 | **Web iskeleti (★):** Vite React-TS uygulaması (`web/`) + React Router + TanStack Query + `@finans/shared` bağlı | T0.2 | `13` §3, `06` §2 | [x] |
 | T0.9 | Tasarım token'ları `@finans/shared/theme` (DESIGN.md → TS + CSS değişkeni) + web'de uygula + fontlar (Fraunces/Hanken) | T0.8 | `13` §3, `DESIGN.md` | [x] |
 | T0.10 | **Web mini deneme:** 2-3 route geçişi + `/api/health`'ten veri çekip gösterme | T0.7, T0.9 | `06` §2 | [x] |
-| T0.11 | **Test altyapısı:** `Finans.Integration.Tests` (WebApplicationFactory + Sqlite) + FluentAssertions; web'de **Vitest + RTL** (+ Playwright iskeleti); `dotnet test`/`pnpm test` yeşil | T0.3, T0.8 | `09` §2-3 | [~] |
+| T0.11 | **Test altyapısı:** `Finans.Integration.Tests` (WebApplicationFactory + Sqlite) + FluentAssertions; web'de **Vitest + RTL** (+ Playwright iskeleti); `dotnet test`/`pnpm test` yeşil | T0.3, T0.8 | `09` §2-3 | [x] |
 | T0.12 | **Gözlemlenebilirlik temeli:** Serilog yapılandırılmış log (Console + CorrelationId enricher) + redaksiyon politikası iskeleti; `/health` & `/health/ready` (ASP.NET HealthChecks) | T0.3 | `12` §3,§8 | [x] |
 | T0.13 | **Güvenlik temeli:** secret yönetimi (User Secrets/env, repoda sır yok) + `.gitignore` sır kalıpları; global hata maskeleme middleware (sözleşmeli hata, stack trace sızmaz); CORS web origin allow-list | T0.3 | `11` §4,§6, `13` §5 | [x] |
 | T0.14 | **Docker temeli:** API için Dockerfile (non-root, minimal imaj) + `docker-compose.yml` (api + postgres); lokal `docker compose up` çalışıyor | T0.4 | `02` §6, `11` §8 | [x] |

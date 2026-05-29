@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-05-30 · Test altyapısı tamam — Sqlite fixture + Playwright (T0.11) → FAZ 0 BİTTİ
+- **Görev(ler):** T0.11 (tamam) · dal `feat/test-infra` · **Faz 0 kapanışı**
+- **Ne yapıldı:**
+  - **Model sağlayıcı-duyarlı:** Npgsql'e özgü `citext`/`xmin`(xid)/`HasPostgresExtension`
+    `FinansDbContext.OnModelCreating`'de `Database.IsNpgsql()` koşuluna alındı; aksi
+    sağlayıcıda (Sqlite/InMemory) `IPAddress`→string converter. Npgsql model/migration
+    değişmedi (design-time Npgsql). Konfig sınıflarından provider-özgü parçalar çıkarıldı.
+  - **Sqlite integration fixture:** `SqliteWebApplicationFactory` (in-memory bağlantı
+    açık tutulur; `ConfigureTestServices` ile Npgsql DbContext kaydı ada-göre temizlenip
+    Sqlite eklenir) + `SqliteIntegrationTests` (EnsureCreated+seed; /health/ready Healthy,
+    seed tutarlılığı relational'da, CK_Holdings_Quantity negatifi reddediyor).
+  - **Playwright iskeleti (web):** `@playwright/test` + `playwright.config.ts`
+    (channel "chrome" → indirme yok; `webServer` vite'ı otomatik başlatır) +
+    `e2e/smoke.spec.ts` (yüklenme + tr-TR format + route geçişi) + `e2e` script'i.
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Persistence/FinansDbContext.cs`,
+  `Configurations/{Portfolio,Identity}Configurations.cs`, `tests/.../Sqlite*.cs`,
+  `tests/.../Finans.Integration.Tests.csproj` (Sqlite paketi), `web/playwright.config.ts`,
+  `web/e2e/smoke.spec.ts`, `web/package.json`.
+- **Test:** backend `dotnet test` **13/13**, web vitest 2, shared 8, **Playwright e2e 1** —
+  hepsi yeşil. (e2e sistem Chrome ile; backend kapalıyken proxy hatası beklenen, test bağımsız.)
+- **Karar/Not:** Model artık sağlayıcı-portatif (prod Npgsql, test Sqlite); IsNpgsql
+  koşulu tek nokta. Playwright iskelet — gerçek akışlar Faz 1'de. **Faz 0 DoD'un tamamı
+  karşılandı.**
+- **Durum:** tamamlandı → **FAZ 0 BİTTİ**
+- **Sıradaki:** Faz 1 — T1.1 `PortfolioCalculationService` (saf hesap + birim test, NFR-1).
+
 ## 2026-05-30 · Docker temeli — compose ile migrate+seed'li API (T0.14)
 - **Görev(ler):** T0.14 (tamam) · dal `feat/docker`
 - **Ne yapıldı:**

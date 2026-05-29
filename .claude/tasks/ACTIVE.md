@@ -4,13 +4,17 @@
 > başında hook bunu otomatik gösterir. Kaynak plan: [`../docs/08-BACKLOG.md`](../docs/08-BACKLOG.md).
 > Bir görev bitince buradan çıkar, backlog'da `[x]` işaretle, TASKLOG'a girdi ekle.
 
-**Aktif faz:** Faz 0 — Hazırlık & İskelet · **Frontend: WEB ÖNCELİKLİ** (monorepo)
+**Aktif faz:** ✅ Faz 0 BİTTİ → **Faz 1 — Portföy Takip MVP** · **WEB ÖNCELİKLİ**
 
 ## Sıradaki (öncelik sırası)
-1. **T0.11 kalan** — Sqlite integration fixture + Playwright iskeleti
-   → **Faz 0 TAM kapanış**, sonra Faz 1 (Portföy MVP: T1.1 hesap servisi)
+1. **T1.1** — `PortfolioCalculationService` (CLAUDE.md §6 formülleri, saf fonksiyon)
+2. **T1.2** — Birim testleri (altın: 40gr/4.546→181.851, +%43) — NFR-1 zorunlu
+3. **T1.3** — `CurrencyConversionService` + FxRates + test
+4. **T1.4** — Reel getiri (enflasyon) + test · **T1.5** ort. maliyet türetimi + test
+5. **T1.6** — Holdings CRUD endpoint + DTO + validasyon · **T1.7** `GET /portfolio/summary`
 
-> Mobil **FAZ M**'de (web parası sonrası).
+> Faz 1 ayrıca: T1.8 BES, T1.9 settings, T1.10 shared API/format hook, T1.11-14 web
+> (AppShell/HeroCard/Donut/Holdings/Ekle), T1.15 per-user kapsam. Mobil **FAZ M**'de.
 
 ## Tamamlanan (bu oturum)
 - T0.1-T0.3, T0.7, T0.8, T0.10: monorepo + .NET (net10.0/slnx) + health + web + canlı zincir
@@ -20,7 +24,9 @@
 - **T0.12+T0.13**: Serilog+correlation+redaksiyon+health/ready, hata maskeleme,
   CORS allow-list, User Secrets — `main`
 - **T0.14**: Docker (Dockerfile non-root + compose); `docker compose up --build`
-  ile migrate+seed'li API canlı doğrulandı — dal `feat/docker`
+  ile migrate+seed'li API canlı doğrulandı — `main`
+- **T0.11**: test altyapısı — Sqlite integration fixture + Playwright iskeleti
+  (sağlayıcı-duyarlı model); dotnet 13 + web 2 + shared 8 + e2e 1 yeşil — dal `feat/test-infra`
 
 ## Devam eden
 - (yok)
