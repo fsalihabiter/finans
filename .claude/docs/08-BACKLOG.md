@@ -8,15 +8,15 @@
 
 ## ⭐ ŞU ANKİ DURUM & SIRADAKİ ADIM
 
-**Durum:** İskelet ayakta. Monorepo (pnpm) + `@finans/shared` + .NET çözümü
-(4 katman + 2 test projesi, `net10.0`, `.slnx`) + `GET /api/health` + web (Vite
-React-TS, Router, TanStack Query) kuruldu. **Web → proxy → backend → health zinciri
-canlı çalışıyor.** Testler yeşil (`dotnet test`, `pnpm test`). T0.1/T0.2/T0.3/T0.7/
-T0.8/T0.10 [x]; T0.11 [~] (Sqlite fixture + Playwright iskeleti kaldı).
+**Durum:** İskelet + veri katmanı ayakta. Monorepo (pnpm) + `@finans/shared` +
+.NET çözümü (`net10.0`, `.slnx`) + `GET /api/health` + web (Vite/Router/Query) +
+**EF Core/Npgsql veri katmanı** (12 tablo + kimlik/audit, InitialCreate migration
+gerçek Postgres'te uygulandı, **tutarlı idempotent seed 422.970/641.403/+%51,6**).
+Testler yeşil (`dotnet test` 4/4, `pnpm test`). T0.1-T0.8/T0.10 ve T0.4-T0.6b [x];
+T0.11 [~] (Sqlite fixture + Playwright kaldı).
 
-**Sıradaki adım → `T0.4`-`T0.6` (EF Core + entity'ler + migration + seeder).**
-Şema [`03-DATA-MODEL.md`](03-DATA-MODEL.md)'de hazır. Paralelde T0.9 (DESIGN.md
-token'ları) ve güvenlik/gözlemlenebilirlik/Docker kapıları (T0.12-T0.14).
+**Sıradaki adım → `T0.9` (DESIGN.md token'ları) + güvenlik/gözlemlenebilirlik/
+Docker kapıları (`T0.12`-`T0.14`).** Faz 0'ı kapatmaya bunlar kaldı.
 
 ---
 
@@ -27,10 +27,10 @@ token'ları) ve güvenlik/gözlemlenebilirlik/Docker kapıları (T0.12-T0.14).
 | T0.1 | `git init` + `.gitignore` (bin/obj, node_modules, dist, .expo, *.env, secrets) | — | `06` §6 | [x] |
 | T0.2 | **Monorepo iskeleti:** pnpm workspaces (`packages/*`, `web`, `mobile`) + `@finans/shared` paketi (types/api/theme/format boş iskelet) | T0.1 | `13` §2, `06` §2 | [x] |
 | T0.3 | .NET çözümü + 4 katman projesi + test projesi | T0.1 | `02` §2.1, `06` §2 | [x] |
-| T0.4 | EF Core + Npgsql kur; `FinansDbContext` | T0.3 | `02`, `03` | [ ] |
-| T0.5 | Entity'leri yaz — **portföy** (Assets, Holdings, Transactions, PriceSnapshots, BesDetails, FxRates, InflationRates) + **kimlik/audit iskeleti** (Users, Roles, UserRoles, RefreshTokens, AuditLogs) | T0.4 | `03` §A,§B | [ ] |
-| T0.6 | İlk migration + `database update` | T0.5 | `03` §13 | [ ] |
-| T0.6b | **Kapsamlı, tutarlı seeder** (`SeedData.cs`, idempotent): kullanıcı/rol, kur+enflasyon, varlık kataloğu, **tutarlı pozisyonlar (641.403/422.970/+%51,6)**, BesDetails, fiyat geçmişi | T0.6 | `03` §12 | [ ] |
+| T0.4 | EF Core + Npgsql kur; `FinansDbContext` | T0.3 | `02`, `03` | [x] |
+| T0.5 | Entity'leri yaz — **portföy** (Assets, Holdings, Transactions, PriceSnapshots, BesDetails, FxRates, InflationRates) + **kimlik/audit iskeleti** (Users, Roles, UserRoles, RefreshTokens, AuditLogs) | T0.4 | `03` §A,§B | [x] |
+| T0.6 | İlk migration + `database update` | T0.5 | `03` §13 | [x] |
+| T0.6b | **Kapsamlı, tutarlı seeder** (`SeedData.cs`, idempotent): kullanıcı/rol, kur+enflasyon, varlık kataloğu, **tutarlı pozisyonlar (641.403/422.970/+%51,6)**, BesDetails, fiyat geçmişi | T0.6 | `03` §12 | [x] |
 | T0.7 | `GET /api/health` → `{status:"ok"}` | T0.3 | `04` §3 | [x] |
 | T0.8 | **Web iskeleti (★):** Vite React-TS uygulaması (`web/`) + React Router + TanStack Query + `@finans/shared` bağlı | T0.2 | `13` §3, `06` §2 | [x] |
 | T0.9 | Tasarım token'ları `@finans/shared/theme` (DESIGN.md → TS + CSS değişkeni) + web'de uygula + fontlar (Fraunces/Hanken) | T0.8 | `13` §3, `DESIGN.md` | [ ] |
