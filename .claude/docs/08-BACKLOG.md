@@ -14,10 +14,12 @@
 gerçek Postgres'te uygulandı, **tutarlı idempotent seed 422.970/641.403/+%51,6**).
 + **tasarım token'ları** (DESIGN.md → `@finans/shared/theme`, Fraunces/Hanken
 web'de uygulandı, görsel doğrulandı). Testler yeşil (`dotnet test` 4/4, `pnpm test`
-shared 8 + web 2). T0.1-T0.10 ve T0.4-T0.6b [x]; T0.11 [~] (Sqlite + Playwright kaldı).
+shared 8 + web 2) + **güvenlik/gözlemlenebilirlik temeli** (Serilog+CorrelationId+
+redaksiyon, `/health`+`/health/ready`, hata maskeleme middleware, CORS allow-list,
+User Secrets). T0.1-T0.13 [x]; T0.11 [~] (Sqlite + Playwright kaldı).
 
-**Sıradaki adım → güvenlik/gözlemlenebilirlik/Docker kapıları (`T0.12`-`T0.14`).**
-Faz 0'ı kapatmaya bunlar (+ T0.11 kalanı) kaldı.
+**Sıradaki adım → `T0.14` (Docker: API Dockerfile non-root + compose api+postgres)**
++ T0.11 kalanı → **Faz 0 kapanışı**.
 
 ---
 
@@ -37,8 +39,8 @@ Faz 0'ı kapatmaya bunlar (+ T0.11 kalanı) kaldı.
 | T0.9 | Tasarım token'ları `@finans/shared/theme` (DESIGN.md → TS + CSS değişkeni) + web'de uygula + fontlar (Fraunces/Hanken) | T0.8 | `13` §3, `DESIGN.md` | [x] |
 | T0.10 | **Web mini deneme:** 2-3 route geçişi + `/api/health`'ten veri çekip gösterme | T0.7, T0.9 | `06` §2 | [x] |
 | T0.11 | **Test altyapısı:** `Finans.Integration.Tests` (WebApplicationFactory + Sqlite) + FluentAssertions; web'de **Vitest + RTL** (+ Playwright iskeleti); `dotnet test`/`pnpm test` yeşil | T0.3, T0.8 | `09` §2-3 | [~] |
-| T0.12 | **Gözlemlenebilirlik temeli:** Serilog yapılandırılmış log (Console + CorrelationId enricher) + redaksiyon politikası iskeleti; `/health` & `/health/ready` (ASP.NET HealthChecks) | T0.3 | `12` §3,§8 | [ ] |
-| T0.13 | **Güvenlik temeli:** secret yönetimi (User Secrets/env, repoda sır yok) + `.gitignore` sır kalıpları; global hata maskeleme middleware (sözleşmeli hata, stack trace sızmaz); CORS web origin allow-list | T0.3 | `11` §4,§6, `13` §5 | [ ] |
+| T0.12 | **Gözlemlenebilirlik temeli:** Serilog yapılandırılmış log (Console + CorrelationId enricher) + redaksiyon politikası iskeleti; `/health` & `/health/ready` (ASP.NET HealthChecks) | T0.3 | `12` §3,§8 | [x] |
+| T0.13 | **Güvenlik temeli:** secret yönetimi (User Secrets/env, repoda sır yok) + `.gitignore` sır kalıpları; global hata maskeleme middleware (sözleşmeli hata, stack trace sızmaz); CORS web origin allow-list | T0.3 | `11` §4,§6, `13` §5 | [x] |
 | T0.14 | **Docker temeli:** API için Dockerfile (non-root, minimal imaj) + `docker-compose.yml` (api + postgres); lokal `docker compose up` çalışıyor | T0.4 | `02` §6, `11` §8 | [ ] |
 
 **Faz 0 DoD:** **Web** `/api/health`'i gösteriyor; `dotnet ef migrations` ile DB
