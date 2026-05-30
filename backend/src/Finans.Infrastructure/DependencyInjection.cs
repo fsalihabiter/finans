@@ -1,3 +1,4 @@
+using Finans.Application.Portfolio;
 using Finans.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,10 @@ public static class DependencyInjection
     {
         services.AddDbContext<FinansDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        // Kur sağlayıcı DbContext'e bağlı → scoped. Saf hesap servisi durumsuz → singleton.
+        services.AddScoped<IFxRateProvider, EfFxRateProvider>();
+        services.AddSingleton<PortfolioCalculationService>();
 
         return services;
     }

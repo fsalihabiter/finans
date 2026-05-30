@@ -7,9 +7,8 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ → **Faz 1 — Portföy Takip MVP** · **WEB ÖNCELİKLİ**
 
 ## Sıradaki (öncelik sırası)
-1. **T1.3** — `CurrencyConversionService` + FxRates (elle kur) + test
-2. **T1.4** — Reel getiri (enflasyon verisi bağlama) + test · **T1.5** ort. maliyet türetimi (tx→AvgCost) + test
-3. **T1.6** — Holdings CRUD endpoint + DTO + validasyon · **T1.7** `GET /portfolio/summary`
+1. **T1.4** — Reel getiri (enflasyon verisi bağlama) + test · **T1.5** ort. maliyet türetimi (tx→AvgCost) + test
+2. **T1.6** — Holdings CRUD endpoint + DTO + validasyon · **T1.7** `GET /portfolio/summary`
 
 > Faz 1 ayrıca: T1.8 BES, T1.9 settings, T1.10 shared API/format hook, T1.11-14 web
 > (AppShell/HeroCard/Donut/Holdings/Ekle), T1.15 per-user kapsam. Mobil **FAZ M**'de.
@@ -26,7 +25,9 @@
 - **T0.11**: test altyapısı — Sqlite integration fixture + Playwright iskeleti
   (sağlayıcı-duyarlı model); dotnet 13 + web 2 + shared 8 + e2e 1 yeşil — dal `feat/test-infra`
 - **T1.1+T1.2**: `PortfolioCalculationService` (§6 formülleri, saf/yan etkisiz) + 20 birim
-  testi (seed seti birebir, altın +%43, dağılım toplamı 1, reel getiri) — SC-01/02/05/06; backend 33 yeşil
+  testi (seed seti birebir, altın +%43, dağılım toplamı 1, reel getiri) — SC-01/02/05/06
+- **T1.3**: `CurrencyConverter` (saf, ters/çapraz kur, **bölmeyle tam hassasiyet**) +
+  `IFxRateProvider`/`EfFxRateProvider` (en güncel kur) + DI — SC-03 unit+integration; backend 46 yeşil
 
 ## Devam eden
 - (yok)

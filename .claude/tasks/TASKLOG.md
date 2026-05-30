@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-05-30 · `CurrencyConverter` + `IFxRateProvider` (EF) + test (T1.3)
+- **Görev(ler):** T1.3 (tamam) · Faz 1
+- **Ne yapıldı:**
+  - **Saf `CurrencyConverter`** (`Finans.Application/Portfolio/`): değişmez kur anlık
+    görüntüsü alan, I/O'suz, deterministik dönüşüm. Aynı pb → birim; doğrudan kur (×);
+    ters kur (÷); çapraz kur (pivot pb üzerinden iki adım). `Convert`/`TryConvert`/`RateFor`.
+  - **Hassasiyet kararı (NFR-1):** ters yön `1/Rate` saklanıp çarpılmaz — **bölme** ile
+    uygulanır. Aksi halde 96.000 ₺ → 1.999,99… $ çıkıyordu; finans uygulamasında kabul
+    edilemez. Çapraz kur de adım adım çarp/böl. Sıfır/negatif tırnak güvenlik için atlanır.
+  - **`IFxRateProvider`** (Application arayüzü) + **`EfFxRateProvider`** (Infrastructure):
+    her pb çifti için EN GÜNCEL tırnağı (AsOfUtc) yükler. EF `GroupBy().First()` SQL'e
+    çevrilemediğinden sıralı çekip bellekte gruplanır (FxRates küçük). DI: provider scoped,
+    `PortfolioCalculationService` singleton.
+- **Dokunulan dosyalar:** `Finans.Application/Portfolio/CurrencyConverter.cs`,
+  `Finans.Infrastructure/Persistence/EfFxRateProvider.cs`,
+  `Finans.Infrastructure/DependencyInjection.cs`,
+  `tests/Finans.Application.Tests/Portfolio/CurrencyConverterTests.cs`,
+  `tests/Finans.Integration.Tests/FxRateProviderTests.cs`.
+- **Test:** SC-03 unit (11 test: doğrudan/ters/çapraz, tam hassasiyet, bilinmeyen kur→hata/false,
+  güvensiz tırnak atlama) + integration (2 test: seed'den en güncel kur 48 seçilir, çapraz
+  EUR→USD=104). `dotnet test` **Application 31 + Integration 15 = 46 yeşil**.
+- **Karar/Not:** Converter saf; gerçek bağlama (USD varlığın summary'de TRY'ye çevrilmesi)
+  T1.7 endpoint'inde. Cache (anahtar pb çifti) T1.15/Faz 2'de.
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.4 reel getiri (enflasyon verisi bağlama) + T1.5 ort. maliyet türetimi (tx→AvgCost).
+
 ## 2026-05-30 · `PortfolioCalculationService` + birim testleri (T1.1 + T1.2) → FAZ 1 başladı
 - **Görev(ler):** T1.1 (tamam), T1.2 (tamam) · Faz 1 ilk görevi
 - **Ne yapıldı:**
