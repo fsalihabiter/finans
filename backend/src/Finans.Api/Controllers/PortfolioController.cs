@@ -10,11 +10,20 @@ namespace Finans.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class PortfolioController(IPortfolioService portfolio) : ControllerBase
+public sealed class PortfolioController(IPortfolioService portfolio, INudgeService nudges) : ControllerBase
 {
     /// <summary>GET /api/portfolio/summary — toplam değer/maliyet/getiri/dağılım.</summary>
     [HttpGet("summary")]
     public async Task<ActionResult<PortfolioSummaryDto>> GetSummary(
         [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
         Ok(await portfolio.GetSummaryAsync(baseCurrency, ct));
+
+    /// <summary>
+    /// GET /api/portfolio/nudges — kural tabanlı eğitici notlar (FR-2.4). Durumu açıklar,
+    /// çerçeve sunar; **yatırım tavsiyesi değildir** (CLAUDE.md §2, UI disclaimer ile gösterilir).
+    /// </summary>
+    [HttpGet("nudges")]
+    public async Task<ActionResult<NudgesResponse>> GetNudges(
+        [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
+        Ok(new NudgesResponse(await nudges.GetNudgesAsync(baseCurrency, ct)));
 }

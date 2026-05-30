@@ -141,7 +141,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [x] (T1.5: `DerivePosition` unit + seed tx→holding tutarlılık integration) |
 | SC-07 | FR-1.1/NFR-4 | Geçersiz girdi (miktar ≤ 0) → 400 + TR hata mesajı | Integration | [x] (T1.6; VALIDATION_ERROR + field quantity, integration) |
 | SC-08 | FR-2.5/NFR-5 | **Olay:** fiyat API'si çöker → son bilinen fiyat + `stale:true`, çökme yok | Integration | [x] (T2.3; çöken sağlayıcı → DB'den son-bilinen bayat tırnak, `HasStale`/`FailedSources`, bayat geçmişe yazılmaz, altın taze sürer) |
-| SC-09 | FR-2.4 | Nakit oranı eşik üstü → ilgili nudge tetiklenir | Unit + Integration | [ ] |
+| SC-09 | FR-2.4 | Kural tabanlı not eşiği aşınca tetiklenir (yoğunlaşma top-2 ≥%60 · tek varlık ≥%40 · nakit <%5); çeşitlenmiş/boş portföyde tetiklenmez; notlar **tavsiye içermez** | Unit + Integration | [x] (T2.5; `NudgeRuleEngine` 6 unit + `GET /portfolio/nudges` 2 e2e (seed→yoğunlaşma+düşük nakit; boş→0)) |
 | SC-10 | FR-3.2 | **Olay:** LLM bozuk JSON döner → fallback, 200, şema korunur | Unit + Integration | [ ] |
 | SC-11 | FR-3.3/NFR-2 | Commentary çıktısı yasaklı yönlendirme ("al/sat/yükselir") içermez | Unit (filtre) | [ ] |
 | SC-12 | FR-4.3 | Bilinmeyen sembol → anlamlı 404 hata | Integration | [ ] |

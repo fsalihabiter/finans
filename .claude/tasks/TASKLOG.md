@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-05-31 · `NudgeRuleEngine` — kural tabanlı eğitici notlar + `GET /nudges` (T2.5)
+- **Görev(ler):** T2.5 (tamam).
+- **Ne yapıldı:**
+  1. **Saf motor (Application/Portfolio `NudgeRuleEngine`):** portföy özetinden (hazır oranlar)
+     deterministik notlar üretir. Kurallar: **yoğunlaşma** (en büyük 2 varlık ≥%60), **tek varlık
+     ağırlığı** (en büyük ≥%40), **düşük nakit** (nakit <%5). Boş portföyde (değer ≤0) not yok.
+     Her not durumu betimler + çerçeve sunar — **somut al/sat yönlendirmesi YOK** (CLAUDE.md §2).
+  2. **Model:** `Nudge`(Id, Icon, Title, Body, `NudgeSeverity` Info/Warning) + `NudgesResponse`.
+     TR yüzde formatı yardımcı (≥%10 tam, altı 1 ondalık virgüllü: "%64" / "%0,7").
+  3. **Servis + uç nokta:** `INudgeService`→`NudgeService` (summary'i per-user alıp motordan geçirir;
+     yeni sayı üretmez) · `GET /api/portfolio/nudges` (PortfolioController, baseCurrency opsiyonel).
+  4. **DI:** `NudgeRuleEngine` singleton (saf) + `INudgeService` scoped.
+- **Dokunulan dosyalar:** yeni `src/Finans.Application/Portfolio/{NudgeRuleEngine,INudgeService}.cs`,
+  `src/Finans.Infrastructure/Services/NudgeService.cs`; düzenlenen `Infrastructure/DependencyInjection.cs`,
+  `Api/Controllers/PortfolioController.cs`; yeni testler
+  `tests/Finans.Application.Tests/Portfolio/NudgeRuleEngineTests.cs` (xUnit Assert — Application.Tests'te
+  FluentAssertions yok), `tests/Finans.Integration.Tests/NudgesApiTests.cs`; doküman `09` (SC-09), `08`.
+- **Test:** **SC-09** — 6 unit (yoğunlaşma fires/diversified-değil, tek-varlık eşik+ad, düşük-nakit
+  alt/üst, boş→0, **tavsiye-kelimesi yok**) + 2 e2e (seed→`concentration`+`low-cash`; admin boş→0,
+  per-user). `dotnet test` **yeşil: Application 45 + Integration 50 = 95**, 0 hata.
+- **Karar/Not:** Sayısal yargı koddadır (deterministik kural), LLM yorumu Faz 3. Eşikler `internal const`
+  (ileride seçenek). Notlar UI'da disclaimer altında gösterilecek (NFR-2, T2.6). 04 §5 nudge sözleşmesi
+  mevcut taslakla uyumlu (id/icon/title/body/severity).
+- **Durum:** tamamlandı
+- **Sıradaki:** **T2.6 Web** — `usePrices`/`useNudges` hook'ları; "Yenile" butonu + "son güncelleme/
+  yaklaşık (stale)" etiketi + Nudge kartı. **Web görünürlüğü burada kullanıcıya çıkar** (canlı doğrulama).
+
 ## 2026-05-31 · `GET /api/prices` + summary'i canlı fiyatla besle (T2.4)
 - **Görev(ler):** T2.4 (tamam).
 - **Ne yapıldı:**

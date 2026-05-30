@@ -33,6 +33,10 @@ public static class DependencyInjection
         services.AddScoped<IPortfolioService, PortfolioService>();
         services.AddScoped<ISettingsService, SettingsService>();
 
+        // Eğitici notlar (T2.5): saf kural motoru (singleton) + per-user servis (scoped).
+        services.AddSingleton<NudgeRuleEngine>();
+        services.AddScoped<INudgeService, NudgeService>();
+
         // Fiyat sağlayıcılar (Faz 2, T2.1): anahtarsız dış kaynaklar → typed HttpClient.
         // Frankfurter = döviz (ECB), Truncgil = gram altın. Üst katman (T2.2) IEnumerable
         // ile çözüp CanQuote'a göre yönlendirir; cache/fallback orada.

@@ -18,9 +18,9 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 2: `T2.5` `NudgeRuleEngine` + `GET /nudges`; ardından `T2.6` Web (yenile + "yaklaşık" + Nudge)**
-(Faz 0 ✅ · Faz 1 ✅ · **T2.1 ✅** sağlayıcılar · **T2.2 ✅** `PriceFetchService` · **T2.3 ✅** fallback ·
-**T2.4 ✅** `GET /api/prices` + CurrentPrice besleme). **Web görünürlüğü T2.6'da** kullanıcıya çıkar.
+**Sıradaki adım → FAZ 2: `T2.6` Web — yenile butonu + "son güncelleme/yaklaşık (stale)" + Nudge kartı**
+(Faz 0 ✅ · Faz 1 ✅ · **T2.1→T2.5 ✅** — sağlayıcılar, `PriceFetchService`, fallback, `GET /api/prices`,
+`NudgeRuleEngine`+`GET /nudges`). **Web görünürlüğü T2.6'da** kullanıcıya çıkar (fiyat + nudge zinciri).
 
 ---
 
@@ -91,7 +91,7 @@ testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.
 | T2.2 | `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz | T2.1 | `02` §2.2 | [x] (`IPriceFetchService.RefreshAsync`: CanQuote yönlendirme + sağlayıcı izolasyonu; 10 dk in-memory cache; yazım → `PriceSnapshots`+`FxRates`+`Holding.CurrentPrice`; SC-18 3 senaryo) |
 | T2.3 | Fallback: dış API çökünce son bilinen fiyat + `stale:true` | T2.2 | `04` §5, NFR-5 | [x] (sağlayıcı çökünce DB'den son-bilinen `IsStale` tırnak; `HasStale`/`FailedSources`; bayat geçmişe yazılmaz; çöken kaynak için kısa retry-TTL; SC-08) |
 | T2.4 | `GET /api/prices` + summary'i canlı fiyatla besle | T2.2 | `04` §5 | [x] (`PricesController` → `RefreshAsync`; `PricesResponse`/`PriceDto` (kind/currency/price/asOf/source/**stale**); `Holding.CurrentPrice` yazımı → summary/holdings besleme; e2e test stub sağlayıcıyla, ağsız) |
-| T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 | [ ] |
+| T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 | [x] (saf `NudgeRuleEngine`: yoğunlaşma/tek-varlık/düşük-nakit eşikleri → eğitici not, **tavsiye değil**; `Nudge`/`NudgesResponse`; `INudgeService`→summary; `GET /api/portfolio/nudges` per-user; SC-09 6 unit+2 e2e) |
 | T2.6 | **Web:** yenile + son güncelleme/"yaklaşık" etiketi + Nudge kartı | T2.4 | `13` §4 | [ ] |
 | T2.7 | **Redis cache katmanı:** fiyat/FX/summary cache Redis'e (dağıtık); stampede koruması; cache isabet metriği | T2.2 | `10` §3 | [ ] |
 | T2.8 | **Gözlemlenebilirlik yığını:** Compose'a Seq + Prometheus + Grafana; OTel metrikleri (RED + bağımlılık + cache); ilk dashboard'lar + alarmlar | T0.11 | `12` §2,§4,§6 | [ ] |
