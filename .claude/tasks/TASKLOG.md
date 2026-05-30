@@ -20,6 +20,34 @@
 
 ---
 
+## 2026-05-30 · `PortfolioCalculationService` + birim testleri (T1.1 + T1.2) → FAZ 1 başladı
+- **Görev(ler):** T1.1 (tamam), T1.2 (tamam) · Faz 1 ilk görevi
+- **Ne yapıldı:**
+  - **Saf hesaplama servisi** (`Finans.Application/Portfolio/`): CLAUDE.md §6 formülleri
+    tek yerde, yan etkisiz, I/O yok. Statik saf yardımcılar: `TotalCost`, `CurrentValue`,
+    `Profit`, `ReturnRatio`, `WeightedAverageCost`, `RealReturn` (Fisher). Toplayıcı
+    `CalculateSummary` (özet + dağılım, ops. enflasyonla reel getiri) ve `CalculateHoldings`
+    (kalem metrikleri + ağırlık). Tüm hesap `decimal`; yuvarlama yok (NFR-1).
+  - **Modeller** (`PortfolioModels.cs`): `HoldingInput`/`HoldingResult`/`PortfolioSummary`/
+    `AllocationSlice` — EF entity'sine bağımsız saf record'lar (04 §4 şekliyle uyumlu).
+  - **Null politikası:** fiyatsız/sıfır-maliyetli kalemde değer/kâr/getiri null; reel
+    getiri enflasyon yoksa null (04 §4 sözleşmesi).
+  - **20 birim testi:** seed seti BİREBİR (maliyet 422.970, değer 641.403, kâr +218.433,
+    +%51,6; altın +%43), dağılım ağırlıkları (04 §4: 0,405/0,436/0,150/0,009, toplam 1),
+    reel getiri formülü, kenar durumlar (boş portföy, fiyatsız kalem, sıfır maliyet).
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Portfolio/PortfolioModels.cs`,
+  `.../Portfolio/PortfolioCalculationService.cs`,
+  `backend/tests/Finans.Application.Tests/Portfolio/PortfolioCalculationServiceTests.cs`.
+- **Test:** SC-01 (unit ✓), SC-02 (✓), SC-05 (✓), SC-06 (saf çekirdek ✓) — `dotnet test`
+  **Application 20/20 + Integration 13/13 = 33 yeşil**. (SC-01 integration, SC-06 tx türetimi
+  sonraki görevlerde.)
+- **Karar/Not:** Servis tamamen saf (entity'siz record girdi) → repository/EF bağlama
+  T1.6/T1.7'ye bırakıldı. Faz 1 varsayımı: kalemler baz pb cinsinden fiyatlı; para birimi
+  dönüşümü (T1.3) girdiler servise verilmeden uygulanacak. `RealReturn`/`WeightedAverageCost`
+  saf çekirdekleri burada test edildi; veri bağlama T1.4/T1.5.
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.3 `CurrencyConversionService` + `FxRates` (elle kur) + test.
+
 ## 2026-05-30 · Test altyapısı tamam — Sqlite fixture + Playwright (T0.11) → FAZ 0 BİTTİ
 - **Görev(ler):** T0.11 (tamam) · dal `feat/test-infra` · **Faz 0 kapanışı**
 - **Ne yapıldı:**

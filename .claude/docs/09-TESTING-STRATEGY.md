@@ -133,12 +133,12 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 
 | SC | Gereksinim | Senaryo (özet) | Seviye | Durum |
 |----|-----------|----------------|--------|-------|
-| SC-01 | FR-1.3 | Altın kalemi eklenince değer/kâr/getiri doğru (40gr→260.000, +%43) | Unit + Integration | [ ] |
-| SC-02 | FR-1.3 | Çok varlıklı portföyde dağılım % toplamı 1,0 (±yuvarlama) | Unit | [ ] |
+| SC-01 | FR-1.3 | Altın kalemi eklenince değer/kâr/getiri doğru (40gr→260.000, +%43) | Unit + Integration | [~] (unit ✓ T1.2; integration → T1.7) |
+| SC-02 | FR-1.3 | Çok varlıklı portföyde dağılım % toplamı 1,0 (±yuvarlama) | Unit | [x] (T1.2) |
 | SC-03 | FR-1.4 | USD varlık TRY baz pb'ye güncel kurdan çevrilir | Unit + Integration | [ ] |
 | SC-04 | FR-1.5 | BES'te devlet katkısı kendi katkısından **ayrı** dönüyor | Integration | [ ] |
-| SC-05 | FR-1.6 | Reel getiri = (1+nominal)/(1+enflasyon)−1 doğru | Unit | [ ] |
-| SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [ ] |
+| SC-05 | FR-1.6 | Reel getiri = (1+nominal)/(1+enflasyon)−1 doğru | Unit | [x] (T1.2; servis çekirdeği — veri bağlama T1.4) |
+| SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [~] (saf çekirdek ✓ T1.2; tx türetimi → T1.5) |
 | SC-07 | FR-1.1/NFR-4 | Geçersiz girdi (miktar ≤ 0) → 400 + TR hata mesajı | Integration | [ ] |
 | SC-08 | FR-2.5/NFR-5 | **Olay:** fiyat API'si çöker → son bilinen fiyat + `stale:true`, çökme yok | Integration | [ ] |
 | SC-09 | FR-2.4 | Nakit oranı eşik üstü → ilgili nudge tetiklenir | Unit + Integration | [ ] |
