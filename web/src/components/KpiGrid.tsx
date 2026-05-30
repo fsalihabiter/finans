@@ -1,5 +1,6 @@
 import { formatCurrency, formatPercent } from "@finans/shared";
 import type { PortfolioSummary } from "@finans/shared";
+import { InfoTip } from "./InfoTip";
 
 function tone(v: number | null): string {
   if (v === null || v === 0) return "";
@@ -36,7 +37,13 @@ export function KpiGrid({
       </div>
 
       <div className="kpi">
-        <div className="k">Net Kâr / Zarar</div>
+        <div className="k">
+          Net Kâr / Zarar
+          <InfoTip label="Net kâr/zarar">
+            Güncel değer eksi toplam maliyet. Henüz satmasan da "kâğıt üstündeki"
+            kazanç/kaybını gösterir.
+          </InfoTip>
+        </div>
         <div className={`v tnum ${tone(netProfit)}`}>
           {profitSign}
           {formatCurrency(netProfit, baseCurrency)}
@@ -45,7 +52,13 @@ export function KpiGrid({
       </div>
 
       <div className="kpi">
-        <div className="k">Getiri</div>
+        <div className="k">
+          Getiri
+          <InfoTip label="Reel getiri">
+            Getiri, paranın yüzde kaç büyüdüğüdür. Reel getiri ise enflasyondan
+            arındırılmış halidir — satın alma gücün gerçekte arttı mı azaldı mı.
+          </InfoTip>
+        </div>
         <div className={`v tnum ${tone(returnRatio)}`}>
           {returnRatio === null ? "—" : formatPercent(returnRatio)}
         </div>

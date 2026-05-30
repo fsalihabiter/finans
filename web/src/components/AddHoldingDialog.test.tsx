@@ -44,8 +44,18 @@ describe("AddHoldingDialog", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  it("eksik zorunlu alanla Ekle butonu pasif", () => {
+  it("eksik zorunlu alanla Ekle butonu pasif + ipucu görünür", () => {
     renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
     expect(screen.getByRole("button", { name: "Ekle" })).toBeDisabled();
+    expect(screen.getByText(/Ad, miktar ve alış fiyatı zorunlu/)).toBeInTheDocument();
+  });
+
+  it("tür chip'i seçince birim ön ayarı güncellenir (BES → birim)", () => {
+    renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
+    // Başlangıçta Gold seçili → birim "gram".
+    expect(screen.getByLabelText("Birim")).toHaveValue("gram");
+    fireEvent.click(screen.getByRole("radio", { name: /BES/ }));
+    expect(screen.getByLabelText("Birim")).toHaveValue("birim");
+    expect(screen.getByRole("radio", { name: /BES/ })).toHaveAttribute("aria-checked", "true");
   });
 });

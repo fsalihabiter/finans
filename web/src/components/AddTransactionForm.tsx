@@ -13,10 +13,12 @@ export function AddTransactionForm({
   holdingId,
   currency,
   unit,
+  onDone,
 }: {
   holdingId: string;
   currency: CurrencyCode;
   unit: string;
+  onDone?: (type: TransactionType) => void;
 }) {
   const add = useAddTransaction(holdingId);
   const [type, setType] = useState<TransactionType>("Buy");
@@ -37,6 +39,7 @@ export function AddTransactionForm({
         onSuccess: () => {
           setQuantity("");
           setUnitPrice("");
+          onDone?.(type);
         },
       },
     );
@@ -44,8 +47,6 @@ export function AddTransactionForm({
 
   return (
     <form className="tx-form" onSubmit={onSubmit} aria-label="İşlem ekle">
-      <h2>İşlem ekle</h2>
-
       <div className="tx-type" role="group" aria-label="İşlem türü">
         <button
           type="button"

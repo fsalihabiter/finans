@@ -10,6 +10,11 @@ import { PortfolioPage } from "./routes/PortfolioPage.tsx";
 import { HoldingDetailPage } from "./routes/HoldingDetailPage.tsx";
 import { AnalysisPage } from "./routes/AnalysisPage.tsx";
 import { SettingsPage } from "./routes/SettingsPage.tsx";
+import { TransactionsPage } from "./routes/TransactionsPage.tsx";
+import { PerformancePage } from "./routes/PerformancePage.tsx";
+import { ScenarioPage } from "./routes/ScenarioPage.tsx";
+import { StocksPage } from "./routes/StocksPage.tsx";
+import { EducationPage } from "./routes/EducationPage.tsx";
 import { queryClient } from "./lib/queryClient.ts";
 import { applyTheme } from "./lib/applyTheme.ts";
 import "./index.css";
@@ -24,7 +29,12 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <PortfolioPage /> },
       { path: "holdings/:id", element: <HoldingDetailPage /> },
+      { path: "islemler", element: <TransactionsPage /> },
+      { path: "performans", element: <PerformancePage /> },
       { path: "analiz", element: <AnalysisPage /> },
+      { path: "senaryo", element: <ScenarioPage /> },
+      { path: "hisse", element: <StocksPage /> },
+      { path: "egitim", element: <EducationPage /> },
       { path: "ayarlar", element: <SettingsPage /> },
     ],
   },

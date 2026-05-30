@@ -1,18 +1,19 @@
-import { Disclaimer } from "../components/Disclaimer";
+import { ComingSoonPage } from "../components/ComingSoonPage";
 
 /**
- * Analiz sayfası — eğitici yorum kartları Faz 3'te (LLM). Disclaimer (NFR-2) bu
- * yüzeyte **her zaman** görünür — yorum içeriği gelmeden önce bile.
+ * Analiz — eğitici LLM yorum kartları Faz 3'te. Disclaimer (NFR-2) bu yüzeyde
+ * **her zaman** görünür (yorum içeriği gelmeden önce bile).
  */
 export function AnalysisPage() {
   return (
-    <section>
-      <h1>Analiz</h1>
-      <Disclaimer />
-      <p className="muted">
-        Eğitici yorum kartları (portföyünü sade dille açıklayan çerçeveler) Faz 3'te
-        burada gelecek.
-      </p>
-    </section>
+    <ComingSoonPage
+      kicker="Yapay zekâ destekli"
+      title="Analiz"
+      icon="✦"
+      heading="Portföyün ne anlatıyor?"
+      description="Hesaplar sistemde yapılır, yorum sade dille üretilir. Çeşitlendirme, yoğunlaşma, döviz maruziyeti ve reel getiri üzerine eğitici çerçeveler bu ekranda gelecek."
+      phase="Faz 3"
+      withDisclaimer
+    />
   );
 }

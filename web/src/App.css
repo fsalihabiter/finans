@@ -154,11 +154,23 @@
   color: var(--muted-2, #6f6557);
 }
 
+/* Tutarlı dikey ritim: her içerik sayfası bloklarını TEK gap (16px) ile dizer.
+   Blokların kendi margin'i yok → boşluklar her sayfada birebir aynı (tema uyumlu). */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .app-content {
   flex: 1;
   min-width: 0;
-  max-width: 1320px;
-  padding: 26px 34px 60px;
+  width: 100%;
+  /* İçerik 1320px sütunda ortalanır. --gutter, topbar'ın "full-bleed" olup (ana
+     alanın tüm genişliği) içeriğiyle hizalı kalması için de kullanılır: app-content
+     padding'i = topbar negatif margin'i → topbar tam app-content kadar yayılır. */
+  --gutter: max(34px, calc((100vw - 250px - 1320px) / 2));
+  padding: 0 var(--gutter) 60px;
 }
 
 /* ───── Topbar / sayfa başlığı ───── */
@@ -166,9 +178,21 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 22px;
   gap: 18px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* Full-bleed: ana alanın tüm genişliğine yayılır (negatif margin), iç içeriği
+     --gutter padding ile 1320 sütununa hizalanır → kaydırınca kesik dikdörtgen yok. */
+  padding: 20px var(--gutter) 14px;
+  margin-inline: calc(-1 * var(--gutter));
+  /* Atmosfer gradyanıyla tam uyum: renk tint'i YOK (düz bant oluşmasın) — yalnızca
+     backdrop blur. Kaydırılmadan: arkaplan olduğu gibi görünür (göze batmaz);
+     kaydırılınca alttaki içerik buzlu-cam gibi yumuşar, başlık okunaklı kalır. */
+  background: transparent;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 .topbar .greet-hi {
   font-size: 12.5px;
@@ -202,8 +226,7 @@
 .kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 16px;
+  gap: 16px;
 }
 .kpi {
   background: var(--panel, #1c1813);
@@ -276,13 +299,11 @@
   display: grid;
   grid-template-columns: 1.55fr 1fr;
   gap: 16px;
-  margin-bottom: 16px;
 }
 .grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
-  margin-bottom: 16px;
 }
 
 /* ───── Dağılım donut + lejant ───── */
@@ -388,7 +409,6 @@
   border: 1px solid rgba(224, 178, 85, 0.2);
   border-radius: 18px;
   padding: 15px 17px;
-  margin-top: 16px;
   display: flex;
   gap: 12px;
 }
@@ -503,7 +523,34 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-width: 720px;
+  max-width: 1100px;
+  padding-top: 22px;
+}
+/* Detay gövdesi: geniş ekranda 2 sütun (özet/metrik | işlem geçmişi).
+   İşlem/fiyat/katkı formları artık modalda — sayfada yoğunluk yok (#2). */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-top: 6px;
+}
+.detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+@media (max-width: 860px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .detail-back {
   font-size: 12.5px;
@@ -698,11 +745,25 @@
   flex: 1;
 }
 .tx-history {
-  margin: 0.5rem 0 1.25rem;
+  margin: 0;
 }
-.tx-history h2 {
-  font-size: 1rem;
-  margin-bottom: 0.6rem;
+/* Detay sağ sütununda dar alana sığsın (620px min-width'i kaldır, kompakt). */
+.tx-history .holdings-table {
+  min-width: 0;
+  font-size: 12.5px;
+}
+.tx-history .holdings-table th,
+.tx-history .holdings-table td {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.tx-history .holdings-table th:first-child,
+.tx-history .holdings-table td:first-child {
+  padding-left: 2px;
+}
+.tx-history .holdings-table th:last-child,
+.tx-history .holdings-table td:last-child {
+  padding-right: 2px;
 }
 
 /* Sil / ikincil butonlar */
@@ -723,7 +784,7 @@
 
 /* ───── Ayarlar ───── */
 .setgrp {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 .setgrp .gt {
   font-family: var(--font-display, Georgia, serif);
@@ -787,7 +848,7 @@
 
 /* ───── Disclaimer ───── */
 .disclaimer {
-  margin: 0 0 1rem;
+  margin: 0;
   padding: 11px 15px;
   font-size: 11.5px;
   color: var(--muted, #a89c89);
@@ -931,8 +992,57 @@
   cursor: default;
 }
 .btn-ghost {
-  background: transparent;
+  background: var(--panel-2, #241f18);
   color: var(--text, #f3ede2);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 13px;
+  padding: 0.6rem 1.2rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.16s;
+}
+.btn-ghost:hover {
+  border-color: var(--gold, #e0b255);
+  color: var(--gold, #e0b255);
+}
+
+/* Birincil / tehlikeli (dolu) buton — boş durum CTA, retry, onay diyaloğu. */
+.btn-primary {
+  appearance: none;
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: 13px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  background: linear-gradient(140deg, var(--gold, #e0b255), #a9762f);
+  color: #14110d;
+  box-shadow: 0 10px 24px -12px rgba(224, 178, 85, 0.7);
+}
+.btn-primary.lg {
+  padding: 0.8rem 1.6rem;
+  font-size: 0.95rem;
+  border-radius: 14px;
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+.btn-danger-solid {
+  appearance: none;
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: 13px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  background: var(--coral, #e58e6e);
+  color: #2a130c;
+}
+.btn-danger-solid:disabled,
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 /* ───── Yardımcılar ───── */
@@ -946,11 +1056,28 @@
 
 /* ───── Responsive ───── */
 @media (max-width: 1040px) {
+  /* Sidebar → off-canvas drawer; mobil üst bar görünür (display kuralı dosya
+     sonunda — base `display:none`'dan SONRA gelmeli, yoksa cascade onu ezer). */
   .app-sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    width: 270px;
+    max-width: 84vw;
+    transform: translateX(-100%);
+    transition: transform 0.24s ease;
+    box-shadow: 0 0 60px -10px rgba(0, 0, 0, 0.8);
+  }
+  .app-sidebar.open {
+    transform: none;
   }
   .app-content {
-    padding: 22px 16px 50px;
+    --gutter: 16px;
+    padding: 70px var(--gutter) 56px;
+  }
+  .topbar {
+    top: 56px;
   }
   .kpis {
     grid-template-columns: 1fr 1fr;
@@ -958,5 +1085,644 @@
   .grid-2,
   .grid-3 {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Dar ekran: pozisyon tablosu → kart düzeni (yatay kaydırma yerine). */
+@media (max-width: 640px) {
+  .kpis {
+    grid-template-columns: 1fr;
+  }
+  .holdings-table,
+  .holdings-table tbody,
+  .holdings-table tr {
+    display: block;
+    width: 100%;
+  }
+  .holdings-table {
+    min-width: 0;
+  }
+  .holdings-table thead {
+    display: none;
+  }
+  .holdings-table tbody tr {
+    background: var(--panel-2, #241f18);
+    border: 1px solid var(--line, #322b22);
+    border-radius: 14px;
+    padding: 6px 14px;
+    margin-bottom: 10px;
+  }
+  .holdings-table tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    text-align: right;
+    border-bottom: 1px solid var(--line, #322b22);
+  }
+  .holdings-table tbody tr td:first-child,
+  .holdings-table tbody tr td:last-child {
+    border-bottom: 1px solid var(--line, #322b22);
+  }
+  .holdings-table tbody tr td:last-child {
+    border-bottom: none;
+  }
+  .holdings-table td.num {
+    text-align: right;
+  }
+  .holdings-table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted-2, #6f6557);
+    font-weight: 600;
+  }
+  .holdings-table td[data-label="Varlık"]::before {
+    display: none;
+  }
+  .holdings-table td[data-label="Varlık"] {
+    justify-content: flex-start;
+  }
+  .weight-bar {
+    min-width: 120px;
+  }
+}
+
+/* Hareketi azalt tercihi (a11y). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ───── Erişilebilirlik: içeriğe atla ───── */
+.skip-link {
+  position: fixed;
+  top: -60px;
+  left: 12px;
+  z-index: 100;
+  background: var(--gold, #e0b255);
+  color: #14110d;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: top 0.18s;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+/* Görünür odak halkası (klavye) — buton/link/chip. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[role="radio"]:focus-visible,
+.app-nav a:focus-visible {
+  outline: 2px solid var(--gold, #e0b255);
+  outline-offset: 2px;
+}
+
+/* ───── Mobil üst bar + drawer ───── */
+.mobile-topbar {
+  display: none; /* yalnızca ≤1040px'te görünür */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 14px;
+  background: rgba(20, 17, 13, 0.86);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line, #322b22);
+}
+.mobile-topbar .mobile-brand {
+  padding: 0;
+  flex: 1;
+}
+.hamburger {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  border: 1px solid var(--line, #322b22);
+  background: var(--panel, #1c1813);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hamburger span {
+  width: 17px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text, #f3ede2);
+}
+.mobile-add {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  border: none;
+  background: linear-gradient(140deg, var(--gold, #e0b255), #a9762f);
+  color: #1a140a;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(8, 6, 4, 0.6);
+  backdrop-filter: blur(2px);
+}
+body.drawer-lock {
+  overflow: hidden;
+}
+
+/* ───── HealthBadge ───── */
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--muted-2, #6f6557);
+}
+.health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted-2, #6f6557);
+  flex-shrink: 0;
+}
+.health-badge[data-tone="ok"] .health-dot {
+  background: var(--mint, #5fc9a0);
+}
+.health-badge[data-tone="error"] .health-dot {
+  background: var(--coral, #e58e6e);
+}
+.health-badge[data-tone="pending"] .health-dot {
+  background: var(--gold, #e0b255);
+}
+
+/* ───── Veri tazeliği etiketi ───── */
+.freshness {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted, #a89c89);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 100px;
+  padding: 5px 11px;
+  font-variant-numeric: tabular-nums;
+}
+.freshness .fresh-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mint, #5fc9a0);
+}
+
+/* ───── Toast ───── */
+.toast-region {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 36px));
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  border-left-width: 3px;
+  border-radius: 13px;
+  padding: 12px 14px;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+  animation: toast-in 0.22s ease;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.toast-ic {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.toast-success { border-left-color: var(--mint, #5fc9a0); }
+.toast-success .toast-ic { background: rgba(95, 201, 160, 0.16); color: var(--mint, #5fc9a0); }
+.toast-error { border-left-color: var(--coral, #e58e6e); }
+.toast-error .toast-ic { background: rgba(229, 142, 110, 0.16); color: var(--coral, #e58e6e); }
+.toast-info { border-left-color: var(--gold, #e0b255); }
+.toast-info .toast-ic { background: rgba(224, 178, 85, 0.16); color: var(--gold, #e0b255); }
+.toast-msg {
+  flex: 1;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text, #f3ede2);
+}
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--muted, #a89c89);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.toast-close:hover {
+  color: var(--text, #f3ede2);
+}
+
+/* ───── Hata durumu (retry) ───── */
+.state-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(229, 142, 110, 0.07);
+  border: 1px solid rgba(229, 142, 110, 0.28);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+.state-error p {
+  margin: 0;
+  color: var(--text, #f3ede2);
+  font-size: 13.5px;
+}
+
+/* ───── Onay diyaloğu ───── */
+.modal.confirm {
+  max-width: 420px;
+}
+.confirm-body {
+  padding: 22px 22px 8px;
+}
+.confirm-body h2 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+.confirm-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted, #a89c89);
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px 20px;
+}
+
+/* ───── Skeleton (yükleme iskeleti) ───── */
+.skel {
+  display: block;
+  background: linear-gradient(100deg, #221d16 30%, #2e2820 50%, #221d16 70%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes skel-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.skel-mt {
+  margin-top: 10px;
+}
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line, #322b22);
+}
+.skel-row:last-child {
+  border-bottom: none;
+}
+
+/* ───── Boş durum ───── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 48px 24px;
+  background: var(--panel, #1c1813);
+  border: 1px dashed var(--line, #322b22);
+  border-radius: 20px;
+}
+.empty-ic {
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  background: rgba(224, 178, 85, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  margin-bottom: 4px;
+}
+.empty-title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 19px;
+  margin: 0;
+}
+.empty-desc {
+  max-width: 380px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted, #a89c89);
+}
+.empty-action {
+  margin-top: 8px;
+}
+
+/* ───── Info-tip (eğitici ipucu) ───── */
+.infotip {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+.infotip-btn {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid var(--muted-2, #6f6557);
+  background: transparent;
+  color: var(--muted, #a89c89);
+  font-size: 9px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  cursor: help;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.infotip-btn:hover {
+  border-color: var(--gold, #e0b255);
+  color: var(--gold, #e0b255);
+}
+.infotip-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  width: 230px;
+  background: var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 12px;
+  padding: 11px 13px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #d8cebd;
+  text-align: left;
+  letter-spacing: normal;
+  text-transform: none;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.85);
+}
+
+/* ───── Form yardımcıları (tür chip'leri / ipucu) ───── */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.field-label {
+  color: var(--muted, #a89c89);
+  font-size: 0.8rem;
+}
+.form-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted-2, #6f6557);
+}
+
+/* ───── Tehlikeli alan (detayda sil) ───── */
+.danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: rgba(229, 142, 110, 0.05);
+  border: 1px solid rgba(229, 142, 110, 0.22);
+  border-radius: 16px;
+}
+.dz-title {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.dz-desc {
+  font-size: 11.5px;
+  color: var(--muted, #a89c89);
+  margin-top: 2px;
+}
+
+/* ───── "Yakında" (Analiz placeholder) ───── */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 44px 24px;
+  background: linear-gradient(150deg, #2a2114, #1b1610);
+  border: 1px solid #3a3024;
+  border-radius: 20px;
+}
+.cs-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 17px;
+  background: linear-gradient(140deg, var(--gold, #e0b255), #9c6f2e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #1a140a;
+  box-shadow: 0 8px 22px -8px rgba(224, 178, 85, 0.6);
+}
+.cs-title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 20px;
+  margin: 0;
+}
+.cs-desc {
+  max-width: 440px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--muted, #a89c89);
+}
+
+/* ───── Özel kaydırma çubuğu ───── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a241c transparent;
+}
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a241c;
+  border-radius: 8px;
+}
+
+/* ───── Genel modal kabuğu (işlem/fiyat/katkı vb.) ───── */
+.sheet-body {
+  padding: 21px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+/* Modal içindeki formlar panel chrome'unu bırakır (çift kart görünmesin). */
+.sheet-body .tx-form,
+.sheet-body .price-form,
+.price-form.bare {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+/* İkincil çerçeveli buton (detay aksiyonları). */
+.btn-ghost.outlined {
+  border: 1px solid var(--line, #322b22);
+  border-radius: 13px;
+  padding: 0.6rem 1.2rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-ghost.outlined:hover {
+  border-color: var(--gold, #e0b255);
+  color: var(--gold, #e0b255);
+}
+
+/* ───── Dönem sekmeleri (performans) ───── */
+.periods {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.periods button {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line, #322b22);
+  color: var(--muted, #a89c89);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: 0.18s;
+}
+.periods button:hover {
+  color: var(--text, #f3ede2);
+}
+.periods button.on {
+  background: rgba(224, 178, 85, 0.14);
+  border-color: var(--gold, #e0b255);
+  color: var(--gold, #e0b255);
+}
+
+/* Grafik yer tutucu (zaman serisi Faz 2'de canlı fiyatla birikecek). */
+.chart-frame {
+  position: relative;
+  min-height: 230px;
+  border-radius: 14px;
+  background:
+    linear-gradient(var(--line, #322b22) 1px, transparent 1px) 0 0 / 100% 57px,
+    var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.chart-frame .cf-empty {
+  text-align: center;
+  max-width: 320px;
+  padding: 20px;
+}
+.chart-frame .cf-empty .cf-ic {
+  font-size: 26px;
+}
+.chart-frame .cf-empty p {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted, #a89c89);
+}
+
+/* Performans: gerçek-veri kalem getiri çubukları (tüm zamanlar). */
+.perf-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.perf-bar .pb-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+.perf-bar .pb-name {
+  font-weight: 600;
+}
+.perf-track {
+  position: relative;
+  height: 8px;
+  border-radius: 6px;
+  background: #2a241c;
+  overflow: hidden;
+}
+.perf-track i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+}
+
+/* ───── Mobil üst bar görünürlüğü — DOSYA SONU (base display:none'dan sonra) ───── */
+@media (max-width: 1040px) {
+  .mobile-topbar {
+    display: flex;
   }
 }

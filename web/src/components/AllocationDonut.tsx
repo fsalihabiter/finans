@@ -18,11 +18,11 @@ export function AllocationDonut({
 }) {
   if (allocation.length === 0) return null;
 
-  let acc = 0;
-  const segments = allocation.map((slice) => {
+  // Her dilimin başlangıcı, önceki dilimlerin toplam yayı kadar kaydırılır.
+  // (Render sırasında değişken mutasyonundan kaçınılır — n küçük, varlık türü ≤ 6.)
+  const segments = allocation.map((slice, i) => {
     const length = slice.weight * CIRC;
-    const dashoffset = -acc;
-    acc += length;
+    const dashoffset = -allocation.slice(0, i).reduce((sum, s) => sum + s.weight * CIRC, 0);
     return { slice, length, dashoffset };
   });
 

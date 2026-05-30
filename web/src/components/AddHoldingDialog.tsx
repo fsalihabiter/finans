@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AssetType, CreateHoldingInput, CurrencyCode } from "@finans/shared";
 import { useCreateHolding } from "../lib/hooks";
+import { useToast } from "./Toast";
+import { ASSET_META } from "../lib/assetMeta";
 
 const ASSET_TYPES: { value: AssetType; label: string; unit: string }[] = [
   { value: "Gold", label: "Altın", unit: "gram" },
@@ -35,27 +37,51 @@ const INITIAL: FormState = {
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 /**
  * "Varlık Ekle" modalı (13 §4, FR-1.1) → POST /api/holdings. İlk alış işlemiyle
  * pozisyon oluşturur; backend ort. maliyeti işlemden türetir. Sayısal hesap YOK —
- * sadece girdi toplar. Hata zarfı (validasyon/çakışma) kullanıcıya gösterilir.
+ * sadece girdi toplar. Tür seçimi görsel chip'lerle; ilk alana autofocus, Tab
+ * odak tuzağı (a11y); dolu formda yanlışlıkla dışına tıklama kapatmaz (veri korunur).
  */
 export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const create = useCreateHolding();
+  const { notify } = useToast();
   const [form, setForm] = useState<FormState>(INITIAL);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
 
-  // Açılışta formu ve hatayı sıfırla; Escape ile kapat.
+  // Açılışta ilk alana odaklan. (Form durumu sıfırlamaya gerek yok: bileşen
+  // yalnızca açıkken mount edilir — her açılış taze state ile başlar.)
   useEffect(() => {
-    if (open) {
-      setForm(INITIAL);
-      create.reset();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) requestAnimationFrame(() => firstFieldRef.current?.focus());
   }, [open]);
 
+  // Escape ile kapat + Tab odak tuzağı (modal dışına çıkmasın).
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const items = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
+      ).filter((el) => el.offsetParent !== null);
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -79,6 +105,13 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
     Number.isFinite(unitPrice) &&
     unitPrice >= 0;
 
+  const dirty = JSON.stringify(form) !== JSON.stringify(INITIAL);
+
+  // Dolu formda yanlışlıkla overlay tıklamasıyla veri kaybını önle.
+  const onOverlayClick = () => {
+    if (!dirty) onClose();
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
@@ -90,12 +123,18 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
       unit: form.unit.trim(),
       transaction: { type: "Buy", quantity, unitPrice },
     };
-    create.mutate(input, { onSuccess: onClose });
+    create.mutate(input, {
+      onSuccess: () => {
+        notify(`${input.name} portföyüne eklendi.`, "success");
+        onClose();
+      },
+    });
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onOverlayClick}>
       <div
+        ref={dialogRef}
         className="modal"
         role="dialog"
         aria-modal="true"
@@ -107,21 +146,28 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
           <button type="button" className="modal-close" aria-label="Kapat" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={onSubmit} className="add-form">
-          <label>
-            Tür
-            <select
-              value={form.assetType}
-              onChange={(e) => onAssetTypeChange(e.target.value as AssetType)}
-            >
+          <div className="field-group">
+            <span className="field-label">Tür</span>
+            <div className="type-chips" role="radiogroup" aria-label="Varlık türü">
               {ASSET_TYPES.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
+                <button
+                  key={a.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={form.assetType === a.value}
+                  className={form.assetType === a.value ? "sel" : ""}
+                  onClick={() => onAssetTypeChange(a.value)}
+                >
+                  <span aria-hidden="true">{ASSET_META[a.value].icon}</span> {a.label}
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+          </div>
 
           <label>
             Ad
             <input
+              ref={firstFieldRef}
               value={form.name}
               onChange={(e) => set({ name: e.target.value })}
               placeholder="örn. Altın (gram)"
@@ -175,6 +221,10 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
             <p className="neg" role="alert">
               {create.error instanceof Error ? create.error.message : "Eklenemedi."}
             </p>
+          )}
+
+          {!valid && !create.isError && (
+            <p className="form-hint">Ad, miktar ve alış fiyatı zorunlu. Miktar 0'dan büyük olmalı.</p>
           )}
 
           <div className="add-actions">

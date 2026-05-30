@@ -1,6 +1,7 @@
 import type { CurrencyCode } from "@finans/shared";
 import { CurrencySelector } from "../components/CurrencySelector";
 import { Disclaimer } from "../components/Disclaimer";
+import { useToast } from "../components/Toast";
 import { useSettings, useUpdateSettings } from "../lib/hooks";
 
 /**
@@ -10,12 +11,16 @@ import { useSettings, useUpdateSettings } from "../lib/hooks";
 export function SettingsPage() {
   const settings = useSettings();
   const update = useUpdateSettings();
+  const { notify } = useToast();
 
   const onCurrencyChange = (currency: CurrencyCode) =>
-    update.mutate({ baseCurrency: currency });
+    update.mutate(
+      { baseCurrency: currency },
+      { onSuccess: () => notify(`Baz para birimi ${currency} olarak ayarlandı.`, "success") },
+    );
 
   return (
-    <section>
+    <section className="page">
       <div className="topbar">
         <div>
           <div className="greet-hi">Tercihler</div>

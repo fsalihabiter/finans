@@ -1,20 +1,35 @@
+import { Link } from "react-router-dom";
 import type { CurrencyCode } from "@finans/shared";
 import { KpiGrid } from "../components/KpiGrid";
 import { AllocationDonut } from "../components/AllocationDonut";
 import { PortfolioInsights } from "../components/PortfolioInsights";
 import { CurrencySelector } from "../components/CurrencySelector";
 import { HoldingsTable } from "../components/HoldingsTable";
+import { PortfolioSkeleton } from "../components/Skeleton";
+import { EmptyState } from "../components/EmptyState";
 import { useHoldings, usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
+import { useAppShell } from "../lib/appShell";
+import { currentGreeting } from "../lib/greeting";
+
+/** asOf zaman damgasını "14:32" / "—" olarak biçimler. */
+function freshness(asOf: string): string {
+  const d = new Date(asOf);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" }).format(d);
+}
 
 /**
  * Genel Bakış panosu (13 §4): KPI'lar + dağılım donut + içgörüler + pozisyon tablosu.
  * Tüm sayılar backend'den; burada yalnızca veri bağlama + tr-TR biçimleme (NFR-1/7).
+ * Durumlar: yükleniyor → iskelet, hata → tekrar dene, boş → CTA'lı boş durum.
  */
 export function PortfolioPage() {
   const settings = useSettings();
   const summary = usePortfolioSummary();
   const holdings = useHoldings();
   const updateSettings = useUpdateSettings();
+  const { openAddHolding } = useAppShell();
 
   const baseCurrency = settings.data?.baseCurrency;
   const onCurrencyChange = (currency: CurrencyCode) =>
@@ -23,14 +38,18 @@ export function PortfolioPage() {
   const holdingList = Array.isArray(holdings.data) ? holdings.data : [];
 
   return (
-    <section>
+    <section className="page">
       <div className="topbar">
         <div>
-          <div className="greet-hi">İyi günler,</div>
+          <div className="greet-hi">{currentGreeting()},</div>
           <h1>Genel Bakış</h1>
         </div>
         <div className="tools">
-          {summary.data && <span className="badge">{summary.data.allocation.length} varlık</span>}
+          {summary.data && (
+            <span className="freshness" title="Son güncelleme">
+              <span className="fresh-dot" aria-hidden="true" /> {freshness(summary.data.asOf)}
+            </span>
+          )}
           {baseCurrency && (
             <CurrencySelector
               value={baseCurrency}
@@ -41,11 +60,15 @@ export function PortfolioPage() {
         </div>
       </div>
 
-      {summary.isLoading && <p className="muted">Yükleniyor…</p>}
+      {summary.isLoading && <PortfolioSkeleton />}
+
       {summary.isError && (
-        <p className="neg" role="alert">
-          Portföy özeti yüklenemedi. Bağlantıyı kontrol edip tekrar deneyin.
-        </p>
+        <div className="state-error" role="alert">
+          <p>Portföy özeti yüklenemedi. Bağlantını kontrol edip tekrar dene.</p>
+          <button type="button" className="btn-primary" onClick={() => summary.refetch()}>
+            Tekrar dene
+          </button>
+        </div>
       )}
 
       {summary.data && (
@@ -54,9 +77,27 @@ export function PortfolioPage() {
 
           {summary.data.allocation.length > 0 ? (
             <>
-              <div className="card" style={{ marginBottom: 16 }}>
-                <div className="card-head"><h3>Varlık Dağılımı</h3></div>
-                <AllocationDonut allocation={summary.data.allocation} />
+              <div className="grid-2">
+                <div className="card">
+                  <div className="card-head"><h3>Varlık Dağılımı</h3></div>
+                  <AllocationDonut allocation={summary.data.allocation} />
+                </div>
+                <div className="card">
+                  <div className="card-head">
+                    <h3>Değer Seyri</h3>
+                    <Link to="/performans" className="mini link">Detay →</Link>
+                  </div>
+                  <div className="chart-frame">
+                    <div className="cf-empty">
+                      <div className="cf-ic" aria-hidden="true">🕒</div>
+                      <p>
+                        Zaman içindeki değer grafiği, canlı fiyat geçmişi biriktikçe burada
+                        görünecek (Faz 2). Şimdilik <b>Performans</b> sekmesinde kalem bazında
+                        getiriyi görebilirsin.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <PortfolioInsights summary={summary.data} holdings={holdingList} />
@@ -70,9 +111,21 @@ export function PortfolioPage() {
               </div>
             </>
           ) : (
-            <p className="muted empty-hint">
-              Henüz pozisyonun yok. Soldaki <b>＋ Varlık Ekle</b> ile başla.
-            </p>
+            <EmptyState
+              icon="📂"
+              title="Portföyün henüz boş"
+              description={
+                <>
+                  İlk varlığını ekle; toplam değer, dağılım ve getiri otomatik
+                  hesaplansın. Altın, döviz, hisse, fon, nakit ve BES ekleyebilirsin.
+                </>
+              }
+              action={
+                <button type="button" className="btn-primary lg" onClick={openAddHolding}>
+                  ＋ İlk varlığını ekle
+                </button>
+              }
+            />
           )}
         </>
       )}
