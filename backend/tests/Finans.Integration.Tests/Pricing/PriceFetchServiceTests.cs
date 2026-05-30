@@ -103,21 +103,41 @@ public sealed class PriceFetchServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task One_provider_failure_does_not_block_others()
+    public async Task Failed_provider_falls_back_to_last_known_stale_price()
     {
-        // Döviz sağlayıcı çöküyor; altın yine de yazılmalı, çökme olmamalı.
+        var usdRowsBefore = await _db.FxRates
+            .CountAsync(r => r.FromCurrency == CurrencyCode.USD && r.ToCurrency == CurrencyCode.TRY);
+
+        // Döviz sağlayıcı çöküyor; altın taze yazılmalı, döviz son-bilinene düşmeli, çökme yok.
         var result = await Build(
             GoldStub(7000m),
             new ThrowingPriceProvider("frankfurter-test", i => i.Kind == PriceInstrumentKind.Currency))
             .RefreshAsync();
 
-        result.FailedSources.Should().Contain("frankfurter-test");
-        result.Quotes.Should().OnlyContain(q => q.Instrument.Kind == PriceInstrumentKind.Gold);
+        result.FailedSources.Should().ContainSingle().Which.Should().Be("frankfurter-test");
+        result.HasStale.Should().BeTrue();
 
-        var gold = await _db.Holdings.SingleAsync(h => h.Asset.Symbol == "XAU");
-        gold.CurrentPrice.Should().Be(7000m);
-        // Döviz çöktü → USD CurrentPrice seed değerinde kaldı (48).
-        var usd = await _db.Holdings.SingleAsync(h => h.Asset.Symbol == "USD");
-        usd.CurrentPrice.Should().Be(48m);
+        // Altın: taze (canlı) tırnak.
+        var goldQuote = result.Quotes
+            .Should().ContainSingle(q => q.Instrument.Kind == PriceInstrumentKind.Gold).Subject;
+        goldQuote.IsStale.Should().BeFalse();
+        goldQuote.Price.Should().Be(7000m);
+
+        // Döviz: son bilinen (seed FxRate USD 48 · EUR 52) BAYAT olarak döndü.
+        var usdQuote = result.Quotes
+            .Should().ContainSingle(q => q.Instrument == PriceInstrument.ForCurrency(CurrencyCode.USD)).Subject;
+        usdQuote.IsStale.Should().BeTrue();
+        usdQuote.Price.Should().Be(48m);
+        result.Quotes.Should().Contain(q =>
+            q.Instrument == PriceInstrument.ForCurrency(CurrencyCode.EUR) && q.IsStale && q.Price == 52m);
+
+        // Bayat tırnak geçmişe YAZILMADI (yeni FxRate satırı yok).
+        var usdRowsAfter = await _db.FxRates
+            .CountAsync(r => r.FromCurrency == CurrencyCode.USD && r.ToCurrency == CurrencyCode.TRY);
+        usdRowsAfter.Should().Be(usdRowsBefore);
+
+        // Altın holding canlı (7000); USD holding son-bilinende (48) kaldı.
+        (await _db.Holdings.SingleAsync(h => h.Asset.Symbol == "XAU")).CurrentPrice.Should().Be(7000m);
+        (await _db.Holdings.SingleAsync(h => h.Asset.Symbol == "USD")).CurrentPrice.Should().Be(48m);
     }
 }

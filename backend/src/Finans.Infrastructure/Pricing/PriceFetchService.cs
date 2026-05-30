@@ -26,6 +26,9 @@ public sealed class PriceFetchService(
     internal const string CacheKey = "prices:refresh";
     internal static readonly TimeSpan Ttl = TimeSpan.FromMinutes(10);
 
+    /// <summary>Bir kaynak çökerse (bayat sonuç) kısa TTL ile cache'le → çöken kaynağı yakında yeniden dene.</summary>
+    internal static readonly TimeSpan StaleRetryTtl = TimeSpan.FromMinutes(1);
+
     public async Task<PriceRefreshResult> RefreshAsync(CancellationToken ct = default)
     {
         if (cache.TryGetValue(CacheKey, out PriceRefreshResult? cached) && cached is not null)
@@ -51,9 +54,11 @@ public sealed class PriceFetchService(
         if (assetsByInstrument.Count == 0)
             return CacheAndReturn(new PriceRefreshResult([], refreshedAt, FromCache: false, FailedSources: []));
 
-        // 2) Sağlayıcılara CanQuote'a göre yönlendir; her sağlayıcı izole.
+        // 2) Sağlayıcılara CanQuote'a göre yönlendir; her sağlayıcı izole. Çökerse → son
+        //    bilinen fiyattan bayat (stale) tırnak üret (T2.3, NFR-5) — uygulama çökmez.
         var instruments = assetsByInstrument.Keys.ToList();
-        var quotes = new List<PriceQuote>();
+        var fresh = new List<PriceQuote>();
+        var stale = new List<PriceQuote>();
         var failed = new List<string>();
         foreach (var provider in providers)
         {
@@ -62,25 +67,77 @@ public sealed class PriceFetchService(
                 continue;
             try
             {
-                quotes.AddRange(await provider.GetQuotesAsync(handled, ct));
+                fresh.AddRange(await provider.GetQuotesAsync(handled, ct));
             }
             catch (Exception ex)
             {
                 failed.Add(provider.Source);
                 logger.LogWarning(ex,
-                    "Fiyat sağlayıcı {Source} başarısız; bu turda atlanıyor (fallback T2.3).", provider.Source);
+                    "Fiyat sağlayıcı {Source} başarısız; son bilinen fiyata düşülüyor (stale).", provider.Source);
+                stale.AddRange(await LoadLastKnownAsync(handled, assetsByInstrument, ct));
             }
         }
 
-        // 3) Kalıcılaştır: snapshot (geçmiş) + fxrate (converter) + holding.CurrentPrice (okuma yolu).
-        await PersistAsync(quotes, assetsByInstrument, refreshedAt, ct);
+        // 3) Kalıcılaştır: yalnız TAZE tırnaklar → snapshot (geçmiş) + fxrate (converter) +
+        //    holding.CurrentPrice (okuma yolu). Bayat tırnak zaten son-bilineni taşır → yazılmaz.
+        await PersistAsync(fresh, assetsByInstrument, refreshedAt, ct);
 
-        return CacheAndReturn(new PriceRefreshResult(quotes, refreshedAt, FromCache: false, FailedSources: failed));
+        var result = new PriceRefreshResult(
+            [.. fresh, .. stale], refreshedAt, FromCache: false, FailedSources: failed);
+
+        // Bir kaynak çöktüyse kısa TTL → yakında yeniden dene; aksi halde tam TTL.
+        return CacheAndReturn(result, failed.Count == 0 ? Ttl : StaleRetryTtl);
     }
 
-    private PriceRefreshResult CacheAndReturn(PriceRefreshResult result)
+    private PriceRefreshResult CacheAndReturn(PriceRefreshResult result, TimeSpan? ttl = null)
     {
-        cache.Set(CacheKey, result, Ttl);
+        cache.Set(CacheKey, result, ttl ?? Ttl);
+        return result;
+    }
+
+    /// <summary>
+    /// Çöken sağlayıcının enstrümanları için DB'deki <b>son bilinen</b> değeri okuyup bayat
+    /// (<c>IsStale=true</c>) tırnak üretir: döviz → en güncel <c>FxRate</c>; altın → en güncel
+    /// <c>PriceSnapshot</c>. Hiç geçmiş yoksa o enstrüman atlanır (loglanır).
+    /// </summary>
+    private async Task<List<PriceQuote>> LoadLastKnownAsync(
+        IReadOnlyCollection<PriceInstrument> instruments,
+        IReadOnlyDictionary<PriceInstrument, List<Asset>> assetsByInstrument,
+        CancellationToken ct)
+    {
+        var result = new List<PriceQuote>();
+        foreach (var instrument in instruments)
+        {
+            if (instrument.Kind == PriceInstrumentKind.Currency)
+            {
+                var from = instrument.Currency;
+                var latest = await db.FxRates
+                    .Where(r => r.FromCurrency == from && r.ToCurrency == CurrencyCode.TRY)
+                    .OrderByDescending(r => r.AsOfUtc).ThenByDescending(r => r.CreatedAtUtc)
+                    .FirstOrDefaultAsync(ct);
+                if (latest is not null)
+                    result.Add(new PriceQuote(
+                        instrument, latest.Rate, CurrencyCode.TRY, latest.AsOfUtc, latest.Source, IsStale: true));
+                else
+                    logger.LogWarning("Son bilinen FX yok: {From}→TRY; bayat tırnak üretilemedi.", from);
+            }
+            else // Gold
+            {
+                if (!assetsByInstrument.TryGetValue(instrument, out var assetsForInst) || assetsForInst.Count == 0)
+                    continue;
+                var assetIds = assetsForInst.Select(a => a.Id).ToList();
+                var pricingCcy = assetsForInst[0].PricingCurrency;
+                var latest = await db.PriceSnapshots
+                    .Where(p => assetIds.Contains(p.AssetId))
+                    .OrderByDescending(p => p.AsOfUtc).ThenByDescending(p => p.CreatedAtUtc)
+                    .FirstOrDefaultAsync(ct);
+                if (latest is not null)
+                    result.Add(new PriceQuote(
+                        instrument, latest.Price, pricingCcy, latest.AsOfUtc, latest.Source, IsStale: true));
+                else
+                    logger.LogWarning("Son bilinen altın fiyatı yok; bayat tırnak üretilemedi.");
+            }
+        }
         return result;
     }
 
@@ -90,12 +147,14 @@ public sealed class PriceFetchService(
         DateTime nowUtc,
         CancellationToken ct)
     {
-        if (quotes.Count == 0)
+        // Yalnız taze tırnaklar yazılır; bayat (son-bilinen) tırnak geçmişi kirletmez.
+        var freshQuotes = quotes.Where(q => !q.IsStale).ToList();
+        if (freshQuotes.Count == 0)
             return;
 
         var priceByAsset = new Dictionary<Guid, decimal>();
 
-        foreach (var quote in quotes)
+        foreach (var quote in freshQuotes)
         {
             if (!assetsByInstrument.TryGetValue(quote.Instrument, out var quoteAssets))
                 continue;

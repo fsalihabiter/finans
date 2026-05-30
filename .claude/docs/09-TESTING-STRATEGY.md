@@ -140,7 +140,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-05 | FR-1.6 | Reel getiri = (1+nominal)/(1+enflasyon)−1 doğru | Unit | [x] (T1.2 çekirdek + T1.4 enflasyon verisi bağlama, integration) |
 | SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [x] (T1.5: `DerivePosition` unit + seed tx→holding tutarlılık integration) |
 | SC-07 | FR-1.1/NFR-4 | Geçersiz girdi (miktar ≤ 0) → 400 + TR hata mesajı | Integration | [x] (T1.6; VALIDATION_ERROR + field quantity, integration) |
-| SC-08 | FR-2.5/NFR-5 | **Olay:** fiyat API'si çöker → son bilinen fiyat + `stale:true`, çökme yok | Integration | [ ] |
+| SC-08 | FR-2.5/NFR-5 | **Olay:** fiyat API'si çöker → son bilinen fiyat + `stale:true`, çökme yok | Integration | [x] (T2.3; çöken sağlayıcı → DB'den son-bilinen bayat tırnak, `HasStale`/`FailedSources`, bayat geçmişe yazılmaz, altın taze sürer) |
 | SC-09 | FR-2.4 | Nakit oranı eşik üstü → ilgili nudge tetiklenir | Unit + Integration | [ ] |
 | SC-10 | FR-3.2 | **Olay:** LLM bozuk JSON döner → fallback, 200, şema korunur | Unit + Integration | [ ] |
 | SC-11 | FR-3.3/NFR-2 | Commentary çıktısı yasaklı yönlendirme ("al/sat/yükselir") içermez | Unit (filtre) | [ ] |

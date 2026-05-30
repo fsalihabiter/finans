@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-05-31 · Fallback — dış API çökünce son bilinen fiyat + `stale` (T2.3)
+- **Görev(ler):** T2.3 (tamam). T2.2'nin `FailedSources` izolasyon kancası üstüne kuruldu.
+- **Ne yapıldı:**
+  1. **`PriceQuote.IsStale`** (varsayılan `false`) — sağlayıcılar canlı tırnağı `false` üretir
+     (mevcut çağrılar değişmedi); fallback `true` işaretler. **`PriceRefreshResult.HasStale`** türetilmiş.
+  2. **Fallback (`PriceFetchService`):** bir sağlayıcı çökünce (catch) o sağlayıcının enstrümanları
+     için **DB'den son bilinen** değer okunur (`LoadLastKnownAsync`): döviz → en güncel `FxRate`,
+     altın → en güncel `PriceSnapshot` → `IsStale=true` tırnak. Hiç geçmiş yoksa enstrüman atlanır (log).
+  3. **Bayat yazılmaz:** `PersistAsync` yalnız taze tırnağı yazar (savunmacı `!IsStale` filtre) →
+     bayat değer geçmişi/CurrentPrice'ı kirletmez; sonuçta yalnız **gösterim** için döner.
+  4. **Kısa retry-TTL:** bir kaynak çöktüyse sonuç **1 dk** cache'lenir (10 dk yerine) → çöken
+     kaynak yakında yeniden denenir; tüm kaynaklar sağlıklıysa tam 10 dk.
+  5. **Çökme yok:** sağlam kaynak (altın) taze yazmayı sürdürür; uygulama akışı kesilmez (NFR-5).
+- **Dokunulan dosyalar:** `src/Finans.Application/Pricing/{PriceQuote,IPriceFetchService}.cs`,
+  `src/Finans.Infrastructure/Pricing/PriceFetchService.cs`; test
+  `tests/Finans.Integration.Tests/Pricing/PriceFetchServiceTests.cs` (izolasyon testi fallback'e
+  güncellendi); doküman `09` (SC-08 [x]), `08-BACKLOG.md`.
+- **Test:** **SC-08** — döviz sağlayıcı çöker → altın taze (7000), USD/EUR son-bilinen bayat (48/52),
+  `HasStale`/`FailedSources` doğru, yeni FxRate yazılmadı, CurrentPrice son-bilinende. `dotnet test`
+  **yeşil: Application 39 + Integration 46 = 85**, 0 hata.
+- **Karar/Not:** Stale = "son bilinen, canlı kaynak ulaşılamadı"; geçmişe yazılmaz (yanlış gözlem
+  olur). Çöken kaynakta kısa TTL bilinçli (uzun TTL bayatı kilitlerdi). TTL süresinin kendisi
+  zaman-bağımlı → birim testte doğrulanmadı (MemoryCache saati enjekte gerektirir); davranış belgelendi.
+- **Durum:** tamamlandı
+- **Sıradaki:** T2.4 — `GET /api/prices` (RefreshAsync'i tetikler; `stale`/`asOf`/`source` yüzeye çıkar)
+  + summary'i canlı fiyatla besle. **Web görünürlüğü burada başlar** (kullanıcıya gösterilecek).
+
 ## 2026-05-31 · `PriceFetchService` — canlı fiyat orkestrasyonu + cache + yazım (T2.2)
 - **Görev(ler):** T2.2 (tamam).
 - **Ne yapıldı:**

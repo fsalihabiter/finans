@@ -15,11 +15,16 @@ public interface IPriceFetchService
 
 /// <summary>
 /// Bir tazeleme turunun sonucu. <paramref name="FromCache"/> ise dış API'ye gidilmedi
-/// (TTL içinde). <paramref name="FailedSources"/> bu turda çağrısı başarısız olan
-/// sağlayıcı anahtarlarıdır (fallback/stale ele alımı T2.3).
+/// (TTL içinde). <paramref name="FailedSources"/> bu turda çağrısı başarısız olan sağlayıcı
+/// anahtarlarıdır; bunların enstrümanları <see cref="PriceQuote.IsStale"/> son-bilinen
+/// tırnaklarla doldurulur (T2.3, NFR-5). <see cref="HasStale"/> en az bir bayat fiyat varsa.
 /// </summary>
 public sealed record PriceRefreshResult(
     IReadOnlyList<PriceQuote> Quotes,
     DateTime RefreshedAtUtc,
     bool FromCache,
-    IReadOnlyList<string> FailedSources);
+    IReadOnlyList<string> FailedSources)
+{
+    /// <summary>Sonuçta en az bir bayat (son-bilinen) fiyat var mı?</summary>
+    public bool HasStale => Quotes.Any(q => q.IsStale);
+}

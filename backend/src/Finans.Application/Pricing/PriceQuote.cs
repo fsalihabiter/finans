@@ -14,9 +14,15 @@ namespace Finans.Application.Pricing;
 /// <param name="QuoteCurrency">Fiyatın ifade edildiği para birimi (Faz 2: TRY).</param>
 /// <param name="AsOfUtc">Fiyatın geçerli olduğu an (kaynaktan; yoksa çekim anı).</param>
 /// <param name="Source">Kaynak anahtarı (<c>PriceSnapshot.Source</c>'a yazılır; örn. "frankfurter").</param>
+/// <param name="IsStale">
+/// Dış kaynak ulaşılamadığında <b>son bilinen</b> fiyattan üretilen fallback tırnağı (T2.3, NFR-5).
+/// Sağlayıcılar canlı tırnağı <c>false</c> üretir; üst katman fallback'te <c>true</c> işaretler.
+/// Stale tırnak geçmişe (snapshot/fxrate) <b>yazılmaz</b>; yalnız gösterim/uyarı içindir.
+/// </param>
 public sealed record PriceQuote(
     PriceInstrument Instrument,
     decimal Price,
     CurrencyCode QuoteCurrency,
     DateTime AsOfUtc,
-    string Source);
+    string Source,
+    bool IsStale = false);

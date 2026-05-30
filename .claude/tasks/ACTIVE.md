@@ -7,14 +7,13 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ · ✅ **Faz 1 — Portföy Takip MVP BİTTİ** → **Faz 2 — Canlı fiyat + nudge**
 
 ## Sıradaki (öncelik sırası) — Faz 2
-1. **T2.3** — Fallback: dış API çökünce son bilinen fiyat + `stale:true` (NFR-5, SC-08).
-   Kanca hazır: `PriceFetchService` zaten sağlayıcı çökmesini izole edip `FailedSources` döner.
-2. **T2.4** — `GET /api/prices` + summary'i canlı fiyatla besle · **T2.5** `NudgeRuleEngine` + `GET /nudges`
-3. **T2.6** — Web: yenile + "yaklaşık" etiketi + Nudge kartı
+1. **T2.4** — `GET /api/prices` (RefreshAsync'i tetikler; `stale`/`asOf`/`source` yüzeye) + summary'i
+   canlı fiyatla besle. **← Web görünürlüğü burada başlar.** · **T2.5** `NudgeRuleEngine` + `GET /nudges`
+2. **T2.6** — Web: yenile butonu + "son güncelleme/yaklaşık" etiketi + Nudge kartı
 
-> ✅ **T2.1+T2.2 bitti** — sağlayıcılar (Frankfurter döviz + Truncgil altın, anahtarsız) +
-> `PriceFetchService` (CanQuote yönlendirme + 10 dk cache + `PriceSnapshots`/`FxRates`/`Holding.CurrentPrice`
-> yazımı + sağlayıcı izolasyonu). Bkz. TASKLOG 2026-05-31.
+> ✅ **T2.1+T2.2+T2.3 bitti** — sağlayıcılar (Frankfurter+Truncgil, anahtarsız) + `PriceFetchService`
+> (CanQuote yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) + fallback (çöken kaynakta
+> son-bilinen `stale`, çökme yok). Bkz. TASKLOG 2026-05-31.
 > Altyapı (Faz 2 boyunca): T2.7 Redis cache · T2.8 Seq/Prometheus/Grafana · T2.9 reverse proxy+rate limit.
 
 ## Faz 1 tamamlananlar (özet)
@@ -41,6 +40,8 @@
 - **T2.2:** `PriceFetchService` (`IPriceFetchService.RefreshAsync`) — CanQuote yönlendirme + sağlayıcı
   izolasyonu (`FailedSources`); 10 dk in-memory cache (`prices:refresh`); yazım → `PriceSnapshots`
   (geçmiş) + `FxRates` (converter) + `Holding.CurrentPrice` (okuma yolu, global). SC-18 (3 senaryo).
+- **T2.3:** Fallback — sağlayıcı çökünce DB'den son-bilinen `PriceQuote.IsStale` tırnak (`HasStale`);
+  bayat geçmişe yazılmaz; çöken kaynakta kısa retry-TTL (1 dk). Çökme yok (NFR-5). SC-08.
 
 ## Devam eden / Bloke
 - (yok)
