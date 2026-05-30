@@ -7,6 +7,7 @@ import "@fontsource-variable/fraunces";
 import "@fontsource-variable/hanken-grotesk";
 import App from "./App.tsx";
 import { PortfolioPage } from "./routes/PortfolioPage.tsx";
+import { HoldingDetailPage } from "./routes/HoldingDetailPage.tsx";
 import { AnalysisPage } from "./routes/AnalysisPage.tsx";
 import { queryClient } from "./lib/queryClient.ts";
 import { applyTheme } from "./lib/applyTheme.ts";
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <PortfolioPage /> },
+      { path: "holdings/:id", element: <HoldingDetailPage /> },
       { path: "analiz", element: <AnalysisPage /> },
     ],
   },

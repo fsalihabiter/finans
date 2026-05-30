@@ -7,6 +7,14 @@ import type { CurrencyCode } from "../types/index";
 const CURRENCY_FRACTION_DIGITS = 2;
 
 /**
+ * Sade sayı (miktar vb.) tr-TR biçimi: binlik `.`, ondalık `,`, sondaki sıfırlar atılır.
+ * Örn. formatNumber(2000) → "2.000" · formatNumber(40.5) → "40,5"
+ */
+export function formatNumber(value: number, maxFractionDigits = 4): string {
+  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: maxFractionDigits }).format(value);
+}
+
+/**
  * Para tutarını tr-TR biçiminde döndürür (binlik `.`, ondalık `,`).
  * Örn. formatCurrency(422970.5, "TRY") → "₺422.970,50"
  */

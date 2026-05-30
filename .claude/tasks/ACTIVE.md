@@ -7,9 +7,8 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ → **Faz 1 — Portföy Takip MVP** · **WEB ÖNCELİKLİ**
 
 ## Sıradaki (öncelik sırası)
-1. **T1.13** — Web: Holdings tablo/kart + varlık detay
-2. **T1.14** — Web: "Varlık Ekle" formu (modal) → POST /holdings
-3. (kalan) T1.8 BES ekranı · T1.15 cache · görsel doğrulama (web bitince)
+1. **T1.14** — Web: "Varlık Ekle" formu (modal) → POST /holdings
+2. (kalan) T1.8 BES ekranı · T1.15 cache · görsel doğrulama (web bitince) · web e2e akışı
 
 > Faz 1 ayrıca: T1.8 BES, T1.9 settings, T1.10 shared API/format hook, T1.11-14 web
 > (AppShell/HeroCard/Donut/Holdings/Ekle), T1.15 per-user kapsam. Mobil **FAZ M**'de.
@@ -38,6 +37,8 @@
 - **T1.10**: `@finans/shared` API tipleri + istemci (hata zarfı parse) + web React Query hook'ları;
   shared **12 yeşil**, web **2 yeşil**, tsc temiz
 - **T1.11**: Web AppShell (sidebar) + HeroCard + summary bağlama + para birimi seçici; web **3 yeşil**
+- **T1.12**: Web AllocationDonut (SVG) + lejant; web **6 yeşil**
+- **T1.13**: Web Holdings tablo + varlık detay (BES/fiyat güncelle/sil); web **8 yeşil**
 
 ## Devam eden
 - (yok)

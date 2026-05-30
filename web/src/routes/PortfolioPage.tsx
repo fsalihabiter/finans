@@ -2,7 +2,8 @@ import type { CurrencyCode } from "@finans/shared";
 import { HeroCard } from "../components/HeroCard";
 import { AllocationDonut } from "../components/AllocationDonut";
 import { CurrencySelector } from "../components/CurrencySelector";
-import { usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
+import { HoldingsTable } from "../components/HoldingsTable";
+import { useHoldings, usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
 
 /**
  * Portföy sayfası (T1.11): özet HeroCard + baz para birimi seçici. Dağılım grafiği
@@ -12,6 +13,7 @@ import { usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hook
 export function PortfolioPage() {
   const settings = useSettings();
   const summary = usePortfolioSummary();
+  const holdings = useHoldings();
   const updateSettings = useUpdateSettings();
 
   const baseCurrency = settings.data?.baseCurrency;
@@ -39,19 +41,28 @@ export function PortfolioPage() {
       )}
 
       {summary.data && (
-        <div className="portfolio-grid">
-          <HeroCard summary={summary.data} />
-          {summary.data.allocation.length > 0 ? (
-            <AllocationDonut
-              allocation={summary.data.allocation}
-              baseCurrency={summary.data.baseCurrency}
-            />
-          ) : (
-            <p className="muted empty-hint">
-              Henüz pozisyonun yok. Bir varlık ekleyerek başla.
-            </p>
+        <>
+          <div className="portfolio-grid">
+            <HeroCard summary={summary.data} />
+            {summary.data.allocation.length > 0 ? (
+              <AllocationDonut
+                allocation={summary.data.allocation}
+                baseCurrency={summary.data.baseCurrency}
+              />
+            ) : (
+              <p className="muted empty-hint">
+                Henüz pozisyonun yok. Bir varlık ekleyerek başla.
+              </p>
+            )}
+          </div>
+
+          {holdings.data && holdings.data.length > 0 && (
+            <section className="holdings-section">
+              <h2>Pozisyonlar</h2>
+              <HoldingsTable holdings={holdings.data} baseCurrency={summary.data.baseCurrency} />
+            </section>
           )}
-        </div>
+        </>
       )}
     </section>
   );

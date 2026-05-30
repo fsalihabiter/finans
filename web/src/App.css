@@ -276,6 +276,164 @@
   font-size: 0.78rem;
 }
 
+/* Holdings tablosu */
+.holdings-section {
+  margin-top: 1.75rem;
+}
+.holdings-section h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.75rem;
+}
+.holdings-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-card, 22px);
+  background: var(--panel, #1c1813);
+}
+.holdings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 640px;
+}
+.holdings-table th,
+.holdings-table td {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  white-space: nowrap;
+}
+.holdings-table th {
+  color: var(--muted, #a89c89);
+  font-weight: 500;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--line, #322b22);
+}
+.holdings-table td.num,
+.holdings-table th.num {
+  text-align: right;
+}
+.holdings-table tbody tr {
+  border-bottom: 1px solid var(--line, #322b22);
+}
+.holdings-table tbody tr:last-child {
+  border-bottom: none;
+}
+.holdings-table tbody tr:hover {
+  background: var(--panel-2, #241f18);
+}
+.holding-link {
+  color: var(--text, #f3ede2);
+  text-decoration: none;
+  font-weight: 600;
+}
+.holding-link:hover {
+  color: var(--gold, #e0b255);
+}
+.holding-symbol {
+  font-size: 0.78rem;
+}
+
+/* Varlık detay */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.detail-symbol {
+  font-size: 1rem;
+}
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem 1.5rem;
+  margin: 0.5rem 0 1.25rem;
+  padding: 1.25rem var(--space-screen-x, 20px);
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-card, 22px);
+}
+@media (min-width: 620px) {
+  .detail-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.detail-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.detail-stats dt {
+  color: var(--muted, #a89c89);
+  font-size: 0.76rem;
+}
+.detail-stats dd {
+  margin: 0;
+  font-weight: 600;
+}
+.detail-bes h2 {
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Güncel fiyat formu */
+.price-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 360px;
+}
+.price-form label {
+  color: var(--muted, #a89c89);
+  font-size: 0.8rem;
+}
+.price-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.price-row input {
+  flex: 1;
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-badge, 14px);
+  color: var(--text, #f3ede2);
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+}
+.price-row input:focus-visible {
+  outline: 2px solid var(--gold, #e0b255);
+  outline-offset: 1px;
+}
+
+/* Butonlar */
+.price-row button,
+.btn-danger {
+  appearance: none;
+  font: inherit;
+  font-weight: 600;
+  border-radius: var(--radius-badge, 14px);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: 1px solid var(--line, #322b22);
+}
+.price-row button {
+  background: var(--gold, #e0b255);
+  color: #14110d;
+  border-color: transparent;
+}
+.btn-danger {
+  background: transparent;
+  color: var(--coral, #e58e6e);
+  border-color: var(--coral, #e58e6e);
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(229, 142, 110, 0.12);
+}
+.price-row button:disabled,
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* Yardımcılar */
 .muted {
   color: var(--muted, #a89c89);

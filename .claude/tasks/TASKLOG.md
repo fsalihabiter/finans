@@ -20,6 +20,22 @@
 
 ---
 
+## 2026-05-30 · Web: Holdings tablosu + varlık detay (T1.13)
+- **Görev(ler):** T1.13 (tamam)
+- **Ne yapıldı:** `HoldingsTable` (gerçek tablo; dar ekran yatay kaydırma; ad→detay link, tr-TR
+  biçim, pozitif/negatif renk). `HoldingDetailPage` (route `/holdings/:id`): metrikler + BES
+  (devlet katkısı ayrı) + **güncel fiyat güncelle** (FR-1.8, `useUpdateHolding`) + **sil**
+  (`useDeleteHolding` → portföye dön). `formatNumber` (tr-TR miktar) shared'a eklendi.
+  PortfolioPage'e "Pozisyonlar" bölümü.
+- **Dokunulan dosyalar:** `web/src/components/HoldingsTable.tsx` (+test),
+  `web/src/routes/{HoldingDetailPage,PortfolioPage}.tsx`, `web/src/main.tsx` (route),
+  `web/src/App.css`, `packages/shared/src/format/index.ts` (formatNumber).
+- **Test:** web **8 yeşil** (+2 tablo: link/biçim, boş), shared 13, `tsc` temiz.
+- **Karar/Not:** Detay route olarak yapıldı (modal değil) — derin link + geri tuşu doğal.
+  Holdings'in dar-ekran kart varyantı yatay kaydırmaya bırakıldı (MVP).
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.14 "Varlık Ekle" formu (modal) → POST /holdings.
+
 ## 2026-05-30 · Web: AllocationDonut (SVG) + legend (T1.12)
 - **Görev(ler):** T1.12 (tamam)
 - **Ne yapıldı:** `AllocationDonut` — SVG donut (her dilim ağırlığı kadar yay, varlık-türü
