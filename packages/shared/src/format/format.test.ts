@@ -20,4 +20,8 @@ describe("formatPercent (tr-TR)", () => {
   it("hazır yüzde değerini asRatio=false ile biçimler", () => {
     expect(formatPercent(43, 0, false)).toBe("+%43");
   });
+
+  it("signed=false ile pozitifte işaret eklemez (ağırlık/oran)", () => {
+    expect(formatPercent(0.405, 1, true, false)).toBe("%40,5");
+  });
 });

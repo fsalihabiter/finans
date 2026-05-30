@@ -212,6 +212,70 @@
   font-weight: 600;
 }
 
+/* Portföy yerleşimi: geniş ekranda hero ve donut yan yana */
+.portfolio-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+@media (min-width: 900px) {
+  .portfolio-grid {
+    grid-template-columns: 1.6fr 1fr;
+    align-items: start;
+  }
+}
+
+/* AllocationDonut + legend */
+.alloc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem var(--space-screen-x, 20px);
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-card, 22px);
+}
+.alloc-donut {
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+.alloc-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.alloc-legend li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem;
+  column-gap: 0.6rem;
+}
+.alloc-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+  align-self: center;
+}
+.alloc-name {
+  font-size: 0.9rem;
+}
+.alloc-weight {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.alloc-value {
+  grid-column: 2 / 4;
+  font-size: 0.78rem;
+}
+
 /* Yardımcılar */
 .muted {
   color: var(--muted, #a89c89);

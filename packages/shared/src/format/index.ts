@@ -22,11 +22,17 @@ export function formatCurrency(value: number, currency: CurrencyCode = "TRY"): s
 /**
  * Oranı yüzde olarak tr-TR biçiminde döndürür.
  * Girdi oran (0.516) ya da hazır yüzde olabilir; `asRatio` ile belirtilir.
- * Örn. formatPercent(0.516) → "%51,6"
+ * `signed` true ise pozitifte "+" eklenir (getiri için); ağırlık/oran gösteriminde false.
+ * Örn. formatPercent(0.516) → "+%51,6" · formatPercent(0.405, 1, true, false) → "%40,5"
  */
-export function formatPercent(value: number, fractionDigits = 1, asRatio = true): string {
+export function formatPercent(
+  value: number,
+  fractionDigits = 1,
+  asRatio = true,
+  signed = true,
+): string {
   const pct = asRatio ? value * 100 : value;
-  const sign = pct > 0 ? "+" : "";
+  const sign = signed && pct > 0 ? "+" : "";
   return `${sign}%${new Intl.NumberFormat("tr-TR", {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,

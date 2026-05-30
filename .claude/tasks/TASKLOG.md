@@ -20,6 +20,18 @@
 
 ---
 
+## 2026-05-30 · Web: AllocationDonut (SVG) + legend (T1.12)
+- **Görev(ler):** T1.12 (tamam)
+- **Ne yapıldı:** `AllocationDonut` — SVG donut (her dilim ağırlığı kadar yay, varlık-türü
+  renkleri DESIGN.md token'ından) + lejant (ad / işaretsiz % / değer). `role="img"` + aria-label
+  (erişilebilir özet). PortfolioPage'de hero ile yan yana (geniş ekran grid). `formatPercent`'e
+  `signed` parametresi eklendi → ağırlıkta "+" yok (getiride var).
+- **Dokunulan dosyalar:** `web/src/components/AllocationDonut.tsx` (+test), `web/src/routes/PortfolioPage.tsx`,
+  `web/src/App.css`, `packages/shared/src/format/index.ts` (+test).
+- **Test:** shared **13 yeşil** (signed=false), web **6 yeşil** (+3 donut: ad/%, aria, boş), `tsc` temiz.
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.13 Holdings tablo/kart + varlık detay.
+
 ## 2026-05-30 · Web: AppShell (sidebar) + HeroCard + summary bağlama + para birimi seçici (T1.11)
 - **Görev(ler):** T1.11 (tamam); T1.9'un web ayağı (para birimi seçici) da burada
 - **Ne yapıldı:**

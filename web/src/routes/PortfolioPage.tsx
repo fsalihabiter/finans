@@ -1,5 +1,6 @@
 import type { CurrencyCode } from "@finans/shared";
 import { HeroCard } from "../components/HeroCard";
+import { AllocationDonut } from "../components/AllocationDonut";
 import { CurrencySelector } from "../components/CurrencySelector";
 import { usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
 
@@ -38,14 +39,19 @@ export function PortfolioPage() {
       )}
 
       {summary.data && (
-        <>
+        <div className="portfolio-grid">
           <HeroCard summary={summary.data} />
-          {summary.data.allocation.length === 0 && (
+          {summary.data.allocation.length > 0 ? (
+            <AllocationDonut
+              allocation={summary.data.allocation}
+              baseCurrency={summary.data.baseCurrency}
+            />
+          ) : (
             <p className="muted empty-hint">
               Henüz pozisyonun yok. Bir varlık ekleyerek başla.
             </p>
           )}
-        </>
+        </div>
       )}
     </section>
   );

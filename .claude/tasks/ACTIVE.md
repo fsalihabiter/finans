@@ -7,10 +7,9 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ → **Faz 1 — Portföy Takip MVP** · **WEB ÖNCELİKLİ**
 
 ## Sıradaki (öncelik sırası)
-1. **T1.12** — Web: `AllocationDonut` (SVG/conic) + legend
-2. **T1.13** — Web: Holdings tablo/kart + varlık detay
-3. **T1.14** — Web: "Varlık Ekle" formu (modal) → POST /holdings
-4. (kalan) T1.8 BES ekranı · T1.15 cache · görsel doğrulama (web bitince)
+1. **T1.13** — Web: Holdings tablo/kart + varlık detay
+2. **T1.14** — Web: "Varlık Ekle" formu (modal) → POST /holdings
+3. (kalan) T1.8 BES ekranı · T1.15 cache · görsel doğrulama (web bitince)
 
 > Faz 1 ayrıca: T1.8 BES, T1.9 settings, T1.10 shared API/format hook, T1.11-14 web
 > (AppShell/HeroCard/Donut/Holdings/Ekle), T1.15 per-user kapsam. Mobil **FAZ M**'de.
