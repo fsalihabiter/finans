@@ -20,6 +20,27 @@
 
 ---
 
+## 2026-05-30 · Canlı görsel doğrulama + FX/enflasyon in-memory cache (T1.15) → FAZ 1 MVP TAMAM
+- **Görev(ler):** T1.15 (cache, tamam), T1.8 (BES detay ekranı, tamam) · Faz 1 kapanışı
+- **Ne yapıldı:**
+  - **Görsel doğrulama:** backend (5298) + Vite (5173) canlı; PostgreSQL'e karşı portföy sayfası,
+    HeroCard, donut+lejant, Pozisyonlar tablosu ve "Varlık Ekle" modalı ekran görüntüsüyle doğrulandı
+    (tr-TR biçim, renkler, BES devlet katkısı ayrı). Uçtan uca zincir çalışıyor.
+  - **Cache (T1.15):** `CachedFxRateProvider` + `CachedInflationRateProvider` decorator'ları
+    (`IMemoryCache`, 60 sn TTL, global anahtar — kullanıcı-bağımsız). `AddMemoryCache` + DI'da
+    Ef sağlayıcı → cache decorator sarması. §13 "dış çağrı/DB cache'lenir" kapısı.
+  - **T1.8:** BES detay ekranında "Kendi katkın / Devlet katkısı (ayrı) / Hak ediş" gösterimi.
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Services/{CachedFxRateProvider,CachedInflationRateProvider}.cs`,
+  `Finans.Infrastructure/DependencyInjection.cs`, `tests/Finans.Integration.Tests/ProviderCacheTests.cs`.
+- **Test:** cache testi (TTL içinde DB'ye güncel kur eklendi → sağlayıcı hâlâ eski/cached değer döndü =
+  cache hit kanıtı). `dotnet test` **Application 39 + Integration 31 = 70 yeşil**. Web 11 + shared 13.
+  Görsel: canlı PostgreSQL'e karşı tüm ekranlar doğrulandı.
+- **Karar/Not:** Per-user summary'nin **server** cache'i ertelendi — tek kullanıcılı dev'de React
+  Query istemcide tazeliyor; gerekince UserId anahtarlı server cache + mutation invalidation eklenir.
+  Playwright e2e gerçek akış güncellemesi Faz 2'ye (iki sunucu orkestrasyonu).
+- **Durum:** tamamlandı → **FAZ 1 — Portföy Takip MVP TAMAM**
+- **Sıradaki:** Faz 2 — canlı fiyat API'si + bağlama-duyarlı eğitici notlar (nudge).
+
 ## 2026-05-30 · Web: "Varlık Ekle" modal formu → POST /holdings (T1.14) — Faz 1 web seti bitti
 - **Görev(ler):** T1.14 (tamam)
 - **Ne yapıldı:** `AddHoldingDialog` — özel overlay modal (jsdom-dostu, role=dialog/aria-modal,

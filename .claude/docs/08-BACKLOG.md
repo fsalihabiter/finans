@@ -18,7 +18,8 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 1 (Portföy MVP): `T1.1` `PortfolioCalculationService`**
+**Sıradaki adım → FAZ 2 (Canlı fiyat + nudge): `T2.1` fiyat sağlayıcı + `IPriceProvider`**
+(Faz 0 ✅ · Faz 1 ✅ — Portföy MVP web'de canlı doğrulandı)
 (saf hesap fonksiyonları, altın test verisi 40gr/4.546→181.851/+%43 — birim testli).
 
 ---
@@ -61,18 +62,18 @@ koşucuları (`dotnet test`, `pnpm test`) kurulu ve yeşil**; **yapılandırılm
 | T1.5 | Ort. maliyet türetimi (Transactions'tan) + test | T0.4 | `03` §5 | [x] |
 | T1.6 | Holdings CRUD endpoint'leri + DTO + validasyon | T1.5 | `04` §4 | [x] |
 | T1.7 | `GET /api/portfolio/summary` | T1.1–T1.4 | `04` §4 | [x] |
-| T1.8 | BES özel alanları (devlet katkısı ayrı) — entity→DTO→ekran | T0.4 | `03`, `04`, `05` §7 | [~] (entity→DTO ✓ `bes` alanı/SC-04; ekran Faz web) |
+| T1.8 | BES özel alanları (devlet katkısı ayrı) — entity→DTO→ekran | T0.4 | `03`, `04`, `05` §7 | [x] (entity→DTO `bes`/SC-04 + detay ekranında "Devlet katkısı" ayrı) |
 | T1.9 | Settings (baz para birimi) endpoint + web seçimi | T0.7 | `04` §4 | [~] (endpoint GET/PUT ✓ + test; web seçimi → T1.11) |
 | T1.10 | `@finans/shared`: API tipleri (04) + TanStack Query hook'ları + `formatCurrency/formatPercent` (tr-TR) | T0.2, T1.7 | `13` §2, `05` §10 | [x] (tipler+istemci shared; hook'lar web — mobilde shared'a taşınır) |
 | T1.11 | **Web:** AppShell (sidebar/topbar) + `HeroCard` + `summary` bağlama | T1.7, T1.10 | `13` §4 | [x] (+ baz para birimi seçici) |
 | T1.12 | **Web:** `AllocationDonut` (SVG/conic) + legend | T1.7 | `13` §4 | [x] (SVG donut + lejant, varlık-türü renkleri) |
 | T1.13 | **Web:** Holdings tablosu/kartı + varlık detay (modal/route) | T1.6 | `13` §4 | [x] (tablo + `/holdings/:id` detay: BES, fiyat güncelle, sil) |
 | T1.14 | **Web:** "Varlık Ekle" formu (modal) → `POST /holdings` | T1.6 | `13` §4 | [x] (modal form, tür/pb/birim/işlem; hata zarfı gösterimi) |
-| T1.15 | **Per-user kapsam deseni:** tüm sorgular `UserId`'e kapsanır (EF global query filter / base repo); summary cache anahtarı `UserId` içerir; in-memory cache (varlık kataloğu/summary) | T1.6 | `11` §3, `10` §3 | [~] (`ICurrentUser` + her sorguda `WHERE UserId` ✓ SC-13; cache henüz yok) |
+| T1.15 | **Per-user kapsam deseni:** tüm sorgular `UserId`'e kapsanır (EF global query filter / base repo); summary cache anahtarı `UserId` içerir; in-memory cache (varlık kataloğu/summary) | T1.6 | `11` §3, `10` §3 | [x] (`ICurrentUser`+`WHERE UserId`/SC-13; FX/enflasyon in-memory cache. Per-user summary server cache ertelendi — React Query istemcide tazeler) |
 
-**Faz 1 DoD:** **Web'de** varlık ekle/sil/listele; toplam/kâr/getiri/dağılım
+**Faz 1 DoD:** ✅ **KARŞILANDI** — **Web'de** varlık ekle/sil/listele; toplam/kâr/getiri/dağılım
 testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.
-→ **Tek başına (web) ürün.**
+→ **Tek başına (web) ürün** (canlı PostgreSQL'e karşı görsel doğrulandı).
 
 ---
 
