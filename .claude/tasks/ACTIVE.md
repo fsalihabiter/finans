@@ -7,10 +7,11 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ → **Faz 1 — Portföy Takip MVP** · **WEB ÖNCELİKLİ**
 
 ## Sıradaki (öncelik sırası)
-1. **T1.9** — Settings (baz para birimi) endpoint `GET/PUT /api/settings`
-2. **T1.10** — `@finans/shared`: API tipleri + TanStack Query hook'ları + `formatCurrency/formatPercent` (tr-TR)
-3. **T1.11-14** — Web: AppShell/HeroCard + AllocationDonut + Holdings tablo + "Varlık Ekle" formu
-4. (kalan) T1.8 BES ekranı · T1.15 cache (per-user kapsam ✓, cache yok)
+1. **T1.10** — `@finans/shared`: API tipleri + TanStack Query hook'ları + `formatCurrency/formatPercent` (tr-TR)
+2. **T1.11** — Web: AppShell (sidebar/topbar) + `HeroCard` + summary bağlama + para birimi seçici
+3. **T1.12** — Web: `AllocationDonut` (SVG/conic) + legend
+4. **T1.13-14** — Web: Holdings tablo/detay + "Varlık Ekle" formu (POST /holdings)
+5. (kalan) T1.8 BES ekranı · T1.15 cache
 
 > Faz 1 ayrıca: T1.8 BES, T1.9 settings, T1.10 shared API/format hook, T1.11-14 web
 > (AppShell/HeroCard/Donut/Holdings/Ekle), T1.15 per-user kapsam. Mobil **FAZ M**'de.
@@ -35,6 +36,7 @@
 - **T1.6+T1.7**: Portföy API — Holdings CRUD + `portfolio/summary`; `ICurrentUser` per-user
   izolasyon (IDOR→404), DTO+validasyon (ApiError), fx/enflasyon entegre. SC-01/04/07/13;
   backend **66 yeşil** + canlı PostgreSQL smoke doğrulandı
+- **T1.9**: `GET/PUT /api/settings` (baz para birimi) — kullanıcıya kapsanır; backend **69 yeşil**
 
 ## Devam eden
 - (yok)

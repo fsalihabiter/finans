@@ -22,6 +22,7 @@ public static class DependencyInjection
         // Use-case servisleri (DbContext + ICurrentUser'a bağlı) → scoped.
         services.AddScoped<IHoldingService, HoldingService>();
         services.AddScoped<IPortfolioService, PortfolioService>();
+        services.AddScoped<ISettingsService, SettingsService>();
 
         return services;
     }

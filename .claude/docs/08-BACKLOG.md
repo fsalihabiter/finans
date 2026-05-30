@@ -62,7 +62,7 @@ koşucuları (`dotnet test`, `pnpm test`) kurulu ve yeşil**; **yapılandırılm
 | T1.6 | Holdings CRUD endpoint'leri + DTO + validasyon | T1.5 | `04` §4 | [x] |
 | T1.7 | `GET /api/portfolio/summary` | T1.1–T1.4 | `04` §4 | [x] |
 | T1.8 | BES özel alanları (devlet katkısı ayrı) — entity→DTO→ekran | T0.4 | `03`, `04`, `05` §7 | [~] (entity→DTO ✓ `bes` alanı/SC-04; ekran Faz web) |
-| T1.9 | Settings (baz para birimi) endpoint + web seçimi | T0.7 | `04` §4 | [ ] |
+| T1.9 | Settings (baz para birimi) endpoint + web seçimi | T0.7 | `04` §4 | [~] (endpoint GET/PUT ✓ + test; web seçimi → T1.11) |
 | T1.10 | `@finans/shared`: API tipleri (04) + TanStack Query hook'ları + `formatCurrency/formatPercent` (tr-TR) | T0.2, T1.7 | `13` §2, `05` §10 | [ ] |
 | T1.11 | **Web:** AppShell (sidebar/topbar) + `HeroCard` + `summary` bağlama | T1.7, T1.10 | `13` §4 | [ ] |
 | T1.12 | **Web:** `AllocationDonut` (SVG/conic) + legend | T1.7 | `13` §4 | [ ] |

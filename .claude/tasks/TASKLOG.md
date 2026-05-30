@@ -20,6 +20,19 @@
 
 ---
 
+## 2026-05-30 · Settings endpoint — baz para birimi (T1.9 backend)
+- **Görev(ler):** T1.9 (backend kısmı tamam; web seçimi T1.11'de)
+- **Ne yapıldı:** `GET/PUT /api/settings` (04 §4) — `ISettingsService`/`SettingsService` (kullanıcıya
+  kapsanır), `SettingsDto`/`UpdateSettingsRequest`, `SettingsController`. PUT `User.BaseCurrency`'i günceller.
+- **Dokunulan dosyalar:** `Finans.Application/Portfolio/ISettingsService.cs`,
+  `Finans.Infrastructure/Services/SettingsService.cs`, `Finans.Infrastructure/DependencyInjection.cs`,
+  `Finans.Api/Controllers/SettingsController.cs`, `tests/Finans.Integration.Tests/SettingsApiTests.cs`.
+- **Test:** 3 integration (GET seed TRY; PUT→USD kalıcı; ayar kullanıcılar arası sızmıyor).
+  `dotnet test` **Application 39 + Integration 30 = 69 yeşil**.
+- **Karar/Not:** Web tarafı (para birimi seçici) T1.11 AppShell ile gelecek.
+- **Durum:** tamamlandı (backend)
+- **Sıradaki:** T1.10 `@finans/shared` (API tipleri + TanStack Query hook + tr-TR format).
+
 ## 2026-05-30 · Portföy API: Holdings CRUD + summary (T1.6 + T1.7) — ilk gerçek endpoint'ler
 - **Görev(ler):** T1.6 (tamam), T1.7 (tamam) · ayrıca T1.8 kısmi (bes alanı), T1.15 kısmi (per-user)
 - **Ne yapıldı:**
