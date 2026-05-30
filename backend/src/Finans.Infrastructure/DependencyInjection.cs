@@ -53,6 +53,9 @@ public static class DependencyInjection
         services.AddTransient<IPriceProvider>(sp => sp.GetRequiredService<FrankfurterPriceProvider>());
         services.AddTransient<IPriceProvider>(sp => sp.GetRequiredService<TruncgilGoldPriceProvider>());
 
+        // Orkestrasyon (T2.2): sağlayıcıları yönlendir + cache + snapshot/fxrate/CurrentPrice yaz.
+        services.AddScoped<IPriceFetchService, PriceFetchService>();
+
         return services;
     }
 }

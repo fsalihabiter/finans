@@ -146,6 +146,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-11 | FR-3.3/NFR-2 | Commentary çıktısı yasaklı yönlendirme ("al/sat/yükselir") içermez | Unit (filtre) | [ ] |
 | SC-12 | FR-4.3 | Bilinmeyen sembol → anlamlı 404 hata | Integration | [ ] |
 | SC-17 | FR-2.1 | Fiyat sağlayıcı dış kaynağı doğru ayrıştırır: Frankfurter → her döviz için doğrudan TRY kuru (ters çevirme yok); Truncgil → "GRA" gram altın satış (TRY); yabancı-olmayan/eksik enstrüman atlanır; HTTP/ayrıştırma hatası istisna (fallback T2.3) | Unit (HTTP stub) | [x] (T2.1; Frankfurter+Truncgil sağlayıcı testleri, 8 senaryo) |
+| SC-18 | FR-2.2 | `PriceFetchService` canlı tırnağı yazar: `PriceSnapshots`(geçmiş)+`FxRates`(converter)+`Holding.CurrentPrice`(okuma yolu) güncellenir; TTL içinde 2. çağrı cache'ten (dış API tekrar yok); bir sağlayıcı çökse diğeri yazmayı sürdürür | Integration (Sqlite+seed, stub sağlayıcı) | [x] (T2.2; 3 senaryo) |
 | SC-W1 | NFR-7 | `formatCurrency(641403)`="641.403 ₺", `formatPercent(0.516)`="%51,6" (`@finans/shared`) | Unit (Vitest) | [x] (T1.10 format.test.ts) |
 | SC-W2 | NFR-2 | **Web** Analiz sayfası render'ında `Disclaimer` her zaman mevcut | Bileşen (RTL) | [x] (Disclaimer bileşeni + AnalysisPage.test) |
 | SC-W3 | FR-1.1/1.3 | **Web E2E:** varlık ekle → portföy özeti güncellenir | E2E (Playwright) | [ ] (ertelendi → Faz 2; iki-sunucu orkestrasyonu) |

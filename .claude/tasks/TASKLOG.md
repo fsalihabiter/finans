@@ -20,6 +20,38 @@
 
 ---
 
+## 2026-05-31 · `PriceFetchService` — canlı fiyat orkestrasyonu + cache + yazım (T2.2)
+- **Görev(ler):** T2.2 (tamam).
+- **Ne yapıldı:**
+  1. **Sözleşme (Application/Pricing):** `IPriceFetchService.RefreshAsync` + `PriceRefreshResult`
+     (Quotes, RefreshedAtUtc, FromCache, FailedSources).
+  2. **Orkestrasyon (Infrastructure/Pricing `PriceFetchService`):** aktif fiyatlanabilir varlıklar
+     (Gold + Fx, `PricingCurrency==TRY`) → `PriceInstrument` eşlemesi (`TryMapInstrument`; Fx para
+     birimi `Symbol??Unit`'ten parse). `IEnumerable<IPriceProvider>` → `CanQuote` yönlendirmesiyle
+     çekim; **her sağlayıcı izole** (try/catch → `FailedSources`'a düşer, log, diğerleri sürer).
+  3. **Yazım (kritik bulgu):** Okuma yolu bugün `Holding.CurrentPrice` (denormalize); `PriceSnapshots`
+     yalnız seed'liydi, `FxRates`'i `CurrencyConverter` okuyor. Dolayısıyla her tırnak için:
+     **PriceSnapshot** (geçmiş; aynı `(asset,AsOf)` varsa atla → gün-içi FX yinelemesi önlenir) +
+     döviz ise **FxRate** (`currency→TRY`, converter için) + ilgili **tüm** `Holding.CurrentPrice`
+     (global, kullanıcıdan bağımsız) → özet/holdings anında canlı fiyatı yansıtır.
+  4. **Cache:** 10 dk in-memory (`prices:refresh`); TTL içinde `RefreshAsync` dış çağrı/yazma
+     yapmadan cache'ten döner (`FromCache=true`) — `CachedFxRateProvider` deseninin eşi (10 §3-4).
+  5. **DI:** `IPriceFetchService → PriceFetchService` scoped (DbContext'e bağlı).
+- **Dokunulan dosyalar:** yeni `src/Finans.Application/Pricing/IPriceFetchService.cs`,
+  `src/Finans.Infrastructure/Pricing/PriceFetchService.cs`; düzenlenen
+  `Infrastructure/DependencyInjection.cs`; yeni testler
+  `tests/Finans.Integration.Tests/Pricing/{StubPriceProvider,PriceFetchServiceTests}.cs`;
+  doküman `09` (SC-18), `08-BACKLOG.md`.
+- **Test:** **SC-18** (3 senaryo: yazım→snapshot/fxrate/CurrentPrice; TTL cache→dış çağrı tekrar yok
+  (call-count); sağlayıcı izolasyonu→biri çökse altın yazılır, USD seed'de kalır). İzole Sqlite+seed,
+  stub sağlayıcı (ağsız). `dotnet test` **yeşil: Application 39 + Integration 46 = 85**, 0 hata.
+- **Karar/Not:** Canlı fiyatın okuma yolu = `Holding.CurrentPrice` güncellemesi (mevcut denormalize
+  deseni; read-path değiştirmeden minimal). Fiyat/FxRate **global** (per-user değil) — IDOR kapsamı
+  dışı. Snapshot yazımı geçmiş için bilinçli (Performans grafiği T2.4+); retention ileride (T2.7+).
+- **Durum:** tamamlandı
+- **Sıradaki:** T2.3 — fallback: bir sağlayıcı çökünce son bilinen fiyat + `stale:true` (NFR-5, SC-08);
+  `FailedSources` zaten bunun kancası. Ardından T2.4 `GET /api/prices` + summary'i besle.
+
 ## 2026-05-31 · Faz 2 başladı — fiyat sağlayıcı seçimi + `IPriceProvider` (T2.1)
 - **Görev(ler):** T2.1 (tamam) — Faz 2 ilk adım.
 - **Ne yapıldı:**

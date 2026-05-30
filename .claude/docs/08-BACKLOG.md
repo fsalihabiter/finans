@@ -18,9 +18,9 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 2: `T2.2` `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz**
-(Faz 0 ✅ · Faz 1 ✅ — Portföy MVP web'de canlı doğrulandı · **T2.1 ✅** — Frankfurter (döviz) +
-Truncgil (gram altın) sağlayıcıları, anahtarsız; `IPriceProvider` soyutlaması + typed HttpClient).
+**Sıradaki adım → FAZ 2: `T2.3` fallback (dış API çökünce son bilinen fiyat + `stale:true`, NFR-5/SC-08)**
+(Faz 0 ✅ · Faz 1 ✅ · **T2.1 ✅** sağlayıcılar (Frankfurter+Truncgil, anahtarsız) · **T2.2 ✅**
+`PriceFetchService` — CanQuote yönlendirme + cache + `PriceSnapshots`/`FxRates`/`Holding.CurrentPrice` yazımı).
 
 ---
 
@@ -88,7 +88,7 @@ testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.
 | ID | Görev | Bağımlılık | Doküman | Durum |
 |----|-------|-----------|---------|-------|
 | T2.1 | Fiyat sağlayıcı seç (altın/döviz ücretsiz katman) + `IPriceProvider` | Faz 1 | `02` | [x] (Frankfurter=ECB döviz, Truncgil=TR gram altın; ikisi de **anahtarsız**; `IPriceProvider`+`PriceInstrument`/`PriceQuote`; typed HttpClient+DI; 8 sağlayıcı testi) |
-| T2.2 | `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz | T2.1 | `02` §2.2 | [ ] |
+| T2.2 | `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz | T2.1 | `02` §2.2 | [x] (`IPriceFetchService.RefreshAsync`: CanQuote yönlendirme + sağlayıcı izolasyonu; 10 dk in-memory cache; yazım → `PriceSnapshots`+`FxRates`+`Holding.CurrentPrice`; SC-18 3 senaryo) |
 | T2.3 | Fallback: dış API çökünce son bilinen fiyat + `stale:true` | T2.2 | `04` §5, NFR-5 | [ ] |
 | T2.4 | `GET /api/prices` + summary'i canlı fiyatla besle | T2.2 | `04` §5 | [ ] |
 | T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 | [ ] |
