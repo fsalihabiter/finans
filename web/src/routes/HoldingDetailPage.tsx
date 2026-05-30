@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatCurrency, formatNumber, formatPercent } from "@finans/shared";
+import { AddTransactionForm } from "../components/AddTransactionForm";
 import { useDeleteHolding, useHolding, useUpdateHolding } from "../lib/hooks";
 
 function tone(value: number | null): string {
@@ -80,6 +81,8 @@ export function HoldingDetailPage() {
           </dl>
         </div>
       )}
+
+      <AddTransactionForm holdingId={h.id} currency={h.currency} unit={h.unit} />
 
       <form className="price-form" onSubmit={onUpdatePrice}>
         <label htmlFor="price">Güncel fiyatı güncelle ({h.currency})</label>

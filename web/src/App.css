@@ -375,6 +375,90 @@
   margin-bottom: 0.25rem;
 }
 
+/* İşlem ekle (alış/satış) formu */
+.tx-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.5rem 0 1.5rem;
+  padding: 1.1rem var(--space-screen-x, 20px);
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-card, 22px);
+  max-width: 560px;
+}
+.tx-form h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+.tx-type {
+  display: inline-flex;
+  align-self: flex-start;
+  background: var(--bg, #14110d);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-pill, 100px);
+  padding: 3px;
+}
+.tx-type button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted, #a89c89);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 1rem;
+  border-radius: var(--radius-pill, 100px);
+  cursor: pointer;
+}
+.tx-type button.active {
+  background: var(--mint, #5fc9a0);
+  color: #14110d;
+  font-weight: 600;
+}
+.tx-type button.active.sell {
+  background: var(--coral, #e58e6e);
+}
+.tx-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.6rem;
+  align-items: end;
+}
+.tx-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--muted, #a89c89);
+  font-size: 0.8rem;
+}
+.tx-row input {
+  background: var(--bg, #14110d);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-badge, 14px);
+  color: var(--text, #f3ede2);
+  font: inherit;
+  padding: 0.5rem 0.7rem;
+}
+.tx-row input:focus-visible {
+  outline: 2px solid var(--gold, #e0b255);
+  outline-offset: 1px;
+}
+.tx-row button {
+  appearance: none;
+  font: inherit;
+  font-weight: 600;
+  background: var(--gold, #e0b255);
+  color: #14110d;
+  border: none;
+  border-radius: var(--radius-badge, 14px);
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+}
+.tx-row button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* Güncel fiyat formu */
 .price-form {
   display: flex;

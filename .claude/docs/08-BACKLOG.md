@@ -70,6 +70,7 @@ koşucuları (`dotnet test`, `pnpm test`) kurulu ve yeşil**; **yapılandırılm
 | T1.13 | **Web:** Holdings tablosu/kartı + varlık detay (modal/route) | T1.6 | `13` §4 | [x] (tablo + `/holdings/:id` detay: BES, fiyat güncelle, sil) |
 | T1.14 | **Web:** "Varlık Ekle" formu (modal) → `POST /holdings` | T1.6 | `13` §4 | [x] (modal form, tür/pb/birim/işlem; hata zarfı gösterimi) |
 | T1.15 | **Per-user kapsam deseni:** tüm sorgular `UserId`'e kapsanır (EF global query filter / base repo); summary cache anahtarı `UserId` içerir; in-memory cache (varlık kataloğu/summary) | T1.6 | `11` §3, `10` §3 | [x] (`ICurrentUser`+`WHERE UserId`/SC-13; FX/enflasyon in-memory cache. Per-user summary server cache ertelendi — React Query istemcide tazeler) |
+| T1.16 | **Web:** mevcut pozisyona **alış/satış işlemi ekle** UI → `POST /holdings/{id}/transactions` (backend T1.6'da hazırdı, UI eksikti) | T1.13 | `04` §4 | [x] (`AddTransactionForm` detay sayfasında; Alış/Satış + miktar/fiyat) |
 
 **Faz 1 DoD:** ✅ **KARŞILANDI** — **Web'de** varlık ekle/sil/listele; toplam/kâr/getiri/dağılım
 testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.

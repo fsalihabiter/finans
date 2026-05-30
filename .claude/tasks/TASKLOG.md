@@ -20,6 +20,23 @@
 
 ---
 
+## 2026-05-30 · Mevcut pozisyona alış/satış işlemi ekleme UI'ı (T1.16)
+- **Görev(ler):** T1.16 (tamam) — kullanıcı bildirimi: "pozisyonlara ekleme/çıkarma yapamıyorum"
+- **Ne yapıldı:** **Gerçek eksik** — backend `POST /holdings/{id}/transactions` + shared `addTransaction`
+  + `useAddTransaction` hook'u T1.6'dan beri vardı ama **çağıran UI yoktu** (detayda yalnız fiyat-güncelle/sil).
+  - **`AddTransactionForm`:** Alış (ekleme) / Satış (çıkarma) segment + miktar + birim fiyat →
+    `useAddTransaction`. Backend ort. maliyet/miktarı işlemlerden yeniden türetir (T1.5); fazla satış→400
+    (hata zarfı gösterilir). Başarıda holding + summary + holdings invalidate → sayfa tazelenir.
+  - `HoldingDetailPage`'e bağlandı (fiyat-güncelle formunun üstünde). CSS: alış/satış segment (yeşil/kırmızı).
+- **Dokunulan dosyalar:** `web/src/components/AddTransactionForm.tsx` (+test),
+  `web/src/routes/HoldingDetailPage.tsx`, `web/src/App.css`, `.claude/docs/08-BACKLOG.md`.
+- **Test:** web **15 yeşil** (+3: alış POST gövdesi, satış type=Sell, eksikte pasif), `tsc` temiz.
+- **Karar/Not:** Görsel doğrulama atlandı — kullanıcı app'i Visual Studio'da debug'da çalıştırıyor
+  (Finans.Api PID 14732, parent VsDebugConsole, 5298'i tutuyor) → kendi backend'imi başlatamadım,
+  onunkine de dokunmadım. Endpoint zaten o instance'ta mevcut; frontend HMR/rebuild ile görünür.
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı + `IPriceProvider`.
+
 ## 2026-05-30 · Faz 1 loose-end taraması — Disclaimer (NFR-2, SC-W2) + bayat işaretler
 - **Görev(ler):** Faz 1 kapanış denetimi (kullanıcı "atlanan adım var mı?")
 - **Ne yapıldı:**
