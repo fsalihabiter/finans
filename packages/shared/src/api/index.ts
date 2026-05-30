@@ -9,7 +9,9 @@ import type {
   CurrencyCode,
   HealthResponse,
   Holding,
+  NudgesResponse,
   PortfolioSummary,
+  PricesResponse,
   Settings,
   TransactionInput,
   UpdateHoldingInput,
@@ -92,6 +94,13 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     addBesContribution: (id: string, input: AddBesContributionInput) =>
       send<Holding>("POST", `/api/holdings/${id}/bes-contribution`, input),
     deleteHolding: (id: string) => send<void>("DELETE", `/api/holdings/${id}`),
+
+    // ── Canlı fiyat & eğitici notlar (Faz 2 — 04 §5) ──
+    /** GET /api/prices — tazeleme turunu tetikler; güncel altın/döviz fiyatları (+ stale). */
+    getPrices: () => get<PricesResponse>("/api/prices"),
+    /** GET /api/portfolio/nudges — kural tabanlı eğitici notlar (tavsiye değil). */
+    getNudges: (baseCurrency?: CurrencyCode) =>
+      get<NudgesResponse>(withBaseCurrency("/api/portfolio/nudges", baseCurrency)),
 
     // ── Ayarlar (04 §4) ──
     getSettings: () => get<Settings>("/api/settings"),

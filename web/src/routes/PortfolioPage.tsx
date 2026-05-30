@@ -1,22 +1,35 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import type { CurrencyCode } from "@finans/shared";
 import { KpiGrid } from "../components/KpiGrid";
 import { AllocationDonut } from "../components/AllocationDonut";
 import { PortfolioInsights } from "../components/PortfolioInsights";
+import { NudgesCard } from "../components/NudgesCard";
+import { LivePrices } from "../components/LivePrices";
 import { CurrencySelector } from "../components/CurrencySelector";
 import { HoldingsTable } from "../components/HoldingsTable";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
-import { useHoldings, usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
+import { useToast } from "../components/Toast";
+import {
+  useHoldings,
+  useNudges,
+  usePortfolioSummary,
+  usePrices,
+  useSettings,
+  useUpdateSettings,
+} from "../lib/hooks";
 import { useAppShell } from "../lib/appShell";
 import { currentGreeting } from "../lib/greeting";
 
-/** asOf zaman damgasını "14:32" / "—" olarak biçimler. */
-function freshness(asOf: string): string {
-  const d = new Date(asOf);
-  return Number.isNaN(d.getTime())
+/** Zaman damgasını "14:32" (+ "· yaklaşık" bayatsa) / "—" olarak biçimler. */
+function freshness(iso: string, stale = false): string {
+  const d = new Date(iso);
+  const time = Number.isNaN(d.getTime())
     ? "—"
     : new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" }).format(d);
+  return stale ? `${time} · yaklaşık` : time;
 }
 
 /**
@@ -28,14 +41,47 @@ export function PortfolioPage() {
   const settings = useSettings();
   const summary = usePortfolioSummary();
   const holdings = useHoldings();
+  const prices = usePrices();
+  const nudges = useNudges();
   const updateSettings = useUpdateSettings();
   const { openAddHolding } = useAppShell();
+  const { notify } = useToast();
+  const qc = useQueryClient();
+
+  // Canlı fiyat tazelendiğinde backend Holding.CurrentPrice'ı yazdı → özet+holdings'i
+  // tazele ki pano canlı değeri yansıtsın. Aynı tur için yeniden tetiklemeyi engelle.
+  const lastRefresh = useRef<string | null>(null);
+  useEffect(() => {
+    const refreshed = prices.data?.refreshedAtUtc;
+    if (refreshed && refreshed !== lastRefresh.current) {
+      lastRefresh.current = refreshed;
+      void qc.invalidateQueries({ queryKey: ["summary"] });
+      void qc.invalidateQueries({ queryKey: ["holdings"] });
+    }
+  }, [prices.data?.refreshedAtUtc, qc]);
 
   const baseCurrency = settings.data?.baseCurrency;
   const onCurrencyChange = (currency: CurrencyCode) =>
     updateSettings.mutate({ baseCurrency: currency });
 
   const holdingList = Array.isArray(holdings.data) ? holdings.data : [];
+
+  const onRefresh = async () => {
+    try {
+      const [result] = await Promise.all([prices.refetch(), nudges.refetch()]);
+      const stale = result.data?.hasStale ?? false;
+      notify(
+        stale ? "Fiyatlar güncellendi (bazıları yaklaşık)" : "Fiyatlar güncellendi",
+        stale ? "info" : "success",
+      );
+    } catch {
+      notify("Fiyat güncellenemedi. Bağlantını kontrol et.", "error");
+    }
+  };
+
+  const freshIso = prices.data?.refreshedAtUtc ?? summary.data?.asOf;
+  const hasStale = prices.data?.hasStale ?? false;
+  const refreshing = prices.isFetching || nudges.isFetching;
 
   return (
     <section className="page">
@@ -45,11 +91,19 @@ export function PortfolioPage() {
           <h1>Genel Bakış</h1>
         </div>
         <div className="tools">
-          {summary.data && (
-            <span className="freshness" title="Son güncelleme">
-              <span className="fresh-dot" aria-hidden="true" /> {freshness(summary.data.asOf)}
+          {freshIso && (
+            <span className={`freshness${hasStale ? " stale" : ""}`} title="Son fiyat güncellemesi">
+              <span className="fresh-dot" aria-hidden="true" /> {freshness(freshIso, hasStale)}
             </span>
           )}
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={onRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? "Yenileniyor…" : "↻ Yenile"}
+          </button>
           {baseCurrency && (
             <CurrencySelector
               value={baseCurrency}
@@ -59,6 +113,8 @@ export function PortfolioPage() {
           )}
         </div>
       </div>
+
+      <LivePrices prices={prices.data?.prices ?? []} />
 
       {summary.isLoading && <PortfolioSkeleton />}
 
@@ -101,6 +157,8 @@ export function PortfolioPage() {
               </div>
 
               <PortfolioInsights summary={summary.data} holdings={holdingList} />
+
+              <NudgesCard nudges={nudges.data?.nudges ?? []} />
 
               <div className="card">
                 <div className="card-head">

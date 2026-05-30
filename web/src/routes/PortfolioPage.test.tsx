@@ -23,7 +23,20 @@ const summary = {
   asOf: "2026-05-30T00:00:00Z",
 };
 
-/** Fetch'i URL'e göre yanıtlar (settings + holdings + summary). */
+const pricesResponse = {
+  refreshedAtUtc: "2026-05-30T00:00:00Z",
+  fromCache: false,
+  hasStale: false,
+  failedSources: [],
+  prices: [
+    {
+      kind: "Gold", currency: "TRY", price: 6500, quoteCurrency: "TRY",
+      asOfUtc: "2026-05-30T00:00:00Z", source: "truncgil", stale: false,
+    },
+  ],
+};
+
+/** Fetch'i URL'e göre yanıtlar (settings + holdings + summary + prices + nudges). */
 function mockApi() {
   vi.stubGlobal(
     "fetch",
@@ -31,6 +44,8 @@ function mockApi() {
       let body: unknown = summary;
       if (url.includes("/api/settings")) body = { baseCurrency: "TRY" };
       else if (url.includes("/api/holdings")) body = []; // boş pozisyon listesi
+      else if (url.includes("/api/prices")) body = pricesResponse;
+      else if (url.includes("/nudges")) body = { nudges: [] };
       return Promise.resolve({ ok: true, status: 200, json: async () => body } as Response);
     }),
   );

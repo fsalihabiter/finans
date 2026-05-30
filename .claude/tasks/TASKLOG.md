@@ -20,6 +20,34 @@
 
 ---
 
+## 2026-05-31 · Web — canlı fiyat + nudge görünürlüğü (T2.6)
+- **Görev(ler):** T2.6 (tamam). Faz 2 fiyat zinciri **kullanıcıya görünür** hale geldi.
+- **Ne yapıldı:**
+  1. **shared sözleşme:** `PriceDto`/`PricesResponse`/`Nudge`/`NudgeSeverity`/`NudgesResponse` tipleri +
+     `getPrices()` (`/api/prices`) ve `getNudges()` (`/api/portfolio/nudges`) istemci metotları.
+  2. **web hook'ları:** `usePrices` (60 sn staleTime) + `useNudges` (120 sn) + `queryKeys.prices/nudges`.
+  3. **`LivePrices` bileşeni:** altın/döviz çipleri (`quoteCurrency` ile TR biçim); `stale` → "~yaklaşık".
+  4. **`NudgesCard` bileşeni:** API kural-notları (`.nudge` + şiddet rengi: Warning altın / Info nane) +
+     **"yatırım tavsiyesi değildir" disclaimer'ı** (NFR-2); not yoksa çizmez.
+  5. **PortfolioPage bağlama:** topbar'a **"↻ Yenile"** butonu (`prices.refetch`+`nudges.refetch`+toast) +
+     fiyat refreshedAt/`stale`'e bağlı **"son güncelleme · yaklaşık"** etiketi; canlı fiyat strip; Nudge
+     kartı. **Kritik:** `prices.refreshedAtUtc` değişince (backend `CurrentPrice`'ı yazdı) `useEffect`
+     summary+holdings'i invalidate eder → pano canlı değeri yansıtır (TanStack v5'te query onSuccess yok).
+  6. **Çift nudge temizliği:** `PortfolioInsights`'taki client-side hesaplanan "yoğunlaşma" nudge'ı
+     kaldırıldı (artık yetkili API `NudgesCard` var; çakışma yok).
+  7. **CSS:** `.price-chips`/`.price-chip(.stale)`, `.nudge-list`, `.nudge.nudge-info` (nane), `.freshness.stale`
+     — `.mobile-topbar` DOSYA-SONU kuralı korunarak öncesine eklendi (CSS sıra).
+- **Dokunulan dosyalar:** `packages/shared/src/{types,api}/index.ts`; web yeni `components/{LivePrices,NudgesCard}.tsx`
+  (+ `.test.tsx`); düzenlenen `web/src/lib/hooks.ts`, `routes/PortfolioPage.tsx` (+ test mock), `components/PortfolioInsights.tsx`,
+  `App.css`; doküman `04`(zaten T2.4'te), `08`, `09` (SC-W4).
+- **Test:** web **37 yeşil** (33→37: LivePrices 2 + NudgesCard 2; PortfolioPage test mock'una prices/nudges
+  eklendi). shared 13. `tsc -b` + `vite build` + **eslint 0 hata** temiz. **Canlı tarayıcı doğrulaması: bir
+  sonraki adımda** (backend PostgreSQL'e karşı + 5173).
+- **Karar/Not:** Fiyat tazeleme tetikleyici `GET /api/prices` (query); özet/holdings saf okuma kalıp
+  invalidation ile canlanır (read purity korunur). Stale → "yaklaşık" (UI), kullanıcı bilgilendirilir.
+- **Durum:** tamamlandı (kod + testler); canlı görsel doğrulama sıradaki.
+- **Sıradaki:** Canlı doğrulama (tarayıcı). Ardından Faz 2 altyapı T2.7 (Redis) / T2.8 (gözlem) / T2.9 (proxy).
+
 ## 2026-05-31 · `NudgeRuleEngine` — kural tabanlı eğitici notlar + `GET /nudges` (T2.5)
 - **Görev(ler):** T2.5 (tamam).
 - **Ne yapıldı:**

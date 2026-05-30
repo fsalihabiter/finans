@@ -6,14 +6,18 @@
 
 **Aktif faz:** ✅ Faz 0 BİTTİ · ✅ **Faz 1 — Portföy Takip MVP BİTTİ** → **Faz 2 — Canlı fiyat + nudge**
 
-## Sıradaki (öncelik sırası) — Faz 2
-1. **T2.6** — Web: `usePrices`/`useNudges` hook'ları + "Yenile" butonu + "son güncelleme/yaklaşık (stale)"
-   etiketi + Nudge kartı. **← Web görünürlüğü burada kullanıcıya çıkar** (/prices → pano canlı fiyatı yansıtır).
+**Faz 2 işlevsel DoD ✅ KARŞILANDI** (otomatik güncel değer + yenileme; ≥1 not tetiklenir; dış API çökünce
+çökme yok). Kalan: dağıtım/gözlem altyapısı.
 
-> ✅ **T2.1→T2.5 bitti** — sağlayıcılar (Frankfurter+Truncgil, anahtarsız) + `PriceFetchService`
-> (yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) + fallback (`stale`) +
-> `GET /api/prices` (besleme) + `NudgeRuleEngine`+`GET /nudges` (kural tabanlı eğitici not, tavsiye değil).
-> Bkz. TASKLOG 2026-05-31. Altyapı: T2.7 Redis · T2.8 Seq/Prometheus/Grafana · T2.9 reverse proxy+rate limit.
+## Sıradaki (öncelik sırası) — Faz 2 altyapı
+1. **T2.7** — Redis cache katmanı (fiyat/FX/summary dağıtık cache; stampede koruması; isabet metriği)
+2. **T2.8** — Gözlemlenebilirlik yığını (Compose'a Seq + Prometheus + Grafana; OTel metrikleri; dashboard)
+3. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS; güvenlik başlıkları)
+
+> ✅ **T2.1→T2.6 bitti** — fiyat zinciri uçtan uca: sağlayıcılar (Frankfurter+Truncgil, anahtarsız) →
+> `PriceFetchService` (yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) → fallback (`stale`) →
+> `GET /api/prices` + `NudgeRuleEngine`/`GET /nudges` → **Web** (canlı fiyat çipleri + "Yenile" + stale
+> etiketi + Nudge kartı). Bkz. TASKLOG 2026-05-31. **Canlı tarayıcı doğrulaması sıradaki.**
 
 ## Faz 1 tamamlananlar (özet)
 - **Saf hesap (T1.1-1.5):** `PortfolioCalculationService` (§6), `CurrencyConverter` (ters/çapraz,
@@ -30,7 +34,7 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **95** (Application 45 + Integration 50) · web **33** · shared **13** · eslint 0 hata
+- **Yeşil kapı:** backend **95** (Application 45 + Integration 50) · web **37** · shared **13** · eslint 0 hata · tsc/vite temiz
 
 ## Faz 2 tamamlananlar (özet)
 - **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan
@@ -46,7 +50,10 @@
   saf okuma canlı yansır (summary network-refresh'e bağlanmadı: deterministik + ağsız test). 2 e2e (stub).
 - **T2.5:** `NudgeRuleEngine` (saf) — yoğunlaşma/tek-varlık/düşük-nakit eşikleri → eğitici not
   (**tavsiye değil**, CLAUDE.md §2). `Nudge`/`NudgesResponse`; `INudgeService`→summary; `GET /api/portfolio/nudges`
-  per-user. SC-09 (6 unit + 2 e2e). Yeşil kapı: backend **95** (App 45 + Integration 50).
+  per-user. SC-09 (6 unit + 2 e2e).
+- **T2.6:** Web — shared tipler/istemci (`getPrices`/`getNudges`) + `usePrices`/`useNudges`; `LivePrices`
+  çipleri + "↻ Yenile" + stale "yaklaşık" etiketi; `NudgesCard` (disclaimer); fiyat tazelenince
+  summary/holdings invalidate (canlı yansır); PortfolioInsights inline nudge kaldırıldı. web 33→37. SC-W4.
 
 ## Devam eden / Bloke
 - (yok)

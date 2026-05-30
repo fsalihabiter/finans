@@ -96,6 +96,45 @@ export interface PortfolioSummary {
   asOf: string;
 }
 
+// ── Canlı Fiyat & Eğitici Notlar (Faz 2 — 04 §5) ─────────────────────────────
+
+/** Tek enstrümanın güncel fiyatı (GET /api/prices). stale → son bilinen ("yaklaşık"). */
+export interface PriceDto {
+  kind: "Gold" | "Currency";
+  currency: CurrencyCode;
+  price: number;
+  quoteCurrency: CurrencyCode;
+  asOfUtc: string;
+  source: string;
+  stale: boolean;
+}
+
+/** GET /api/prices yanıtı. Fiyatlar kullanıcı-bağımsız (global piyasa). */
+export interface PricesResponse {
+  refreshedAtUtc: string;
+  fromCache: boolean;
+  hasStale: boolean;
+  failedSources: string[];
+  prices: PriceDto[];
+}
+
+/** Eğitici not önem düzeyi. */
+export type NudgeSeverity = "Info" | "Warning";
+
+/** Kural tabanlı eğitici not (GET /api/portfolio/nudges). Tavsiye DEĞİL — farkındalık. */
+export interface Nudge {
+  id: string;
+  icon: string;
+  title: string;
+  body: string;
+  severity: NudgeSeverity;
+}
+
+/** GET /api/portfolio/nudges yanıtı. */
+export interface NudgesResponse {
+  nudges: Nudge[];
+}
+
 /** Bir pozisyona alış/satış (POST .../transactions, POST /holdings içinde). */
 export interface TransactionInput {
   type: TransactionType;

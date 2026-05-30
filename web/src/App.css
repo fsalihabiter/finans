@@ -1720,6 +1720,59 @@ body.drawer-lock {
   border-radius: 6px;
 }
 
+/* ───── Canlı fiyat çipleri + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
+.price-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.price-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  background: var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 100px;
+  padding: 7px 13px;
+  font-size: 12.5px;
+}
+.price-chip .pc-k {
+  color: var(--muted, #a89c89);
+}
+.price-chip b {
+  color: var(--text, #f3ede2);
+  font-variant-numeric: tabular-nums;
+}
+.price-chip.stale {
+  border-color: rgba(224, 178, 85, 0.35);
+}
+.price-chip .pc-stale {
+  color: var(--gold, #e0b255);
+  font-size: 11px;
+}
+
+.nudge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* Info düzeyi: nane tonu (daha yumuşak); Warning varsayılan altın `.nudge`. */
+.nudge.nudge-info {
+  background: linear-gradient(135deg, rgba(95, 201, 160, 0.09), rgba(95, 201, 160, 0.02));
+  border-color: rgba(95, 201, 160, 0.2);
+}
+.nudge.nudge-info .nudge-ic {
+  background: rgba(95, 201, 160, 0.16);
+}
+
+.freshness.stale {
+  border-color: rgba(224, 178, 85, 0.4);
+  color: var(--gold, #e0b255);
+}
+.freshness.stale .fresh-dot {
+  background: var(--gold, #e0b255);
+}
+
 /* ───── Mobil üst bar görünürlüğü — DOSYA SONU (base display:none'dan sonra) ───── */
 @media (max-width: 1040px) {
   .mobile-topbar {

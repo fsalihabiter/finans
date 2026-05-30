@@ -23,6 +23,8 @@ export const queryKeys = {
   holdings: (baseCurrency?: CurrencyCode) => ["holdings", baseCurrency ?? "default"] as const,
   holding: (id: string) => ["holding", id] as const,
   settings: ["settings"] as const,
+  prices: ["prices"] as const,
+  nudges: ["nudges"] as const,
 };
 
 export function usePortfolioSummary(baseCurrency?: CurrencyCode) {
@@ -51,6 +53,24 @@ export function useSettings() {
   return useQuery({
     queryKey: queryKeys.settings,
     queryFn: () => api.getSettings(),
+  });
+}
+
+/** Canlı altın/döviz fiyatları (T2.6). Sorgu, backend'de tazeleme turunu tetikler (cache'li). */
+export function usePrices() {
+  return useQuery({
+    queryKey: queryKeys.prices,
+    queryFn: () => api.getPrices(),
+    staleTime: 60_000, // fiyatlar yavaş değişir; backend zaten 10 dk cache'liyor
+  });
+}
+
+/** Kural tabanlı eğitici notlar (T2.6). */
+export function useNudges() {
+  return useQuery({
+    queryKey: queryKeys.nudges,
+    queryFn: () => api.getNudges(),
+    staleTime: 120_000,
   });
 }
 

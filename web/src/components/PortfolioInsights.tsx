@@ -87,17 +87,6 @@ export function PortfolioInsights({
           </p>
         </div>
       </div>
-
-      {top2Weight > 0.5 && (
-        <div className="nudge">
-          <div className="nudge-ic">💡</div>
-          <div className="nudge-tx">
-            Portföyünün ilk iki kalemi (<b>{top2.map((a) => a.name).join(" + ")}</b>) toplam değerin{" "}
-            <b>{formatPercent(top2Weight, 1, true, false)}</b>'ini oluşturuyor. Bu yoğunlaşma, ikisi
-            aynı anda gerilerse riski birlikte taşıman anlamına gelir — çeşitlendirme bunu yumuşatır.
-          </div>
-        </div>
-      )}
     </>
   );
 }

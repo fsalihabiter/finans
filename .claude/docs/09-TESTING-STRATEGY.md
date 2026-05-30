@@ -150,6 +150,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-W1 | NFR-7 | `formatCurrency(641403)`="641.403 ₺", `formatPercent(0.516)`="%51,6" (`@finans/shared`) | Unit (Vitest) | [x] (T1.10 format.test.ts) |
 | SC-W2 | NFR-2 | **Web** Analiz sayfası render'ında `Disclaimer` her zaman mevcut | Bileşen (RTL) | [x] (Disclaimer bileşeni + AnalysisPage.test) |
 | SC-W3 | FR-1.1/1.3 | **Web E2E:** varlık ekle → portföy özeti güncellenir | E2E (Playwright) | [ ] (ertelendi → Faz 2; iki-sunucu orkestrasyonu) |
+| SC-W4 | FR-2.5/2.4 | **Web:** `LivePrices` çipleri (altın/döviz) bayatta "yaklaşık" gösterir; `NudgesCard` notları + "tavsiye değildir" disclaimer'ıyla render eder; not yoksa çizmez | Bileşen (RTL) | [x] (T2.6; LivePrices 2 + NudgesCard 2) |
 | SC-M1 | NFR-2/7 | (Faz M) Mobil format + Analiz disclaimer pariteleri | Unit/Bileşen (mobil) | [ ] |
 | **SC-13** | **NFR-12, `11`§3** | **Güvenlik:** Kullanıcı A, B'nin holding id'siyle istek atar → **404** (IDOR/BOLA yok). **Kimlik açılmadan zorunlu.** | Integration | [x] (T1.6; GET/DELETE başkasının id'si→404, boş liste/sıfır özet, integration) |
 | SC-14 | NFR-4, `11`§5 | **Güvenlik:** Eşik üstü istek → **429** (rate limit) | Integration | [ ] |
