@@ -3,6 +3,7 @@
 // Ham sayı gelir; biçimleme `../format` ile yapılır (hesap burada YOK).
 
 import type {
+  AddBesContributionInput,
   ApiErrorEnvelope,
   CreateHoldingInput,
   CurrencyCode,
@@ -88,6 +89,8 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       send<Holding>("POST", `/api/holdings/${id}/transactions`, input),
     updateHolding: (id: string, input: UpdateHoldingInput) =>
       send<Holding>("PUT", `/api/holdings/${id}`, input),
+    addBesContribution: (id: string, input: AddBesContributionInput) =>
+      send<Holding>("POST", `/api/holdings/${id}/bes-contribution`, input),
     deleteHolding: (id: string) => send<void>("DELETE", `/api/holdings/${id}`),
 
     // ── Ayarlar (04 §4) ──

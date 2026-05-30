@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type {
+  AddBesContributionInput,
   CreateHoldingInput,
   CurrencyCode,
   TransactionInput,
@@ -87,6 +88,18 @@ export function useUpdateHolding(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateHoldingInput) => api.updateHolding(id, input),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });
+    },
+  });
+}
+
+export function useAddBesContribution(id: string) {
+  const invalidate = useInvalidatePortfolio();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AddBesContributionInput) => api.addBesContribution(id, input),
     onSuccess: () => {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });

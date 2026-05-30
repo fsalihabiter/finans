@@ -319,6 +319,13 @@ Quantity = Σ Buy.Quantity − Σ Sell.Quantity
   saklanır** (okuma yolu hızlanır, `10` §4).
 - **Birim testi zorunlu** (NFR-1) — § 12 seed'indeki altın kalemi fixture.
 
+> ⚠️ **BES bu kuralın DIŞINDA.** BES nominal bir hesap (1 birim): "alış/satış" yok,
+> aylık katkı ile büyür. Maliyet tabanı = `BesDetails.OwnContribution +
+> StateContribution`; değer = güncel fon değeri (`CurrentPrice`). BES'e alış/satış
+> işlemi **engellenir** (eklenirse türetim BES maliyetini bozardı); yerine
+> `POST /holdings/{id}/bes-contribution` (kendi + devlet %30) kullanılır ve
+> `Holdings.AvgCost = own + state` doğrudan güncellenir (T1.17).
+
 ---
 
 ## 12. SEED VERİSİ (kapsamlı & tutarlı)

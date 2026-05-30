@@ -26,13 +26,28 @@ public sealed record HoldingDto(
     decimal? Profit,
     decimal? ReturnRatio,
     decimal Weight,
-    BesDto? Bes);
+    BesDto? Bes,
+    IReadOnlyList<TransactionDto>? Transactions = null);
 
-/// <summary>BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1, 03 §A).</summary>
+/// <summary>
+/// BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1, 03 §A).
+/// BES nominal hesaptır: maliyet = kendi + devlet katkısı; "alış/satış" modeline
+/// uymaz, aylık katkı ile büyür (JoinedAtUtc = sözleşme başlangıcı).
+/// </summary>
 public sealed record BesDto(
     decimal OwnContribution,
     decimal StateContribution,
-    VestingState VestingState);
+    VestingState VestingState,
+    DateTime? JoinedAtUtc);
+
+/// <summary>Bir pozisyonun geçmiş işlemi (detayda gösterilir, 04 §4).</summary>
+public sealed record TransactionDto(
+    Guid Id,
+    TransactionType Type,
+    decimal Quantity,
+    decimal UnitPrice,
+    decimal Fee,
+    DateTime TransactedAtUtc);
 
 /// <summary>Portföy özeti (04 §4 — GET /portfolio/summary). Tüm sayılar backend hesabı.</summary>
 public sealed record PortfolioSummaryDto(
@@ -83,3 +98,12 @@ public sealed record TransactionRequest(
 /// <summary>PUT /api/holdings/{id} — Faz 1'de güncel fiyatı elle güncelle (FR-1.8).</summary>
 public sealed record UpdateHoldingRequest(
     decimal? CurrentPrice);
+
+/// <summary>
+/// POST /api/holdings/{id}/bes-contribution — BES'e aylık katkı ekler. Kendi katkı
+/// (<paramref name="OwnAmount"/>) + devlet katkısı (verilmezse %30 hesaplanır, TR kuralı).
+/// Maliyet tabanı (kendi+devlet) ve dolayısıyla getiri buna göre güncellenir.
+/// </summary>
+public sealed record AddBesContributionRequest(
+    decimal OwnAmount,
+    decimal? StateAmount = null);

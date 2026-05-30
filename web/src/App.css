@@ -459,6 +459,15 @@
   cursor: default;
 }
 
+/* İşlem geçmişi */
+.tx-history {
+  margin: 0.5rem 0 1.5rem;
+}
+.tx-history h2 {
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
 /* Güncel fiyat formu */
 .price-form {
   display: flex;

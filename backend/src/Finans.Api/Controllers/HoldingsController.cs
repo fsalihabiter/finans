@@ -45,6 +45,12 @@ public sealed class HoldingsController(IHoldingService holdings) : ControllerBas
         Guid id, [FromBody] UpdateHoldingRequest request, CancellationToken ct) =>
         Ok(await holdings.UpdateAsync(id, request, ct));
 
+    /// <summary>POST /api/holdings/{id}/bes-contribution — BES'e aylık katkı (kendi + devlet).</summary>
+    [HttpPost("{id:guid}/bes-contribution")]
+    public async Task<ActionResult<HoldingDto>> AddBesContribution(
+        Guid id, [FromBody] AddBesContributionRequest request, CancellationToken ct) =>
+        Ok(await holdings.AddBesContributionAsync(id, request, ct));
+
     /// <summary>DELETE /api/holdings/{id} — pozisyonu sil (soft-delete, 204).</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

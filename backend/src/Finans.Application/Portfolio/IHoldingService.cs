@@ -19,6 +19,9 @@ public interface IHoldingService
 
     Task<HoldingDto> UpdateAsync(Guid id, UpdateHoldingRequest request, CancellationToken ct = default);
 
+    /// <summary>BES pozisyonuna aylık katkı ekler (kendi + devlet). BES değilse 400.</summary>
+    Task<HoldingDto> AddBesContributionAsync(Guid id, AddBesContributionRequest request, CancellationToken ct = default);
+
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
 

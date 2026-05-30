@@ -42,6 +42,17 @@ export interface Bes {
   ownContribution: number;
   stateContribution: number;
   vestingState: VestingState;
+  joinedAtUtc: string | null;
+}
+
+/** Bir pozisyonun geçmiş işlemi (detayda gösterilir). */
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  quantity: number;
+  unitPrice: number;
+  fee: number;
+  transactedAtUtc: string;
 }
 
 /** GET /api/holdings kalemi. Hesaplanamayan alanlar null. */
@@ -61,6 +72,8 @@ export interface Holding {
   returnRatio: number | null;
   weight: number;
   bes: Bes | null;
+  /** Yalnızca tekil holding (GET /holdings/{id}) yanıtında dolu; listede null. */
+  transactions?: Transaction[] | null;
 }
 
 /** Dağılım dilimi (donut + legend). */
@@ -105,6 +118,12 @@ export interface CreateHoldingInput {
 /** PUT /api/holdings/{id} — güncel fiyatı elle güncelle (FR-1.8). */
 export interface UpdateHoldingInput {
   currentPrice: number | null;
+}
+
+/** POST /api/holdings/{id}/bes-contribution — BES'e aylık katkı (kendi + devlet %30 ops.). */
+export interface AddBesContributionInput {
+  ownAmount: number;
+  stateAmount?: number | null;
 }
 
 // ── Ayarlar (04 §4) ──────────────────────────────────────────────────────────

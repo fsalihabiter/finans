@@ -20,6 +20,34 @@
 
 ---
 
+## 2026-05-30 · BES özel modeli (T1.17) + pozisyon işlem geçmişi (T1.18) + BES veri onarımı
+- **Görev(ler):** T1.17, T1.18 (tamam) — kullanıcı bildirimi: "BES'e işlem ekledim tüm değerler bozuldu"
+- **Kök neden:** BES nominal hesap (kendi+devlet katkısı + fon getirisi), "alış/satış → ağırlıklı ort.
+  maliyet" modeline uymuyor. Genel `AddTransaction` BES'e işlem ekleyince maliyeti işlemlerden yeniden
+  türetip 148.554→4.250'ye düşürdü (getiri +%6.473!). Seed BES'i de transaction'sız nominal'di.
+- **Ne yapıldı:**
+  - **Veri onarımı (SQL):** bozuk BES işlemi silindi, `AvgCost` 148.554'e geri (kendi 120k + devlet 28.554).
+  - **T1.17 BES modeli (backend):** `AddTransaction` BES'i reddediyor (400, "aylık katkı kullanın").
+    Yeni `POST /holdings/{id}/bes-contribution` (kendi + devlet; verilmezse %30 TR kuralı) → `BesDetails`
+    büyür, `AvgCost = own + state`. `BesDto`'ya `JoinedAtUtc` (başlangıç, nullable). Web: BES'te
+    "Aylık katkı ekle" formu (alış/satış yerine) + %30 önizleme + başlangıç tarihi gösterimi.
+  - **T1.18 işlem geçmişi:** `GET /holdings/{id}` → `transactions` listesi (en yeni üstte); web
+    `TransactionHistory` tablosu her pozisyonun detayında. BES'te boş (işlem yok → katkı özeti gösterilir).
+- **Dokunulan dosyalar:** `Finans.Application/Portfolio/{PortfolioDtos,IHoldingService}.cs`,
+  `Finans.Infrastructure/Services/HoldingService.cs`, `Finans.Api/Controllers/HoldingsController.cs`,
+  `packages/shared/src/{types,api}/index.ts`, `web/src/lib/hooks.ts`,
+  `web/src/components/{BesContributionForm,TransactionHistory}.tsx` (+test),
+  `web/src/routes/HoldingDetailPage.tsx`, `web/src/App.css`,
+  `tests/Finans.Integration.Tests/BesAndHistoryApiTests.cs`, `.claude/docs/03-DATA-MODEL.md` §11.
+- **Test:** backend **Application 39 + Integration 35 = 74 yeşil** (+4: BES reddi/katkı/geçmiş/başlangıç),
+  web **19** (+4 BES form/geçmiş), shared 13, tsc temiz. **Release konfigürasyonunda** build/test edildi —
+  kullanıcı app'i VS Debug'da çalıştırdığı için `bin/Debug` kilitli; `bin/Release` ayrı → kilide takılmadan.
+- **Karar/Not:** BES ort.-maliyet kuralının istisnası (03 §11'e işlendi). Kullanıcının VS Debug instance'ı
+  ESKİ backend → yeni BES uçlarını görmek için **VS debug oturumunu yeniden başlatması** gerekir (frontend HMR).
+  BES katkı geçmişi (her katkı kaydı) ileride; şimdilik kümülatif kendi/devlet gösteriliyor.
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı + `IPriceProvider`.
+
 ## 2026-05-30 · Mevcut pozisyona alış/satış işlemi ekleme UI'ı (T1.16)
 - **Görev(ler):** T1.16 (tamam) — kullanıcı bildirimi: "pozisyonlara ekleme/çıkarma yapamıyorum"
 - **Ne yapıldı:** **Gerçek eksik** — backend `POST /holdings/{id}/transactions` + shared `addTransaction`

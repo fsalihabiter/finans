@@ -2,11 +2,20 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatCurrency, formatNumber, formatPercent } from "@finans/shared";
 import { AddTransactionForm } from "../components/AddTransactionForm";
+import { BesContributionForm } from "../components/BesContributionForm";
+import { TransactionHistory } from "../components/TransactionHistory";
 import { useDeleteHolding, useHolding, useUpdateHolding } from "../lib/hooks";
 
 function tone(value: number | null): string {
   if (value === null || value === 0) return "";
   return value > 0 ? "pos" : "neg";
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
 }
 
 /**
@@ -34,6 +43,7 @@ export function HoldingDetailPage() {
   }
 
   const h = holding.data;
+  const isBes = h.bes !== null;
 
   const onUpdatePrice = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,14 +88,28 @@ export function HoldingDetailPage() {
             <div><dt>Kendi katkın</dt><dd>{formatCurrency(h.bes.ownContribution, h.currency)}</dd></div>
             <div><dt>Devlet katkısı</dt><dd className="pos">{formatCurrency(h.bes.stateContribution, h.currency)}</dd></div>
             <div><dt>Hak ediş</dt><dd>{h.bes.vestingState}</dd></div>
+            <div><dt>Başlangıç</dt><dd>{h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}</dd></div>
           </dl>
         </div>
       )}
 
-      <AddTransactionForm holdingId={h.id} currency={h.currency} unit={h.unit} />
+      {/* BES nominal hesap → aylık katkı; diğer pozisyonlar → alış/satış işlemi. */}
+      {isBes ? (
+        <BesContributionForm holdingId={h.id} />
+      ) : (
+        <AddTransactionForm holdingId={h.id} currency={h.currency} unit={h.unit} />
+      )}
+
+      <TransactionHistory
+        transactions={h.transactions ?? []}
+        currency={h.currency}
+        unit={h.unit}
+      />
 
       <form className="price-form" onSubmit={onUpdatePrice}>
-        <label htmlFor="price">Güncel fiyatı güncelle ({h.currency})</label>
+        <label htmlFor="price">
+          {isBes ? "Güncel fon değerini güncelle" : "Güncel fiyatı güncelle"} ({h.currency})
+        </label>
         <div className="price-row">
           <input
             id="price"

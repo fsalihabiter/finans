@@ -24,8 +24,17 @@ public sealed class HoldingService(
     public async Task<HoldingDto> GetByIdAsync(Guid id, CurrencyCode? baseCurrency = null, CancellationToken ct = default)
     {
         var all = await BuildHoldingDtosAsync(baseCurrency, ct);
-        return all.FirstOrDefault(h => h.Id == id)
+        var dto = all.FirstOrDefault(h => h.Id == id)
             ?? throw new NotFoundException();
+
+        // Detayda geçmiş işlemler (en yeni üstte). Holding zaten kullanıcıya kapsanmış (yukarıda).
+        var transactions = await db.Transactions
+            .Where(t => t.HoldingId == id)
+            .OrderByDescending(t => t.TransactedAtUtc)
+            .Select(t => new TransactionDto(t.Id, t.Type, t.Quantity, t.UnitPrice, t.Fee, t.TransactedAtUtc))
+            .ToListAsync(ct);
+
+        return dto with { Transactions = transactions };
     }
 
     public async Task<HoldingDto> CreateAsync(CreateHoldingRequest request, CancellationToken ct = default)
@@ -60,6 +69,12 @@ public sealed class HoldingService(
         ValidateTransaction(request, isFirst: false);
 
         var holding = await LoadOwnedWithTransactionsAsync(id, ct);
+
+        // BES nominal hesaptır; alış/satış maliyet türetimini bozar → engelle (aylık katkı kullan).
+        if (holding.Asset.Type == AssetType.Bes)
+            throw new ValidationException("transaction", "not_allowed_for_bes",
+                "BES pozisyonuna alış/satış eklenemez. 'Aylık katkı ekle'yi kullanın.");
+
         var now = DateTime.UtcNow;
 
         var transaction = ToEntity(request, holding.Id, now);
@@ -83,6 +98,38 @@ public sealed class HoldingService(
 
         var holding = await LoadOwnedAsync(id, ct);
         holding.CurrentPrice = request.CurrentPrice;
+        holding.UpdatedAtUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+        return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
+    public async Task<HoldingDto> AddBesContributionAsync(Guid id, AddBesContributionRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.OwnAmount <= 0m)
+            throw new ValidationException("ownAmount", "must_be_positive", "Katkı tutarı 0'dan büyük olmalı.");
+        if (request.StateAmount is < 0m)
+            throw new ValidationException("stateAmount", "must_be_non_negative", "Devlet katkısı negatif olamaz.");
+
+        var holding = await db.Holdings
+            .Include(h => h.Asset)
+            .Include(h => h.BesDetails)
+            .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
+            ?? throw new NotFoundException();
+
+        if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
+            throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
+
+        // Devlet katkısı verilmezse TR kuralı: kendi katkının %30'u (basitleştirilmiş, üst sınır yok).
+        var stateAmount = request.StateAmount ?? Math.Round(request.OwnAmount * 0.30m, 2);
+
+        var bes = holding.BesDetails;
+        bes.OwnContribution += request.OwnAmount;
+        bes.StateContribution += stateAmount;
+
+        // BES maliyet tabanı = kendi + devlet katkısı (nominal 1 birim). Değer (CurrentPrice) fon getirisini taşır.
+        holding.AvgCost = bes.OwnContribution + bes.StateContribution;
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
         await db.SaveChangesAsync(ct);
@@ -120,7 +167,7 @@ public sealed class HoldingService(
             var h = holdings[i];
             var r = results[i];
             var bes = h.BesDetails is { } b
-                ? new BesDto(b.OwnContribution, b.StateContribution, b.VestingState)
+                ? new BesDto(b.OwnContribution, b.StateContribution, b.VestingState, b.JoinedAtUtc)
                 : null;
 
             dtos.Add(new HoldingDto(
@@ -139,6 +186,7 @@ public sealed class HoldingService(
 
     private async Task<Holding> LoadOwnedWithTransactionsAsync(Guid id, CancellationToken ct) =>
         await db.Holdings
+            .Include(h => h.Asset)
             .Include(h => h.Transactions)
             .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
             ?? throw new NotFoundException();
