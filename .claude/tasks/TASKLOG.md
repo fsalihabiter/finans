@@ -20,6 +20,100 @@
 
 ---
 
+## 2026-05-30 · Web UX/UI 2. tur — kullanıcı geri bildirimi (6 madde) + canlı doğrulama (T1.21)
+- **Görev(ler):** T1.21 (tamam) — kullanıcı canlı turda 6 madde işaret etti.
+- **Ne yapıldı:**
+  1. **Sola ağırlık / sağ boşluk:** dashboard'da donut artık `grid-2` içinde "Değer Seyri" önizleme
+     kartının yanında; `.app-content` `margin:0 auto` (geniş ekranda ortalanır). Detay sayfası
+     2 sütun + `max-width` 720→1100.
+  2. **Detay yoğunluğu:** İşlem/fiyat/BES-katkı formları **modale** taşındı (yeni genel `Modal` +
+     `AddTransactionForm`/`BesContributionForm` `onDone` prop'u). Sayfada artık buton tetikliyor;
+     işlem geçmişi sağ sütunda kart içinde (çift başlık kaldırıldı, dar sütuna sığacak CSS).
+  3. **Tüm taslak menüleri:** yeni rotalar + nav grupları (Portföy / Akıl & Öğren) — İşlemler,
+     Performans, Senaryo, Hisse Analizi, Eğitim (ortak `ComingSoonPage`, faz rozetli, gerekli
+     yerlerde disclaimer). Analiz da bu bileşene taşındı.
+  4. **Performans bölümü:** `PerformancePage` — dönem sekmeleri (1A/3A/1Y/Tümü) + zaman-serisi
+     yer tutucu (canlı fiyat geçmişi Faz 2'de) + **gerçek veriden** kalem bazında getiri çubukları.
+  5. **🔴 Mobil menü erişilemezliği (KÖK NEDEN):** CSS kaynak sırası hatası — base `.mobile-topbar
+     {display:none}` kuralı, onu gösteren `@media`'dan SONRA geliyordu (medya sorgusu specificity
+     eklemez → none kazanıyordu). Düzeltme: gösterim kuralı dosya **sonuna** (base'den sonra) alındı.
+     **CSSOM sırası + drawer state makinesi canlı doğrulandı.**
+  6. **Sticky topbar boşluğu + arkaplan uyumu:** negatif margin kaldırıldı, `top:0`'da sıfır boşlukla
+     sabit; `.app-content` üst dolgusu topbar'a devredildi. İki geri bildirim turu sonrası: düz `--bg`
+     dolgu/sert çizgi → kısa süre yarı saydam gradient → **nihai: `background:transparent` + sadece
+     `backdrop-filter: blur(14px)`** (renk tint'i YOK). Kaydırılmadan atmosfer gradyanı olduğu gibi
+     görünür (bant yok); kaydırınca içerik buzlu-cam gibi yumuşar, başlık okunaklı. **Canlı doğrulandı.**
+  7. **Marka adı → "Nirengi":** sidebar + mobil bar (`Ni`+altın `rengi`) ve sayfa başlığı (`index.html`).
+     Kod/paket adları (`@finans/*`) İngilizce kod konvansiyonu gereği değişmedi; yalnızca kullanıcıya
+     görünen marka. Bkz. [[brand-name-nirengi]].
+  8. **Header full-bleed:** 1920px'te içerik 1320'de ortalanınca topbar yalnızca ortadaki sütunu
+     kaplıyordu → kaydırınca "kesik dikdörtgen". `--gutter` değişkeniyle (app-content padding =
+     topbar negatif margin) topbar **ana alanın tüm genişliğine** yayıldı, iç içeriği 1320 sütununa
+     hizalı kaldı. Ölçümle doğrulandı (topbar 250→1910, kartlar 425→1735).
+  9. **Confirm "Vazgeç" butonu teması:** `.btn-ghost`'a `border` tanımlı olmadığından tarayıcının
+     varsayılan açık-gri kenarlığı sızıyordu → temalı (`panel-2` zemin + `line` kenarlık + hover gold).
+  10. **Proje ikonu (favicon + marka):** Vite varsayılan mor logosu yerine **anlam taşıyan ikon**.
+     6 konsept + "N" yükseliş varyantları kullanıcıya canlı önizlemeyle (geçici `web/public/*.html`)
+     sunuldu; seçim: **yükselen nirengi/grafik çizgisi** (4 düğüm: çık → tepe → geri çekilme → daha
+     yüksek zirve — "N"in grafik yorumu, nirengi + portföy yükselişi). Uygulandı: `web/public/favicon.svg`
+     (altın gradient kutu + koyu glyph), `BrandMark` bileşeni (sidebar + mobil bar `◆` yerine),
+     `index.html` (apple-touch + manifest + theme-color), yeni `manifest.webmanifest`. Önizleme dosyaları
+     silindi. Geri bildirim: glyph kutuda boş kalıyordu → şekil büyütüldü (bbox ~11–53, stroke 5,
+     düğüm r5.5) + `BrandMark` svg 24→32px. **Canlı doğrulandı** (sidebar markası + favicon).
+     Bkz. [[brand-name-nirengi]].
+  11. **Tutarlı dikey ritim:** boşluklar dağınıktı (kpis gap 15 vs grid 16; nudge→tablo 0px bitişik;
+     inline `marginBottom`'lar). `.page` yardımcı sınıfı (`display:flex; gap:16px`) tüm içerik
+     sayfalarının (Portföy/Performans/Ayarlar/ComingSoon + Skeleton) kök section'ına eklendi; blok
+     margin'leri (kpis/grid-2/grid-3/nudge/topbar/setgrp/disclaimer/inline) kaldırıldı → **tüm bloklar
+     arası birebir 16px** (ölçümle doğrulandı: topbar→kpis→grid-2→grid-3→nudge→tablo = 16/16/16/16/16).
+- **Dokunulan dosyalar:** yeni `components/{Modal,ComingSoonPage}.tsx`,
+  `routes/{PerformancePage,TransactionsPage,ScenarioPage,StocksPage,EducationPage}.tsx`;
+  düzenlenen `App.tsx` (nav grupları+rotalar), `main.tsx`, `App.css` (sticky/centre/drawer-sıra/
+  periods/chart-frame/perf-bars/modal-form/detay-grid), `routes/{PortfolioPage,HoldingDetailPage,
+  AnalysisPage}.tsx`, `components/{AddTransactionForm,BesContributionForm,TransactionHistory}.tsx`;
+  yeni testler `{Modal,ComingSoonPage,PerformancePage}`.
+- **Test:** web **33 yeşil** (28→33), shared 13, `tsc -b` + `vite build` + **eslint 0 hata** temiz.
+  **Canlı doğrulama (5173 + backend 5298 + PostgreSQL):** dashboard (donut+Değer Seyri), Performans
+  (gerçek getiri çubukları), detay (modal açılışı), 8 menü grubu, mobil drawer state makinesi, sticky.
+- **Karar/Not:** Görsel doğrulamada `resize_window` viewport'u küçültmedi → mobil görünüm CSSOM
+  kuralı sırası + drawer state makinesi (hamburger.click → sidebar.open+scrim+body-lock) ile kanıtlandı.
+  Gelecek-faz menüleri kurgusal veri içermez (yer tutucu + faz rozeti).
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı (zaman serisi gelince Performans grafiği canlanır).
+
+## 2026-05-30 · Web UX/UI yükseltme — mobil nav, durumlar, geri bildirim, a11y (T1.20)
+- **Görev(ler):** T1.20 (tamam) — kullanıcı: "UX/UI uzmanı gözüyle neler yanlış/eksik analiz et, daha
+  kullanışlı ve kontrol edilebilir bir görünüm/site oluştur"
+- **Ne yapıldı:** Görsel dil korunarak **işlevsel/etkileşimsel** boşluklar kapatıldı:
+  - 🔴 **Mobil navigasyon kırıktı** (`<1040px` sidebar `display:none`, yerine hiçbir şey yok → telefonda
+    gezinme + "Varlık Ekle" erişilemiyordu). Düzeltme: **off-canvas drawer** + sabit **mobil üst bar**
+    (hamburger + marka + ＋). Escape/scrim/nav-tıklama ile kapanır; arka plan kaydırma kilidi.
+  - 🔴 Boş durum mobilde **yanlış** yönlendiriyordu ("soldaki menü"). Yeni `EmptyState` (ikon + metin +
+    cihazdan bağımsız **çalışan CTA** → `AppShellContext` ile modalı açar).
+  - 🔴 `window.confirm` → stilize `ConfirmDialog` (alertdialog, odak yönetimi, Escape). "Sil" başlıktan
+    alındı, alta **danger-zone**'a taşındı.
+  - 🟠 Düz "Yükleniyor…" → `Skeleton`/`PortfolioSkeleton` (shimmer). Hata → **"Tekrar dene"** (retry).
+  - 🟠 Aksiyon geri bildirimi yoktu → `ToastProvider`/`useToast` (ekle/fiyat/sil/para birimi).
+  - 🟠 `AddHoldingDialog`: `<select>` → **type-chips** (ikonlu, radiogroup), autofocus, **Tab odak tuzağı**,
+    satır-içi doğrulama ipucu, dolu formda yanlış kapanma koruması, koşullu mount (taze state).
+  - 🟠 Pozisyon tablosu dar ekranda yatay kaydırma yerine **`data-label`'lı kart düzeni**; tüm satır tıklanır.
+  - 🟠 KPI'lara eğitici **info-tooltip** (net kâr/zarar, reel getiri).
+  - 🟡 Saate duyarlı selamlama, **veri tazeliği** etiketi, **sticky topbar**, skip-link + focus-visible,
+    `prefers-reduced-motion`, HealthBadge stili, özel scrollbar. Ölü `HeroCard.tsx` silindi. Analiz sayfası
+    "Yakında" görseliyle zenginleşti (disclaimer korunur).
+- **Dokunulan dosyalar:** yeni `web/src/lib/{appShell.tsx,greeting.ts}`,
+  `web/src/components/{Toast,ConfirmDialog,Skeleton,EmptyState,InfoTip}.tsx`; düzenlenen `web/src/App.tsx`,
+  `web/src/App.css`, `web/src/components/{AddHoldingDialog,KpiGrid,HoldingsTable,AllocationDonut}.tsx`,
+  `web/src/routes/{PortfolioPage,HoldingDetailPage,SettingsPage,AnalysisPage}.tsx`; silinen `HeroCard.tsx`;
+  yeni testler `{greeting,Toast,ConfirmDialog,EmptyState}` + güncellenen `{PortfolioPage,AddHoldingDialog}` testleri.
+- **Test:** web **28 yeşil** (19→28, +9 yeni), shared **13**, `tsc -b` + `vite build` temiz, **eslint 0 hata**
+  (önceden var olan 2 lint hatası — AllocationDonut mutasyon + AddHoldingDialog set-state-in-effect — da giderildi).
+  ⚠️ Canlı görsel doğrulama yapılmadı (backend 5310 ayakta değildi) — istenirse backend+Vite ile turlanabilir.
+- **Karar/Not:** "Varlık Ekle" modalı kabuk durumundan `AppShellContext` ile açılır (boş durum + mobil için).
+  Tablo responsive'i salt-CSS (`data-label`) → DOM/semantik korunur, testler stabil.
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı + `IPriceProvider`.
+
 ## 2026-05-30 · Web görsel yükseltme — taslak referanslı zengin pano (T1.19)
 - **Görev(ler):** T1.19 (tamam) — kullanıcı: "taslağı referans alıp daha güzel/görsel-yüksek frontend"
 - **Ne yapıldı:** `portfoy-web-panosu-taslak.html` tasarım dili Faz 1'in **gerçek-veri** ekranlarına uygulandı
