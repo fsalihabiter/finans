@@ -20,6 +20,26 @@
 
 ---
 
+## 2026-05-30 · `@finans/shared` API tipleri + istemci + web React Query hook'ları (T1.10)
+- **Görev(ler):** T1.10 (tamam)
+- **Ne yapıldı:**
+  - **shared/types:** 04 sözleşmesi tipleri — `AssetType`/`TransactionType`/`VestingState`,
+    `Holding`/`Bes`/`PortfolioSummary`/`AllocationSlice`, `CreateHoldingInput`/`TransactionInput`/
+    `UpdateHoldingInput`, `Settings`, hata zarfı (`ApiErrorEnvelope`).
+  - **shared/api:** `createApiClient` genişletildi (summary/holdings CRUD/transactions/settings);
+    `request` artık hata zarfını çözüp `ApiError{status,code,message}` fırlatıyor, 204'ü gövdesiz çözüyor.
+  - **web/lib/hooks.ts:** TanStack Query hook'ları (usePortfolioSummary/useHoldings/useHolding/
+    useSettings + create/addTx/update/delete/updateSettings mutation'ları; query key'ler + invalidation).
+  - **vitest:** `include` yalnızca `src` → Playwright `e2e/*.spec.ts` artık vitest'e sızmıyor.
+- **Dokunulan dosyalar:** `packages/shared/src/{types,api}/index.ts`, `packages/shared/src/api/api.test.ts`,
+  `web/src/lib/hooks.ts`, `web/vite.config.ts`.
+- **Test:** shared **12 yeşil** (4 yeni api: baseCurrency URL, hata zarfı parse, 204, gövdesiz hata),
+  web **2 yeşil**, shared+web `tsc --noEmit` temiz.
+- **Karar/Not:** Hook'lar şimdilik web'de (shared'ı React'a bağımlı kılmamak için); mobil (Faz M)
+  gelince shared'a taşınır. Vite proxy backend'i `http://localhost:5298` bekliyor (web `pnpm dev`).
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.11 Web AppShell + HeroCard + summary bağlama + para birimi seçici.
+
 ## 2026-05-30 · Settings endpoint — baz para birimi (T1.9 backend)
 - **Görev(ler):** T1.9 (backend kısmı tamam; web seçimi T1.11'de)
 - **Ne yapıldı:** `GET/PUT /api/settings` (04 §4) — `ISettingsService`/`SettingsService` (kullanıcıya

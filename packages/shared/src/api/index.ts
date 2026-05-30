@@ -1,16 +1,30 @@
-// API istemci sözleşmesi — fetch wrapper + uç fonksiyonları.
-// TanStack Query hook'ları T1.10'da bunun üstüne eklenir.
+// API istemci sözleşmesi — fetch wrapper + uç fonksiyonları (framework-bağımsız).
+// React Query hook'ları web/mobil tarafında bunun üstüne kurulur.
 // Ham sayı gelir; biçimleme `../format` ile yapılır (hesap burada YOK).
 
-import type { HealthResponse } from "../types/index";
+import type {
+  ApiErrorEnvelope,
+  CreateHoldingInput,
+  CurrencyCode,
+  HealthResponse,
+  Holding,
+  PortfolioSummary,
+  Settings,
+  TransactionInput,
+  UpdateHoldingInput,
+  UpdateSettingsInput,
+} from "../types/index";
 
+/** Sözleşmeli hata (04 §2). `code`/`details` zarftan çıkarılır; mesaj TR ve gösterilebilir. */
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code = "UNKNOWN") {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -24,16 +38,62 @@ async function request<T>(baseUrl: string, path: string, init?: RequestInit): Pr
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     ...init,
   });
+
   if (!res.ok) {
-    throw new ApiError(res.status, `İstek başarısız: ${res.status}`);
+    // Sözleşmeli hata zarfını çöz; gövde yoksa/parse edilemezse jenerik mesaj.
+    let message = `İstek başarısız: ${res.status}`;
+    let code = "UNKNOWN";
+    try {
+      const body = (await res.json()) as ApiErrorEnvelope;
+      if (body?.error?.message) {
+        message = body.error.message;
+        code = body.error.code ?? code;
+      }
+    } catch {
+      // gövde yok / JSON değil → jenerik mesaj kalır
+    }
+    throw new ApiError(res.status, message, code);
   }
+
+  if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
+function withBaseCurrency(path: string, baseCurrency?: CurrencyCode): string {
+  return baseCurrency ? `${path}?baseCurrency=${baseCurrency}` : path;
+}
+
 export function createApiClient({ baseUrl }: ApiClientOptions) {
+  const get = <T>(path: string) => request<T>(baseUrl, path);
+  const send = <T>(method: string, path: string, body?: unknown) =>
+    request<T>(baseUrl, path, {
+      method,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
   return {
     /** GET /api/health (04 §3). */
-    getHealth: () => request<HealthResponse>(baseUrl, "/api/health"),
+    getHealth: () => get<HealthResponse>("/api/health"),
+
+    // ── Portföy (04 §4) ──
+    getSummary: (baseCurrency?: CurrencyCode) =>
+      get<PortfolioSummary>(withBaseCurrency("/api/portfolio/summary", baseCurrency)),
+    getHoldings: (baseCurrency?: CurrencyCode) =>
+      get<Holding[]>(withBaseCurrency("/api/holdings", baseCurrency)),
+    getHolding: (id: string, baseCurrency?: CurrencyCode) =>
+      get<Holding>(withBaseCurrency(`/api/holdings/${id}`, baseCurrency)),
+    createHolding: (input: CreateHoldingInput) =>
+      send<Holding>("POST", "/api/holdings", input),
+    addTransaction: (id: string, input: TransactionInput) =>
+      send<Holding>("POST", `/api/holdings/${id}/transactions`, input),
+    updateHolding: (id: string, input: UpdateHoldingInput) =>
+      send<Holding>("PUT", `/api/holdings/${id}`, input),
+    deleteHolding: (id: string) => send<void>("DELETE", `/api/holdings/${id}`),
+
+    // ── Ayarlar (04 §4) ──
+    getSettings: () => get<Settings>("/api/settings"),
+    updateSettings: (input: UpdateSettingsInput) =>
+      send<Settings>("PUT", "/api/settings", input),
   };
 }
 

@@ -18,5 +18,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     css: false,
+    // Yalnızca birim/komponent testleri (src). Playwright e2e ayrı koşar (`pnpm e2e`);
+    // aksi halde vitest `e2e/*.spec.ts`'i toplayıp Playwright test()'iyle çakışır.
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
 });
