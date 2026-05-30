@@ -17,7 +17,8 @@
 > ✅ **T2.1→T2.6 bitti** — fiyat zinciri uçtan uca: sağlayıcılar (Frankfurter+Truncgil, anahtarsız) →
 > `PriceFetchService` (yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) → fallback (`stale`) →
 > `GET /api/prices` + `NudgeRuleEngine`/`GET /nudges` → **Web** (canlı fiyat çipleri + "Yenile" + stale
-> etiketi + Nudge kartı). Bkz. TASKLOG 2026-05-31. **Canlı tarayıcı doğrulaması sıradaki.**
+> etiketi + Nudge kartı). **CANLI DOĞRULANDI** (5298 PostgreSQL + 5174, gerçek dış API): gram altın
+> 6.687,67 ₺, USD 45,886, EUR 53,43; 3 nudge; holdings/toplam canlı. Bkz. TASKLOG 2026-05-31.
 
 ## Faz 1 tamamlananlar (özet)
 - **Saf hesap (T1.1-1.5):** `PortfolioCalculationService` (§6), `CurrencyConverter` (ters/çapraz,

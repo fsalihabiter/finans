@@ -41,12 +41,16 @@
   (+ `.test.tsx`); düzenlenen `web/src/lib/hooks.ts`, `routes/PortfolioPage.tsx` (+ test mock), `components/PortfolioInsights.tsx`,
   `App.css`; doküman `04`(zaten T2.4'te), `08`, `09` (SC-W4).
 - **Test:** web **37 yeşil** (33→37: LivePrices 2 + NudgesCard 2; PortfolioPage test mock'una prices/nudges
-  eklendi). shared 13. `tsc -b` + `vite build` + **eslint 0 hata** temiz. **Canlı tarayıcı doğrulaması: bir
-  sonraki adımda** (backend PostgreSQL'e karşı + 5173).
+  eklendi). shared 13. `tsc -b` + `vite build` + **eslint 0 hata** temiz.
+- **CANLI DOĞRULANDI** (backend http:5298 PostgreSQL'e karşı + web 5174, gerçek dış API): `GET /api/prices`
+  canlı döndü — EUR 53,43 · USD 45,886 · gram altın **6.687,67 ₺** (truncgil), `hasStale:false`. Pano
+  (tarayıcı): canlı fiyat çipleri + "↻ Yenile" + freshness etiketi; **3 nudge** kartı (Yoğunlaşma %85,
+  Tek varlık Altın %71, Nakit %0,3) + "tavsiye değildir" disclaimer; holdings canlı fiyatı yansıttı
+  (Altın 209 gr → ₺1.397.723; USD 2000×45,886=₺91.772; EUR 800×53,43=₺42.744); toplam ₺1.973.851,79.
 - **Karar/Not:** Fiyat tazeleme tetikleyici `GET /api/prices` (query); özet/holdings saf okuma kalıp
   invalidation ile canlanır (read purity korunur). Stale → "yaklaşık" (UI), kullanıcı bilgilendirilir.
-- **Durum:** tamamlandı (kod + testler); canlı görsel doğrulama sıradaki.
-- **Sıradaki:** Canlı doğrulama (tarayıcı). Ardından Faz 2 altyapı T2.7 (Redis) / T2.8 (gözlem) / T2.9 (proxy).
+- **Durum:** tamamlandı — canlı doğrulandı.
+- **Sıradaki:** Faz 2 altyapı T2.7 (Redis) / T2.8 (gözlem) / T2.9 (proxy) — işlevsel Faz 2 bitti.
 
 ## 2026-05-31 · `NudgeRuleEngine` — kural tabanlı eğitici notlar + `GET /nudges` (T2.5)
 - **Görev(ler):** T2.5 (tamam).
