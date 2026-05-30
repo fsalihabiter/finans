@@ -20,6 +20,38 @@
 
 ---
 
+## 2026-05-30 · Portföy API: Holdings CRUD + summary (T1.6 + T1.7) — ilk gerçek endpoint'ler
+- **Görev(ler):** T1.6 (tamam), T1.7 (tamam) · ayrıca T1.8 kısmi (bes alanı), T1.15 kısmi (per-user)
+- **Ne yapıldı:**
+  - **Endpoint'ler (04 §4):** `GET/POST/PUT/DELETE /api/holdings`, `POST /holdings/{id}/transactions`,
+    `GET /api/portfolio/summary`. DTO'lar Application'da; servisler (`IHoldingService`/`IPortfolioService`)
+    arayüzü Application, EF impl Infrastructure (mevcut sağlayıcı desenine uygun).
+  - **Per-user izolasyon (11 §3):** `ICurrentUser` (Faz 1: `X-User-Id` başlığı / `Auth:DevUserId`
+    dev varsayılanı; Faz 5 JWT'ye hazır). Her sorgu `WHERE UserId`; başkasının id'si → 404 (IDOR yok).
+  - **Validasyon + hata:** DataAnnotations → `InvalidModelStateResponseFactory` ApiError zarfı;
+    `AppExceptionHandler` (NotFound→404, Validation→400, Conflict→409) GlobalExceptionHandler'dan önce.
+  - **Akış:** create varlığı katalogdan bul/oluştur + ilk işlemle pozisyon; ort. maliyet/miktar
+    `DerivePosition` ile (T1.5); summary fx (T1.3) + enflasyon (T1.4) ile baz pb'ye çevirip özetler.
+  - **JSON:** enum'lar string (`JsonStringEnumConverter`).
+- **Dokunulan dosyalar:** `Finans.Application/Common/{ICurrentUser,ApplicationExceptions}.cs`,
+  `Finans.Application/Portfolio/{PortfolioDtos,IHoldingService}.cs`,
+  `Finans.Infrastructure/Services/{HoldingMapping,HoldingService,PortfolioService}.cs`,
+  `Finans.Infrastructure/DependencyInjection.cs`, `Finans.Api/Auth/HttpCurrentUser.cs`,
+  `Finans.Api/ErrorHandling/AppExceptionHandler.cs`, `Finans.Api/Controllers/{Holdings,Portfolio}Controller.cs`,
+  `Finans.Api/Program.cs`, `appsettings.Development.json` (Auth:DevUserId),
+  `tests/Finans.Integration.Tests/PortfolioApiTests.cs`.
+- **Test:** SC-01 (summary/holdings) + SC-04 (BES ayrı) + SC-07 (geçersiz→400) + SC-13 (IDOR→404) —
+  9 yeni integration testi. `dotnet test` **Application 39 + Integration 27 = 66 yeşil**. Ayrıca
+  **canlı PostgreSQL'e karşı smoke**: summary/holdings/create/IDOR/validasyon/delete doğrulandı,
+  test verisi temizlendi (DB seed-tutarlı).
+- **Karar/Not:** **EF tuzağı** — `Entity.Id = Guid.CreateVersion7()` initializer'ı yüzünden, izlenen
+  bir parent'ın koleksiyonuna eklenen yeni child'ı EF "mevcut" sanıp UPDATE'e çevirir (0 row → sahte
+  `DbUpdateConcurrencyException`). `AddTransaction`'da yeni işlem **açıkça `EntityState.Added`** ile
+  işaretlendi (`db.Add` create'te grafiği zaten Added yapıyor). Allocation şimdilik kalem-başına dilim
+  (seed'de tür=kalem). Cache (T1.15) ve web ekranları (T1.8) sonraki.
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.9 settings (baz pb) endpoint, sonra T1.10 `@finans/shared` + web (T1.11-14).
+
 ## 2026-05-30 · Reel getiri verisi bağlama (T1.4) + ort. maliyet türetimi (T1.5)
 - **Görev(ler):** T1.4 (tamam), T1.5 (tamam) · Faz 1 · sıralı
 - **Ne yapıldı:**

@@ -59,16 +59,16 @@ koşucuları (`dotnet test`, `pnpm test`) kurulu ve yeşil**; **yapılandırılm
 | T1.3 | `CurrencyConversionService` + `FxRates` (Faz 1 elle kur) + test | T1.1 | `02`, `03` | [x] |
 | T1.4 | Reel getiri (enflasyon oranı girişi) + test | T1.1 | `CLAUDE.md` §6 | [x] |
 | T1.5 | Ort. maliyet türetimi (Transactions'tan) + test | T0.4 | `03` §5 | [x] |
-| T1.6 | Holdings CRUD endpoint'leri + DTO + validasyon | T1.5 | `04` §4 | [ ] |
-| T1.7 | `GET /api/portfolio/summary` | T1.1–T1.4 | `04` §4 | [ ] |
-| T1.8 | BES özel alanları (devlet katkısı ayrı) — entity→DTO→ekran | T0.4 | `03`, `04`, `05` §7 | [ ] |
+| T1.6 | Holdings CRUD endpoint'leri + DTO + validasyon | T1.5 | `04` §4 | [x] |
+| T1.7 | `GET /api/portfolio/summary` | T1.1–T1.4 | `04` §4 | [x] |
+| T1.8 | BES özel alanları (devlet katkısı ayrı) — entity→DTO→ekran | T0.4 | `03`, `04`, `05` §7 | [~] (entity→DTO ✓ `bes` alanı/SC-04; ekran Faz web) |
 | T1.9 | Settings (baz para birimi) endpoint + web seçimi | T0.7 | `04` §4 | [ ] |
 | T1.10 | `@finans/shared`: API tipleri (04) + TanStack Query hook'ları + `formatCurrency/formatPercent` (tr-TR) | T0.2, T1.7 | `13` §2, `05` §10 | [ ] |
 | T1.11 | **Web:** AppShell (sidebar/topbar) + `HeroCard` + `summary` bağlama | T1.7, T1.10 | `13` §4 | [ ] |
 | T1.12 | **Web:** `AllocationDonut` (SVG/conic) + legend | T1.7 | `13` §4 | [ ] |
 | T1.13 | **Web:** Holdings tablosu/kartı + varlık detay (modal/route) | T1.6 | `13` §4 | [ ] |
 | T1.14 | **Web:** "Varlık Ekle" formu (modal) → `POST /holdings` | T1.6 | `13` §4 | [ ] |
-| T1.15 | **Per-user kapsam deseni:** tüm sorgular `UserId`'e kapsanır (EF global query filter / base repo); summary cache anahtarı `UserId` içerir; in-memory cache (varlık kataloğu/summary) | T1.6 | `11` §3, `10` §3 | [ ] |
+| T1.15 | **Per-user kapsam deseni:** tüm sorgular `UserId`'e kapsanır (EF global query filter / base repo); summary cache anahtarı `UserId` içerir; in-memory cache (varlık kataloğu/summary) | T1.6 | `11` §3, `10` §3 | [~] (`ICurrentUser` + her sorguda `WHERE UserId` ✓ SC-13; cache henüz yok) |
 
 **Faz 1 DoD:** **Web'de** varlık ekle/sil/listele; toplam/kâr/getiri/dağılım
 testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.

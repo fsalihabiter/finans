@@ -1,5 +1,6 @@
 using Finans.Application.Portfolio;
 using Finans.Infrastructure.Persistence;
+using Finans.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,10 @@ public static class DependencyInjection
         services.AddScoped<IFxRateProvider, EfFxRateProvider>();
         services.AddScoped<IInflationRateProvider, EfInflationRateProvider>();
         services.AddSingleton<PortfolioCalculationService>();
+
+        // Use-case servisleri (DbContext + ICurrentUser'a bağlı) → scoped.
+        services.AddScoped<IHoldingService, HoldingService>();
+        services.AddScoped<IPortfolioService, PortfolioService>();
 
         return services;
     }

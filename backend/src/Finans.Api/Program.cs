@@ -1,9 +1,13 @@
+using System.Text.Json.Serialization;
+using Finans.Api.Auth;
 using Finans.Api.ErrorHandling;
 using Finans.Api.Observability;
+using Finans.Application.Common;
 using Finans.Infrastructure;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Seed;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -23,10 +27,32 @@ try
         .Destructure.With<SensitiveDataDestructuringPolicy>()
         .WriteTo.Console());
 
-    builder.Services.AddControllers();
+    // Enum'lar JSON'da string (allow-list adlarıyla, 04 §1: "Gold"/"TRY"). camelCase varsayılan.
+    builder.Services.AddControllers()
+        .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
     builder.Services.AddOpenApi();
 
-    // Hata maskeleme: istemciye sözleşmeli hata, stack trace sızmaz (11 §4, 04 §2).
+    // DataAnnotations model hatası → sözleşmeli ApiError zarfı (04 §2), ProblemDetails değil.
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var details = context.ModelState
+                .Where(kv => kv.Value?.Errors.Count > 0)
+                .SelectMany(kv => kv.Value!.Errors.Select(e =>
+                    new ApiErrorDetail(ToCamel(kv.Key), e.ErrorMessage)))
+                .ToList();
+
+            var envelope = new ApiErrorEnvelope(new ApiError(
+                ErrorCodes.Validation, "Girdi doğrulama hatası.", details));
+            return new BadRequestObjectResult(envelope);
+        });
+
+    // Geçerli kullanıcı (Faz 1: X-User-Id başlığı / dev varsayılanı; Faz 5: JWT) — 11 §3.
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+
+    // Hata maskeleme: bilinen app hataları (404/400/409) ÖNCE, sonra genel 500 (11 §4, 04 §2).
+    builder.Services.AddExceptionHandler<AppExceptionHandler>();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
@@ -99,6 +125,13 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Model-state alan adını sözleşmeli camelCase'e çevirir (örn. "Transaction.Quantity" → "transaction.quantity").
+static string ToCamel(string key) =>
+    string.IsNullOrEmpty(key)
+        ? key
+        : string.Join('.', key.TrimStart('$', '.').Split('.')
+            .Select(seg => seg.Length == 0 ? seg : char.ToLowerInvariant(seg[0]) + seg[1..]));
 
 /// <summary>
 /// Integration testlerinin (WebApplicationFactory) erişebilmesi için açılan

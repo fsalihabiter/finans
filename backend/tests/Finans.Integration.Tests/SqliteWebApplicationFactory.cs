@@ -27,6 +27,12 @@ public sealed class SqliteWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Açılış migrate/seed'i test'te KAPALI: şemayı testler EnsureCreated ile kurar,
+        // seed'i fixture çalıştırır. (Aksi halde Development config'i Npgsql migration'ı
+        // Sqlite'a uygulamaya çalışıp host'u çökertir.)
+        builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
+        builder.UseSetting("Database:Seed", "false");
+
         builder.ConfigureTestServices(services =>
         {
             // Uygulamanın Npgsql DbContext kayıtlarını (options + provider yapılandırma

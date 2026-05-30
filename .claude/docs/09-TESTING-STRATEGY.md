@@ -133,13 +133,13 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 
 | SC | Gereksinim | Senaryo (özet) | Seviye | Durum |
 |----|-----------|----------------|--------|-------|
-| SC-01 | FR-1.3 | Altın kalemi eklenince değer/kâr/getiri doğru (40gr→260.000, +%43) | Unit + Integration | [~] (unit ✓ T1.2; integration → T1.7) |
+| SC-01 | FR-1.3 | Altın kalemi eklenince değer/kâr/getiri doğru (40gr→260.000, +%43) | Unit + Integration | [x] (unit T1.2 + T1.7 summary/holdings integration) |
 | SC-02 | FR-1.3 | Çok varlıklı portföyde dağılım % toplamı 1,0 (±yuvarlama) | Unit | [x] (T1.2) |
 | SC-03 | FR-1.4 | USD varlık TRY baz pb'ye güncel kurdan çevrilir | Unit + Integration | [x] (T1.3; ters/çapraz kur dahil, tam hassasiyet) |
-| SC-04 | FR-1.5 | BES'te devlet katkısı kendi katkısından **ayrı** dönüyor | Integration | [ ] |
+| SC-04 | FR-1.5 | BES'te devlet katkısı kendi katkısından **ayrı** dönüyor | Integration | [x] (T1.6; GET /holdings `bes` alanı, integration) |
 | SC-05 | FR-1.6 | Reel getiri = (1+nominal)/(1+enflasyon)−1 doğru | Unit | [x] (T1.2 çekirdek + T1.4 enflasyon verisi bağlama, integration) |
 | SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [x] (T1.5: `DerivePosition` unit + seed tx→holding tutarlılık integration) |
-| SC-07 | FR-1.1/NFR-4 | Geçersiz girdi (miktar ≤ 0) → 400 + TR hata mesajı | Integration | [ ] |
+| SC-07 | FR-1.1/NFR-4 | Geçersiz girdi (miktar ≤ 0) → 400 + TR hata mesajı | Integration | [x] (T1.6; VALIDATION_ERROR + field quantity, integration) |
 | SC-08 | FR-2.5/NFR-5 | **Olay:** fiyat API'si çöker → son bilinen fiyat + `stale:true`, çökme yok | Integration | [ ] |
 | SC-09 | FR-2.4 | Nakit oranı eşik üstü → ilgili nudge tetiklenir | Unit + Integration | [ ] |
 | SC-10 | FR-3.2 | **Olay:** LLM bozuk JSON döner → fallback, 200, şema korunur | Unit + Integration | [ ] |
@@ -149,7 +149,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-W2 | NFR-2 | **Web** Analiz sayfası render'ında `Disclaimer` her zaman mevcut | Bileşen (RTL) | [ ] |
 | SC-W3 | FR-1.1/1.3 | **Web E2E:** varlık ekle → portföy özeti güncellenir | E2E (Playwright) | [ ] |
 | SC-M1 | NFR-2/7 | (Faz M) Mobil format + Analiz disclaimer pariteleri | Unit/Bileşen (mobil) | [ ] |
-| **SC-13** | **NFR-12, `11`§3** | **Güvenlik:** Kullanıcı A, B'nin holding id'siyle istek atar → **404** (IDOR/BOLA yok). **Kimlik açılmadan zorunlu.** | Integration | [ ] |
+| **SC-13** | **NFR-12, `11`§3** | **Güvenlik:** Kullanıcı A, B'nin holding id'siyle istek atar → **404** (IDOR/BOLA yok). **Kimlik açılmadan zorunlu.** | Integration | [x] (T1.6; GET/DELETE başkasının id'si→404, boş liste/sıfır özet, integration) |
 | SC-14 | NFR-4, `11`§5 | **Güvenlik:** Eşik üstü istek → **429** (rate limit) | Integration | [ ] |
 | SC-15 | NFR-4, `11`§4 | **Güvenlik:** Hata yanıtında stack trace / iç detay sızmıyor | Integration | [ ] |
 | SC-16 | NFR-4 | **Güvenlik:** Token'sız/expired istek → 401 (Faz 5+) | Integration | [ ] |

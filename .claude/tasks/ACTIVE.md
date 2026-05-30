@@ -7,8 +7,10 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ → **Faz 1 — Portföy Takip MVP** · **WEB ÖNCELİKLİ**
 
 ## Sıradaki (öncelik sırası)
-1. **T1.6** — Holdings CRUD endpoint + DTO + validasyon (+ per-user/IDOR kapsam, SC-07/SC-13)
-2. **T1.7** — `GET /api/portfolio/summary` (calc + fx + enflasyon uçtan uca, SC-01 integration)
+1. **T1.9** — Settings (baz para birimi) endpoint `GET/PUT /api/settings`
+2. **T1.10** — `@finans/shared`: API tipleri + TanStack Query hook'ları + `formatCurrency/formatPercent` (tr-TR)
+3. **T1.11-14** — Web: AppShell/HeroCard + AllocationDonut + Holdings tablo + "Varlık Ekle" formu
+4. (kalan) T1.8 BES ekranı · T1.15 cache (per-user kapsam ✓, cache yok)
 
 > Faz 1 ayrıca: T1.8 BES, T1.9 settings, T1.10 shared API/format hook, T1.11-14 web
 > (AppShell/HeroCard/Donut/Holdings/Ekle), T1.15 per-user kapsam. Mobil **FAZ M**'de.
@@ -29,7 +31,10 @@
 - **T1.3**: `CurrencyConverter` (saf, ters/çapraz kur, **bölmeyle tam hassasiyet**) +
   `IFxRateProvider`/`EfFxRateProvider` (en güncel kur) + DI — SC-03 unit+integration
 - **T1.4+T1.5**: reel getiri enflasyon bağlama (`IInflationRateProvider`) + ort. maliyet
-  türetimi (`DerivePosition`, satış ortalamayı bozmaz) — SC-05/SC-06 unit+integration; backend 57 yeşil
+  türetimi (`DerivePosition`, satış ortalamayı bozmaz) — SC-05/SC-06 unit+integration
+- **T1.6+T1.7**: Portföy API — Holdings CRUD + `portfolio/summary`; `ICurrentUser` per-user
+  izolasyon (IDOR→404), DTO+validasyon (ApiError), fx/enflasyon entegre. SC-01/04/07/13;
+  backend **66 yeşil** + canlı PostgreSQL smoke doğrulandı
 
 ## Devam eden
 - (yok)
