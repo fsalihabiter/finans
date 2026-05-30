@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency, formatNumber, formatPercent } from "@finans/shared";
 import type { CurrencyCode, Holding } from "@finans/shared";
 import { ASSET_META, softBg } from "../lib/assetMeta";
@@ -13,8 +13,8 @@ const money = (value: number | null, ccy: CurrencyCode) =>
 
 /**
  * Pozisyon tablosu (13 §4): ikon + ad/alt-bilgi, ağırlık çubuğu, renkli getiri.
- * Ad hücresi varlık detayına (`/holdings/:id`) bağlanır. Geniş ekranda tablo,
- * dar ekranda yatay kaydırma.
+ * Ad hücresi varlık detayına (`/holdings/:id`) bağlanır; tüm satır da tıklanır.
+ * Geniş ekranda tablo, dar ekranda (≤640px) `data-label`'lı kart düzeni.
  */
 export function HoldingsTable({
   holdings,
@@ -23,6 +23,7 @@ export function HoldingsTable({
   holdings: Holding[];
   baseCurrency: CurrencyCode;
 }) {
+  const navigate = useNavigate();
   if (holdings.length === 0) return null;
 
   return (
@@ -42,9 +43,9 @@ export function HoldingsTable({
           {holdings.map((h) => {
             const meta = ASSET_META[h.assetType];
             return (
-              <tr key={h.id}>
-                <td>
-                  <Link to={`/holdings/${h.id}`} className="holding-link">
+              <tr key={h.id} onClick={() => navigate(`/holdings/${h.id}`)}>
+                <td data-label="Varlık">
+                  <Link to={`/holdings/${h.id}`} className="holding-link" onClick={(e) => e.stopPropagation()}>
                     <div className="asset-cell">
                       <div className="asset-ic" style={{ background: softBg(meta.color) }}>{meta.icon}</div>
                       <div>
@@ -59,17 +60,17 @@ export function HoldingsTable({
                     </div>
                   </Link>
                 </td>
-                <td className="num tnum">
+                <td className="num tnum" data-label="Miktar">
                   {formatNumber(h.quantity)} <span className="muted">{h.unit}</span>
                 </td>
-                <td className="num tnum">{formatCurrency(h.totalCost, baseCurrency)}</td>
-                <td className="num tnum">{money(h.currentValue, baseCurrency)}</td>
-                <td className="num">
-                  <div className="weight-bar">
+                <td className="num tnum" data-label="Maliyet">{formatCurrency(h.totalCost, baseCurrency)}</td>
+                <td className="num tnum" data-label="Değer">{money(h.currentValue, baseCurrency)}</td>
+                <td className="num" data-label="Ağırlık">
+                  <div className="weight-bar" title={formatPercent(h.weight, 1, true, false)}>
                     <i style={{ width: `${Math.min(h.weight * 100, 100)}%`, background: meta.color }} />
                   </div>
                 </td>
-                <td className={`num tnum ${tone(h.returnRatio)}`}>
+                <td className={`num tnum ${tone(h.returnRatio)}`} data-label="Getiri">
                   {h.returnRatio === null ? "—" : formatPercent(h.returnRatio)}
                 </td>
               </tr>

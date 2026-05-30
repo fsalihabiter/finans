@@ -9,7 +9,13 @@ const toNumber = (s: string) => Number(s.replace(",", "."));
  * alış/satış değil — maliyet tabanı (kendi+devlet) büyür, fon getirisi güncel değerden gelir.
  * Devlet katkısı boşsa backend %30 hesaplar (TR kuralı); burada da önizlenir.
  */
-export function BesContributionForm({ holdingId }: { holdingId: string }) {
+export function BesContributionForm({
+  holdingId,
+  onDone,
+}: {
+  holdingId: string;
+  onDone?: () => void;
+}) {
   const add = useAddBesContribution(holdingId);
   const [own, setOwn] = useState("");
 
@@ -20,12 +26,11 @@ export function BesContributionForm({ holdingId }: { holdingId: string }) {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
-    add.mutate({ ownAmount }, { onSuccess: () => setOwn("") });
+    add.mutate({ ownAmount }, { onSuccess: () => { setOwn(""); onDone?.(); } });
   };
 
   return (
     <form className="tx-form" onSubmit={onSubmit} aria-label="Aylık katkı ekle">
-      <h2>Aylık katkı ekle</h2>
       <div className="tx-row">
         <label>
           Kendi katkın (TRY)

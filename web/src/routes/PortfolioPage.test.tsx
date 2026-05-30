@@ -1,7 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { PortfolioPage } from "./PortfolioPage";
+
+/** PortfolioPage bir route bileşeni (Link + navigasyon içerir) → Router gerekli. */
+const renderPage = () =>
+  renderWithProviders(
+    <MemoryRouter>
+      <PortfolioPage />
+    </MemoryRouter>,
+  );
 
 const summary = {
   baseCurrency: "TRY",
@@ -30,9 +39,9 @@ function mockApi() {
 afterEach(() => vi.restoreAllMocks());
 
 describe("PortfolioPage", () => {
-  it("özeti çeker ve HeroCard'ı tr-TR biçimiyle gösterir", async () => {
+  it("özeti çeker ve KPI'ları tr-TR biçimiyle gösterir", async () => {
     mockApi();
-    renderWithProviders(<PortfolioPage />);
+    renderPage();
 
     expect(screen.getByRole("heading", { name: "Genel Bakış" })).toBeInTheDocument();
 
@@ -44,7 +53,7 @@ describe("PortfolioPage", () => {
 
   it("baz para birimi seçiciyi kullanıcı tercihiyle gösterir", async () => {
     mockApi();
-    renderWithProviders(<PortfolioPage />);
+    renderPage();
 
     await waitFor(() => {
       const group = screen.getByRole("group", { name: "Baz para birimi" });

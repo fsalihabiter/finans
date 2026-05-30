@@ -1,0 +1,13 @@
+{
+  "name": "Nirengi — Portföy",
+  "short_name": "Nirengi",
+  "description": "Birden fazla varlık sınıfını tek yerde takip et, anla ve öğren.",
+  "lang": "tr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14110D",
+  "theme_color": "#14110D",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" }
+  ]
+}

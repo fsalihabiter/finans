@@ -24,7 +24,6 @@ export function TransactionHistory({
 }) {
   return (
     <section className="tx-history">
-      <h2>İşlem geçmişi</h2>
       {transactions.length === 0 ? (
         <p className="muted">Henüz işlem yok.</p>
       ) : (
