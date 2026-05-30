@@ -30,13 +30,15 @@ describe("HoldingsTable", () => {
       </MemoryRouter>,
     );
 
-    const link = screen.getByRole("link", { name: "Altın" });
+    // Link artık ikon + ad + alt-bilgi içerir → kısmi ad eşleşmesi + href kontrolü.
+    const link = screen.getByRole("link", { name: /Altın/ });
     expect(link).toHaveAttribute("href", "/holdings/h1");
 
     const row = link.closest("tr")!;
     expect(within(row).getByText(/260\.000,00/)).toBeInTheDocument(); // değer
     expect(within(row).getByText("+%43,0")).toBeInTheDocument(); // getiri
-    expect(within(row).getByText("%40,5")).toBeInTheDocument(); // ağırlık (işaretsiz)
+    // Ağırlık artık görsel çubuk (metin değil) — çubuğun varlığını doğrula.
+    expect(row.querySelector(".weight-bar")).not.toBeNull();
   });
 
   it("boş listede tablo çizmez", () => {

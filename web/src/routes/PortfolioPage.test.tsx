@@ -14,12 +14,14 @@ const summary = {
   asOf: "2026-05-30T00:00:00Z",
 };
 
-/** Fetch'i URL'e göre yanıtlar (settings + summary). */
+/** Fetch'i URL'e göre yanıtlar (settings + holdings + summary). */
 function mockApi() {
   vi.stubGlobal(
     "fetch",
     vi.fn((url: string) => {
-      const body = url.includes("/api/settings") ? { baseCurrency: "TRY" } : summary;
+      let body: unknown = summary;
+      if (url.includes("/api/settings")) body = { baseCurrency: "TRY" };
+      else if (url.includes("/api/holdings")) body = []; // boş pozisyon listesi
       return Promise.resolve({ ok: true, status: 200, json: async () => body } as Response);
     }),
   );
@@ -32,11 +34,12 @@ describe("PortfolioPage", () => {
     mockApi();
     renderWithProviders(<PortfolioPage />);
 
-    expect(screen.getByRole("heading", { name: "Portföy" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Genel Bakış" })).toBeInTheDocument();
 
-    // Toplam değer + getiri backend'den gelip biçimlenmeli
+    // Toplam değer + getiri backend'den gelip biçimlenmeli (KPI hero)
     await waitFor(() => expect(screen.getByText(/641\.403,00/)).toBeInTheDocument());
-    expect(screen.getByText(/\+%51,6/)).toBeInTheDocument();
+    // Getiri hem hero alt-yazısında hem "Getiri" KPI'sinde görünür.
+    expect(screen.getAllByText(/\+%51,6/).length).toBeGreaterThan(0);
   });
 
   it("baz para birimi seçiciyi kullanıcı tercihiyle gösterir", async () => {

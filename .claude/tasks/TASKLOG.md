@@ -20,6 +20,31 @@
 
 ---
 
+## 2026-05-30 · Web görsel yükseltme — taslak referanslı zengin pano (T1.19)
+- **Görev(ler):** T1.19 (tamam) — kullanıcı: "taslağı referans alıp daha güzel/görsel-yüksek frontend"
+- **Ne yapıldı:** `portfoy-web-panosu-taslak.html` tasarım dili Faz 1'in **gerçek-veri** ekranlarına uygulandı
+  (gelecek faz ekranları kurgusal koyulmadı). Yeni:
+  - **assetMeta** (varlık türü → ikon + renk, ortak). **App.css** baştan tasarım sistemi olarak yazıldı.
+  - **Sidebar:** marka mark'ı (◆), ikonlu gezinme + bölüm etiketleri, gradient "Varlık Ekle" (kabuk-seviyesi
+    modal), kullanıcı + sağlık. **Topbar:** greeting + serif başlık + badge.
+  - **Pano:** `KpiGrid` (glow'lu hero + 4 KPI), zengin `AllocationDonut` (merkez etiket), `PortfolioInsights`
+    (En İyi/Zayıf + Hızlı Bilgi + Yoğunlaşma + **computed nudge** — top-2 yoğunlaşma > %50). `HoldingsTable`
+    ikon + alt-bilgi + **renkli ağırlık çubuğu**. Tümü gerçek veriden.
+  - **Detay:** ikon başlık + `detail-hero` + drow'lar + **BES split** (kendi/devlet katkı açıklamalı) +
+    başlangıç tarihi + işlem geçmişi + formlar. **Ayarlar** sayfası (yeni route, para birimi chip'leri + disclaimer).
+  - **Modal** (Varlık Ekle) yeni başlık/kapat yapısı. `vite.config` proxy hedefi `VITE_API_TARGET` ile ayarlanabilir.
+- **Dokunulan dosyalar:** `web/src/App.css` (rewrite), `web/src/App.tsx`, `web/src/main.tsx`,
+  `web/src/lib/assetMeta.ts`, `web/src/components/{KpiGrid,PortfolioInsights,AllocationDonut,HoldingsTable,
+  AddHoldingDialog}.tsx`, `web/src/routes/{PortfolioPage,HoldingDetailPage,SettingsPage}.tsx`,
+  ilgili testler, `web/vite.config.ts`.
+- **Test:** web **19 yeşil** (testler yeni yapıya güncellendi), shared 13, `tsc` + `vite build` temiz.
+  **Canlı görsel doğrulama:** kendi Release backend'im (5310, VS Debug kilidine takılmadan) + Vite (5180)
+  ile pano/holdings/BES-detay ekran görüntüleriyle onaylandı — tüm tasarım taslakla birebir, gerçek veriyle.
+- **Karar/Not:** Gelecek faz ekranları (Senaryo/Hisse/Eğitim/performans grafiği) backend gerektirdiği için
+  yapılmadı. Para-birimi maruziyeti kartı atlandı (Fx pozisyonları TRY-fiyatlı → model temiz exposure vermiyor).
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı + `IPriceProvider`.
+
 ## 2026-05-30 · BES özel modeli (T1.17) + pozisyon işlem geçmişi (T1.18) + BES veri onarımı
 - **Görev(ler):** T1.17, T1.18 (tamam) — kullanıcı bildirimi: "BES'e işlem ekledim tüm değerler bozuldu"
 - **Kök neden:** BES nominal hesap (kendi+devlet katkısı + fon getirisi), "alış/satış → ağırlıklı ort.

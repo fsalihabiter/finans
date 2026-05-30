@@ -5,10 +5,11 @@ import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useDeleteHolding, useHolding, useUpdateHolding } from "../lib/hooks";
+import { ASSET_META, softBg } from "../lib/assetMeta";
 
 function tone(value: number | null): string {
   if (value === null || value === 0) return "";
-  return value > 0 ? "pos" : "neg";
+  return value > 0 ? "up" : "down";
 }
 
 function formatDate(iso: string): string {
@@ -17,6 +18,12 @@ function formatDate(iso: string): string {
     ? "—"
     : new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
 }
+
+const VESTING_TR: Record<string, string> = {
+  NotVested: "Hak edilmedi",
+  PartiallyVested: "Kısmen hak edildi",
+  Vested: "Tamamlandı",
+};
 
 /**
  * Varlık detayı (13 §4, route `/holdings/:id`): metrikler + BES (devlet katkısı ayrı) +
@@ -57,40 +64,58 @@ export function HoldingDetailPage() {
     remove.mutate(h.id, { onSuccess: () => navigate("/") });
   };
 
+  const meta = ASSET_META[h.assetType];
+  const profitSign = h.profit !== null && h.profit > 0 ? "+" : "";
+
   return (
     <section className="detail">
-      <Link to="/" className="muted">← Portföy</Link>
-      <header className="page-head">
-        <h1>
-          {h.name}
-          {h.symbol && <span className="muted detail-symbol"> {h.symbol}</span>}
-        </h1>
+      <Link to="/" className="detail-back">← Portföy</Link>
+
+      <div className="detail-head">
+        <div className="asset-ic" style={{ background: softBg(meta.color) }}>{meta.icon}</div>
+        <div>
+          <h1>
+            {h.name}
+            {h.symbol && <span className="muted"> {h.symbol}</span>}
+          </h1>
+          <div className="dh-sub">{formatNumber(h.quantity)} {h.unit} · {meta.label}</div>
+        </div>
+        <div className="dh-sp" />
         <button type="button" className="btn-danger" onClick={onDelete} disabled={remove.isPending}>
           Sil
         </button>
-      </header>
+      </div>
 
-      <dl className="detail-stats">
-        <div><dt>Miktar</dt><dd>{formatNumber(h.quantity)} {h.unit}</dd></div>
-        <div><dt>Ort. maliyet</dt><dd>{formatCurrency(h.avgCost, h.currency)}</dd></div>
-        <div><dt>Güncel fiyat</dt><dd>{h.currentPrice === null ? "—" : formatCurrency(h.currentPrice, h.currency)}</dd></div>
-        <div><dt>Toplam maliyet</dt><dd>{formatCurrency(h.totalCost, h.currency)}</dd></div>
-        <div><dt>Değer</dt><dd>{h.currentValue === null ? "—" : formatCurrency(h.currentValue, h.currency)}</dd></div>
-        <div><dt>Kâr</dt><dd className={tone(h.profit)}>{h.profit === null ? "—" : formatCurrency(h.profit, h.currency)}</dd></div>
-        <div><dt>Getiri</dt><dd className={tone(h.returnRatio)}>{h.returnRatio === null ? "—" : formatPercent(h.returnRatio)}</dd></div>
-        <div><dt>Portföy ağırlığı</dt><dd>{formatPercent(h.weight, 1, true, false)}</dd></div>
-      </dl>
+      <div className="detail-hero">
+        <div className="dh-v tnum">
+          {h.currentValue === null ? "—" : formatCurrency(h.currentValue, h.currency)}
+        </div>
+        <div className={`dh-g tnum ${tone(h.profit)}`}>
+          {h.profit === null ? "—" : `${profitSign}${formatCurrency(h.profit, h.currency)}`}
+          {h.returnRatio !== null && ` · ${formatPercent(h.returnRatio)}`}
+        </div>
+      </div>
+
+      <div className="drow"><span className="dk">Miktar</span><span className="dv tnum">{formatNumber(h.quantity)} {h.unit}</span></div>
+      <div className="drow"><span className="dk">Ortalama maliyet</span><span className="dv tnum">{formatCurrency(h.avgCost, h.currency)}</span></div>
+      <div className="drow"><span className="dk">Güncel fiyat</span><span className="dv tnum">{h.currentPrice === null ? "—" : formatCurrency(h.currentPrice, h.currency)}</span></div>
+      <div className="drow"><span className="dk">Toplam maliyet</span><span className="dv tnum">{formatCurrency(h.totalCost, h.currency)}</span></div>
+      <div className="drow"><span className="dk">Portföy ağırlığı</span><span className="dv tnum">{formatPercent(h.weight, 1, true, false)}</span></div>
 
       {h.bes && (
-        <div className="detail-bes">
-          <h2>Bireysel Emeklilik (BES)</h2>
-          <dl className="detail-stats">
-            <div><dt>Kendi katkın</dt><dd>{formatCurrency(h.bes.ownContribution, h.currency)}</dd></div>
-            <div><dt>Devlet katkısı</dt><dd className="pos">{formatCurrency(h.bes.stateContribution, h.currency)}</dd></div>
-            <div><dt>Hak ediş</dt><dd>{h.bes.vestingState}</dd></div>
-            <div><dt>Başlangıç</dt><dd>{h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}</dd></div>
-          </dl>
-        </div>
+        <>
+          <div className="detail-section-title">Bireysel Emeklilik (BES)</div>
+          <div className="split">
+            <div className="sh"><span className="sl">Kendi katkın</span><span className="sr tnum">{formatCurrency(h.bes.ownContribution, h.currency)}</span></div>
+            <div className="sd">Senin yatırdığın katkı payları — gerçek <b>yatırım performansının</b> tabanı.</div>
+          </div>
+          <div className="split">
+            <div className="sh"><span className="sl">Devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
+            <div className="sd">Devletin eklediği <b>sübvansiyon</b> (≈%30). Yatırım başarın değildir; bu yüzden ayrı gösterilir.</div>
+          </div>
+          <div className="drow"><span className="dk">Hak ediş</span><span className="dv">{VESTING_TR[h.bes.vestingState] ?? h.bes.vestingState}</span></div>
+          <div className="drow"><span className="dk">Başlangıç</span><span className="dv">{h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}</span></div>
+        </>
       )}
 
       {/* BES nominal hesap → aylık katkı; diğer pozisyonlar → alış/satış işlemi. */}

@@ -73,6 +73,7 @@ koşucuları (`dotnet test`, `pnpm test`) kurulu ve yeşil**; **yapılandırılm
 | T1.16 | **Web:** mevcut pozisyona **alış/satış işlemi ekle** UI → `POST /holdings/{id}/transactions` (backend T1.6'da hazırdı, UI eksikti) | T1.13 | `04` §4 | [x] (`AddTransactionForm` detay sayfasında; Alış/Satış + miktar/fiyat) |
 | T1.17 | **BES özel modeli:** BES'e alış/satış engellenir (nominal hesap); `POST /holdings/{id}/bes-contribution` (kendi + devlet %30) → maliyet tabanı büyür; başlangıç tarihi (JoinedAtUtc) gösterimi; web "Aylık katkı ekle" formu | T1.6, T1.13 | `03` §A, `04` §4 | [x] |
 | T1.18 | **Pozisyon işlem geçmişi:** `GET /holdings/{id}` yanıtına `transactions` listesi + web `TransactionHistory` tablosu (her pozisyonda) | T1.13 | `04` §4 | [x] |
+| T1.19 | **Web görsel yükseltme** (taslak referanslı pano): ikonlu sidebar + KPI şeridi (glow'lu hero) + zengin donut + En İyi/Zayıf + Hızlı Bilgi + Yoğunlaşma + computed nudge + ikonlu/çubuklu pozisyon tablosu + detail-hero/BES split + Ayarlar sayfası | T1.11-14 | `13` §4, taslak | [x] |
 
 **Faz 1 DoD:** ✅ **KARŞILANDI** — **Web'de** varlık ekle/sil/listele; toplam/kâr/getiri/dağılım
 testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.

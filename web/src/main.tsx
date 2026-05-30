@@ -9,6 +9,7 @@ import App from "./App.tsx";
 import { PortfolioPage } from "./routes/PortfolioPage.tsx";
 import { HoldingDetailPage } from "./routes/HoldingDetailPage.tsx";
 import { AnalysisPage } from "./routes/AnalysisPage.tsx";
+import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { queryClient } from "./lib/queryClient.ts";
 import { applyTheme } from "./lib/applyTheme.ts";
 import "./index.css";
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
       { index: true, element: <PortfolioPage /> },
       { path: "holdings/:id", element: <HoldingDetailPage /> },
       { path: "analiz", element: <AnalysisPage /> },
+      { path: "ayarlar", element: <SettingsPage /> },
     ],
   },
 ]);

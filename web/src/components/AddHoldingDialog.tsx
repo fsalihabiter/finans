@@ -102,7 +102,10 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
         aria-labelledby="add-holding-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="add-holding-title">Varlık Ekle</h2>
+        <div className="modal-top">
+          <h2 id="add-holding-title">Varlık Ekle</h2>
+          <button type="button" className="modal-close" aria-label="Kapat" onClick={onClose}>✕</button>
+        </div>
         <form onSubmit={onSubmit} className="add-form">
           <label>
             Tür
