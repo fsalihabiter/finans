@@ -144,17 +144,29 @@ PUT İstek → { "baseCurrency": "USD" } → 200
 
 ## 5. Endpoint'ler — Faz 2 (Canlı Fiyat & Nudge)
 
-### `GET /api/prices?symbols=XAU,USD,AAPL`
+### `GET /api/prices`  *(uygulandı — T2.4)*
+Tazeleme turunu tetikler (cache'li → dış API en çok TTL'de bir; **10 dk**, bayatsa **1 dk** retry).
+Tüm fiyatlanabilir aktif varlıkları (Faz 2: altın + döviz) tazeler — parametre almaz. Fiyatlar
+**kullanıcı-bağımsız** (global piyasa). Bu uç nokta `Holding.CurrentPrice`'ı da yazar → ardından
+çağrılan `summary`/`holdings` canlı fiyatı yansıtır.
 ```json
 200 →
 {
+  "refreshedAtUtc": "2026-05-31T08:00:00Z",
+  "fromCache": false,
+  "hasStale": false,
+  "failedSources": [],
   "prices": [
-    { "symbol": "XAU", "price": 6500.00, "currency": "TRY", "asOf": "…", "stale": false },
-    { "symbol": "USD", "price": 48.00,   "currency": "TRY", "asOf": "…", "stale": true }
+    { "kind": "Gold",     "currency": "TRY", "price": 6687.67, "quoteCurrency": "TRY", "asOfUtc": "…", "source": "truncgil",    "stale": false },
+    { "kind": "Currency", "currency": "USD", "price": 45.886,  "quoteCurrency": "TRY", "asOfUtc": "…", "source": "frankfurter", "stale": false },
+    { "kind": "Currency", "currency": "EUR", "price": 53.5748, "quoteCurrency": "TRY", "asOfUtc": "…", "source": "frankfurter", "stale": false }
   ]
 }
 ```
-> `stale: true` → dış API çökmüş, son bilinen fiyat ("yaklaşık" etiketi, FR-2.5).
+> `stale: true` → o kaynağın dış API'si çökmüş, değer **son bilinen** (UI'da "yaklaşık" etiketi, FR-2.5/NFR-5);
+> `failedSources` çöken kaynak anahtarlarını, `hasStale` en az bir bayat fiyat olup olmadığını verir.
+> `fromCache: true` → TTL içinde, dış API'ye gidilmedi. Kaynaklar **anahtarsız** (Frankfurter=ECB döviz,
+> Truncgil=TR gram altın). Hisse (`Stock`) fiyatı Faz 4'te eklenecek.
 
 ### `GET /api/portfolio/nudges`
 Kural tabanlı eğitici notlar (FR-2.4):

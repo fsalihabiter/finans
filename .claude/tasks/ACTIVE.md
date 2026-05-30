@@ -7,13 +7,13 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ · ✅ **Faz 1 — Portföy Takip MVP BİTTİ** → **Faz 2 — Canlı fiyat + nudge**
 
 ## Sıradaki (öncelik sırası) — Faz 2
-1. **T2.4** — `GET /api/prices` (RefreshAsync'i tetikler; `stale`/`asOf`/`source` yüzeye) + summary'i
-   canlı fiyatla besle. **← Web görünürlüğü burada başlar.** · **T2.5** `NudgeRuleEngine` + `GET /nudges`
-2. **T2.6** — Web: yenile butonu + "son güncelleme/yaklaşık" etiketi + Nudge kartı
+1. **T2.5** — `NudgeRuleEngine` (kural tabanlı eğitici notlar; nakit/yoğunlaşma eşiği) + `GET /api/portfolio/nudges`
+2. **T2.6** — Web: yenile butonu + "son güncelleme/yaklaşık (stale)" etiketi + Nudge kartı.
+   **← Web görünürlüğü burada kullanıcıya çıkar** (/prices'ı çağırır → pano canlı fiyatı yansıtır).
 
-> ✅ **T2.1+T2.2+T2.3 bitti** — sağlayıcılar (Frankfurter+Truncgil, anahtarsız) + `PriceFetchService`
-> (CanQuote yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) + fallback (çöken kaynakta
-> son-bilinen `stale`, çökme yok). Bkz. TASKLOG 2026-05-31.
+> ✅ **T2.1→T2.4 bitti** — sağlayıcılar (Frankfurter+Truncgil, anahtarsız) + `PriceFetchService`
+> (yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) + fallback (`stale`) +
+> `GET /api/prices` (RefreshAsync'i tetikler, CurrentPrice'ı besler). Bkz. TASKLOG 2026-05-31.
 > Altyapı (Faz 2 boyunca): T2.7 Redis cache · T2.8 Seq/Prometheus/Grafana · T2.9 reverse proxy+rate limit.
 
 ## Faz 1 tamamlananlar (özet)
@@ -42,6 +42,9 @@
   (geçmiş) + `FxRates` (converter) + `Holding.CurrentPrice` (okuma yolu, global). SC-18 (3 senaryo).
 - **T2.3:** Fallback — sağlayıcı çökünce DB'den son-bilinen `PriceQuote.IsStale` tırnak (`HasStale`);
   bayat geçmişe yazılmaz; çöken kaynakta kısa retry-TTL (1 dk). Çökme yok (NFR-5). SC-08.
+- **T2.4:** `GET /api/prices` (`PricesController` → `RefreshAsync`) — `PricesResponse`/`PriceDto`
+  (kind/currency/price/asOf/source/**stale** + tur meta'sı). `Holding.CurrentPrice` yazımı → summary/holdings
+  saf okuma canlı yansır (summary network-refresh'e bağlanmadı: deterministik + ağsız test). 2 e2e (stub).
 
 ## Devam eden / Bloke
 - (yok)

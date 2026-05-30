@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-05-31 · `GET /api/prices` + summary'i canlı fiyatla besle (T2.4)
+- **Görev(ler):** T2.4 (tamam).
+- **Ne yapıldı:**
+  1. **DTO (Application/Pricing `PricesDtos`):** `PricesResponse` (RefreshedAtUtc, FromCache, HasStale,
+     FailedSources, Prices) + `PriceDto` (Kind, Currency, Price, QuoteCurrency, AsOfUtc, Source, **Stale**).
+  2. **`PricesController` (`GET /api/prices`):** ince controller → `IPriceFetchService.RefreshAsync` →
+     tırnakları DTO'ya eşler. Parametre yok (tüm fiyatlanabilir varlıkları tazeler); fiyatlar global.
+  3. **"summary'i besle" — tasarım kararı:** summary'yi network-refresh'e BAĞLAMADIM (mevcut
+     `Summary_matches_seed_totals` testini kırardı + read-on-write anti-pattern + testte ağ). Yerine:
+     `GET /api/prices` `Holding.CurrentPrice`'ı yazar (T2.2'den) → summary/holdings **saf okuma** olarak
+     canlı fiyatı yansıtır. Web (T2.6) sırayı kurar: /prices → summary+holdings tazele.
+  4. **04 §5 sözleşmesi** gerçek uygulamayla güncellendi (taslak `symbols`/`symbol` → `kind`+`currency`
+     + tur meta'sı `refreshedAt/fromCache/hasStale/failedSources`).
+- **Dokunulan dosyalar:** yeni `src/Finans.Application/Pricing/PricesDtos.cs`,
+  `src/Finans.Api/Controllers/PricesController.cs`; yeni test
+  `tests/Finans.Integration.Tests/Pricing/PricesApiTests.cs`; doküman `04` §5, `09` (SC-18 notu),
+  `08-BACKLOG.md`.
+- **Test:** **2 e2e** (her test KENDİ factory'si → izole Sqlite+seed; sağlayıcılar stub, ağsız):
+  (a) canlı tırnak döner + `Holding.CurrentPrice` yazıldı → `GET /holdings` altın 7000 / USD 50 gösterir
+  ("besle" uçtan uca kanıtı); (b) döviz kaynağı çöker → `GET /api/prices` 200 + `hasStale`/`stale:true`
+  + son-bilinen 48 (source "Manual"), altın taze sürer. `dotnet test` **yeşil: App 39 + Integration 48 = 87**.
+- **Karar/Not:** `GET /api/prices` = açık refresh tetikleyici; summary/holdings saf okuma kalır
+  (deterministik + ağsız test + read purity). Stale UI'da "yaklaşık" olur (T2.6). Hisse fiyatı Faz 4.
+- **Durum:** tamamlandı
+- **Sıradaki:** T2.5 `NudgeRuleEngine` + `GET /api/portfolio/nudges` (kural tabanlı eğitici notlar,
+  örn. nakit/yoğunlaşma eşiği — tavsiye değil). Ardından **T2.6 Web** → görünürlük kullanıcıya çıkar.
+
 ## 2026-05-31 · Fallback — dış API çökünce son bilinen fiyat + `stale` (T2.3)
 - **Görev(ler):** T2.3 (tamam). T2.2'nin `FailedSources` izolasyon kancası üstüne kuruldu.
 - **Ne yapıldı:**
