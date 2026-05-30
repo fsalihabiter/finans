@@ -7,12 +7,14 @@
 **Aktif faz:** ✅ Faz 0 BİTTİ · ✅ **Faz 1 — Portföy Takip MVP BİTTİ** → **Faz 2 — Canlı fiyat + nudge**
 
 ## Sıradaki (öncelik sırası) — Faz 2
-1. **T2.1** — Fiyat sağlayıcı seç (altın/döviz ücretsiz katman) + `IPriceProvider`
-2. **T2.2** — `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz
-3. **T2.3** — Fallback: dış API çökünce son bilinen fiyat + `stale:true` (NFR-5)
-4. **T2.4** — `GET /api/prices` + summary'i canlı fiyatla besle · **T2.5** `NudgeRuleEngine` + `GET /nudges`
-5. **T2.6** — Web: yenile + "yaklaşık" etiketi + Nudge kartı
+1. **T2.2** — `PriceFetchService`: `IEnumerable<IPriceProvider>` → `CanQuote` yönlendirme, cache
+   (5-15 dk), `PriceSnapshots`/`FxRates`'e yaz
+2. **T2.3** — Fallback: dış API çökünce son bilinen fiyat + `stale:true` (NFR-5, SC-08)
+3. **T2.4** — `GET /api/prices` + summary'i canlı fiyatla besle · **T2.5** `NudgeRuleEngine` + `GET /nudges`
+4. **T2.6** — Web: yenile + "yaklaşık" etiketi + Nudge kartı
 
+> ✅ **T2.1 bitti** — Frankfurter (döviz/ECB) + Truncgil (gram altın), anahtarsız; `IPriceProvider`
+> soyutlaması + typed HttpClient + DI. Bkz. TASKLOG 2026-05-31.
 > Altyapı (Faz 2 boyunca): T2.7 Redis cache · T2.8 Seq/Prometheus/Grafana · T2.9 reverse proxy+rate limit.
 
 ## Faz 1 tamamlananlar (özet)
@@ -30,7 +32,12 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **70** (Application 39 + Integration 31) · web **33** · shared **13** · eslint 0 hata
+- **Yeşil kapı:** backend **82** (Application 39 + Integration 43) · web **33** · shared **13** · eslint 0 hata
+
+## Faz 2 tamamlananlar (özet)
+- **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan
+  TRY kuru), Altın=Truncgil (TR gram, yerel primli). `PriceInstrument`/`PriceQuote` sözleşmesi;
+  typed HttpClient + DI (`IEnumerable<IPriceProvider>`); 8 sağlayıcı testi (SC-17, HTTP stub).
 
 ## Devam eden / Bloke
 - (yok)

@@ -18,9 +18,9 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 2 (Canlı fiyat + nudge): `T2.1` fiyat sağlayıcı + `IPriceProvider`**
-(Faz 0 ✅ · Faz 1 ✅ — Portföy MVP web'de canlı doğrulandı)
-(saf hesap fonksiyonları, altın test verisi 40gr/4.546→181.851/+%43 — birim testli).
+**Sıradaki adım → FAZ 2: `T2.2` `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz**
+(Faz 0 ✅ · Faz 1 ✅ — Portföy MVP web'de canlı doğrulandı · **T2.1 ✅** — Frankfurter (döviz) +
+Truncgil (gram altın) sağlayıcıları, anahtarsız; `IPriceProvider` soyutlaması + typed HttpClient).
 
 ---
 
@@ -85,17 +85,17 @@ testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.
 
 ## FAZ 2 — Canlı Fiyat & Bilgilendirme
 
-| ID | Görev | Bağımlılık | Doküman |
-|----|-------|-----------|---------|
-| T2.1 | Fiyat sağlayıcı seç (altın/döviz ücretsiz katman) + `ILlmClient` benzeri `IPriceProvider` | Faz 1 | `02` |
-| T2.2 | `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz | T2.1 | `02` §2.2 |
-| T2.3 | Fallback: dış API çökünce son bilinen fiyat + `stale:true` | T2.2 | `04` §5, NFR-5 |
-| T2.4 | `GET /api/prices` + summary'i canlı fiyatla besle | T2.2 | `04` §5 |
-| T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 |
-| T2.6 | **Web:** yenile + son güncelleme/"yaklaşık" etiketi + Nudge kartı | T2.4 | `13` §4 |
-| T2.7 | **Redis cache katmanı:** fiyat/FX/summary cache Redis'e (dağıtık); stampede koruması; cache isabet metriği | T2.2 | `10` §3 |
-| T2.8 | **Gözlemlenebilirlik yığını:** Compose'a Seq + Prometheus + Grafana; OTel metrikleri (RED + bağımlılık + cache); ilk dashboard'lar + alarmlar | T0.11 | `12` §2,§4,§6 |
-| T2.9 | **Reverse proxy + sınırlama:** Traefik/Caddy (TLS/Let's Encrypt) + rate limiting + güvenlik başlıkları; iç servisler dışarı kapalı | T0.13 | `11` §5, `10` §5 |
+| ID | Görev | Bağımlılık | Doküman | Durum |
+|----|-------|-----------|---------|-------|
+| T2.1 | Fiyat sağlayıcı seç (altın/döviz ücretsiz katman) + `IPriceProvider` | Faz 1 | `02` | [x] (Frankfurter=ECB döviz, Truncgil=TR gram altın; ikisi de **anahtarsız**; `IPriceProvider`+`PriceInstrument`/`PriceQuote`; typed HttpClient+DI; 8 sağlayıcı testi) |
+| T2.2 | `PriceFetchService` + cache (5-15 dk) + `PriceSnapshots`'a yaz | T2.1 | `02` §2.2 | [ ] |
+| T2.3 | Fallback: dış API çökünce son bilinen fiyat + `stale:true` | T2.2 | `04` §5, NFR-5 | [ ] |
+| T2.4 | `GET /api/prices` + summary'i canlı fiyatla besle | T2.2 | `04` §5 | [ ] |
+| T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 | [ ] |
+| T2.6 | **Web:** yenile + son güncelleme/"yaklaşık" etiketi + Nudge kartı | T2.4 | `13` §4 | [ ] |
+| T2.7 | **Redis cache katmanı:** fiyat/FX/summary cache Redis'e (dağıtık); stampede koruması; cache isabet metriği | T2.2 | `10` §3 | [ ] |
+| T2.8 | **Gözlemlenebilirlik yığını:** Compose'a Seq + Prometheus + Grafana; OTel metrikleri (RED + bağımlılık + cache); ilk dashboard'lar + alarmlar | T0.11 | `12` §2,§4,§6 | [ ] |
+| T2.9 | **Reverse proxy + sınırlama:** Traefik/Caddy (TLS/Let's Encrypt) + rate limiting + güvenlik başlıkları; iç servisler dışarı kapalı | T0.13 | `11` §5, `10` §5 | [ ] |
 
 **Faz 2 DoD:** Otomatik güncel değer + yenileme; ≥1 not doğru tetikleniyor; dış
 API çökünce uygulama çökmüyor; **Redis cache + metrik/dashboard/alarm çalışıyor;

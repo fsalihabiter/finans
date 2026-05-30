@@ -5,6 +5,7 @@ using Finans.Api.Observability;
 using Finans.Application.Common;
 using Finans.Infrastructure;
 using Finans.Infrastructure.Persistence;
+using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Seed;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +60,8 @@ try
     // Veri katmanı (EF Core + Npgsql). Bağlantı dizesi env/User Secrets'tan gelebilir.
     var connectionString = builder.Configuration.GetConnectionString("Postgres")
         ?? throw new InvalidOperationException("ConnectionStrings:Postgres yapılandırılmamış.");
-    builder.Services.AddInfrastructure(connectionString);
+    builder.Services.AddInfrastructure(connectionString,
+        pricing => builder.Configuration.GetSection(PricingOptions.SectionName).Bind(pricing));
 
     // Health: /health (liveness) + /health/ready (DB erişilebilir mi) — 12 §8.
     builder.Services.AddHealthChecks()

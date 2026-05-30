@@ -85,6 +85,7 @@ hiçbir şeye bağımlı değil (saf, test edilebilir).
 | Kimlik doğrulama | Faz 1: yok (tekil kullanıcı). Faz 5: JWT/OAuth | Erken fazda gereksiz karmaşa. |
 | Loglama | `ILogger` + yapılandırılmış log | Dış API hatalarını izlemek için. |
 | Config/secret | `appsettings` + **User Secrets** (dev) / env (prod) | API anahtarı koda gömülmez (NFR-4). |
+| Fiyat sağlayıcı (Faz 2, T2.1) | Döviz: **Frankfurter** (ECB). Altın: **Truncgil** (TR gram). İkisi de **anahtarsız** | Frankfurter = ücretsiz/kotasız/açık kaynak ECB kuru (TRY dahil), günlük — portföy takibi için yeterli; her döviz için doğrudan TRY kuru (ters çevirme yok → tam isabet). Truncgil = TR piyasası gram altın (yerel primli, kullanıcının gördüğü gerçek fiyat; saf XAU-spot türetmesinden daha doğru). Anahtarsız → repoda sır yok. Gayriresmi kaynak riski `IPriceProvider` soyutlaması + T2.3 fallback ile karşılanır. |
 
 ---
 

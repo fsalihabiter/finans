@@ -20,6 +20,44 @@
 
 ---
 
+## 2026-05-31 · Faz 2 başladı — fiyat sağlayıcı seçimi + `IPriceProvider` (T2.1)
+- **Görev(ler):** T2.1 (tamam) — Faz 2 ilk adım.
+- **Ne yapıldı:**
+  1. **Sağlayıcı kararı (kullanıcı onaylı):** Döviz → **Frankfurter** (ECB, anahtarsız, kotasız,
+     TRY dahil; her döviz için *doğrudan* TRY kuru → ters çevirme yok, tam isabet). Altın →
+     **Truncgil** (TR piyasası gram altın, anahtarsız; yerel primli gerçek fiyat — saf XAU-spot
+     türetmesinden daha doğru). İki canlı uç nokta WebFetch ile bugün doğrulandı (şekiller parser'a
+     birebir yansıdı). İkisi de anahtarsız → repoda sır yok (CLAUDE.md §13).
+  2. **Sözleşme (Application/Pricing):** kaynaktan bağımsız `IPriceProvider` (`Source`/`CanQuote`/
+     `GetQuotesAsync`) + `PriceInstrument` (Kind: Currency/Gold) + `PriceQuote` (decimal fiyat,
+     QuoteCurrency, AsOfUtc, Source). Orkestrasyon/cache/fallback bilerek üst katmana bırakıldı
+     (T2.2/T2.3).
+  3. **Sağlayıcılar (Infrastructure/Pricing):** `FrankfurterPriceProvider` (typed HttpClient,
+     `GET /v1/latest?base={ccy}&symbols=TRY`, para birimleri paralel; TRY/döviz-olmayan atlanır) +
+     `TruncgilGoldPriceProvider` (`GET /v4/today.json` → "GRA" **satış**; sayı/string alanları
+     invariant decimal; zaman damgası yoksa `TimeProvider`). `PricingOptions` (yalnız kök adres).
+  4. **DI:** `AddInfrastructure`'a opsiyonel `Action<PricingOptions>`; `AddHttpClient<>` typed
+     client'lar + `TimeProvider.System`; her ikisi `IEnumerable<IPriceProvider>` olarak kaydedildi
+     (T2.2 CanQuote'a göre yönlendirir). `Program.cs` "Pricing" bölümünü bind eder; `appsettings`'e
+     anahtarsız uç noktalar (yorumlu).
+- **Dokunulan dosyalar:** yeni `src/Finans.Application/Pricing/{IPriceProvider,PriceInstrument,PriceQuote}.cs`;
+  yeni `src/Finans.Infrastructure/Pricing/{PricingOptions,FrankfurterPriceProvider,TruncgilGoldPriceProvider}.cs`;
+  düzenlenen `Infrastructure/DependencyInjection.cs`, `Infrastructure/Finans.Infrastructure.csproj`
+  (+`Microsoft.Extensions.Http`), `Api/Program.cs`, `Api/appsettings.json`; yeni testler
+  `tests/Finans.Integration.Tests/Pricing/{StubHttpMessageHandler,FrankfurterPriceProviderTests,TruncgilGoldPriceProviderTests}.cs`;
+  doküman `02-ARCHITECTURE.md` §2.3 (karar), `09-TESTING-STRATEGY.md` (SC-17), `08-BACKLOG.md`.
+- **Test:** **SC-17** (8 senaryo: doğrudan-kur ayrıştırma, döviz/TRY atlama, CanQuote yönlendirme,
+  HTTP hata→istisna; gram-altın satış, string-sayı, altın-yok→atla, GRA-eksik→istisna) — HTTP stub
+  handler ile, ağsız. `dotnet test` **yeşil: Application 39 + Integration 43 = 82**, 0 hata.
+- **Karar/Not:** Sağlayıcı seçimi kalıcı karar → `02` §2.3'e işlendi. Ters-çevirme yerine *doğrudan*
+  kur (finansal hassasiyet, NFR-1). Gram altın **satış** fiyatı (manşet, kullanıcı beklentisi);
+  alış muhafazakâr realize-değer için ileride seçenek. Gayriresmi kaynak riski soyutlama + T2.3
+  fallback ile karşılanacak. Not: build sırasında geçen oturumun kilitli `Finans.Api.exe` dev
+  sunucusu durduruldu (gerekirse `dotnet run` ile tekrar başlatılır).
+- **Durum:** tamamlandı
+- **Sıradaki:** T2.2 — `PriceFetchService` (IEnumerable<IPriceProvider> → CanQuote yönlendirme,
+  5-15 dk cache, `PriceSnapshots`/`FxRates`'e yaz); ardından T2.3 fallback (SC-08), T2.4 `GET /prices`.
+
 ## 2026-05-30 · Web UX/UI 2. tur — kullanıcı geri bildirimi (6 madde) + canlı doğrulama (T1.21)
 - **Görev(ler):** T1.21 (tamam) — kullanıcı canlı turda 6 madde işaret etti.
 - **Ne yapıldı:**
