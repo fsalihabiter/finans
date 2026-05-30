@@ -13,8 +13,9 @@ public static class DependencyInjection
         services.AddDbContext<FinansDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        // Kur sağlayıcı DbContext'e bağlı → scoped. Saf hesap servisi durumsuz → singleton.
+        // Kur/enflasyon sağlayıcılar DbContext'e bağlı → scoped. Saf hesap servisi durumsuz → singleton.
         services.AddScoped<IFxRateProvider, EfFxRateProvider>();
+        services.AddScoped<IInflationRateProvider, EfInflationRateProvider>();
         services.AddSingleton<PortfolioCalculationService>();
 
         return services;

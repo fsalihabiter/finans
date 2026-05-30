@@ -50,3 +50,18 @@ public sealed record AllocationSlice(
     string Name,
     decimal Value,
     decimal Weight);
+
+/// <summary>
+/// Ortalama maliyet türetimi (03 §11) için tek bir işlemin saf verisi —
+/// EF <c>Transaction</c> entity'sine bağımsız (servis saf kalsın).
+/// </summary>
+public sealed record TransactionInput(
+    TransactionType Type,
+    decimal Quantity,
+    decimal UnitPrice,
+    decimal Fee = 0m);
+
+/// <summary>
+/// İşlemlerden türetilen pozisyon (03 §11): saklanacak <c>Holding.Quantity/AvgCost</c>.
+/// </summary>
+public sealed record PositionBasis(decimal Quantity, decimal AvgCost);

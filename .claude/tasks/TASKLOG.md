@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-05-30 · Reel getiri verisi bağlama (T1.4) + ort. maliyet türetimi (T1.5)
+- **Görev(ler):** T1.4 (tamam), T1.5 (tamam) · Faz 1 · sıralı
+- **Ne yapıldı:**
+  - **T1.4 — enflasyon bağlama:** `IInflationRateProvider` (Application) + `EfInflationRateProvider`
+    (en güncel dönemin yıllık oranı, PeriodEndUtc max). DI scoped. `RealReturn` saf formülü
+    zaten vardı (T1.2); artık seed enflasyonu (0,38) yüklenip summary'ye besleniyor →
+    reel getiri ≈ %9,89 (nominal %51,6).
+  - **T1.5 — ort. maliyet türetimi:** `PortfolioCalculationService.DerivePosition` (saf, statik):
+    `AvgCost = Σ(Buy.Qty×UnitPrice + Buy.Fee)/Σ Buy.Qty`, `Quantity = Σ Buy.Qty − Σ Sell.Qty`.
+    **Satış ortalamayı bozmaz**, sadece miktarı düşürür (ort. maliyet yöntemi; FIFO/LIFO Faz 5).
+    Yeni saf record'lar: `TransactionInput`, `PositionBasis` (EF entity'sine bağımsız).
+- **Dokunulan dosyalar:** `Finans.Application/Portfolio/IInflationRateProvider.cs`,
+  `.../PortfolioModels.cs` (+TransactionInput/PositionBasis), `.../PortfolioCalculationService.cs`
+  (+DerivePosition), `Finans.Infrastructure/Persistence/EfInflationRateProvider.cs`,
+  `.../DependencyInjection.cs`, `tests/.../Portfolio/PositionDerivationTests.cs`,
+  `tests/Finans.Integration.Tests/{InflationRealReturnTests,PositionDerivationConsistencyTests}.cs`.
+- **Test:** SC-05 (enflasyon bağlama integration: provider 0,38 yükler, summary reel %9,89) +
+  SC-06 (DerivePosition unit 8 test: tek/çok alış, komisyon, satış ort. bozmaz, alış-satış-alış,
+  boş, yalnız satış + seed tx→holding tutarlılık integration). `dotnet test`
+  **Application 39 + Integration 18 = 57 yeşil**.
+- **Karar/Not:** İki saf çekirdek (RealReturn, DerivePosition) artık veri katmanına bağlandı.
+  Enflasyon dönem-duyarlı seçimi (pozisyon ufkuna göre) ileri fazda; cache Faz 2. `DerivePosition`
+  T1.6 HoldingService'te işlem değişiminde Holding.Quantity/AvgCost'u yeniden hesaplamak için kullanılacak.
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.6 Holdings CRUD endpoint + DTO + validasyon (+IDOR/per-user kapsam) · T1.7 `GET /portfolio/summary`.
+
 ## 2026-05-30 · `CurrencyConverter` + `IFxRateProvider` (EF) + test (T1.3)
 - **Görev(ler):** T1.3 (tamam) · Faz 1
 - **Ne yapıldı:**

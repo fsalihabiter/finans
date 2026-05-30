@@ -1,3 +1,5 @@
+using Finans.Domain.Enums;
+
 namespace Finans.Application.Portfolio;
 
 /// <summary>
@@ -48,6 +50,37 @@ public sealed class PortfolioCalculationService
         }
 
         return totalQuantity != 0m ? totalSpend / totalQuantity : null;
+    }
+
+    /// <summary>
+    /// İşlemlerden pozisyonu türetir (03 §11 — ortalama maliyet yöntemi):
+    /// <c>AvgCost = Σ(Buy.Qty×UnitPrice + Buy.Fee) / Σ Buy.Qty</c>,
+    /// <c>Quantity = Σ Buy.Qty − Σ Sell.Qty</c>. **Satış ortalamayı bozmaz**,
+    /// yalnızca miktarı düşürür (FIFO/LIFO Faz 5). Hiç alış yoksa AvgCost = 0.
+    /// </summary>
+    public static PositionBasis DerivePosition(IEnumerable<TransactionInput> transactions)
+    {
+        ArgumentNullException.ThrowIfNull(transactions);
+
+        decimal buyQuantity = 0m;
+        decimal buyCost = 0m;   // Σ(Buy.Qty×UnitPrice + Fee) — ortalama maliyetin payı
+        decimal sellQuantity = 0m;
+
+        foreach (var tx in transactions)
+        {
+            if (tx.Type == TransactionType.Buy)
+            {
+                buyQuantity += tx.Quantity;
+                buyCost += tx.Quantity * tx.UnitPrice + tx.Fee;
+            }
+            else // Sell — yalnızca miktarı etkiler
+            {
+                sellQuantity += tx.Quantity;
+            }
+        }
+
+        decimal avgCost = buyQuantity != 0m ? buyCost / buyQuantity : 0m;
+        return new PositionBasis(buyQuantity - sellQuantity, avgCost);
     }
 
     /// <summary>

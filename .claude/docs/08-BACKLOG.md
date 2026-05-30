@@ -57,8 +57,8 @@ koşucuları (`dotnet test`, `pnpm test`) kurulu ve yeşil**; **yapılandırılm
 | T1.1 | `PortfolioCalculationService` — formüller (saf fonksiyon) | Faz 0 | `02` §2.2, `CLAUDE.md` §6 | [x] |
 | T1.2 | **Birim testleri** (altın test verisi: 40gr/4.546→181.851, +%43) | T1.1 | `06` §4 | [x] |
 | T1.3 | `CurrencyConversionService` + `FxRates` (Faz 1 elle kur) + test | T1.1 | `02`, `03` | [x] |
-| T1.4 | Reel getiri (enflasyon oranı girişi) + test | T1.1 | `CLAUDE.md` §6 | [ ] |
-| T1.5 | Ort. maliyet türetimi (Transactions'tan) + test | T0.4 | `03` §5 | [ ] |
+| T1.4 | Reel getiri (enflasyon oranı girişi) + test | T1.1 | `CLAUDE.md` §6 | [x] |
+| T1.5 | Ort. maliyet türetimi (Transactions'tan) + test | T0.4 | `03` §5 | [x] |
 | T1.6 | Holdings CRUD endpoint'leri + DTO + validasyon | T1.5 | `04` §4 | [ ] |
 | T1.7 | `GET /api/portfolio/summary` | T1.1–T1.4 | `04` §4 | [ ] |
 | T1.8 | BES özel alanları (devlet katkısı ayrı) — entity→DTO→ekran | T0.4 | `03`, `04`, `05` §7 | [ ] |

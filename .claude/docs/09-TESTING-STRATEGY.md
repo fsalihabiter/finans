@@ -137,8 +137,8 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-02 | FR-1.3 | Çok varlıklı portföyde dağılım % toplamı 1,0 (±yuvarlama) | Unit | [x] (T1.2) |
 | SC-03 | FR-1.4 | USD varlık TRY baz pb'ye güncel kurdan çevrilir | Unit + Integration | [x] (T1.3; ters/çapraz kur dahil, tam hassasiyet) |
 | SC-04 | FR-1.5 | BES'te devlet katkısı kendi katkısından **ayrı** dönüyor | Integration | [ ] |
-| SC-05 | FR-1.6 | Reel getiri = (1+nominal)/(1+enflasyon)−1 doğru | Unit | [x] (T1.2; servis çekirdeği — veri bağlama T1.4) |
-| SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [~] (saf çekirdek ✓ T1.2; tx türetimi → T1.5) |
+| SC-05 | FR-1.6 | Reel getiri = (1+nominal)/(1+enflasyon)−1 doğru | Unit | [x] (T1.2 çekirdek + T1.4 enflasyon verisi bağlama, integration) |
+| SC-06 | §03 §5 | Birden çok alış → ağırlıklı ort. maliyet doğru türeniyor | Unit | [x] (T1.5: `DerivePosition` unit + seed tx→holding tutarlılık integration) |
 | SC-07 | FR-1.1/NFR-4 | Geçersiz girdi (miktar ≤ 0) → 400 + TR hata mesajı | Integration | [ ] |
 | SC-08 | FR-2.5/NFR-5 | **Olay:** fiyat API'si çöker → son bilinen fiyat + `stale:true`, çökme yok | Integration | [ ] |
 | SC-09 | FR-2.4 | Nakit oranı eşik üstü → ilgili nudge tetiklenir | Unit + Integration | [ ] |
