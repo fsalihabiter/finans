@@ -20,6 +20,22 @@
 
 ---
 
+## 2026-05-30 · Web: "Varlık Ekle" modal formu → POST /holdings (T1.14) — Faz 1 web seti bitti
+- **Görev(ler):** T1.14 (tamam)
+- **Ne yapıldı:** `AddHoldingDialog` — özel overlay modal (jsdom-dostu, role=dialog/aria-modal,
+  Escape/dış tık kapatma). Form: tür (preset birim), ad, sembol, para birimi, birim, miktar,
+  alış birim fiyatı → `useCreateHolding` POST /holdings. İstemci doğrulama (ad/birim/miktar>0/
+  fiyat≥0) + backend hata zarfı (çakışma/validasyon) gösterimi. PortfolioPage'e "+ Varlık Ekle"
+  butonu. Üretim `vite build` temiz (343 kB / 108 kB gzip).
+- **Dokunulan dosyalar:** `web/src/components/AddHoldingDialog.tsx` (+test),
+  `web/src/routes/PortfolioPage.tsx`, `web/src/App.css`.
+- **Test:** web **11 yeşil** (+3: kapalı render yok, doldur→POST gövdesi doğru→kapan, eksikte pasif),
+  `tsc` + `vite build` temiz.
+- **Karar/Not:** Faz 1'in tüm web ekranları (T1.11-14) tamam; başarı zinciri kullanıcı→form→
+  POST→invalidate→özet/tablo tazelenir. Sıradaki: canlı görsel doğrulama + T1.15 cache.
+- **Durum:** tamamlandı
+- **Sıradaki:** Canlı görsel doğrulama (web+backend), sonra T1.15 in-memory cache.
+
 ## 2026-05-30 · Web: Holdings tablosu + varlık detay (T1.13)
 - **Görev(ler):** T1.13 (tamam)
 - **Ne yapıldı:** `HoldingsTable` (gerçek tablo; dar ekran yatay kaydırma; ad→detay link, tr-TR

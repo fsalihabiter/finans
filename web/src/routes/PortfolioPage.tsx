@@ -1,8 +1,10 @@
+import { useState } from "react";
 import type { CurrencyCode } from "@finans/shared";
 import { HeroCard } from "../components/HeroCard";
 import { AllocationDonut } from "../components/AllocationDonut";
 import { CurrencySelector } from "../components/CurrencySelector";
 import { HoldingsTable } from "../components/HoldingsTable";
+import { AddHoldingDialog } from "../components/AddHoldingDialog";
 import { useHoldings, usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
 
 /**
@@ -15,6 +17,7 @@ export function PortfolioPage() {
   const summary = usePortfolioSummary();
   const holdings = useHoldings();
   const updateSettings = useUpdateSettings();
+  const [addOpen, setAddOpen] = useState(false);
 
   const baseCurrency = settings.data?.baseCurrency;
   const onCurrencyChange = (currency: CurrencyCode) =>
@@ -24,14 +27,21 @@ export function PortfolioPage() {
     <section>
       <header className="page-head">
         <h1>Portföy</h1>
-        {baseCurrency && (
-          <CurrencySelector
-            value={baseCurrency}
-            onChange={onCurrencyChange}
-            disabled={updateSettings.isPending}
-          />
-        )}
+        <div className="page-tools">
+          {baseCurrency && (
+            <CurrencySelector
+              value={baseCurrency}
+              onChange={onCurrencyChange}
+              disabled={updateSettings.isPending}
+            />
+          )}
+          <button type="button" className="btn-primary" onClick={() => setAddOpen(true)}>
+            + Varlık Ekle
+          </button>
+        </div>
       </header>
+
+      <AddHoldingDialog open={addOpen} onClose={() => setAddOpen(false)} />
 
       {summary.isLoading && <p className="muted">Yükleniyor…</p>}
       {summary.isError && (
