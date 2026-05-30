@@ -20,6 +20,24 @@
 
 ---
 
+## 2026-05-30 · Faz 1 loose-end taraması — Disclaimer (NFR-2, SC-W2) + bayat işaretler
+- **Görev(ler):** Faz 1 kapanış denetimi (kullanıcı "atlanan adım var mı?")
+- **Ne yapıldı:**
+  - **Denetim:** Faz 0 + Faz 1 tüm T-görevleri `[x]`. Açık SC'lerin çoğu sonraki fazlar
+    (SC-08 fiyat/Faz 2, SC-10/11 LLM, SC-12 hisse, SC-14/16 kimlik). Faz 1'e ait 3 loose-end bulundu.
+  - **SC-W2 (NFR-2 — #1 kural):** gerçek boşluktu → `Disclaimer` bileşeni ("yatırım tavsiyesi
+    değildir") + `AnalysisPage`'de her zaman görünür + RTL testi. (Daha önce Faz 3'e ertelenmişti.)
+  - **Bayat işaretler düzeltildi:** SC-W1 (format testi T1.10'da vardı), SC-15 (hata-maskeleme testi
+    T0.13'te vardı), T1.9 (`[~]`→`[x]`; web seçici T1.11'de yapılmıştı) → katalog/backlog gerçeğe çekildi.
+  - **SC-W3 (Web E2E)** bilinçli ertelendi → Faz 2 (Playwright gerçek akış, iki-sunucu orkestrasyonu).
+- **Dokunulan dosyalar:** `web/src/components/Disclaimer.tsx`, `web/src/routes/AnalysisPage.tsx` (+test),
+  `web/src/App.css`, `.claude/docs/{08-BACKLOG,09-TESTING-STRATEGY}.md`.
+- **Test:** web **12 yeşil** (+1 disclaimer SC-W2), `tsc` temiz.
+- **Karar/Not:** Faz 1'de kalan tek bilinçli erteleme **SC-W3 web E2E** (Faz 2'de iki sunucu ayakta
+  iken). Geri kalan her şey kapalı.
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı + `IPriceProvider`.
+
 ## 2026-05-30 · Seed verisini çeşitlendir (4→7 pozisyon, zarar + USD-fiyatlı hisse)
 - **Görev(ler):** ad-hoc (kullanıcı isteği) — seed zenginleştirme
 - **Ne yapıldı:**

@@ -549,6 +549,21 @@
   color: var(--text, #f3ede2);
 }
 
+/* Disclaimer (NFR-2 — yatırım tavsiyesi değildir) */
+.disclaimer {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  color: var(--muted, #a89c89);
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-left: 3px solid var(--gold, #e0b255);
+  border-radius: var(--radius-badge, 14px);
+}
+.disclaimer strong {
+  color: var(--text, #f3ede2);
+}
+
 /* Yardımcılar */
 .muted {
   color: var(--muted, #a89c89);
