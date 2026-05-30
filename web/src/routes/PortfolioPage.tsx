@@ -1,32 +1,52 @@
-import { formatCurrency, formatPercent } from "@finans/shared";
+import type { CurrencyCode } from "@finans/shared";
+import { HeroCard } from "../components/HeroCard";
+import { CurrencySelector } from "../components/CurrencySelector";
+import { usePortfolioSummary, useSettings, useUpdateSettings } from "../lib/hooks";
 
 /**
- * Portföy sayfası — Faz 0 yer tutucu. Gerçek HeroCard/Donut/Holdings T1.11+'da.
- * `@finans/shared/format`'in web'de çalıştığını da gösterir (token + format bağı).
+ * Portföy sayfası (T1.11): özet HeroCard + baz para birimi seçici. Dağılım grafiği
+ * (T1.12) ve holdings tablosu (T1.13) sonraki adımlarda eklenir.
+ * Sayısal hesap backend'de; burada yalnızca veri bağlama + tr-TR biçimleme.
  */
 export function PortfolioPage() {
-  // Örnek sayılar yalnızca format util'ini sergilemek için (taslak değerleri).
+  const settings = useSettings();
+  const summary = usePortfolioSummary();
+  const updateSettings = useUpdateSettings();
+
+  const baseCurrency = settings.data?.baseCurrency;
+  const onCurrencyChange = (currency: CurrencyCode) =>
+    updateSettings.mutate({ baseCurrency: currency });
+
   return (
     <section>
-      <h1>Portföy</h1>
-      <p className="muted">
-        Faz 0 iskeleti. Varlık özeti, dağılım grafiği ve holdings tablosu Faz 1'de
-        gelir.
-      </p>
-      <div className="demo-figures">
-        <div>
-          <span className="muted">Toplam değer</span>
-          <strong>{formatCurrency(641403)}</strong>
-        </div>
-        <div>
-          <span className="muted">Net kâr</span>
-          <strong className="pos">+{formatCurrency(218433)}</strong>
-        </div>
-        <div>
-          <span className="muted">Getiri</span>
-          <strong className="pos">{formatPercent(0.516)}</strong>
-        </div>
-      </div>
+      <header className="page-head">
+        <h1>Portföy</h1>
+        {baseCurrency && (
+          <CurrencySelector
+            value={baseCurrency}
+            onChange={onCurrencyChange}
+            disabled={updateSettings.isPending}
+          />
+        )}
+      </header>
+
+      {summary.isLoading && <p className="muted">Yükleniyor…</p>}
+      {summary.isError && (
+        <p className="neg" role="alert">
+          Portföy özeti yüklenemedi. Bağlantıyı kontrol edip tekrar deneyin.
+        </p>
+      )}
+
+      {summary.data && (
+        <>
+          <HeroCard summary={summary.data} />
+          {summary.data.allocation.length === 0 && (
+            <p className="muted empty-hint">
+              Henüz pozisyonun yok. Bir varlık ekleyerek başla.
+            </p>
+          )}
+        </>
+      )}
     </section>
   );
 }

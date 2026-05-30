@@ -20,6 +20,25 @@
 
 ---
 
+## 2026-05-30 · Web: AppShell (sidebar) + HeroCard + summary bağlama + para birimi seçici (T1.11)
+- **Görev(ler):** T1.11 (tamam); T1.9'un web ayağı (para birimi seçici) da burada
+- **Ne yapıldı:**
+  - **AppShell** sidebar düzenine geçti (geniş ekran sol sidebar; dar ekran üst bar — responsive grid).
+  - **HeroCard:** toplam değer (büyük) + net kâr / getiri / reel getiri / maliyet; pozitif/negatif renk.
+  - **CurrencySelector:** TRY/USD/EUR segment; seçim `useUpdateSettings` ile tercihi günceller →
+    summary/holdings invalidate → seçilen baz pb'ye göre yeniden hesaplanır.
+  - **PortfolioPage** veri bağlandı (`usePortfolioSummary`/`useSettings`); loading/error/boş durum.
+  - CSS: sidebar, hero, seçici, sayfa başlığı (DESIGN.md token'ları). Test yardımcısı
+    `renderWithProviders` (QueryClient sarmalı).
+- **Dokunulan dosyalar:** `web/src/App.tsx`, `web/src/App.css`,
+  `web/src/components/{HeroCard,CurrencySelector}.tsx`, `web/src/routes/PortfolioPage.tsx`,
+  `web/src/routes/PortfolioPage.test.tsx`, `web/src/test/renderWithProviders.tsx`.
+- **Test:** web **3 yeşil** (HeroCard tr-TR biçim + seçici aria-pressed; fetch mock), `tsc` temiz.
+- **Karar/Not:** Görsel doğrulama web seti (T1.12-14) bitince topluca yapılacak. Donut (T1.12) ve
+  holdings tablosu (T1.13) sayfaya eklenecek.
+- **Durum:** tamamlandı
+- **Sıradaki:** T1.12 `AllocationDonut` (SVG/conic) + legend.
+
 ## 2026-05-30 · `@finans/shared` API tipleri + istemci + web React Query hook'ları (T1.10)
 - **Görev(ler):** T1.10 (tamam)
 - **Ne yapıldı:**

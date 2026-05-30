@@ -1,23 +1,44 @@
-/* AppShell + Faz 0 demo stilleri — DESIGN.md token'larını kullanır. */
+/* AppShell + portföy stilleri — DESIGN.md token'larını kullanır. */
 
 .app-shell {
   min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
-.app-topbar {
+/* Geniş ekran: sol sidebar + içerik. */
+@media (min-width: 880px) {
+  .app-shell {
+    grid-template-columns: 240px 1fr;
+  }
+}
+
+.app-sidebar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem var(--space-screen-x, 20px);
+  gap: 1.25rem;
+  padding: 0.85rem var(--space-screen-x, 20px);
   border-bottom: 1px solid var(--line, #322b22);
+}
+
+@media (min-width: 880px) {
+  .app-sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    border-bottom: none;
+    border-right: 1px solid var(--line, #322b22);
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+  }
 }
 
 .app-brand {
   font-family: var(--font-display, Georgia, serif);
   font-weight: 600;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   letter-spacing: 0.01em;
   color: var(--gold, #e0b255);
 }
@@ -27,10 +48,17 @@
   gap: 1.25rem;
 }
 
+@media (min-width: 880px) {
+  .app-nav {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+
 .app-nav a {
   color: var(--muted, #a89c89);
   text-decoration: none;
-  padding: 0.25rem 0;
+  padding: 0.3rem 0;
   border-bottom: 2px solid transparent;
   transition: color 0.15s ease;
 }
@@ -44,8 +72,18 @@
   border-bottom-color: var(--gold, #e0b255);
 }
 
+.app-sidebar-foot {
+  margin-left: auto;
+}
+
+@media (min-width: 880px) {
+  .app-sidebar-foot {
+    margin-left: 0;
+    margin-top: auto;
+  }
+}
+
 .app-content {
-  flex: 1;
   width: 100%;
   max-width: 1080px;
   margin: 0 auto;
@@ -54,7 +92,6 @@
 
 /* Health rozeti */
 .health-badge {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -76,32 +113,116 @@
   background: var(--coral, #e58e6e);
 }
 
-/* Hero/demo figürleri — Faz 1'de gerçek HeroCard gelir */
-.demo-figures {
+/* Sayfa başlığı + araç çubuğu */
+.page-head {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 2rem;
-  margin-top: 1.25rem;
-  padding: 1.25rem var(--space-screen-x, 20px);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.page-head h1 {
+  margin: 0;
+}
+
+/* Baz para birimi seçici (segment) */
+.ccy-selector {
+  display: inline-flex;
+  background: var(--panel, #1c1813);
+  border: 1px solid var(--line, #322b22);
+  border-radius: var(--radius-pill, 100px);
+  padding: 3px;
+}
+.ccy-selector button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted, #a89c89);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: var(--radius-pill, 100px);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.ccy-selector button:hover:not(:disabled) {
+  color: var(--text, #f3ede2);
+}
+.ccy-selector button.active {
+  background: var(--gold, #e0b255);
+  color: #14110d;
+  font-weight: 600;
+}
+.ccy-selector button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* HeroCard */
+.hero-card {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem var(--space-screen-x, 20px);
   background: var(--panel, #1c1813);
   border: 1px solid var(--line, #322b22);
   border-radius: var(--radius-card, 22px);
   box-shadow: var(--shadow-hero, 0 18px 40px -22px rgba(0, 0, 0, 0.9));
 }
-.demo-figures > div {
+.hero-main {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
-.demo-figures strong {
-  font-family: var(--font-display, Georgia, serif);
-  font-size: 1.6rem;
-  font-weight: 600;
-}
-.muted {
+.hero-label {
   color: var(--muted, #a89c89);
   font-size: 0.8rem;
 }
+.hero-value {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 2.4rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 1.5rem;
+  margin: 0;
+}
+@media (min-width: 620px) {
+  .hero-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.hero-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.hero-stats dt {
+  color: var(--muted, #a89c89);
+  font-size: 0.78rem;
+}
+.hero-stats dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Yardımcılar */
+.muted {
+  color: var(--muted, #a89c89);
+  font-size: 0.85rem;
+}
+.empty-hint {
+  margin-top: 1rem;
+}
 .pos {
   color: var(--mint, #5fc9a0);
+}
+.neg {
+  color: var(--coral, #e58e6e);
 }

@@ -3,13 +3,13 @@ import { HealthBadge } from "./components/HealthBadge";
 import "./App.css";
 
 /**
- * AppShell — Faz 0 iskelet kabuğu: sol/üst gezinme + içerik alanı (Outlet).
- * Tam sidebar/topbar tasarımı (DESIGN.md) T0.9/T1.11'de oturur.
+ * AppShell (13 §4): geniş ekranda sol sidebar (marka + gezinme + durum), dar
+ * ekranda üstte yatay bar (responsive grid). İçerik ortalı kolonda (Outlet).
  */
 export default function App() {
   return (
     <div className="app-shell">
-      <header className="app-topbar">
+      <aside className="app-sidebar">
         <span className="app-brand">Finans</span>
         <nav className="app-nav">
           <NavLink to="/" end>
@@ -17,8 +17,10 @@ export default function App() {
           </NavLink>
           <NavLink to="/analiz">Analiz</NavLink>
         </nav>
-        <HealthBadge />
-      </header>
+        <div className="app-sidebar-foot">
+          <HealthBadge />
+        </div>
+      </aside>
       <main className="app-content">
         <Outlet />
       </main>
