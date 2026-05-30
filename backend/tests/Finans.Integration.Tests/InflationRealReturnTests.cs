@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Finans.Application.Portfolio;
 using Finans.Domain.Enums;
+using Finans.Domain.Portfolio;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -49,16 +50,24 @@ public sealed class InflationRealReturnTests : IClassFixture<SqliteWebApplicatio
         var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
 
         var inflation = await provider.GetAnnualRateAsync();
-        var holdings = await db.Holdings
-            .Include(h => h.Asset)
-            .Select(h => new HoldingInput(h.Asset.Type, h.Asset.Name, h.Quantity, h.AvgCost, h.CurrentPrice))
-            .ToListAsync();
+        var entities = await db.Holdings.Include(h => h.Asset).ToListAsync();
 
-        var summary = calc.CalculateSummary(holdings, inflation);
+        // Birim fiyatları baz TRY'ye çevir (USD-fiyatlı kalem ×48, seed FX'i sabit) —
+        // PortfolioService'in yaptığı çevrimi taklit eder (T1.3).
+        decimal toTry(Holding h, decimal v) =>
+            h.Asset.PricingCurrency == CurrencyCode.USD ? v * 48m : v;
+        var inputs = entities
+            .Select(h => new HoldingInput(
+                h.Asset.Type, h.Asset.Name, h.Quantity,
+                toTry(h, h.AvgCost),
+                h.CurrentPrice is { } cp ? toTry(h, cp) : null))
+            .ToList();
+
+        var summary = calc.CalculateSummary(inputs, inflation);
 
         summary.ReturnRatio.Should().NotBeNull();
-        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.516m);
+        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.390m);
         summary.RealReturnRatio.Should().NotBeNull();
-        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0989m);
+        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0072m);
     }
 }

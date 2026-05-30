@@ -1,4 +1,6 @@
 using FluentAssertions;
+using Finans.Domain.Enums;
+using Finans.Domain.Portfolio;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Finans.Integration.Tests;
 
 /// <summary>
-/// SC-01..06 fixture doğrulaması (03 §12, 09 §2): seed sayıları taslakla BİREBİR
-/// tutar — toplam maliyet 422.970, değer 641.403, kâr +218.433, getiri +%51,6.
+/// Seed fixture doğrulaması (03 §12, 09 §2). Baz TRY toplamları (USD-fiyatlı kalem
+/// ×48 çevrilir): maliyet 603.770, değer 839.213, kâr +235.443, getiri +%39,0.
 /// Yanlış rakam kabul edilemez (NFR-1). EF InMemory ile sağlayıcısız koşar.
 /// </summary>
 public sealed class SeedConsistencyTests
@@ -17,22 +19,26 @@ public sealed class SeedConsistencyTests
             .UseInMemoryDatabase($"seed-{Guid.CreateVersion7()}")
             .Options);
 
+    /// <summary>Seed FX'i sabit (USD→TRY=48); USD-fiyatlı kalemi baz TRY'ye çevir.</summary>
+    private static decimal ToTry(Holding h, decimal amount) =>
+        h.Asset.PricingCurrency == CurrencyCode.USD ? amount * 48m : amount;
+
     [Fact]
     public async Task Seed_totals_match_draft_figures()
     {
         await using var db = NewContext();
         await SeedData.SeedAsync(db);
 
-        var holdings = await db.Holdings.ToListAsync();
-        var totalCost = holdings.Sum(h => h.Quantity * h.AvgCost);
-        var totalValue = holdings.Sum(h => h.Quantity * (h.CurrentPrice ?? 0m));
+        var holdings = await db.Holdings.Include(h => h.Asset).ToListAsync();
+        var totalCost = holdings.Sum(h => ToTry(h, h.Quantity * h.AvgCost));
+        var totalValue = holdings.Sum(h => ToTry(h, h.Quantity * (h.CurrentPrice ?? 0m)));
         var profit = totalValue - totalCost;
         var returnPct = profit / totalCost;
 
-        totalCost.Should().Be(422970.00m);
-        totalValue.Should().Be(641403.00m);
-        profit.Should().Be(218433.00m);
-        Math.Round(returnPct * 100m, 1).Should().Be(51.6m);
+        totalCost.Should().Be(603770.00m);
+        totalValue.Should().Be(839213.00m);
+        profit.Should().Be(235443.00m);
+        Math.Round(returnPct * 100m, 1).Should().Be(39.0m);
     }
 
     [Fact]
@@ -43,9 +49,9 @@ public sealed class SeedConsistencyTests
         await SeedData.SeedAsync(db); // ikinci çağrı çoğaltmamalı
 
         (await db.Users.CountAsync()).Should().Be(2);
-        (await db.Holdings.CountAsync()).Should().Be(4);
-        (await db.Assets.CountAsync()).Should().Be(5);
-        (await db.Transactions.CountAsync()).Should().Be(2);
+        (await db.Holdings.CountAsync()).Should().Be(7);
+        (await db.Assets.CountAsync()).Should().Be(7);
+        (await db.Transactions.CountAsync()).Should().Be(5);
     }
 
     [Fact]

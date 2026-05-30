@@ -323,10 +323,11 @@ Quantity = Σ Buy.Quantity − Σ Sell.Quantity
 
 ## 12. SEED VERİSİ (kapsamlı & tutarlı)
 
-> Geliştirme/test için **gerçekçi ve birbirini doğrulayan** veri. Sayılar
-> taslağın başlık değerleriyle **birebir tutar** (toplam 641.403 / maliyet
-> 422.970 / kâr +218.433 / +%51,6) ve hem seed hem **test fixture**'dır
-> (`06` §4, `09`). Doğrulama: `node` ile yeniden hesaplanıp onaylandı.
+> Geliştirme/test için **gerçekçi, çeşitli ve birbirini doğrulayan** veri.
+> 7 pozisyon: altın, döviz (USD + EUR), USD-fiyatlı hisse (kur çevrimi tetikler),
+> **zarardaki fon** (eğitici örnek), BES, nakit. Baz TRY toplamları: **maliyet
+> 603.770 / değer 839.213 / kâr +235.443 / +%39,0** (reel ~+%0,7 @enflasyon 0,38).
+> Hem seed hem **test fixture**'dır (`06` §4, `09`).
 
 ### 12.1 Kullanıcılar & Roller
 - `User#1` — DisplayName "Yatırımcı", BaseCurrency `TRY`, rol `User`. (Faz 1-4'ün tekil kullanıcısı.)
@@ -343,24 +344,30 @@ Quantity = Σ Buy.Quantity − Σ Sell.Quantity
 |------|------|--------|------|-----------------|
 | Gold | Altın (gram) | XAU | gram | TRY |
 | Fx | ABD Doları | USD | USD | TRY |
+| Fx | Euro | EUR | EUR | TRY |
 | Bes | Bireysel Emeklilik | — | birim | TRY |
 | Cash | Nakit (TL) | — | TRY | TRY |
-| Stock | Apple Inc. | AAPL | adet | USD |  ← Faz 4 demo |
+| Stock | Apple Inc. | AAPL | adet | **USD** |  ← kur çevrimi |
+| Fund | Teknoloji Fonu | TEKFON | adet | TRY |
 
-### 12.4 Pozisyonlar (Holdings + Transactions + BesDetails) — **tutarlı**
-| Varlık | İşlem (seed) | AvgCost | Toplam Maliyet | Güncel Fiyat | Değer | Getiri |
-|--------|-------------|---------|----------------|--------------|-------|--------|
-| Altın | Buy 40 gr @ 4.546,275 ₺ | 4.546,275 | **181.851,00** | 6.500 ₺/gr | **260.000** | +%43,0 |
-| Dolar | Buy 2.000 $ @ 43,27 ₺ | 43,27 | **86.540,00** | 48,00 ₺/$ | **96.000** | +%10,9 |
-| BES | own 120.000 + state 28.554 | (notional) | **148.554,00** | — | **279.378** | +%88,1 |
-| Nakit | 6.025 ₺ | 1,00 | **6.025,00** | 1,00 | **6.025** | — |
-| **TOPLAM** | | | **422.970,00** | | **641.403** | **+%51,6** |
+### 12.4 Pozisyonlar (Holdings + Transactions + BesDetails) — **tutarlı** (baz TRY)
+| Varlık | İşlem (seed) | AvgCost | Toplam Maliyet | Güncel Fiyat | Değer (TRY) | Getiri |
+|--------|-------------|---------|----------------|--------------|-------------|--------|
+| Altın | Buy 40 gr @ 4.546,275 ₺ | 4.546,275 | **181.851** | 6.500 ₺/gr | **260.000** | +%43,0 |
+| Dolar | Buy 2.000 $ @ 43,27 ₺ | 43,27 | **86.540** | 48,00 ₺/$ | **96.000** | +%10,9 |
+| Euro | Buy 800 € @ 47,50 ₺ | 47,50 | **38.000** | 52,00 ₺/€ | **41.600** | +%9,5 |
+| Apple (USD) | Buy 12 @ 175 $ | 175 $ | **100.800** | 210 $ (×48) | **120.960** | +%20,0 |
+| Teknoloji Fonu | Buy 1.500 @ 28,00 ₺ | 28,00 | **42.000** | 23,50 ₺ | **35.250** | **−%16,1** |
+| BES | own 120.000 + state 28.554 | (notional) | **148.554** | — | **279.378** | +%88,1 |
+| Nakit | 6.025 ₺ | 1,00 | **6.025** | 1,00 | **6.025** | — |
+| **TOPLAM** | | | **603.770** | | **839.213** | **+%39,0** |
 
 - **BesDetails:** OwnContribution `120.000`, StateContribution `28.554`,
   VestingState `PartiallyVested`. (Devlet katkısı UI'da ayrı; getiri tabanına dahil.)
-- **PriceSnapshots:** Altın 6.500 (AsOf bugün) + 4.546 (alış dönemi); USD 48 + 43,27.
-  (Rereel getiri & senaryo grafiği için en az iki nokta.)
-- Dağılım ağırlıkları: Altın %40,5 · BES %43,6 · Dolar %15,0 · Nakit %0,9 (taslakla aynı).
+- **Apple USD-fiyatlı** → summary'de USD→TRY (×48) çevrimi gerçekten test edilir (SC-03 zinciri).
+- **Teknoloji Fonu** kasıtlı **zararda** (−%16,1) → UI'da negatif getiri (kırmızı) + eğitici örnek.
+- **PriceSnapshots:** altın & USD için iki nokta (now + alış); EUR/AAPL/fon için "now".
+- Dağılım (değer/toplam): BES %33,3 · Altın %31,0 · Apple %14,4 · Dolar %11,4 · Euro %5,0 · Fon %4,2 · Nakit %0,7.
 
 > ⚠️ Taslaktaki ekran sayıları elle konmuştu ve hepsi tam tutmuyordu; seed bunu
 > **düzeltip birebir tutarlı** hale getirir — "doğru veri" ilkesi (NFR-1).

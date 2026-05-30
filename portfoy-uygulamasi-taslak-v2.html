@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portföy Uygulaması — Taslak v0.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14110D;
+    --panel:#1C1813;
+    --panel-2:#241F18;
+    --line:#322B22;
+    --gold:#E0B255;
+    --gold-soft:#caa05a;
+    --mint:#5FC9A0;
+    --coral:#E58E6E;
+    --text:#F3EDE2;
+    --muted:#A89C89;
+    --muted-2:#6F6557;
+    /* varlık sınıfı renkleri */
+    --c-gold:#E0B255;
+    --c-usstock:#6EA8FE;
+    --c-bes:#B98AD9;
+    --c-fund:#3FB9CE;
+    --c-bist:#E8835A;
+    --c-fx:#A8C36A;
+    --c-crypto:#F0A03C;
+    --c-cash:#9CA7A0;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Hanken Grotesk',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:var(--sans);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #2a2014 0%, transparent 55%),
+      radial-gradient(900px 500px at -10% 100%, #1a2420 0%, transparent 50%),
+      #0d0b08;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:48px 16px 64px;color:var(--text);
+  }
+  .intro{max-width:760px;text-align:center;margin-bottom:40px}
+  .intro .tag{display:inline-block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);border:1px solid var(--line);border-radius:100px;padding:6px 16px;margin-bottom:20px;background:rgba(224,178,85,.06)}
+  .intro h1{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1.15;letter-spacing:-.01em;margin-bottom:14px}
+  .intro h1 em{font-style:italic;color:var(--gold)}
+  .intro p{color:var(--muted);font-size:15px;line-height:1.6;max-width:580px;margin:0 auto}
+  .intro .hint{margin-top:18px;font-size:12.5px;color:var(--muted-2)}
+
+  .phone{width:390px;height:824px;border-radius:46px;background:linear-gradient(160deg,#2b251c,#15110c);padding:13px;box-shadow:0 0 0 2px #3a3127,0 40px 80px -20px rgba(0,0,0,.8),0 0 120px -40px rgba(224,178,85,.25);position:relative}
+  .screen{width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--bg);position:relative;display:flex;flex-direction:column}
+  .statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;font-weight:600;flex-shrink:0;z-index:5}
+  .statusbar .dots{display:flex;gap:5px;align-items:center}
+  .statusbar .bars{display:flex;gap:2px;align-items:flex-end;height:11px}
+  .statusbar .bars span{width:3px;background:var(--text);border-radius:1px}
+  .statusbar .bars span:nth-child(1){height:4px}.statusbar .bars span:nth-child(2){height:6px}.statusbar .bars span:nth-child(3){height:8px}.statusbar .bars span:nth-child(4){height:11px}
+  .batt{width:22px;height:11px;border:1.4px solid var(--text);border-radius:3px;position:relative;display:inline-block}
+  .batt::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:var(--text);border-radius:0 1px 1px 0}
+  .batt::before{content:"";position:absolute;left:1.5px;top:1.5px;bottom:1.5px;width:60%;background:var(--mint);border-radius:1px}
+  .notch{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#0d0b08;border-radius:0 0 18px 18px;z-index:6}
+
+  .body{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 20px 110px}
+  .body::-webkit-scrollbar{width:0}
+  .view{display:none;animation:fade .35s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .greet{margin:6px 0 18px}
+  .greet .hi{font-size:13px;color:var(--muted)}
+  .greet .name{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
+  .greet .name .wave{color:var(--gold)}
+
+  .hero{border-radius:26px;padding:24px 22px 20px;position:relative;overflow:hidden;background:linear-gradient(150deg,#2a2114 0%,#1d1812 60%,#181410 100%);border:1px solid #3a3024;box-shadow:0 18px 40px -22px rgba(0,0,0,.9)}
+  .hero::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(224,178,85,.22),transparent 70%)}
+  .hero .lbl{font-size:12px;color:var(--muted);letter-spacing:.04em;position:relative}
+  .hero .val{font-family:var(--serif);font-size:38px;font-weight:600;letter-spacing:-.02em;margin:6px 0 2px;position:relative;font-variant-numeric:tabular-nums}
+  .hero .cur{font-size:18px;color:var(--gold-soft);font-family:var(--sans);font-weight:600}
+  .hero .delta{display:inline-flex;align-items:center;gap:7px;margin-top:10px;position:relative;font-size:14px;font-weight:600}
+  .hero .pill{background:rgba(95,201,160,.14);color:var(--mint);padding:5px 11px;border-radius:100px;font-variant-numeric:tabular-nums}
+  .hero .sub{color:var(--muted);font-weight:500;font-size:13px}
+  /* mini chart */
+  .spark{margin-top:16px;position:relative}
+  .spark svg{width:100%;height:74px;display:block}
+  .periods{display:flex;gap:6px;margin-top:12px;position:relative}
+  .periods button{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:600;padding:7px 0;border-radius:9px;cursor:pointer;transition:.2s}
+  .periods button.on{background:rgba(224,178,85,.14);border-color:var(--gold);color:var(--gold)}
+  .hero .costline{margin-top:16px;padding-top:14px;border-top:1px solid #352c20;display:flex;justify-content:space-between;position:relative}
+  .hero .costline div .k{font-size:11px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.08em}
+  .hero .costline div .v{font-size:15px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
+
+  .sec{display:flex;align-items:center;justify-content:space-between;margin:26px 2px 14px}
+  .sec h3{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .sec a{font-size:12.5px;color:var(--gold);text-decoration:none;font-weight:600}
+
+  .alloc{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:20px;display:flex;gap:18px;align-items:center}
+  .donut{width:118px;height:118px;border-radius:50%;flex-shrink:0;position:relative;
+    background:conic-gradient(
+      var(--c-gold) 0 30%,
+      var(--c-usstock) 30% 52%,
+      var(--c-bes) 52% 68%,
+      var(--c-fund) 68% 80%,
+      var(--c-bist) 80% 90%,
+      var(--c-fx) 90% 98%,
+      var(--c-crypto) 98% 99.5%,
+      var(--c-cash) 99.5% 100%);}
+  .donut::after{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--panel)}
+  .donut .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}
+  .donut .center .n{font-family:var(--serif);font-size:20px;font-weight:600}
+  .donut .center .t{font-size:9.5px;color:var(--muted);letter-spacing:.06em}
+  .legend{flex:1;display:flex;flex-direction:column;gap:8px}
+  .legend .row{display:flex;align-items:center;gap:9px;font-size:12.5px}
+  .legend .row .dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+  .legend .row .nm{flex:1;color:var(--text);font-weight:500}
+  .legend .row .pc{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+
+  .hold{display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px 15px;margin-bottom:10px;cursor:pointer;transition:.2s;text-align:left;width:100%;font-family:inherit;color:inherit}
+  .hold:hover,.hold:active{background:var(--panel-2);transform:translateX(2px);border-color:#41382b}
+  .hold .ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .hold .mid{flex:1;min-width:0}
+  .hold .mid .nm{font-weight:600;font-size:14px}
+  .hold .mid .sub{font-size:11.5px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+  .hold .end{text-align:right}
+  .hold .end .v{font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+  .hold .end .g{font-size:11.5px;margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums}
+  .up{color:var(--mint)} .down{color:var(--coral)}
+
+  .nudge{background:linear-gradient(135deg,rgba(224,178,85,.1),rgba(224,178,85,.03));border:1px solid rgba(224,178,85,.2);border-radius:20px;padding:15px 17px;margin-top:14px;display:flex;gap:12px}
+  .nudge .b{width:30px;height:30px;border-radius:10px;background:rgba(224,178,85,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+  .nudge .tx{font-size:12.5px;line-height:1.55;color:#e7dcc8}
+  .nudge .tx b{color:var(--gold)}
+
+  /* analiz */
+  .ai-head{display:flex;gap:12px;align-items:center;margin:8px 0 6px}
+  .ai-orb{width:40px;height:40px;border-radius:13px;background:linear-gradient(140deg,var(--gold),#9c6f2e);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 6px 18px -6px rgba(224,178,85,.6)}
+  .ai-head .t1{font-family:var(--serif);font-size:19px;font-weight:600}
+  .ai-head .t2{font-size:12px;color:var(--muted);margin-top:1px}
+  .disc{font-size:11px;color:var(--muted-2);background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:10px 13px;line-height:1.5;margin:14px 0 18px}
+  .scores{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px}
+  .score{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px}
+  .score .k{font-size:11.5px;color:var(--muted);font-weight:600}
+  .score .v{font-family:var(--serif);font-size:24px;font-weight:600;margin-top:5px}
+  .score .v small{font-size:13px;color:var(--muted-2);font-family:var(--sans)}
+  .score .mini{height:5px;border-radius:5px;background:#2a241c;margin-top:9px;overflow:hidden}
+  .score .mini i{display:block;height:100%;border-radius:5px}
+  .acard{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:17px;margin-bottom:12px}
+  .acard .hd{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .acard .hd .e{font-size:16px}
+  .acard .hd .h{font-weight:700;font-size:13.5px}
+  .acard p{font-size:12.5px;line-height:1.6;color:#d8cebd}
+  .acard p b{color:var(--text)}
+  .acard .meter{height:7px;border-radius:6px;background:#2a241c;margin:12px 0 7px;overflow:hidden}
+  .acard .meter i{display:block;height:100%;border-radius:6px}
+  .acard .scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted-2)}
+  .tagrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .tg{font-size:11px;padding:5px 11px;border-radius:100px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted)}
+  .bw{display:flex;gap:11px;margin-top:4px}
+  .bw .item{flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .bw .item .t{font-size:10.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em}
+  .bw .item .n{font-size:13.5px;font-weight:700;margin-top:4px}
+  .bw .item .g{font-size:12px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+
+  /* hisse */
+  .search{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 16px;margin:6px 0 16px;color:var(--muted)}
+  .search input{background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:14px;flex:1}
+  .stockhdr{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+  .stockhdr .logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(140deg,#7bd34f,#3f8f1f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0c1a06;font-size:17px;flex-shrink:0}
+  .stockhdr .nm{font-family:var(--serif);font-size:19px;font-weight:600}
+  .stockhdr .tk{font-size:12px;color:var(--muted)}
+  .stockhdr .pr{margin-left:auto;text-align:right}
+  .stockhdr .pr .p{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stockhdr .pr .c{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+  .stockchart{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 12px 8px;margin-bottom:14px}
+  .stockchart svg{width:100%;height:90px;display:block}
+  .crange{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted-2);margin-top:6px;padding:0 4px}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px}
+  .metric .k{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .metric .q{width:14px;height:14px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line);font-size:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+  .metric .v{font-size:20px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums}
+  .metric .tag2{font-size:10.5px;font-weight:600;margin-top:3px}
+
+  /* eğitim */
+  .catrow{display:flex;gap:8px;margin:2px 0 16px;overflow-x:auto}
+  .catrow::-webkit-scrollbar{height:0}
+  .cat{white-space:nowrap;font-size:12px;font-weight:600;padding:8px 14px;border-radius:100px;background:var(--panel);border:1px solid var(--line);color:var(--muted);cursor:pointer}
+  .cat.on{background:rgba(224,178,85,.13);border-color:var(--gold);color:var(--gold)}
+  .lesson{display:flex;gap:13px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:11px;cursor:pointer;transition:.2s}
+  .lesson:hover{border-color:#41382b;background:var(--panel-2)}
+  .lesson .num{width:38px;height:38px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:15px;color:var(--gold);flex-shrink:0}
+  .lesson .info{flex:1}
+  .lesson .info .ti{font-weight:600;font-size:14px}
+  .lesson .info .de{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .lesson .info .mt{font-size:11px;color:var(--muted-2);margin-top:7px;display:flex;gap:12px}
+  .lesson .chev{align-self:center;color:var(--muted-2)}
+  .track{display:flex;gap:7px;margin:4px 0 8px}
+  .track .seg{flex:1;height:5px;border-radius:4px;background:#2a241c}
+  .track .seg.done{background:var(--gold)}
+  .trackmeta{font-size:11.5px;color:var(--muted);margin-bottom:18px}
+
+  .nav{position:absolute;bottom:0;left:0;right:0;height:84px;background:linear-gradient(180deg,rgba(20,17,13,.4),var(--bg) 38%);backdrop-filter:blur(12px);display:flex;align-items:flex-start;padding:12px 14px 0;border-top:1px solid var(--line);z-index:10}
+  .nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--muted-2);font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;transition:.2s;padding-top:6px}
+  .nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .nav button.on{color:var(--gold)}
+  .fab{position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:54px;height:54px;border-radius:50%;background:linear-gradient(140deg,var(--gold),#a9762f);border:none;color:#1a140a;font-size:28px;font-weight:300;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 26px -8px rgba(224,178,85,.7);z-index:11}
+
+  .overlay{position:absolute;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .38s cubic-bezier(.22,.9,.3,1);border-radius:34px;overflow:hidden}
+  .overlay.up{transform:translateY(0)}
+  .ov-bar{height:44px;flex-shrink:0}
+  .ov-top{display:flex;align-items:center;gap:14px;padding:6px 20px 12px}
+  .ov-top button{background:var(--panel);border:1px solid var(--line);width:38px;height:38px;border-radius:12px;color:var(--text);font-size:19px;cursor:pointer}
+  .ov-top .ti{font-family:var(--serif);font-size:18px;font-weight:600}
+  .ov-body{flex:1;overflow-y:auto;padding:6px 20px 30px}
+  .ov-body::-webkit-scrollbar{width:0}
+  .detail-hero{background:linear-gradient(150deg,#2a2114,#181410);border:1px solid #3a3024;border-radius:24px;padding:22px;text-align:center;margin-bottom:16px}
+  .detail-hero .ic{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:25px;margin:0 auto 12px}
+  .detail-hero .v{font-family:var(--serif);font-size:31px;font-weight:600;font-variant-numeric:tabular-nums}
+  .detail-hero .g{font-size:14px;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+  .drow{display:flex;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--line);font-size:13px}
+  .drow .k{color:var(--muted)} .drow .v{font-weight:600;font-variant-numeric:tabular-nums}
+  .subhold{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:9px}
+  .subhold .tk{width:40px;height:40px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
+  .subhold .mid{flex:1}
+  .subhold .mid .nm{font-weight:600;font-size:13.5px}
+  .subhold .mid .sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .subhold .end{text-align:right}
+  .subhold .end .v{font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums}
+  .subhold .end .g{font-size:11px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+
+  .field{margin-bottom:15px}
+  .field label{font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:7px}
+  .field .inp{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+  .field .inp .ph{color:var(--muted-2)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:10px 14px;border-radius:13px;background:var(--panel);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s}
+  .chip.sel{background:rgba(224,178,85,.13);border-color:var(--gold);color:var(--gold)}
+  .savebtn{width:100%;padding:16px;border-radius:16px;background:linear-gradient(140deg,var(--gold),#a9762f);border:none;color:#1a140a;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px}
+
+  .footnote{max-width:760px;text-align:center;margin-top:36px;font-size:12px;color:var(--muted-2);line-height:1.6}
+  .footnote b{color:var(--muted)}
+</style>
+</head>
+<body>
+
+  <div class="intro">
+    <span class="tag">Etkileşimli Taslak · v0.2 · zenginleştirilmiş</span>
+    <h1>Portföyünü <em>anla</em>, sonra <em>büyüt</em>.</h1>
+    <p>Daha detaylı ikinci taslak. Tüm rakamlar <b>tamamen kurgusaldır</b> ve gösterim amaçlı bir örnek portföye aittir. Sekmelere, varlıklara ve hisseye dokunarak gezinebilirsin.</p>
+    <div class="hint">↓ Sekmelere ve listeye dokun · Altın ve ABD Hisseleri detay açar</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="dots">
+          <span class="bars"><span></span><span></span><span></span><span></span></span>
+          <span style="font-size:11px">5G</span>
+          <span class="batt"></span>
+        </span>
+      </div>
+
+      <div class="body">
+
+        <!-- ============ PORTFÖY ============ -->
+        <section class="view active" id="v-portfoy">
+          <div class="greet">
+            <div class="hi">İyi akşamlar,</div>
+            <div class="name">Demo Hesap <span class="wave">👋</span></div>
+          </div>
+
+          <div class="hero">
+            <div class="lbl">Toplam Portföy Değeri</div>
+            <div class="val">925.000 <span class="cur">₺</span></div>
+            <div class="delta">
+              <span class="pill">▲ +196.375 ₺</span>
+              <span class="sub">%26,9 · tüm zamanlar</span>
+            </div>
+
+            <div class="spark">
+              <svg viewBox="0 0 300 74" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="fillg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="rgba(95,201,160,.35)"/>
+                    <stop offset="100%" stop-color="rgba(95,201,160,0)"/>
+                  </linearGradient>
+                </defs>
+                <polygon fill="url(#fillg)" points="0,56 30,52 60,55 90,44 120,47 150,35 180,38 210,26 240,24 270,17 300,12 300,74 0,74"/>
+                <polyline fill="none" stroke="var(--mint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,56 30,52 60,55 90,44 120,47 150,35 180,38 210,26 240,24 270,17 300,12"/>
+              </svg>
+            </div>
+            <div class="periods">
+              <button>1H</button><button>1A</button><button>3A</button>
+              <button class="on">1Y</button><button>Tümü</button>
+            </div>
+
+            <div class="costline">
+              <div><div class="k">Maliyet</div><div class="v">728.625 ₺</div></div>
+              <div><div class="k">Net Kâr</div><div class="v up">+196.375 ₺</div></div>
+              <div style="text-align:right"><div class="k">Getiri</div><div class="v up">%26,9</div></div>
+            </div>
+          </div>
+
+          <div class="sec"><h3>Dağılım</h3><a>Detay →</a></div>
+          <div class="alloc">
+            <div class="donut"><div class="center"><div class="n">8</div><div class="t">VARLIK</div></div></div>
+            <div class="legend">
+              <div class="row"><span class="dot" style="background:var(--c-gold)"></span><span class="nm">Altın</span><span class="pc">%30,0</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-usstock)"></span><span class="nm">ABD Hisse</span><span class="pc">%22,0</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-bes)"></span><span class="nm">BES</span><span class="pc">%16,0</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-fund)"></span><span class="nm">Fon</span><span class="pc">%12,0</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-bist)"></span><span class="nm">BIST</span><span class="pc">%10,0</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-fx)"></span><span class="nm">Döviz</span><span class="pc">%8,0</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-crypto)"></span><span class="nm">Kripto</span><span class="pc">%1,5</span></div>
+              <div class="row"><span class="dot" style="background:var(--c-cash)"></span><span class="nm">Nakit</span><span class="pc">%0,5</span></div>
+            </div>
+          </div>
+
+          <div class="sec"><h3>Varlıklarım</h3><a>Tümü →</a></div>
+
+          <button class="hold" onclick="openDetail('gold')">
+            <div class="ic" style="background:rgba(224,178,85,.15)">🪙</div>
+            <div class="mid"><div class="nm">Altın (Gram)</div><div class="sub">60 gr · ort. 3.300 ₺/gr</div></div>
+            <div class="end"><div class="v">277.500 ₺</div><div class="g up">+%40,2</div></div>
+          </button>
+
+          <button class="hold" onclick="openDetail('us')">
+            <div class="ic" style="background:rgba(110,168,254,.15)">📈</div>
+            <div class="mid"><div class="nm">ABD Hisseleri</div><div class="sub">3 hisse · NVDA, AAPL, MSFT</div></div>
+            <div class="end"><div class="v">203.500 ₺</div><div class="g up">+%33,9</div></div>
+          </button>
+
+          <button class="hold">
+            <div class="ic" style="background:rgba(185,138,217,.15)">🏦</div>
+            <div class="mid"><div class="nm">BES</div><div class="sub">Fon + devlet katkısı</div></div>
+            <div class="end"><div class="v">148.000 ₺</div><div class="g up">+%32,1</div></div>
+          </button>
+
+          <button class="hold">
+            <div class="ic" style="background:rgba(63,185,206,.15)">📊</div>
+            <div class="mid"><div class="nm">Fon (TEFAS)</div><div class="sub">Hisse yoğun · AFA</div></div>
+            <div class="end"><div class="v">111.000 ₺</div><div class="g up">+%16,8</div></div>
+          </button>
+
+          <button class="hold">
+            <div class="ic" style="background:rgba(232,131,90,.15)">🇹🇷</div>
+            <div class="mid"><div class="nm">BIST Hisseleri</div><div class="sub">2 hisse · THYAO, ASELS</div></div>
+            <div class="end"><div class="v">92.500 ₺</div><div class="g up">+%14,2</div></div>
+          </button>
+
+          <button class="hold">
+            <div class="ic" style="background:rgba(168,195,106,.15)">💵</div>
+            <div class="mid"><div class="nm">Döviz</div><div class="sub">1.000 $ + 350 €</div></div>
+            <div class="end"><div class="v">74.000 ₺</div><div class="g up">+%8,8</div></div>
+          </button>
+
+          <button class="hold">
+            <div class="ic" style="background:rgba(240,160,60,.15)">₿</div>
+            <div class="mid"><div class="nm">Kripto</div><div class="sub">0,015 BTC · ort. yüksek</div></div>
+            <div class="end"><div class="v">13.875 ₺</div><div class="g down">−%22,9</div></div>
+          </button>
+
+          <button class="hold">
+            <div class="ic" style="background:rgba(156,167,160,.15)">💰</div>
+            <div class="mid"><div class="nm">Nakit</div><div class="sub">TL · vadesiz</div></div>
+            <div class="end"><div class="v">4.625 ₺</div><div class="g" style="color:var(--muted)">—</div></div>
+          </button>
+
+          <div class="nudge">
+            <div class="b">💡</div>
+            <div class="tx"><b>Kripto kalemin zararda</b> (−%22,9). Tek bir varlığın değer kaybetmesi normaldir; önemli olan portföyün geneline oranı. Kripto, portföyünün yalnızca %1,5'i olduğu için toplam etkisi sınırlı. <b>Analiz</b> sekmesinde detaylı bak.</div>
+          </div>
+        </section>
+
+        <!-- ============ ANALİZ ============ -->
+        <section class="view" id="v-analiz">
+          <div class="ai-head">
+            <div class="ai-orb">✦</div>
+            <div><div class="t1">Portföy Yorumu</div><div class="t2">30 Mayıs 2026 · güncel verilerle</div></div>
+          </div>
+          <div class="disc">ℹ️ Bu yorumlar eğitim ve farkındalık amaçlıdır, <b>yatırım tavsiyesi değildir</b>. Kararlar tamamen sana aittir.</div>
+
+          <div class="scores">
+            <div class="score">
+              <div class="k">Çeşitlendirme</div>
+              <div class="v">İyi <small>· 8 varlık</small></div>
+              <div class="mini"><i style="width:78%;background:var(--mint)"></i></div>
+            </div>
+            <div class="score">
+              <div class="k">Tahmini Oynaklık</div>
+              <div class="v">Orta <small>· ↑</small></div>
+              <div class="mini"><i style="width:55%;background:var(--gold)"></i></div>
+            </div>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">🧭</span><span class="h">Genel Sağlık</span></div>
+            <p>Portföyün <b>sekiz varlık sınıfına</b> yayılmış; önceki dönemlere göre daha dengeli bir tablo. En büyük kalem <b>Altın (%30)</b>, ardından <b>ABD Hisseleri (%22)</b> geliyor. Toplam getirin maliyetinin <b>%26,9 üzerinde</b>.</p>
+            <div class="meter"><i style="width:78%;background:linear-gradient(90deg,var(--mint),var(--gold))"></i></div>
+            <div class="scale"><span>Yoğunlaşmış</span><span>Dengeli</span><span>Çok dağınık</span></div>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">🏆</span><span class="h">En İyi & En Zayıf Kalem</span></div>
+            <p>Getiri uçları bir portföyde normaldir; biri kazanırken diğeri kaybedebilir — <b>çeşitlendirmenin amacı</b> da budur.</p>
+            <div class="bw">
+              <div class="item"><div class="t">En iyi</div><div class="n">Altın</div><div class="g up">+%40,2</div></div>
+              <div class="item"><div class="t">En zayıf</div><div class="n">Kripto</div><div class="g down">−%22,9</div></div>
+            </div>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">⚖️</span><span class="h">Yoğunlaşma Notu</span></div>
+            <p>İlk iki kalemin (Altın + ABD Hisse) toplamı <b>%52</b>. Bu, tek kaleme bağımlı bir portföye göre makul; yine de bu iki varlık aynı anda düşerse etkiyi birlikte hissedersin. "Çeşitlendirme" dersi bunu örnekle anlatıyor.</p>
+            <div class="tagrow"><span class="tg">Altın %30</span><span class="tg">ABD Hisse %22</span><span class="tg">→ birlikte %52</span></div>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">📉</span><span class="h">Enflasyona Karşı (Reel Getiri)</span></div>
+            <p>Nominal getirin <b>%26,9</b>. Diyelim aynı dönemde enflasyon <b>%38</b> oldu; o zaman <b>reel</b> getirin negatife düşer — yani rakam büyümüş olsa da satın alma gücün gerilemiş olabilir. Reel getiri, "param mı büyüdü, yoksa sadece rakam mı?" sorusunun cevabıdır.</p>
+            <div class="tagrow"><span class="tg">Nominal %26,9</span><span class="tg">Örnek enflasyon %38</span><span class="tg down">Reel ≈ −%8</span></div>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">🔮</span><span class="h">Senaryo (geçmişe dönük)</span></div>
+            <p>"Ya kripto yerine o parayı da fona koysaydım?" gibi soruların geçmiş 12 ay verisiyle nasıl sonuçlanacağını burada deneyebilirsin. Bu bir tahmin değil, <b>geçmişin gösterimidir</b> — öğrenmek için güvenli bir alan.</p>
+            <div class="tagrow"><span class="tg">▶ Senaryoyu çalıştır</span></div>
+          </div>
+        </section>
+
+        <!-- ============ HİSSE ============ -->
+        <section class="view" id="v-hisse">
+          <div class="search">
+            <span>🔍</span>
+            <input value="NVDA" readonly>
+            <span style="font-size:12px;color:var(--muted-2)">NASDAQ</span>
+          </div>
+
+          <div class="stockhdr">
+            <div class="logo">N</div>
+            <div><div class="nm">NVIDIA Corp.</div><div class="tk">NVDA · ABD</div></div>
+            <div class="pr"><div class="p">$138,20</div><div class="c up">▲ %2,4</div></div>
+          </div>
+
+          <div class="stockchart">
+            <svg viewBox="0 0 300 90" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="stk" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(110,168,254,.35)"/>
+                  <stop offset="100%" stop-color="rgba(110,168,254,0)"/>
+                </linearGradient>
+              </defs>
+              <polygon fill="url(#stk)" points="0,70 25,66 50,72 75,58 100,40 125,46 150,30 175,38 200,24 225,34 250,20 275,26 300,15 300,90 0,90"/>
+              <polyline fill="none" stroke="var(--c-usstock)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,70 25,66 50,72 75,58 100,40 125,46 150,30 175,38 200,24 225,34 250,20 275,26 300,15"/>
+            </svg>
+            <div class="crange"><span>52H düşük $86</span><span>son 1 yıl</span><span>52H yüksek $153</span></div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="k">F/K Oranı <span class="q">?</span></div><div class="v">52,3</div><div class="tag2" style="color:var(--coral)">Çok yüksek</div></div>
+            <div class="metric"><div class="k">PD/DD <span class="q">?</span></div><div class="v">38,5</div><div class="tag2" style="color:var(--coral)">Yüksek</div></div>
+            <div class="metric"><div class="k">Kâr Büyümesi <span class="q">?</span></div><div class="v">+%62</div><div class="tag2 up">Çok güçlü</div></div>
+            <div class="metric"><div class="k">Temettü Verimi <span class="q">?</span></div><div class="v">%0,03</div><div class="tag2" style="color:var(--muted)">Yok denecek</div></div>
+            <div class="metric"><div class="k">Beta <span class="q">?</span></div><div class="v">1,68</div><div class="tag2" style="color:var(--gold)">Piyasadan oynak</div></div>
+            <div class="metric"><div class="k">Piyasa Değeri <span class="q">?</span></div><div class="v">$3,4T</div><div class="tag2" style="color:var(--muted)">Dev ölçek</div></div>
+          </div>
+
+          <div class="ai-head" style="margin-top:4px">
+            <div class="ai-orb">✦</div>
+            <div><div class="t1">Bu rakamlar ne anlatıyor?</div><div class="t2">Sade dille açıklama</div></div>
+          </div>
+          <div class="disc">ℹ️ Aşağıdaki açıklama metriklerin <b>ne anlama geldiğini</b> öğretir; "al / sat" ya da "yükselir" demez. <b>Yatırım tavsiyesi değildir.</b></div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">📊</span><span class="h">F/K = 52,3 — neden bu kadar yüksek?</span></div>
+            <p>F/K, "şirketin 1 liralık kârı için kaç lira ödüyorsun?" sorusunun cevabıdır. <b>52,3</b> oldukça yüksek bir sayı; bu genelde piyasanın şirketten <b>gelecekte çok yüksek büyüme beklediği</b> anlamına gelir. Nitekim kâr büyümesi <b>+%62</b> — yani beklenti boş değil. Ama yüksek F/K aynı zamanda "fiyat şişmiş olabilir, beklenti karşılanmazsa sert düşüş gelebilir" riskini de taşır.</p>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">🌪️</span><span class="h">Beta = 1,68 — oynaklık ne demek?</span></div>
+            <p>Beta, hissenin piyasaya göre ne kadar <b>oynak</b> olduğunu gösterir. <b>1,68</b>, piyasa %1 hareket ettiğinde bu hissenin ortalama ~%1,68 hareket etme eğiliminde olduğu anlamına gelir — yani hem yükselişte hem düşüşte daha sert. Yüksek beta "kötü" değildir; sadece <b>daha fazla dalgalanmaya hazır olmak</b> gerektiğini söyler.</p>
+          </div>
+
+          <div class="acard">
+            <div class="hd"><span class="e">🏛️</span><span class="h">Genel Resim</span></div>
+            <p>Hızlı büyüyen (+%62 kâr), ama <b>pahalı fiyatlanmış</b> (yüksek F/K & PD/DD) ve <b>oynak</b> (beta 1,68) bir büyüme hissesi. Temettü neredeyse yok, çünkü kârı dağıtmak yerine büyümeye yatırıyor. Bunlar hissenin "iyi/kötü" olduğunu söylemez; sana <b>karakterini</b> ve <b>nelere dikkat etmen gerektiğini</b> anlatır.</p>
+          </div>
+        </section>
+
+        <!-- ============ EĞİTİM ============ -->
+        <section class="view" id="v-egitim">
+          <div class="greet" style="margin-bottom:8px">
+            <div class="name" style="font-size:22px">Öğren <span class="wave">📚</span></div>
+          </div>
+          <div class="track"><span class="seg done"></span><span class="seg done"></span><span class="seg done"></span><span class="seg done"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></div>
+          <div class="trackmeta">8 dersten 4'ü tamamlandı · ~%50</div>
+
+          <div class="catrow">
+            <span class="cat on">Tümü</span>
+            <span class="cat">Temeller</span>
+            <span class="cat">Hisse Okuma</span>
+            <span class="cat">Risk</span>
+            <span class="cat">Vergi</span>
+          </div>
+
+          <div class="lesson">
+            <div class="num">01</div>
+            <div class="info"><div class="ti">Enflasyon ve Reel Getiri</div><div class="de">"Param büyüdü mü, yoksa sadece rakam mı?"</div><div class="mt"><span>⏱ 4 dk</span><span>✓ Tamamlandı</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson">
+            <div class="num">02</div>
+            <div class="info"><div class="ti">Çeşitlendirme Neden Önemli?</div><div class="de">Tüm yumurtaları tek sepete koymamanın matematiği.</div><div class="mt"><span>⏱ 5 dk</span><span>✓ Tamamlandı</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson">
+            <div class="num">03</div>
+            <div class="info"><div class="ti">F/K, PD/DD Nedir?</div><div class="de">Bir hisseyi okumanın en temel üç rakamı.</div><div class="mt"><span>⏱ 6 dk</span><span>✓ Tamamlandı</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson">
+            <div class="num">04</div>
+            <div class="info"><div class="ti">Beta ve Oynaklık</div><div class="de">Bir varlık ne kadar "zıplıyor", nasıl ölçülür?</div><div class="mt"><span>⏱ 5 dk</span><span>✓ Tamamlandı</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson" style="opacity:.85">
+            <div class="num" style="color:var(--mint);border-color:rgba(95,201,160,.3)">05</div>
+            <div class="info"><div class="ti">Risk ve Getiri İlişkisi</div><div class="de">Neden yüksek getiri beklentisi yüksek risk demektir.</div><div class="mt"><span>⏱ 5 dk</span><span style="color:var(--mint)">● Sırada</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson" style="opacity:.5">
+            <div class="num">06</div>
+            <div class="info"><div class="ti">Bileşik Getirinin Gücü</div><div class="de">Zamanın yatırımcının en büyük dostu olması.</div><div class="mt"><span>⏱ 5 dk</span><span>🔒 Kilitli</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson" style="opacity:.5">
+            <div class="num">07</div>
+            <div class="info"><div class="ti">Temettü ve Büyüme Hisseleri</div><div class="de">Kâr dağıtan mı, büyümeye yatıran mı?</div><div class="mt"><span>⏱ 6 dk</span><span>🔒 Kilitli</span></div></div>
+            <div class="chev">→</div>
+          </div>
+          <div class="lesson" style="opacity:.5">
+            <div class="num">08</div>
+            <div class="info"><div class="ti">Yatırımda Vergi Temelleri</div><div class="de">Getirinin ne kadarı gerçekten cebinde kalır?</div><div class="mt"><span>⏱ 7 dk</span><span>🔒 Kilitli</span></div></div>
+            <div class="chev">→</div>
+          </div>
+        </section>
+
+      </div><!-- /body -->
+
+      <div class="nav">
+        <button class="on" data-v="portfoy" onclick="go(this)">
+          <svg viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5Z"/></svg>
+          Portföy
+        </button>
+        <button data-v="analiz" onclick="go(this)">
+          <svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 16l3-4 3 2 4-6"/></svg>
+          Analiz
+        </button>
+        <div style="width:54px"></div>
+        <button data-v="hisse" onclick="go(this)">
+          <svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 6-7M21 8h-4m4 0v4"/></svg>
+          Hisse
+        </button>
+        <button data-v="egitim" onclick="go(this)">
+          <svg viewBox="0 0 24 24"><path d="M3 6.5 12 3l9 3.5L12 10 3 6.5Zm0 0V14m18-7.5V14M7 8.7V14c0 1.1 2.2 2 5 2s5-.9 5-2V8.7"/></svg>
+          Eğitim
+        </button>
+        <button class="fab" onclick="openAdd()">+</button>
+      </div>
+
+      <!-- DETAIL: GOLD -->
+      <div class="overlay" id="ov-gold">
+        <div class="ov-bar"></div>
+        <div class="ov-top"><button onclick="closeOv('ov-gold')">←</button><span class="ti">Altın (Gram)</span></div>
+        <div class="ov-body">
+          <div class="detail-hero">
+            <div class="ic" style="background:rgba(224,178,85,.15)">🪙</div>
+            <div class="v">277.500 ₺</div>
+            <div class="g up">+79.500 ₺ · +%40,2</div>
+          </div>
+          <div class="drow"><span class="k">Miktar</span><span class="v">60 gr</span></div>
+          <div class="drow"><span class="k">Ortalama maliyet</span><span class="v">3.300 ₺/gr</span></div>
+          <div class="drow"><span class="k">Güncel fiyat</span><span class="v">4.625 ₺/gr</span></div>
+          <div class="drow"><span class="k">Toplam maliyet</span><span class="v">198.000 ₺</span></div>
+          <div class="drow"><span class="k">Portföy ağırlığı</span><span class="v">%30,0</span></div>
+
+          <div class="sec" style="margin:22px 2px 12px"><h3 style="font-size:15px">Son İşlemler</h3></div>
+          <div class="drow"><span class="k">12 Oca 2026 · Alış</span><span class="v">20 gr · 4.100 ₺/gr</span></div>
+          <div class="drow"><span class="k">04 Eki 2025 · Alış</span><span class="v">25 gr · 3.250 ₺/gr</span></div>
+          <div class="drow"><span class="k">18 May 2025 · Alış</span><span class="v">15 gr · 2.380 ₺/gr</span></div>
+
+          <div class="nudge" style="margin-top:18px">
+            <div class="b">💡</div>
+            <div class="tx">Altın geçmişte enflasyona karşı <b>koruyucu</b> bir varlık olarak görülmüştür. Ancak fiyatı oynak olabilir; kısa vadeli düşüşler normaldir.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAIL: US STOCKS -->
+      <div class="overlay" id="ov-us">
+        <div class="ov-bar"></div>
+        <div class="ov-top"><button onclick="closeOv('ov-us')">←</button><span class="ti">ABD Hisseleri</span></div>
+        <div class="ov-body">
+          <div class="detail-hero">
+            <div class="ic" style="background:rgba(110,168,254,.15)">📈</div>
+            <div class="v">203.500 ₺</div>
+            <div class="g up">+51.500 ₺ · +%33,9</div>
+          </div>
+          <div class="drow" style="border:none;padding-bottom:4px"><span class="k">3 hisse · USD bazlı, ₺ gösterimi</span><span class="v"></span></div>
+
+          <div class="subhold">
+            <div class="tk">N</div>
+            <div class="mid"><div class="nm">NVIDIA</div><div class="sub">12 adet · ort. $96</div></div>
+            <div class="end"><div class="v">84.000 ₺</div><div class="g up">+%44,8</div></div>
+          </div>
+          <div class="subhold">
+            <div class="tk">A</div>
+            <div class="mid"><div class="nm">Apple</div><div class="sub">18 adet · ort. $171</div></div>
+            <div class="end"><div class="v">63.500 ₺</div><div class="g up">+%17,6</div></div>
+          </div>
+          <div class="subhold">
+            <div class="tk">M</div>
+            <div class="mid"><div class="nm">Microsoft</div><div class="sub">7 adet · ort. $318</div></div>
+            <div class="end"><div class="v">56.000 ₺</div><div class="g up">+%40,0</div></div>
+          </div>
+
+          <div class="nudge" style="margin-top:18px">
+            <div class="b">💡</div>
+            <div class="tx">ABD hisseleri <b>dolar bazlı</b> olduğu için getirinde iki kaynak var: hissenin kendi performansı <b>ve</b> dolar/TL kuru. Bu ayrımı görmek "gerçek" performansı anlamana yardım eder.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD overlay -->
+      <div class="overlay" id="ov-add">
+        <div class="ov-bar"></div>
+        <div class="ov-top"><button onclick="closeOv('ov-add')">✕</button><span class="ti">Varlık Ekle</span></div>
+        <div class="ov-body">
+          <div class="field">
+            <label>Varlık türü</label>
+            <div class="chips">
+              <span class="chip sel">🪙 Altın</span><span class="chip">💵 Döviz</span><span class="chip">📈 ABD Hisse</span>
+              <span class="chip">🇹🇷 BIST</span><span class="chip">📊 Fon</span><span class="chip">🏦 BES</span>
+              <span class="chip">₿ Kripto</span><span class="chip">💰 Nakit</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Para birimi</label>
+            <div class="chips"><span class="chip sel">₺ TRY</span><span class="chip">$ USD</span><span class="chip">€ EUR</span></div>
+          </div>
+          <div class="field"><label>Miktar</label><div class="inp"><span class="ph">örn. 60 gr</span><span>⌨</span></div></div>
+          <div class="field"><label>Ortalama maliyet (birim başına)</label><div class="inp"><span class="ph">örn. 3.300 ₺</span><span>⌨</span></div></div>
+          <div class="field"><label>Alış tarihi (opsiyonel)</label><div class="inp"><span class="ph">GG / AA / YYYY</span><span>📅</span></div></div>
+          <button class="savebtn" onclick="closeOv('ov-add')">Portföye Ekle</button>
+        </div>
+      </div>
+
+    </div><!-- /screen -->
+  </div><!-- /phone -->
+
+  <div class="footnote">
+    <b>Bu yalnızca görsel bir taslaktır</b> — gerçek hesaplama, canlı fiyat veya LLM bağlantısı henüz yok. Tüm rakamlar kurgusaldır.<br>
+    Amaç: ekranların akışını, hangi bilginin nerede duracağını ve genel hissi birlikte görmek.
+  </div>
+
+<script>
+  function go(btn){
+    document.querySelectorAll('.nav button[data-v]').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    const v=btn.dataset.v;
+    document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+    document.getElementById('v-'+v).classList.add('active');
+    document.querySelector('.body').scrollTop=0;
+  }
+  function openDetail(which){document.getElementById('ov-'+which).classList.add('up');}
+  function openAdd(){document.getElementById('ov-add').classList.add('up');}
+  function closeOv(id){document.getElementById(id).classList.remove('up');}
+
+  // period selector demo
+  document.querySelectorAll('.periods button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.periods button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+    });
+  });
+  // education category demo
+  document.querySelectorAll('.cat').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.cat').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on');
+    });
+  });
+  // add-screen chip selection demo
+  document.querySelectorAll('#ov-add .field').forEach(f=>{
+    f.querySelectorAll('.chip').forEach(c=>{
+      c.addEventListener('click',()=>{
+        f.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+        c.classList.add('sel');
+      });
+    });
+  });
+</script>
+</body>
+</html>

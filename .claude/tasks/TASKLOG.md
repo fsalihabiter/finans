@@ -20,6 +20,28 @@
 
 ---
 
+## 2026-05-30 · Seed verisini çeşitlendir (4→7 pozisyon, zarar + USD-fiyatlı hisse)
+- **Görev(ler):** ad-hoc (kullanıcı isteği) — seed zenginleştirme
+- **Ne yapıldı:**
+  - **Seed 4→7 pozisyon:** mevcut (altın/dolar/BES/nakit) + **Euro** (800 € @47,50) + **Apple** (12 @175 $,
+    **USD-fiyatlı** → summary'de gerçek USD→TRY ×48 çevrimi) + **Teknoloji Fonu** (1.500 @28,00, güncel
+    23,50 → **−%16,1 zarar**, eğitici negatif örnek). Yeni `Asset`/`Holding`/`Transaction`/`PriceSnapshot`.
+  - **Yeni baz TRY toplamları:** maliyet 603.770 · değer 839.213 · kâr +235.443 · **+%39,0** · reel **+%0,7**.
+  - **Testler güncellendi:** DB-seed okuyan 4 integration testi yeni sayılara çekildi (USD-fiyatlı kalem
+    ×48 çevrilerek baz-TRY toplamı). PortfolioApiTests'e AAPL kur-çevrimi + fon negatif-getiri kontrolü
+    eklendi. **Application.Tests'e dokunulmadı** (kendi hardcoded "altın formül" setleri, DB'den bağımsız).
+  - Yerel PostgreSQL TRUNCATE + `dotnet run -- seed` ile yeniden tohumlandı; **canlı UI görsel doğrulandı**
+    (7-dilim donut, Apple $→₺ çevrimi, fon kırmızı zarar).
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Seed/SeedData.cs`, `tests/Finans.Integration.Tests/
+  {SeedConsistencyTests,SqliteIntegrationTests,PortfolioApiTests,InflationRealReturnTests}.cs`,
+  `.claude/docs/03-DATA-MODEL.md` §12.
+- **Test:** `dotnet test` **Application 39 + Integration 31 = 70 yeşil**. Görsel doğrulandı.
+- **Karar/Not:** Apple USD-fiyatlı tutuldu → summary'de kur çevrimi artık gerçek veriyle de test ediliyor.
+  Build sırasında görsel-doğrulama koşumundan kalan orphan `Finans.Api` süreci DLL kilitlemişti → sonlandırıldı
+  (ileride TaskStop sonrası child süreç kontrolü).
+- **Durum:** tamamlandı
+- **Sıradaki:** Faz 2 — T2.1 fiyat sağlayıcı + `IPriceProvider`.
+
 ## 2026-05-30 · Canlı görsel doğrulama + FX/enflasyon in-memory cache (T1.15) → FAZ 1 MVP TAMAM
 - **Görev(ler):** T1.15 (cache, tamam), T1.8 (BES detay ekranı, tamam) · Faz 1 kapanışı
 - **Ne yapıldı:**

@@ -1,5 +1,6 @@
 using System.Net;
 using FluentAssertions;
+using Finans.Domain.Enums;
 using Finans.Domain.Portfolio;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Seed;
@@ -43,9 +44,13 @@ public sealed class SqliteIntegrationTests : IClassFixture<SqliteWebApplicationF
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
 
-        var holdings = await db.Holdings.ToListAsync();
-        holdings.Sum(h => h.Quantity * h.AvgCost).Should().Be(422970.00m);
-        holdings.Sum(h => h.Quantity * (h.CurrentPrice ?? 0m)).Should().Be(641403.00m);
+        // Baz TRY toplamı: USD-fiyatlı kalem (AAPL) seed FX'iyle ×48 çevrilir.
+        var holdings = await db.Holdings.Include(h => h.Asset).ToListAsync();
+        decimal toTry(Holding h, decimal amount) =>
+            h.Asset.PricingCurrency == CurrencyCode.USD ? amount * 48m : amount;
+
+        holdings.Sum(h => toTry(h, h.Quantity * h.AvgCost)).Should().Be(603770.00m);
+        holdings.Sum(h => toTry(h, h.Quantity * (h.CurrentPrice ?? 0m))).Should().Be(839213.00m);
     }
 
     [Fact]

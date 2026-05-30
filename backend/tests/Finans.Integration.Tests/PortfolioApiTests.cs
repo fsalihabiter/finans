@@ -63,12 +63,12 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
 
         summary.Should().NotBeNull();
         summary!.BaseCurrency.Should().Be(CurrencyCode.TRY);
-        summary.TotalCost.Should().Be(422970m);
-        summary.TotalValue.Should().Be(641403m);
-        summary.NetProfit.Should().Be(218433m);
-        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.516m);
-        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0989m); // enflasyon 0,38
-        summary.Allocation.Should().HaveCount(4);
+        summary.TotalCost.Should().Be(603770m);
+        summary.TotalValue.Should().Be(839213m);
+        summary.NetProfit.Should().Be(235443m);
+        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.390m);
+        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0072m); // enflasyon 0,38
+        summary.Allocation.Should().HaveCount(7);
         Math.Round(summary.Allocation.Sum(a => a.Weight), 6).Should().Be(1m);
     }
 
@@ -79,20 +79,33 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
 
         var holdings = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json);
 
-        holdings.Should().NotBeNull().And.HaveCount(4);
+        holdings.Should().NotBeNull().And.HaveCount(7);
         var gold = holdings!.Single(h => h.AssetType == AssetType.Gold);
         gold.Quantity.Should().Be(40m);
         gold.AvgCost.Should().Be(4546.275m);
         gold.TotalCost.Should().Be(181851m);
         gold.CurrentValue.Should().Be(260000m);
         Math.Round(gold.ReturnRatio!.Value, 2).Should().Be(0.43m); // +%43
-        Math.Round(gold.Weight, 3).Should().Be(0.405m);
+        Math.Round(gold.Weight, 3).Should().Be(0.310m);
 
         // BES kalemi devlet katkısını AYRI taşır (03 §A).
         var bes = holdings.Single(h => h.AssetType == AssetType.Bes);
         bes.Bes.Should().NotBeNull();
         bes.Bes!.StateContribution.Should().Be(28554m);
         bes.Bes.OwnContribution.Should().Be(120000m);
+
+        // USD-fiyatlı hisse: birim alanlar USD (ham), toplulaştırma baz TRY'ye çevrilir (T1.3).
+        var aapl = holdings.Single(h => h.AssetType == AssetType.Stock);
+        aapl.Currency.Should().Be(CurrencyCode.USD);
+        aapl.AvgCost.Should().Be(175m);          // ham (USD)
+        aapl.CurrentPrice.Should().Be(210m);     // ham (USD)
+        aapl.TotalCost.Should().Be(100800m);     // 12 × 175 × 48 (TRY)
+        aapl.CurrentValue.Should().Be(120960m);  // 12 × 210 × 48 (TRY)
+        Math.Round(aapl.ReturnRatio!.Value, 2).Should().Be(0.20m);
+
+        // Zarardaki fon → negatif getiri.
+        var fund = holdings.Single(h => h.AssetType == AssetType.Fund);
+        fund.ReturnRatio!.Value.Should().BeNegative();
     }
 
     // ── CRUD akışı ───────────────────────────────────────────────────────────
