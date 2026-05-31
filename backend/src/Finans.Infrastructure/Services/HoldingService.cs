@@ -121,9 +121,14 @@ public sealed class HoldingService(
         if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
             throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
 
-        // Devlet katkısı verilmezse mevzuat oranı (2026: %20) — BesRules/BesCalculator (yıllık üst
-        // sınır T-BES planında; lansman öncesi EGM/SPK doğrulaması, CLAUDE.md §2).
-        var stateAmount = request.StateAmount ?? BesCalculator.StateContributionFor(request.OwnAmount);
+        // Ödeme tarihi (verilmezse şimdi). Gelecek olamaz; oran bu tarihe göre seçilir (geriye dönük değil).
+        var paidAt = request.PaidAtUtc ?? DateTime.UtcNow;
+        if (paidAt > DateTime.UtcNow)
+            throw new ValidationException("paidAtUtc", "must_not_be_future", "Ödeme tarihi gelecekte olamaz.");
+
+        // Devlet katkısı verilmezse, katkının ödendiği tarihteki orana göre (2026 öncesi %30, sonrası
+        // %20) — BesRules/BesCalculator (yıllık üst sınır T-BES.4; lansman öncesi EGM/SPK, CLAUDE.md §2).
+        var stateAmount = request.StateAmount ?? BesCalculator.StateContributionFor(request.OwnAmount, paidAt);
 
         var bes = holding.BesDetails;
         bes.OwnContribution += request.OwnAmount;

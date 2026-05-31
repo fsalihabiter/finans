@@ -13,8 +13,21 @@ namespace Finans.Application.Portfolio;
 /// </summary>
 public static class BesRules
 {
-    /// <summary>Devlet katkısı oranı (2026: %20). Kendi katkının bu kadarı devlet katkısı olarak eklenir.</summary>
-    public const decimal StateContributionRate = 0.20m;
+    /// <summary>Devlet katkısı oranının %20'ye düştüğü tarih (RG 2026-01-07; 2026-01-01'den geçerli).</summary>
+    public static readonly DateTime Rate20EffectiveUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>2026 öncesi devlet katkısı oranı.</summary>
+    public const decimal StateRateBefore2026 = 0.30m;
+
+    /// <summary>2026-01-01'den itibaren devlet katkısı oranı.</summary>
+    public const decimal StateRateFrom2026 = 0.20m;
+
+    /// <summary>
+    /// Devlet katkısı oranı, katkının <b>ödendiği tarihe</b> göredir (oran <b>geriye dönük DEĞİL</b>):
+    /// 2026-01-01 öncesi ödenen katkılar %30, o tarihten itibaren %20.
+    /// </summary>
+    public static decimal StateContributionRateOn(DateTime contributionDateUtc) =>
+        contributionDateUtc < Rate20EffectiveUtc ? StateRateBefore2026 : StateRateFrom2026;
 
     /// <summary>
     /// Yıllık devlet katkısı üst sınırı (2026 ≈ 79.272 ₺ = yıllık brüt asgari ücret × %20).

@@ -20,6 +20,23 @@
 
 ---
 
+## 2026-05-31 · BES devlet katkısı oranı TARİHE BAĞLI yapıldı — geriye dönük değil (kullanıcı geri bildirimi)
+- **Görev(ler):** T-BES.1/2 düzeltmesi (kullanıcı haklı uyarısı: %30→%20 değişimi geçmiş katkıları etkilememeli).
+- **Sorun:** `BesRules.StateContributionRate` tek sabit %20 idi → "oran her zaman %20" anlamına geliyordu;
+  geçmiş/geri-tarihli katkı yanlış oran alırdı. (Birikmiş `StateContribution` zaten yeniden hesaplanmıyordu,
+  o yön doğruydu.)
+- **Ne yapıldı:** Oran **tarih çizelgesine** çevrildi — `BesRules.StateContributionRateOn(date)`: 2026-01-01
+  öncesi **%30**, sonrası **%20** (geriye dönük DEĞİL). `BesCalculator.StateContributionFor(own, paidAtUtc)`
+  ödeme tarihine göre uygular. `AddBesContributionRequest.PaidAtUtc` (ops., gelecek→400). Web: katkı formuna
+  **ödeme tarihi** alanı + tarihe göre dinamik oran önizlemesi (%20/%30); detay açıklaması "2026-01-01'den
+  %20, öncesi %30 — geçmiş katkılar etkilenmez".
+- **Dokunulan dosyalar:** `BesRules.cs`, `BesCalculator.cs`, `PortfolioDtos.cs` (PaidAtUtc), `HoldingService.cs`;
+  `BesCalculatorTests.cs` (2025→%30, 2026→%20); web `shared/types`, `BesContributionForm.tsx`(+test),
+  `HoldingDetailPage.tsx` (açıklama).
+- **Test:** backend **App 55 + Integration 56 = 111** · web **43** · shared 13 · lint/build temiz.
+- **Durum:** tamamlandı — oran artık tarihe bağlı (doğru).
+- **Sıradaki:** T-BES.5 (fon dağılımı eğitici projeksiyon) / T2.8.
+
 ## 2026-05-31 · BES detaylı analiz — araştırma + devlet katkısı %20 + hak ediş türetme + başlangıç tarihi (T-BES.1-3)
 - **Görev(ler):** T-BES.1, T-BES.2, T-BES.3 (tamam); T-BES.4-6 planlandı (08 epik).
 - **Araştırma (web, kaynak: egm.org.tr / allianz SSS):** Devlet katkısı **%20** (2026-01-01'den; önceki %30,

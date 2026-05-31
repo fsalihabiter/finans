@@ -9,9 +9,12 @@ namespace Finans.Application.Portfolio;
 /// </summary>
 public static class BesCalculator
 {
-    /// <summary>Kendi katkıya karşılık devlet katkısı (oran × tutar, 2 ondalık). Üst sınır T-BES planında.</summary>
-    public static decimal StateContributionFor(decimal ownAmount) =>
-        ownAmount <= 0m ? 0m : Math.Round(ownAmount * BesRules.StateContributionRate, 2);
+    /// <summary>
+    /// Kendi katkıya karşılık devlet katkısı (oran × tutar, 2 ondalık). Oran katkının <b>ödendiği
+    /// tarihe</b> göredir (geriye dönük değil): 2026 öncesi %30, sonrası %20. Üst sınır T-BES.4'te.
+    /// </summary>
+    public static decimal StateContributionFor(decimal ownAmount, DateTime contributionDateUtc) =>
+        ownAmount <= 0m ? 0m : Math.Round(ownAmount * BesRules.StateContributionRateOn(contributionDateUtc), 2);
 
     /// <summary>Sistemde tam kalış yılı (JoinedAtUtc → asOf). Tarih yoksa/gelecekse 0.</summary>
     public static int YearsInSystem(DateTime? joinedAtUtc, DateTime asOfUtc)

@@ -6,7 +6,7 @@ import { BesContributionForm } from "./BesContributionForm";
 afterEach(() => vi.restoreAllMocks());
 
 describe("BesContributionForm", () => {
-  it("aylık katkıyı BES ucuna POST eder ve %30 devlet katkısını önizler", async () => {
+  it("devlet katkısını ÖDEME TARİHİNDEKİ orana göre önizler ve POST eder", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -17,7 +17,11 @@ describe("BesContributionForm", () => {
     renderWithProviders(<BesContributionForm holdingId="bes1" />);
 
     fireEvent.change(screen.getByLabelText(/Kendi katkın/), { target: { value: "2000" } });
-    // %30 önizleme (600,00)
+    // Varsayılan bugün (2026) → %20 → 400,00
+    expect(screen.getByText(/400,00/)).toBeInTheDocument();
+
+    // Geri-tarihli ödeme (2025) → %30 → 600,00 (oran geriye dönük değil)
+    fireEvent.change(screen.getByLabelText(/Ödeme tarihi/), { target: { value: "2025-06-01" } });
     expect(screen.getByText(/600,00/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Katkı ekle" }));
@@ -26,7 +30,9 @@ describe("BesContributionForm", () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("/api/holdings/bes1/bes-contribution");
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body as string)).toMatchObject({ ownAmount: 2000 });
+    const body = JSON.parse(init.body as string);
+    expect(body).toMatchObject({ ownAmount: 2000 });
+    expect(body.paidAtUtc).toContain("2025-06-01");
   });
 
   it("tutar boşken buton pasif", () => {

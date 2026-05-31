@@ -101,12 +101,14 @@ public sealed record UpdateHoldingRequest(
 
 /// <summary>
 /// POST /api/holdings/{id}/bes-contribution — BES'e aylık katkı ekler. Kendi katkı
-/// (<paramref name="OwnAmount"/>) + devlet katkısı (verilmezse %30 hesaplanır, TR kuralı).
+/// (<paramref name="OwnAmount"/>) + devlet katkısı (verilmezse <paramref name="PaidAtUtc"/>
+/// tarihindeki orana göre hesaplanır — 2026 öncesi %30, sonrası %20; geriye dönük değil).
 /// Maliyet tabanı (kendi+devlet) ve dolayısıyla getiri buna göre güncellenir.
 /// </summary>
 public sealed record AddBesContributionRequest(
     decimal OwnAmount,
-    decimal? StateAmount = null);
+    decimal? StateAmount = null,
+    DateTime? PaidAtUtc = null);
 
 /// <summary>
 /// PUT /api/holdings/{id}/bes — BES sözleşme alanlarını günceller (T-BES). Şimdilik

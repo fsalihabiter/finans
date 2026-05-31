@@ -12,13 +12,15 @@ public sealed class BesCalculatorTests
     private static readonly DateTime AsOf = new(2026, 5, 31, 0, 0, 0, DateTimeKind.Utc);
 
     [Theory]
-    [InlineData(1000, 200)]   // %20
-    [InlineData(2500, 500)]
-    [InlineData(0, 0)]
-    [InlineData(-50, 0)]      // negatif → 0
-    public void StateContributionFor_applies_rate(decimal own, decimal expected)
+    [InlineData(1000, 2026, 200)]   // 2026 → %20
+    [InlineData(2500, 2026, 500)]
+    [InlineData(1000, 2025, 300)]   // 2026 ÖNCESİ → %30 (oran geriye dönük değil)
+    [InlineData(0, 2026, 0)]
+    [InlineData(-50, 2026, 0)]      // negatif → 0
+    public void StateContributionFor_uses_rate_for_payment_date(decimal own, int year, decimal expected)
     {
-        Assert.Equal(expected, BesCalculator.StateContributionFor(own));
+        var paidAt = new DateTime(year, 3, 1, 0, 0, 0, DateTimeKind.Utc);
+        Assert.Equal(expected, BesCalculator.StateContributionFor(own, paidAt));
     }
 
     [Fact]

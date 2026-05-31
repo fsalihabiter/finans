@@ -209,7 +209,7 @@ export function HoldingDetailPage() {
               </div>
               <div className="split">
                 <div className="sh"><span className="sl">Devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
-                <div className="sd">Devletin eklediği <b>sübvansiyon</b>: kendi katkının <b>%20'si</b> (2026 oranı; üst sınır yıllık brüt asgari ücretin %20'si). Yatırım başarın değildir, ayrı gösterilir.</div>
+                <div className="sd">Devletin eklediği <b>sübvansiyon</b>: kendi katkının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — oran geriye dönük değil, geçmiş katkılar etkilenmez). Üst sınır yıllık brüt asgari ücretin %20'si. Yatırım başarın değildir, ayrı gösterilir.</div>
               </div>
               <div className="drow"><span className="dk">Hak ediş</span><span className="dv">{VESTING_TR[h.bes.vestingState] ?? h.bes.vestingState}</span></div>
               <div className="drow">
