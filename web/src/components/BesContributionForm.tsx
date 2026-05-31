@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatCurrency } from "@finans/shared";
 import { useAddBesContribution } from "../lib/hooks";
+import { DateField } from "./DateField";
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
@@ -57,13 +58,7 @@ export function BesContributionForm({
         </label>
         <label>
           Ödeme tarihi
-          <input
-            type="date"
-            max={today}
-            value={paidAt}
-            onChange={(e) => setPaidAt(e.target.value)}
-            required
-          />
+          <DateField value={paidAt} onChange={setPaidAt} max={today} required ariaLabel="Ödeme tarihi" />
         </label>
         <button type="submit" disabled={!valid || add.isPending}>
           {add.isPending ? "Ekleniyor…" : "Katkı ekle"}

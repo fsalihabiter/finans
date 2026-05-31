@@ -6,6 +6,7 @@ import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
 import { BesContributionPlanForm } from "../components/BesContributionPlanForm";
 import { BesContributionHistory } from "../components/BesContributionHistory";
+import { DateField } from "../components/DateField";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Modal } from "../components/Modal";
@@ -355,7 +356,7 @@ export function HoldingDetailPage() {
               </label>
               <label>
                 Ödeme tarihi
-                <input type="date" max={today} value={editDate} onChange={(e) => setEditDate(e.target.value)} required />
+                <DateField value={editDate} onChange={setEditDate} max={today} required ariaLabel="Ödeme tarihi" />
               </label>
               <button type="submit" disabled={updateContribution.isPending}>
                 {updateContribution.isPending ? "Kaydediliyor…" : "Kaydet"}
@@ -369,13 +370,13 @@ export function HoldingDetailPage() {
         <Modal title="BES başlangıç tarihi" onClose={closeModal}>
           <form className="price-form bare" onSubmit={onUpdateBesDate}>
             <div className="price-row">
-              <input
+              <DateField
                 id="besdate"
-                type="date"
-                autoFocus
-                max={today}
                 value={besDate}
-                onChange={(e) => setBesDate(e.target.value)}
+                onChange={setBesDate}
+                max={today}
+                autoFocus
+                ariaLabel="BES başlangıç tarihi"
               />
               <button type="submit" disabled={updateBes.isPending || besDate === ""}>
                 Kaydet

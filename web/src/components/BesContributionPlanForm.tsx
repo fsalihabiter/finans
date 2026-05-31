@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGenerateBesContributions } from "../lib/hooks";
+import { DateField } from "./DateField";
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
@@ -58,11 +59,11 @@ export function BesContributionPlanForm({
       <div className="tx-row">
         <label>
           Başlangıç
-          <input type="date" max={today} value={from} onChange={(e) => setFrom(e.target.value)} required />
+          <DateField value={from} onChange={setFrom} max={today} required ariaLabel="Başlangıç" />
         </label>
         <label>
           Bitiş
-          <input type="date" max={today} value={to} onChange={(e) => setTo(e.target.value)} required />
+          <DateField value={to} onChange={setTo} max={today} required ariaLabel="Bitiş" />
         </label>
         <button type="submit" disabled={!valid || gen.isPending}>
           {gen.isPending ? "Oluşturuluyor…" : "Katkıları oluştur"}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CurrencyCode, TransactionType } from "@finans/shared";
 import { useAddTransaction } from "../lib/hooks";
+import { DateField } from "./DateField";
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
@@ -26,21 +27,26 @@ export function AddTransactionForm({
   onDone?: (type: TransactionType) => void;
 }) {
   const add = useAddTransaction(holdingId);
+  const today = new Date().toISOString().slice(0, 10);
   const [type, setType] = useState<TransactionType>("Buy");
   const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
+  const [date, setDate] = useState(today);
 
   const qty = toNumber(quantity);
   const price = cash ? 1 : toNumber(unitPrice);
-  const valid = cash
-    ? Number.isFinite(qty) && qty > 0
-    : Number.isFinite(qty) && qty > 0 && Number.isFinite(price) && price >= 0;
+  const valid =
+    date !== "" &&
+    (cash
+      ? Number.isFinite(qty) && qty > 0
+      : Number.isFinite(qty) && qty > 0 && Number.isFinite(price) && price >= 0);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
     add.mutate(
-      { type, quantity: qty, unitPrice: price },
+      // İşlem tarihi performans/maliyet için önemli (geçmiş tarihli işlem desteklenir).
+      { type, quantity: qty, unitPrice: price, date: `${date}T00:00:00Z` },
       {
         onSuccess: () => {
           setQuantity("");
@@ -95,6 +101,10 @@ export function AddTransactionForm({
             />
           </label>
         )}
+        <label>
+          {cash ? "Tarih" : "İşlem tarihi"}
+          <DateField value={date} onChange={setDate} max={today} required ariaLabel="İşlem tarihi" />
+        </label>
         <button type="submit" disabled={!valid || add.isPending}>
           {add.isPending ? (cash ? "Kaydediliyor…" : "Ekleniyor…") : cash ? "Kaydet" : "Ekle"}
         </button>
