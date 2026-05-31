@@ -90,6 +90,7 @@ export function PortfolioPage() {
           <div className="greet-hi">{currentGreeting()},</div>
           <h1>Genel Bakış</h1>
         </div>
+        <PriceTicker prices={prices.data?.prices ?? []} />
         <div className="tools">
           {freshIso && (
             <span className={`freshness${hasStale ? " stale" : ""}`} title="Son fiyat güncellemesi">
@@ -113,8 +114,6 @@ export function PortfolioPage() {
           )}
         </div>
       </div>
-
-      <PriceTicker prices={prices.data?.prices ?? []} />
 
       {summary.isLoading && <PortfolioSkeleton />}
 

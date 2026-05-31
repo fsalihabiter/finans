@@ -1720,56 +1720,43 @@ body.drawer-lock {
   border-radius: 6px;
 }
 
-/* ───── Canlı fiyat şeridi (statik) + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
-.price-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  border: 1px solid var(--line, #322b22);
-  border-radius: 14px;
-  background: var(--panel-2, #241f18);
-  padding: 8px 8px 8px 4px;
-}
-.pb-items {
+/* ───── Topbar'a gömülü kompakt canlı fiyat şeridi + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
+.live-prices {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 4px 8px;
+  align-self: center; /* topbar flex-end iken dikeyde ortala */
 }
-.pb-item {
+.lp {
   display: inline-flex;
   align-items: baseline;
-  gap: 7px;
-  font-size: 13px;
-  padding: 2px 16px;
+  gap: 6px;
+  font-size: 12.5px;
+  padding: 3px 11px;
+  border: 1px solid var(--line, #322b22);
+  border-radius: 100px;
+  background: var(--panel-2, #241f18);
 }
-/* Sütunları ince dikey çizgiyle ayır (ilk hariç). */
-.pb-item + .pb-item {
-  border-left: 1px solid var(--line, #322b22);
+.lp-ic {
+  font-size: 12px;
 }
-.pb-ic {
-  font-size: 13px;
-}
-.pb-k {
+.lp-k {
   color: var(--muted, #a89c89);
 }
-.pb-item b {
+.lp b {
   color: var(--text, #f3ede2);
   font-variant-numeric: tabular-nums;
 }
-.pb-item.stale b {
+.lp.stale {
+  border-color: rgba(224, 178, 85, 0.35);
+}
+.lp.stale b {
   color: var(--gold, #e0b255);
 }
-.pb-stale {
+.lp-stale {
   color: var(--gold, #e0b255);
   font-size: 11px;
-}
-.pb-src {
-  color: var(--muted, #a89c89);
-  font-size: 11px;
-  opacity: 0.8;
-  padding-right: 8px;
 }
 
 .nudge-list {

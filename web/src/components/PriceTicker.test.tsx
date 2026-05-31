@@ -15,13 +15,13 @@ const prices: PriceDto[] = [
 ];
 
 describe("PriceTicker", () => {
-  it("altın/döviz değerlerini, kaynağı ve bayat işaretini gösterir", () => {
+  it("altın/döviz değerlerini, kaynağı (tooltip) ve bayat işaretini gösterir", () => {
     render(<PriceTicker prices={prices} />);
-    // Statik şerit → her değer tek kez.
     expect(screen.getByText("Gram altın")).toBeInTheDocument();
     expect(screen.getByText("USD")).toBeInTheDocument();
-    expect(screen.getByText(/Kaynak: Frankfurter/)).toBeInTheDocument();
     expect(screen.getByText(/yaklaşık/)).toBeInTheDocument();
+    // Kaynak topbar'da yer kaplamasın diye hover ipucunda (title).
+    expect(screen.getByLabelText("Canlı fiyatlar").getAttribute("title")).toContain("Frankfurter");
   });
 
   it("boş listede hiçbir şey çizmez", () => {
