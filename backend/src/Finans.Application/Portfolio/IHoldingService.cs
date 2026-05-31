@@ -28,6 +28,12 @@ public interface IHoldingService
     /// <summary>Düzenli BES katkısını tarih aralığından üretir (kapsanan aylar için kayıt; idempotent). BES değilse 400.</summary>
     Task<HoldingDto> GenerateBesContributionsAsync(Guid id, GenerateBesContributionsRequest request, CancellationToken ct = default);
 
+    /// <summary>Tek BES katkı kaydını düzenler (tutar/tarih → devlet katkısı + maliyet yeniden hesaplanır).</summary>
+    Task<HoldingDto> UpdateBesContributionAsync(Guid id, Guid contributionId, UpdateBesContributionRequest request, CancellationToken ct = default);
+
+    /// <summary>Tek BES katkı kaydını siler (kümülatif + maliyet düşülür).</summary>
+    Task<HoldingDto> DeleteBesContributionAsync(Guid id, Guid contributionId, CancellationToken ct = default);
+
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
 

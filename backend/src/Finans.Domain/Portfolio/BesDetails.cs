@@ -22,5 +22,15 @@ public class BesDetails : Entity
     public string? ProviderName { get; set; }
     public DateTime? JoinedAtUtc { get; set; }
 
+    // ── Düzenli katkı planı (T-BES.6b): "bundan sonraki katkılar için kullan" ──
+    /// <summary>Aktif plan tutarı (aylık). Değiştirilene kadar geçerli; gün geldikçe otomatik kayıt.</summary>
+    public decimal? MonthlyAmount { get; set; }
+
+    /// <summary>Plan ödeme günü (1–28).</summary>
+    public int? ContributionDay { get; set; }
+
+    /// <summary>Düzenli katkı planı aktif mi? (Açıksa eksik aylar görüntülemede otomatik üretilir.)</summary>
+    public bool PlanActive { get; set; }
+
     public Holding Holding { get; set; } = null!;
 }

@@ -1802,6 +1802,72 @@ body.drawer-lock {
   background: var(--gold, #e0b255);
 }
 
+/* ───── Geçmiş tabloları: dikey kaydırma + yatay kaydırma YOK + sütun otomatik sığdırma (T-BES.6) ───── */
+.history-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* Sütunlar genişliğe sığsın (yatay taşma yok); uzun metin … ile kesilir. */
+.holdings-table.fit {
+  width: 100%;
+  table-layout: fixed;
+}
+.holdings-table.fit th,
+.holdings-table.fit td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Sticky başlık (kaydırırken görünür kalsın). */
+.history-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel, #1c1813);
+  z-index: 1;
+}
+
+.row-actions {
+  display: inline-flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.icon-btn {
+  background: var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  line-height: 1;
+  font-size: 13px;
+  color: var(--muted, #a89c89);
+  cursor: pointer;
+  transition: 0.16s;
+}
+.icon-btn:hover {
+  border-color: var(--gold, #e0b255);
+  color: var(--gold, #e0b255);
+}
+.icon-btn.danger:hover {
+  border-color: #e07a7a;
+  color: #e07a7a;
+}
+
+/* Form içi checkbox satırı ("bundan sonraki katkılar için kullan"). */
+.check-row {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  color: var(--muted, #a89c89);
+  cursor: pointer;
+}
+.check-row input {
+  margin-top: 2px;
+  accent-color: var(--gold, #e0b255);
+}
+
 /* ───── Mobil üst bar görünürlüğü — DOSYA SONU (base display:none'dan sonra) ───── */
 @media (max-width: 1040px) {
   .mobile-topbar {

@@ -63,6 +63,18 @@ public sealed class HoldingsController(IHoldingService holdings) : ControllerBas
         Guid id, [FromBody] GenerateBesContributionsRequest request, CancellationToken ct) =>
         Ok(await holdings.GenerateBesContributionsAsync(id, request, ct));
 
+    /// <summary>PUT /api/holdings/{id}/bes/contributions/{cid} — tek BES katkı kaydını düzenle.</summary>
+    [HttpPut("{id:guid}/bes/contributions/{contributionId:guid}")]
+    public async Task<ActionResult<HoldingDto>> UpdateBesContribution(
+        Guid id, Guid contributionId, [FromBody] UpdateBesContributionRequest request, CancellationToken ct) =>
+        Ok(await holdings.UpdateBesContributionAsync(id, contributionId, request, ct));
+
+    /// <summary>DELETE /api/holdings/{id}/bes/contributions/{cid} — tek BES katkı kaydını sil.</summary>
+    [HttpDelete("{id:guid}/bes/contributions/{contributionId:guid}")]
+    public async Task<ActionResult<HoldingDto>> DeleteBesContribution(
+        Guid id, Guid contributionId, CancellationToken ct) =>
+        Ok(await holdings.DeleteBesContributionAsync(id, contributionId, ct));
+
     /// <summary>DELETE /api/holdings/{id} — pozisyonu sil (soft-delete, 204).</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

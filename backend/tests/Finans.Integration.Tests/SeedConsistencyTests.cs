@@ -35,10 +35,11 @@ public sealed class SeedConsistencyTests
         var profit = totalValue - totalCost;
         var returnPct = profit / totalCost;
 
-        totalCost.Should().Be(603770.00m);
+        // BES maliyeti = kendi katkı (cepten); devlet katkısı maliyet değil → 603.770→575.216.
+        totalCost.Should().Be(575216.00m);
         totalValue.Should().Be(839213.00m);
-        profit.Should().Be(235443.00m);
-        Math.Round(returnPct * 100m, 1).Should().Be(39.0m);
+        profit.Should().Be(263997.00m);
+        Math.Round(returnPct * 100m, 1).Should().Be(45.9m);
     }
 
     [Fact]

@@ -107,8 +107,9 @@ public static class SeedData
         var aaplHolding = new Holding { Id = Id("holding-aapl"), UserId = user.Id, AssetId = aapl.Id, Quantity = 12m, AvgCost = 175.000000m, CurrentPrice = 210.000000m, CreatedAtUtc = now };
         // Teknoloji Fonu: 1.500 @ 28,00 → maliyet 42.000 · güncel 23,50 → 35.250 (−%16,1) ZARAR
         var fundHolding = new Holding { Id = Id("holding-fund"), UserId = user.Id, AssetId = fund.Id, Quantity = 1500m, AvgCost = 28.000000m, CurrentPrice = 23.500000m, CreatedAtUtc = now };
-        // BES: own 120.000 + state 28.554 = 148.554 (notional 1 pay) · güncel 279.378 (+%88,1)
-        var besHolding = new Holding { Id = Id("holding-bes"), UserId = user.Id, AssetId = bes.Id, Quantity = 1m, AvgCost = 148554.000000m, CurrentPrice = 279378.000000m, CreatedAtUtc = now };
+        // BES: maliyet = CEPTEN ödenen = kendi katkı 120.000 (devlet katkısı 28.554 maliyet DEĞİL, getiriye
+        // dahil). Güncel fon değeri 279.378 → getiri (279.378−120.000)/120.000 ≈ +%132,8.
+        var besHolding = new Holding { Id = Id("holding-bes"), UserId = user.Id, AssetId = bes.Id, Quantity = 1m, AvgCost = 120000.000000m, CurrentPrice = 279378.000000m, CreatedAtUtc = now };
         // Nakit: 6.025 ₺
         var cashHolding = new Holding { Id = Id("holding-cash"), UserId = user.Id, AssetId = cash.Id, Quantity = 6025m, AvgCost = 1.000000m, CurrentPrice = 1.000000m, CreatedAtUtc = now };
 

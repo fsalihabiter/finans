@@ -70,8 +70,8 @@ public sealed class BesAndHistoryApiTests : IClassFixture<SqliteWebApplicationFa
         dto!.Bes.Should().NotBeNull();
         dto.Bes!.OwnContribution.Should().Be(121000m);
         dto.Bes.StateContribution.Should().Be(28754m); // 28.554 + 200 (%20)
-        dto.AvgCost.Should().Be(149754m);              // kendi + devlet
-        dto.TotalCost.Should().Be(149754m);
+        dto.AvgCost.Should().Be(121000m);              // maliyet = kendi katkı (cepten): 120.000 + 1.000
+        dto.TotalCost.Should().Be(121000m);
     }
 
     [Fact]

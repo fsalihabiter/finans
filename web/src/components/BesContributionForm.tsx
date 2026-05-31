@@ -26,6 +26,7 @@ export function BesContributionForm({
   const today = new Date().toISOString().slice(0, 10);
   const [own, setOwn] = useState("");
   const [paidAt, setPaidAt] = useState(today);
+  const [recurring, setRecurring] = useState(false);
 
   const ownAmount = toNumber(own);
   const valid = Number.isFinite(ownAmount) && ownAmount > 0 && paidAt !== "";
@@ -36,7 +37,7 @@ export function BesContributionForm({
     e.preventDefault();
     if (!valid) return;
     add.mutate(
-      { ownAmount, paidAtUtc: `${paidAt}T00:00:00Z` },
+      { ownAmount, paidAtUtc: `${paidAt}T00:00:00Z`, recurring },
       { onSuccess: () => { setOwn(""); onDone?.(); } },
     );
   };
@@ -68,10 +69,18 @@ export function BesContributionForm({
           {add.isPending ? "Ekleniyor…" : "Katkı ekle"}
         </button>
       </div>
+      <label className="check-row">
+        <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} />
+        <span>
+          Bundan sonraki katkılar için kullan — bu tutar/gün ile <b>düzenli</b> sayılsın; tarih geldikçe
+          (tutar değiştirilene kadar) otomatik eklensin.
+        </span>
+      </label>
       {valid && (
         <p className="muted">
           Tahmini devlet katkısı (%{Math.round(rate * 100)}):{" "}
-          <strong>{formatCurrency(estimatedState, "TRY")}</strong> — toplam maliyete eklenir.
+          <strong>{formatCurrency(estimatedState, "TRY")}</strong> — fon değerine eklenir (maliyet =
+          yalnız kendi katkın).
         </p>
       )}
       {add.isError && (

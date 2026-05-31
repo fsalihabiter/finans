@@ -66,8 +66,8 @@ public sealed class InflationRealReturnTests : IClassFixture<SqliteWebApplicatio
         var summary = calc.CalculateSummary(inputs, inflation);
 
         summary.ReturnRatio.Should().NotBeNull();
-        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.390m);
+        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.459m); // BES maliyeti = kendi katkı (cepten)
         summary.RealReturnRatio.Should().NotBeNull();
-        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0072m);
+        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0572m);
     }
 }

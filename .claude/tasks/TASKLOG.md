@@ -20,6 +20,38 @@
 
 ---
 
+## 2026-05-31 · BES — maliyet=kendi katkı + katkı düzenle/sil + düzenli plan (checkbox+otomatik devam) + geçmiş UX (T-BES.6b/7)
+- **Görev(ler):** T-BES.6b (tamam), T-BES.7 (tamam) — kullanıcı geri bildirimi (6 madde).
+- **Ne yapıldı:**
+  1. **Maliyet = kişinin CEPTEN ödediği = yalnız kendi katkı** (own-only). `Holding.AvgCost = OwnContribution`
+     (önceki own+state bırakıldı). Devlet katkısı fon değerinde → getiriye yansır. Seed BES AvgCost 148.554→120.000;
+     etkilenen seed-toplam testleri güncellendi (totalCost 603.770→575.216, getiri %39→%45,9, reel %0,72→%5,72).
+  2. **Katkı düzenle/sil:** `PUT/DELETE /holdings/{id}/bes/contributions/{cid}` — kümülatif (own/state) delta ile
+     güncellenir, devlet katkısı yeni tarihin oranıyla, maliyet=own. `BesContributionDto.Id` eklendi.
+  3. **Düzenli plan + otomatik devam:** `BesDetails.MonthlyAmount/ContributionDay/PlanActive` (+migration);
+     katkı eklerken **"bundan sonraki katkılar için kullan"** checkbox → plan kurar; `CatchUpBesPlanAsync`
+     görüntülemede (GetById) eksik ayları **otomatik üretir** (lazy; gerçek arka plan job T-BES.6b notu).
+  4. **Geçmiş UX:** `.history-scroll` (dikey scroll, **yatay scroll yok**) + `.holdings-table.fit` (table-layout
+     fixed → sütunlar genişliğe sığar, sticky başlık); BES geçmişinde **"Kaynak" sütunu kaldırıldı**, yerine
+     **düzenle/sil ikon butonları** (`.icon-btn`). İşlem geçmişine de scroll/fit uygulandı.
+  5. **Web:** shared `BesContribution.id`, `Bes.planActive/monthlyAmount`, `AddBesContributionInput.recurring`,
+     `UpdateBesContributionInput`; `updateBesContribution`/`deleteBesContribution` + hook'lar; `BesContributionForm`
+     recurring checkbox; `BesContributionHistory` ikon butonları (+test güncel); detayda düzenle modalı + sil onayı
+     + "düzenli plan aktif" notu.
+- **Dokunulan dosyalar:** backend `HoldingService.cs` (cost=own, Update/Delete contribution, CatchUp, ApplyBesTotals),
+  `BesDetails.cs` (+plan alanları), `PortfolioDtos.cs`, `IHoldingService.cs`, `HoldingsController.cs`, `SeedData.cs`
+  (AvgCost), migration `*_BesContributionPlan`; testler `BesContributionEditApiTests.cs`(yeni) + güncellenen seed-total
+  testleri (Portfolio/Inflation/SeedConsistency/Sqlite/BesAndHistory). web `shared/{types,api}`, `lib/hooks.ts`,
+  `BesContributionForm/History(.test).tsx`, `TransactionHistory.tsx`, `routes/HoldingDetailPage.tsx`, `App.css`.
+  doküman `03 §A`(maliyet kararı + plan/contribution tabloları), `08`(T-BES.6b/7), `09`(SC-23).
+- **Test:** backend **App 59 + Integration 60 = 119** · web **45** · shared 13 · lint/build temiz.
+- **Karar/Not:** Otomatik devam = **lazy catch-up** (BES detayını açınca eksik aylar üretilir); uygulama kapalıyken
+  üretim için gerçek arka plan job gerek (T-BES.6b notu, scheduler altyapısı). Catch-up `DateTime.UtcNow` kullanır →
+  saat-bağımlı; deterministik birim testi yerine planner (saf) + düzenle/sil e2e ile kapsandı. **Migration canlı
+  Postgres'e uygulandı** (BesContributionPlan; additive). Mevcut seed verisi idempotent (eski AvgCost değişmez).
+- **Durum:** T-BES.6b, T-BES.7 tamam.
+- **Sıradaki:** **T-BES.5 — fon dağılımı eğitici kâr/zarar projeksiyonu** (kullanıcının sırası).
+
 ## 2026-05-31 · BES düzenli katkı — tarih aralığından aylık kayıt üretimi + katkı geçmişi + hatırlatma (T-BES.6) + "Düzenle" buton teması
 - **Görev(ler):** T-BES.6 (tamam); T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı) planlandı.
 - **Ne yapıldı:**

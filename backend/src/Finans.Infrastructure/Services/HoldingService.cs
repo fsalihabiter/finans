@@ -23,6 +23,9 @@ public sealed class HoldingService(
 
     public async Task<HoldingDto> GetByIdAsync(Guid id, CurrencyCode? baseCurrency = null, CancellationToken ct = default)
     {
+        // Aktif düzenli plan varsa, gün geldikçe eksik ayları otomatik üret ("tarih geldikçe ödenmiş sayılır").
+        await CatchUpBesPlanAsync(id, ct);
+
         var all = await BuildHoldingDtosAsync(baseCurrency, ct);
         var dto = all.FirstOrDefault(h => h.Id == id)
             ?? throw new NotFoundException();
@@ -147,8 +150,18 @@ public sealed class HoldingService(
             CreatedAtUtc = DateTime.UtcNow,
         });
 
-        // BES maliyet tabanı = kendi + devlet katkısı (nominal 1 birim). Değer (CurrentPrice) fon getirisini taşır.
-        holding.AvgCost = bes.OwnContribution + bes.StateContribution;
+        // "Bundan sonraki katkılar için kullan" → düzenli plan (bu tutar/gün; bitiş yok). Tutar
+        // değiştirilene kadar geçerli; gün geldikçe görüntülemede otomatik kayıt (CatchUpBesPlanAsync).
+        if (request.Recurring)
+        {
+            bes.MonthlyAmount = request.OwnAmount;
+            bes.ContributionDay = Math.Clamp(paidAt.Day, 1, 28);
+            bes.PlanActive = true;
+        }
+
+        // Maliyet = kişinin CEPTEN ödediği = kendi katkı toplamı (devlet katkısı maliyet değil, getiriye
+        // dahil olur). Değer (CurrentPrice) fon getirisini taşır.
+        holding.AvgCost = bes.OwnContribution;
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
         await db.SaveChangesAsync(ct);
@@ -237,11 +250,134 @@ public sealed class HoldingService(
         }
 
         bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, now);
-        holding.AvgCost = bes.OwnContribution + bes.StateContribution;
+        holding.AvgCost = bes.OwnContribution;
         holding.UpdatedAtUtc = now;
         await db.SaveChangesAsync(ct);
 
         return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
+    public async Task<HoldingDto> UpdateBesContributionAsync(
+        Guid id, Guid contributionId, UpdateBesContributionRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.OwnAmount <= 0m)
+            throw new ValidationException("ownAmount", "must_be_positive", "Katkı tutarı 0'dan büyük olmalı.");
+        if (request.PaidAtUtc > DateTime.UtcNow)
+            throw new ValidationException("paidAtUtc", "must_not_be_future", "Ödeme tarihi gelecekte olamaz.");
+
+        var holding = await LoadBesWithContributionsAsync(id, ct);
+        var bes = holding.BesDetails!;
+        var c = holding.BesContributions.FirstOrDefault(x => x.Id == contributionId)
+            ?? throw new NotFoundException();
+
+        // Devlet katkısı yeni tarihteki orana göre yeniden hesaplanır; kümülatif delta ile güncellenir.
+        var newState = BesCalculator.StateContributionFor(request.OwnAmount, request.PaidAtUtc);
+        bes.OwnContribution += request.OwnAmount - c.OwnAmount;
+        bes.StateContribution += newState - c.StateAmount;
+        c.OwnAmount = request.OwnAmount;
+        c.StateAmount = newState;
+        c.PaidAtUtc = request.PaidAtUtc;
+
+        ApplyBesTotals(holding, bes);
+        await db.SaveChangesAsync(ct);
+        return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
+    public async Task<HoldingDto> DeleteBesContributionAsync(Guid id, Guid contributionId, CancellationToken ct = default)
+    {
+        var holding = await LoadBesWithContributionsAsync(id, ct);
+        var bes = holding.BesDetails!;
+        var c = holding.BesContributions.FirstOrDefault(x => x.Id == contributionId)
+            ?? throw new NotFoundException();
+
+        bes.OwnContribution = Math.Max(0m, bes.OwnContribution - c.OwnAmount);
+        bes.StateContribution = Math.Max(0m, bes.StateContribution - c.StateAmount);
+        db.BesContributions.Remove(c);
+
+        ApplyBesTotals(holding, bes);
+        await db.SaveChangesAsync(ct);
+        return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
+    /// <summary>
+    /// Aktif düzenli plan varsa eksik ayları (son katkıdan bugüne) otomatik üretir (T-BES.6b). Plan
+    /// yoksa/BES değilse no-op. İdempotent (kayıtlı ay atlanır). "Tarih geldikçe ödenmiş sayılır."
+    /// </summary>
+    private async Task CatchUpBesPlanAsync(Guid holdingId, CancellationToken ct)
+    {
+        var holding = await db.Holdings
+            .Include(h => h.BesDetails)
+            .Include(h => h.BesContributions)
+            .FirstOrDefaultAsync(h => h.Id == holdingId && h.UserId == currentUser.UserId, ct);
+
+        if (holding?.BesDetails is not { PlanActive: true, MonthlyAmount: { } amount, ContributionDay: { } day })
+            return;
+
+        var now = DateTime.UtcNow;
+        var lastPaid = holding.BesContributions.Count > 0
+            ? holding.BesContributions.Max(c => c.PaidAtUtc)
+            : (DateTime?)null;
+        // Son katkının ayından SONRAKİ aydan başla (yoksa bu aydan).
+        var from = lastPaid is { } lp
+            ? new DateTime(lp.Year, lp.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1)
+            : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var dates = BesContributionPlanner.MonthlyDates(day, from, now);
+        if (dates.Count == 0)
+            return;
+
+        var covered = holding.BesContributions.Select(c => c.PaidAtUtc.Year * 100 + c.PaidAtUtc.Month).ToHashSet();
+        var bes = holding.BesDetails;
+        var added = false;
+        foreach (var date in dates)
+        {
+            if (!covered.Add(date.Year * 100 + date.Month))
+                continue;
+            var state = BesCalculator.StateContributionFor(amount, date);
+            db.BesContributions.Add(new BesContribution
+            {
+                HoldingId = holding.Id,
+                OwnAmount = amount,
+                StateAmount = state,
+                PaidAtUtc = date,
+                Source = "Plan",
+                CreatedAtUtc = now,
+            });
+            bes.OwnContribution += amount;
+            bes.StateContribution += state;
+            added = true;
+        }
+
+        if (added)
+        {
+            ApplyBesTotals(holding, bes);
+            await db.SaveChangesAsync(ct);
+        }
+    }
+
+    /// <summary>BES holding'i (Asset+BesDetails+BesContributions) kullanıcıya kapsanmış yükler; BES değilse 400.</summary>
+    private async Task<Holding> LoadBesWithContributionsAsync(Guid id, CancellationToken ct)
+    {
+        var holding = await db.Holdings
+            .Include(h => h.Asset)
+            .Include(h => h.BesDetails)
+            .Include(h => h.BesContributions)
+            .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
+            ?? throw new NotFoundException();
+
+        if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
+            throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
+
+        return holding;
+    }
+
+    /// <summary>Hak ediş + maliyet (CEPTEN ödenen = kendi katkı) + zaman damgasını günceller.</summary>
+    private static void ApplyBesTotals(Holding holding, BesDetails bes)
+    {
+        bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, DateTime.UtcNow);
+        holding.AvgCost = bes.OwnContribution;
+        holding.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>BES detayını (devlet katkısı/hak ediş/katkı geçmişi/"bu ay katkını gir" durumu) eşler.</summary>
@@ -252,7 +388,7 @@ public sealed class HoldingService(
 
         var list = contributions
             .OrderByDescending(c => c.PaidAtUtc)
-            .Select(c => new BesContributionDto(c.OwnAmount, c.StateAmount, c.PaidAtUtc, c.Source))
+            .Select(c => new BesContributionDto(c.Id, c.OwnAmount, c.StateAmount, c.PaidAtUtc, c.Source))
             .ToList();
 
         // "Bu ay katkını gir" hatırlatması: kayıt varsa ve en son katkı bu aydan önceyse.
@@ -261,7 +397,8 @@ public sealed class HoldingService(
 
         return new BesDto(
             bes.OwnContribution, bes.StateContribution,
-            BesCalculator.VestingStateFor(bes.JoinedAtUtc, nowUtc), bes.JoinedAtUtc, list, due);
+            BesCalculator.VestingStateFor(bes.JoinedAtUtc, nowUtc), bes.JoinedAtUtc, list, due,
+            bes.PlanActive, bes.MonthlyAmount);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

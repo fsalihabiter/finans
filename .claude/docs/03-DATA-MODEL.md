@@ -118,14 +118,25 @@ Kısıt: **`UNIQUE(UserId, AssetId)` (IsDeleted=false)**, `Quantity >= 0`,
 | HoldingId | uuid FK→Holdings | hayır | **UNIQUE** |
 | OwnContribution | numeric(18,6) | hayır | Kendi katkı payı (maliyet bileşeni) |
 | StateContribution | numeric(18,6) | hayır | **Devlet katkısı — AYRI** (FR-1.5) |
-| VestingState | varchar(20) | hayır | `VestingState` (CHECK) |
+| VestingState | varchar(20) | hayır | `VestingState` (CHECK) — JoinedAtUtc'den türetilir |
 | ProviderName | text | evet | BES şirketi |
 | JoinedAtUtc | timestamptz | evet | |
+| MonthlyAmount | numeric(18,6) | evet | Düzenli plan aylık tutarı (T-BES.6b) |
+| ContributionDay | int | evet | Plan ödeme günü (1–28) |
+| PlanActive | bool | hayır | Düzenli plan aktif mi (default false) |
 
-> **Modelleme kararı (BES getirisi):** Getiri maliyet tabanı = **OwnContribution
-> + StateContribution** (taslaktaki +%88 buradan gelir). Devlet katkısı UI'da
-> **ayrı satır** gösterilir ama getiri tabanına dahildir. `Holdings.AvgCost`
-> BES için bu toplamı (notional 1 "pay" üzerinden) yansıtır.
+> **`BesContributions`** (T-BES.6, Holdings 1—*): `Id, HoldingId(FK), OwnAmount, StateAmount,
+> PaidAtUtc, Source("Manual"|"Plan"), CreatedAtUtc`. Tek tek katkı ödemeleri — işlem geçmişi +
+> düzenli katkı takibi. Devlet katkısı her kaydın **PaidAtUtc orananı** kadar (geriye dönük değil).
+
+> **Modelleme kararı (BES maliyeti — GÜNCELLENDİ T-BES.6):** Maliyet = kişinin **CEPTEN
+> ödediği** = yalnız **OwnContribution** (kendi katkı toplamı). Devlet katkısı maliyet
+> DEĞİL; fon değerine dahil olup **getiriye** yansır. `Holdings.AvgCost` BES için =
+> `OwnContribution` (notional 1 "pay"). Önceki "own+state" tabanı bırakıldı (kullanıcı
+> kararı: ortalama maliyet = cepten ödenen). Katkılar `BesContribution` kayıtlarıyla
+> izlenir; kümülatif `Own/StateContribution` her ekleme/düzenleme/silmede güncellenir.
+> Düzenli plan (`MonthlyAmount`/`ContributionDay`/`PlanActive`): işaretliyse ay geldikçe
+> görüntülemede otomatik kayıt (lazy catch-up; tam scheduler T-BES.6b ileri).
 
 > **Devlet katkısı & hak ediş kuralı (T-BES, araştırma tabanlı — tek kaynak `BesRules`):**
 > Devlet katkısı = kendi katkının **%20'si** (2026-01-01'den; önceki %30 — RG 2026-01-07). Üst sınır =

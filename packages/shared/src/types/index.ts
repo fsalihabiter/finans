@@ -39,6 +39,7 @@ export interface ApiErrorEnvelope {
 
 /** Tek bir BES katkı ödemesi kaydı (T-BES.6). source: "Manual" | "Plan". */
 export interface BesContribution {
+  id: string;
   ownAmount: number;
   stateAmount: number;
   paidAtUtc: string;
@@ -55,6 +56,10 @@ export interface Bes {
   contributions: BesContribution[];
   /** Bu ayın katkısı henüz girilmedi mi? ("Katkı payını gir" hatırlatması). */
   contributionDue: boolean;
+  /** Düzenli katkı planı aktif mi? */
+  planActive: boolean;
+  /** Aktif plan aylık tutarı (varsa). */
+  monthlyAmount: number | null;
 }
 
 /** Bir pozisyonun geçmiş işlemi (detayda gösterilir). */
@@ -177,6 +182,14 @@ export interface AddBesContributionInput {
   stateAmount?: number | null;
   /** Ödeme tarihi (verilmezse şimdi). Devlet katkısı oranı bu tarihe göre seçilir (2026 öncesi %30, sonrası %20). */
   paidAtUtc?: string | null;
+  /** "Bundan sonraki katkılar için kullan": işaretlenirse düzenli plan kurulur (bu tutar/gün; bitiş yok). */
+  recurring?: boolean;
+}
+
+/** PUT /api/holdings/{id}/bes/contributions/{cid} — tek katkı kaydını düzenle. */
+export interface UpdateBesContributionInput {
+  ownAmount: number;
+  paidAtUtc: string;
 }
 
 /** PUT /api/holdings/{id}/bes — BES sözleşme alanları (şimdilik başlangıç tarihi; hak edişi yeniden türetir). */

@@ -63,11 +63,12 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
 
         summary.Should().NotBeNull();
         summary!.BaseCurrency.Should().Be(CurrencyCode.TRY);
-        summary.TotalCost.Should().Be(603770m);
+        // BES maliyeti = kendi katkı (cepten); devlet katkısı maliyet değil → toplam maliyet 603.770→575.216.
+        summary.TotalCost.Should().Be(575216m);
         summary.TotalValue.Should().Be(839213m);
-        summary.NetProfit.Should().Be(235443m);
-        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.390m);
-        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0072m); // enflasyon 0,38
+        summary.NetProfit.Should().Be(263997m);
+        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.459m);
+        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0572m); // enflasyon 0,38
         summary.Allocation.Should().HaveCount(7);
         Math.Round(summary.Allocation.Sum(a => a.Weight), 6).Should().Be(1m);
     }

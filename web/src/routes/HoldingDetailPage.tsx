@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatCurrency, formatNumber, formatPercent } from "@finans/shared";
-import type { TransactionType } from "@finans/shared";
+import type { BesContribution, TransactionType } from "@finans/shared";
 import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
 import { BesContributionPlanForm } from "../components/BesContributionPlanForm";
@@ -10,7 +10,14 @@ import { TransactionHistory } from "../components/TransactionHistory";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
-import { useDeleteHolding, useHolding, useUpdateBes, useUpdateHolding } from "../lib/hooks";
+import {
+  useDeleteBesContribution,
+  useDeleteHolding,
+  useHolding,
+  useUpdateBes,
+  useUpdateBesContribution,
+  useUpdateHolding,
+} from "../lib/hooks";
 import { ASSET_META, softBg } from "../lib/assetMeta";
 
 function tone(value: number | null): string {
@@ -52,6 +59,8 @@ export function HoldingDetailPage() {
   const holding = useHolding(id);
   const updatePrice = useUpdateHolding(id);
   const updateBes = useUpdateBes(id);
+  const updateContribution = useUpdateBesContribution(id);
+  const deleteContribution = useDeleteBesContribution(id);
   const remove = useDeleteHolding();
   const { notify } = useToast();
 
@@ -59,6 +68,10 @@ export function HoldingDetailPage() {
   const [besDate, setBesDate] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [modal, setModal] = useState<ActiveModal>(null);
+  const [editingC, setEditingC] = useState<BesContribution | null>(null);
+  const [editOwn, setEditOwn] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [deletingC, setDeletingC] = useState<BesContribution | null>(null);
   const today = new Date().toISOString().slice(0, 10);
 
   if (holding.isLoading) return <p className="muted">Yükleniyor…</p>;
@@ -114,6 +127,30 @@ export function HoldingDetailPage() {
   const onBesPlanDone = () => {
     closeModal();
     notify("Düzenli katkı kayıtları oluşturuldu.", "success");
+  };
+
+  const openEditContribution = (c: BesContribution) => {
+    setEditOwn(String(c.ownAmount));
+    setEditDate(toDateInput(c.paidAtUtc));
+    setEditingC(c);
+  };
+
+  const onEditContributionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingC) return;
+    const own = Number(editOwn.replace(",", "."));
+    if (!Number.isFinite(own) || own <= 0 || editDate === "") return;
+    updateContribution.mutate(
+      { contributionId: editingC.id, input: { ownAmount: own, paidAtUtc: `${editDate}T00:00:00Z` } },
+      { onSuccess: () => { setEditingC(null); notify("Katkı güncellendi.", "success"); } },
+    );
+  };
+
+  const onDeleteContribution = () => {
+    if (!deletingC) return;
+    deleteContribution.mutate(deletingC.id, {
+      onSuccess: () => { setDeletingC(null); notify("Katkı silindi.", "info"); },
+    });
   };
 
   const openBesDate = () => {
@@ -246,6 +283,12 @@ export function HoldingDetailPage() {
                 <b>10 yıl</b> (ve 56 yaş) tam. Oran ve eşikler mevzuata tabidir; bilgilendirme amaçlıdır,
                 yatırım tavsiyesi değildir.
               </p>
+              {h.bes.planActive && (
+                <p className="note-muted">
+                  🔁 Düzenli katkı planı aktif{h.bes.monthlyAmount ? `: ${formatCurrency(h.bes.monthlyAmount, h.currency)}/ay` : ""}.
+                  Tutar değiştirilene kadar, ay geldikçe otomatik katkı kaydı eklenir.
+                </p>
+              )}
             </>
           )}
         </div>
@@ -255,7 +298,11 @@ export function HoldingDetailPage() {
           <div className="card">
             <div className="card-head"><h3>{isBes ? "Katkı Geçmişi" : "İşlem Geçmişi"}</h3></div>
             {isBes ? (
-              <BesContributionHistory contributions={h.bes?.contributions ?? []} />
+              <BesContributionHistory
+                contributions={h.bes?.contributions ?? []}
+                onEdit={openEditContribution}
+                onDelete={setDeletingC}
+              />
             ) : (
               <TransactionHistory
                 transactions={h.transactions ?? []}
@@ -305,6 +352,26 @@ export function HoldingDetailPage() {
           <BesContributionPlanForm holdingId={h.id} onDone={onBesPlanDone} />
         </Modal>
       )}
+      {editingC && (
+        <Modal title="Katkıyı düzenle" onClose={() => setEditingC(null)}>
+          <form className="tx-form" onSubmit={onEditContributionSubmit} aria-label="Katkıyı düzenle">
+            <div className="tx-row">
+              <label>
+                Tutar (TRY)
+                <input inputMode="decimal" autoFocus value={editOwn} onChange={(e) => setEditOwn(e.target.value)} required />
+              </label>
+              <label>
+                Ödeme tarihi
+                <input type="date" max={today} value={editDate} onChange={(e) => setEditDate(e.target.value)} required />
+              </label>
+              <button type="submit" disabled={updateContribution.isPending}>
+                {updateContribution.isPending ? "Kaydediliyor…" : "Kaydet"}
+              </button>
+            </div>
+            {updateContribution.isError && <p className="neg" role="alert">Güncelleme başarısız.</p>}
+          </form>
+        </Modal>
+      )}
       {modal === "besdate" && (
         <Modal title="BES başlangıç tarihi" onClose={closeModal}>
           <form className="price-form bare" onSubmit={onUpdateBesDate}>
@@ -345,6 +412,16 @@ export function HoldingDetailPage() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={deletingC !== null}
+        title="Katkıyı sil?"
+        message="Bu katkı kaydı silinecek; toplam katkı ve maliyet buna göre güncellenecek."
+        confirmLabel="Evet, sil"
+        busy={deleteContribution.isPending}
+        onConfirm={onDeleteContribution}
+        onCancel={() => setDeletingC(null)}
+      />
 
       <ConfirmDialog
         open={confirmOpen}

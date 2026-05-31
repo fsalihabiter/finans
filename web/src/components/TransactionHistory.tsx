@@ -33,8 +33,8 @@ export function TransactionHistory({
       {transactions.length === 0 ? (
         <p className="muted">Henüz işlem yok.</p>
       ) : (
-        <div className="holdings-wrap">
-          <table className="holdings-table">
+        <div className="history-scroll">
+          <table className="holdings-table fit">
             <thead>
               <tr>
                 <th scope="col">Tarih</th>

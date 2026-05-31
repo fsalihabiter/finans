@@ -13,6 +13,7 @@ import type {
   CurrencyCode,
   GenerateBesContributionsInput,
   TransactionInput,
+  UpdateBesContributionInput,
   UpdateBesInput,
   UpdateHoldingInput,
   UpdateSettingsInput,
@@ -155,6 +156,31 @@ export function useGenerateBesContributions(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: GenerateBesContributionsInput) => api.generateBesContributions(id, input),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });
+    },
+  });
+}
+
+export function useUpdateBesContribution(id: string) {
+  const invalidate = useInvalidatePortfolio();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ contributionId, input }: { contributionId: string; input: UpdateBesContributionInput }) =>
+      api.updateBesContribution(id, contributionId, input),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });
+    },
+  });
+}
+
+export function useDeleteBesContribution(id: string) {
+  const invalidate = useInvalidatePortfolio();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (contributionId: string) => api.deleteBesContribution(id, contributionId),
     onSuccess: () => {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });

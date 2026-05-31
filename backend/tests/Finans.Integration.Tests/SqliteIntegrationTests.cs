@@ -49,7 +49,8 @@ public sealed class SqliteIntegrationTests : IClassFixture<SqliteWebApplicationF
         decimal toTry(Holding h, decimal amount) =>
             h.Asset.PricingCurrency == CurrencyCode.USD ? amount * 48m : amount;
 
-        holdings.Sum(h => toTry(h, h.Quantity * h.AvgCost)).Should().Be(603770.00m);
+        // BES maliyeti = kendi katkı (cepten); devlet katkısı maliyet değil → 603.770→575.216.
+        holdings.Sum(h => toTry(h, h.Quantity * h.AvgCost)).Should().Be(575216.00m);
         holdings.Sum(h => toTry(h, h.Quantity * (h.CurrentPrice ?? 0m))).Should().Be(839213.00m);
     }
 

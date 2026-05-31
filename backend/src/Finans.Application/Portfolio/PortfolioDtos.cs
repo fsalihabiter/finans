@@ -40,10 +40,13 @@ public sealed record BesDto(
     VestingState VestingState,
     DateTime? JoinedAtUtc,
     IReadOnlyList<BesContributionDto> Contributions,
-    bool ContributionDue);
+    bool ContributionDue,
+    bool PlanActive,
+    decimal? MonthlyAmount);
 
 /// <summary>Tek bir BES katkı ödemesi kaydı (T-BES.6). Source: "Manual" | "Plan".</summary>
 public sealed record BesContributionDto(
+    Guid Id,
     decimal OwnAmount,
     decimal StateAmount,
     DateTime PaidAtUtc,
@@ -117,7 +120,9 @@ public sealed record UpdateHoldingRequest(
 public sealed record AddBesContributionRequest(
     decimal OwnAmount,
     decimal? StateAmount = null,
-    DateTime? PaidAtUtc = null);
+    DateTime? PaidAtUtc = null,
+    /// <summary>"Bundan sonraki katkılar için kullan": işaretlenirse düzenli plan kurulur (bu tutar/gün; bitiş yok).</summary>
+    bool Recurring = false);
 
 /// <summary>
 /// PUT /api/holdings/{id}/bes — BES sözleşme alanlarını günceller (T-BES). Şimdilik
@@ -137,3 +142,8 @@ public sealed record GenerateBesContributionsRequest(
     int Day,
     DateTime FromUtc,
     DateTime ToUtc);
+
+/// <summary>PUT /api/holdings/{id}/bes/contributions/{cid} — tek katkı kaydını düzenle (tutar/tarih).</summary>
+public sealed record UpdateBesContributionRequest(
+    decimal OwnAmount,
+    DateTime PaidAtUtc);
