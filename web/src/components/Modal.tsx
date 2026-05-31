@@ -20,16 +20,27 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const restore = useRef<HTMLElement | null>(null);
+  // onClose'u ref'te tut: ebeveyn her render'da yeni kapatma fonksiyonu verse bile asıl
+  // effect YENİDEN çalışmasın (yoksa her tuşta odak ilk öğeye sıçrardı). Ref güncellemesi
+  // render'da değil, ayrı bir effect'te (react-hooks/refs).
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     restore.current = document.activeElement as HTMLElement | null;
     requestAnimationFrame(() => {
-      const first = ref.current?.querySelector<HTMLElement>(FOCUSABLE);
+      // Odağı İÇERİK alanındaki ilk alana ver (kapat butonu .modal-top'ta, DOM'da
+      // ondan önce gelir → tüm modalda querySelector onu seçerdi). Yoksa modal geneline düş.
+      const body = ref.current?.querySelector<HTMLElement>(".sheet-body");
+      const first =
+        body?.querySelector<HTMLElement>(FOCUSABLE) ?? ref.current?.querySelector<HTMLElement>(FOCUSABLE);
       first?.focus();
     });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab" || !ref.current) return;
@@ -54,7 +65,7 @@ export function Modal({
       document.body.classList.remove("drawer-lock");
       restore.current?.focus?.();
     };
-  }, [onClose]);
+  }, []); // yalnız mount/unmount — onClose ref ile okunur (yukarıdaki açıklama)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
