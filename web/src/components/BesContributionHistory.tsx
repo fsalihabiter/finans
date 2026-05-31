@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { formatCurrency, formatDate } from "@finans/shared";
 import type { BesContribution, BesContributionStatus } from "@finans/shared";
 
@@ -8,10 +9,13 @@ const STATUS_CLS: Record<BesContributionStatus, string> = {
 };
 
 /**
- * BES katkı ödeme geçmişi (en yeni üstte): tarih + kendi/devlet katkısı + satır içi düzenle/sil.
+ * BES katkı ödeme geçmişi (en yeni üstte): tarih + katkı payı + devlet katkısı + satır içi düzenle/sil.
  * Durum **renkli sol şerit** + lejant ile gösterilir (ayrı sütun YOK — lejant zaten anlamı verir).
- * Bekleyenler (sarı/gri) tabloda görünür ama toplama girmez. Dikey kaydırma, yatay yok; sütunlar
- * sığar (kesilmez/elips yok).
+ * Bekleyenler (sarı/gri) tabloda görünür ama toplama girmez.
+ *
+ * <p>Alttaki <b>toplam satırı</b> (`tfoot`) <b>Ödenmiş</b> (Deposited+StatePending) ve gerekirse
+ * <b>Bekleyen</b> (Future) toplamlarını gösterir; "Ödenmiş katkı payı toplamı" backend'in
+ * `AvgCost` (Ortalama maliyet) hesabıyla <b>birebir eşittir</b> — sütun toplamı gözle doğrulanır.</p>
  */
 export function BesContributionHistory({
   contributions,
@@ -22,6 +26,22 @@ export function BesContributionHistory({
   onEdit?: (c: BesContribution) => void;
   onDelete?: (c: BesContribution) => void;
 }) {
+  // Tek geçişte ödenmiş + bekleyen toplamları (own + state).
+  const totals = useMemo(() => {
+    let paidOwn = 0, paidState = 0, futureOwn = 0, futureState = 0;
+    for (const c of contributions) {
+      if (c.status === "Future") {
+        futureOwn += c.ownAmount;
+        futureState += c.stateAmount;
+      } else {
+        // Deposited + StatePending: kendi katkı ödendi → maliyet tabanına dahil.
+        paidOwn += c.ownAmount;
+        paidState += c.stateAmount;
+      }
+    }
+    return { paidOwn, paidState, futureOwn, futureState };
+  }, [contributions]);
+
   if (contributions.length === 0)
     return <p className="muted">Henüz katkı kaydı yok.</p>;
 
@@ -61,6 +81,22 @@ export function BesContributionHistory({
               );
             })}
           </tbody>
+          <tfoot>
+            <tr className="hist-total hist-total--paid">
+              <th scope="row">Ödenmiş toplam</th>
+              <td className="num">{formatCurrency(totals.paidOwn, "TRY")}</td>
+              <td className="num up">{formatCurrency(totals.paidState, "TRY")}</td>
+              <td></td>
+            </tr>
+            {(totals.futureOwn > 0 || totals.futureState > 0) && (
+              <tr className="hist-total hist-total--future">
+                <th scope="row">Bekleyen (toplama dahil değil)</th>
+                <td className="num">{formatCurrency(totals.futureOwn, "TRY")}</td>
+                <td className="num">{formatCurrency(totals.futureState, "TRY")}</td>
+                <td></td>
+              </tr>
+            )}
+          </tfoot>
         </table>
       </div>
     </>

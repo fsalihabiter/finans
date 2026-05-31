@@ -1895,6 +1895,28 @@ body.drawer-lock {
   background: var(--panel, #1c1813);
   z-index: 1;
 }
+/* Toplam satırı — alt sticky; "Ödenmiş toplam" backend'in `AvgCost`/"Ortalama maliyet"
+   değeriyle birebir eşittir (gözle doğrulama). Bekleyen ise toplama dahil değil notu. */
+.history-scroll tfoot th,
+.history-scroll tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: var(--panel, #1c1813);
+  border-top: 1px solid var(--line, #322b22);
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-weight: 700;
+  z-index: 1;
+}
+.hist-total--paid td.num.up { color: var(--mint, #5fc9a0); }
+.hist-total--future th,
+.hist-total--future td {
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--muted, #a89c89);
+  border-top: none;
+  padding-top: 2px;
+}
 
 /* ── BES katkı durumu renklendirmesi (T-BES.8): yatırıldı (yeşil) / devlet bekliyor (sarı) /
    gelecek (gri). Satırın solunda renkli şerit + durum rozeti. ── */
