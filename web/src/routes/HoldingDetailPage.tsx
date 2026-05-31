@@ -8,7 +8,7 @@ import { TransactionHistory } from "../components/TransactionHistory";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
-import { useDeleteHolding, useHolding, useUpdateHolding } from "../lib/hooks";
+import { useDeleteHolding, useHolding, useUpdateBes, useUpdateHolding } from "../lib/hooks";
 import { ASSET_META, softBg } from "../lib/assetMeta";
 
 function tone(value: number | null): string {
@@ -29,7 +29,14 @@ const VESTING_TR: Record<string, string> = {
   Vested: "Tamamlandı",
 };
 
-type ActiveModal = null | "tx" | "bes" | "price";
+type ActiveModal = null | "tx" | "bes" | "price" | "besdate";
+
+/** ISO tarihten <input type="date"> değeri (YYYY-MM-DD). */
+function toDateInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
 
 /**
  * Varlık detayı (13 §4, route `/holdings/:id`): geniş ekranda 2 sütun (özet/metrik +
@@ -42,12 +49,15 @@ export function HoldingDetailPage() {
   const navigate = useNavigate();
   const holding = useHolding(id);
   const updatePrice = useUpdateHolding(id);
+  const updateBes = useUpdateBes(id);
   const remove = useDeleteHolding();
   const { notify } = useToast();
 
   const [price, setPrice] = useState("");
+  const [besDate, setBesDate] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [modal, setModal] = useState<ActiveModal>(null);
+  const today = new Date().toISOString().slice(0, 10);
 
   if (holding.isLoading) return <p className="muted">Yükleniyor…</p>;
   if (holding.isError || !holding.data) {
@@ -97,6 +107,25 @@ export function HoldingDetailPage() {
   const onBesDone = () => {
     closeModal();
     notify("BES katkısı eklendi.", "success");
+  };
+
+  const openBesDate = () => {
+    setBesDate(toDateInput(h.bes?.joinedAtUtc ?? null));
+    setModal("besdate");
+  };
+
+  const onUpdateBesDate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!besDate) return;
+    updateBes.mutate(
+      { joinedAtUtc: `${besDate}T00:00:00Z` },
+      {
+        onSuccess: () => {
+          closeModal();
+          notify("Başlangıç tarihi güncellendi.", "success");
+        },
+      },
+    );
   };
 
   const onDelete = () => {
@@ -180,10 +209,21 @@ export function HoldingDetailPage() {
               </div>
               <div className="split">
                 <div className="sh"><span className="sl">Devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
-                <div className="sd">Devletin eklediği <b>sübvansiyon</b> (≈%30). Yatırım başarın değildir; bu yüzden ayrı gösterilir.</div>
+                <div className="sd">Devletin eklediği <b>sübvansiyon</b>: kendi katkının <b>%20'si</b> (2026 oranı; üst sınır yıllık brüt asgari ücretin %20'si). Yatırım başarın değildir, ayrı gösterilir.</div>
               </div>
               <div className="drow"><span className="dk">Hak ediş</span><span className="dv">{VESTING_TR[h.bes.vestingState] ?? h.bes.vestingState}</span></div>
-              <div className="drow"><span className="dk">Başlangıç</span><span className="dv">{h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}</span></div>
+              <div className="drow">
+                <span className="dk">Başlangıç</span>
+                <span className="dv">
+                  {h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}
+                  <button type="button" className="link" onClick={openBesDate}> · Düzenle</button>
+                </span>
+              </div>
+              <p className="note-muted">
+                Hak ediş sistemde kalış süresine bağlıdır: <b>&lt;3 yıl</b> hak edilmez · <b>3–10 yıl</b> kısmi ·{" "}
+                <b>10 yıl</b> (ve 56 yaş) tam. Oran ve eşikler mevzuata tabidir; bilgilendirme amaçlıdır,
+                yatırım tavsiyesi değildir.
+              </p>
             </>
           )}
         </div>
@@ -232,6 +272,26 @@ export function HoldingDetailPage() {
       {modal === "bes" && (
         <Modal title="Aylık katkı ekle" onClose={closeModal}>
           <BesContributionForm holdingId={h.id} onDone={onBesDone} />
+        </Modal>
+      )}
+      {modal === "besdate" && (
+        <Modal title="BES başlangıç tarihi" onClose={closeModal}>
+          <form className="price-form bare" onSubmit={onUpdateBesDate}>
+            <div className="price-row">
+              <input
+                id="besdate"
+                type="date"
+                autoFocus
+                max={today}
+                value={besDate}
+                onChange={(e) => setBesDate(e.target.value)}
+              />
+              <button type="submit" disabled={updateBes.isPending || besDate === ""}>
+                Kaydet
+              </button>
+            </div>
+            {updateBes.isError && <p className="neg">Güncelleme başarısız.</p>}
+          </form>
         </Modal>
       )}
       {modal === "price" && (

@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-05-31 · BES detaylı analiz — araştırma + devlet katkısı %20 + hak ediş türetme + başlangıç tarihi (T-BES.1-3)
+- **Görev(ler):** T-BES.1, T-BES.2, T-BES.3 (tamam); T-BES.4-6 planlandı (08 epik).
+- **Araştırma (web, kaynak: egm.org.tr / allianz SSS):** Devlet katkısı **%20** (2026-01-01'den; önceki %30,
+  RG 2026-01-07). Üst sınır = yıllık brüt asgari ücretin %20'si (2026 ≈ 79.272 ₺). Hak ediş 3/6/10 yıl
+  kademeli; kesin yüzdeler kaynaklarda **çelişkili** → uygulamada kaba durum (NotVested/Partially/Vested),
+  emeklilik 10 yıl+56 yaş. **Oran/eşik mevzuata tabi → lansman öncesi EGM/SPK doğrulaması ŞART** (CLAUDE.md §2).
+- **Ne yapıldı:**
+  1. **`BesRules`** (tek kaynak; oran/cap/eşik + "doğrulanmalı" notları) + **`BesCalculator`** (saf):
+     `StateContributionFor` (%20), `YearsInSystem`, `VestingStateFor` (yıl→kaba durum). 9 birim testi (SC-20).
+  2. Katkı endpoint'i sabit %30 → **%20** (BesCalculator); hak ediş artık **okuma anında türetilir**
+     (`BuildHoldingDtosAsync` + katkıda) → saklanan VestingState'e güvenilmez.
+  3. **`PUT /holdings/{id}/bes`** (`UpdateBesAsync`): başlangıç tarihi güncelle → hak ediş yeniden türer;
+     gelecek tarih→400, BES değil→400, IDOR→404. Integration 3 senaryo (SC-21).
+  4. **Web:** shared `UpdateBesInput`+`updateBes`; `useUpdateBes`; detayda başlangıç "· Düzenle" (date modal,
+     "Kaydet") + **devlet katkısı açıklaması** (%20 + üst sınır) + **hak ediş kademe notu** + disclaimer.
+- **Dokunulan dosyalar:** backend yeni `Application/Portfolio/{BesRules,BesCalculator}.cs`; düzenlenen
+  `HoldingService.cs`(+UpdateBesAsync, %20, vesting türetme), `IHoldingService.cs`, `PortfolioDtos.cs`
+  (UpdateBesRequest), `HoldingsController.cs` (PUT /bes); testler `BesCalculatorTests.cs`(yeni),
+  `BesAndHistoryApiTests.cs` (%20 + 3 PUT test), `PriceFetchServiceTests.cs` (flaky saat→2030 fix).
+  web `shared/{types,api}`, `lib/hooks.ts`, `routes/HoldingDetailPage.tsx`. doküman `08`(T-BES epik),
+  `09`(SC-20/21), `03`(BES kural notu).
+- **Test:** backend **App 54 + Integration 56 = 110** · web **43** · shared **13** · lint/build temiz.
+  Not: zaman-bağımlı flaky `PriceFetchServiceTests` (sabit saat seed gerçek-now'dan eski kalınca FX sırası
+  bozuluyordu) → stub saati **2030**'a alınıp deterministik yapıldı.
+- **Karar/Not:** **Fon dağılımı kâr/zarar senaryosu (T-BES.5)** kasıtlı planlandı, bu turda yapılmadı:
+  projeksiyon olduğu için **eğitici/varsayımsal çerçeve + disclaimer** ile tasarlanmalı (CLAUDE.md §2 —
+  senaryo serbest, gelecek tahmini/tavsiye yasak); hesap KODDA (bileşik getiri), girdiler kullanıcıdan.
+  Seed'in birikmiş state katkısı (%30 dönemi) değişmedi (geçmiş; %20 yeni katkılara uygulanır).
+- **Durum:** T-BES.1-3 tamam; T-BES.4 (yıllık cap), **T-BES.5 (senaryo)**, T-BES.6 (katkı planı) bekliyor.
+- **Sıradaki:** kullanıcı onayıyla **T-BES.5 fon-dağılımı eğitici projeksiyon** ya da T2.8 gözlemlenebilirlik.
+
 ## 2026-05-31 · UX tutarlılığı — canlı fiyat ticker'ı + nakit/canlı varlıkta elle fiyat kaldırma (ad-hoc, kullanıcı geri bildirimi)
 - **Görev(ler):** ad-hoc (T2.6 üstüne kullanıcı geri bildirimi). İki soru: (a) nakit için elle fiyat/işlem
   gerekli mi? (b) canlı veriyi kayan-yazı olarak görmek.

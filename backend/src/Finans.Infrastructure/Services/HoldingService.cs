@@ -121,18 +121,49 @@ public sealed class HoldingService(
         if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
             throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
 
-        // Devlet katkısı verilmezse TR kuralı: kendi katkının %30'u (basitleştirilmiş, üst sınır yok).
-        var stateAmount = request.StateAmount ?? Math.Round(request.OwnAmount * 0.30m, 2);
+        // Devlet katkısı verilmezse mevzuat oranı (2026: %20) — BesRules/BesCalculator (yıllık üst
+        // sınır T-BES planında; lansman öncesi EGM/SPK doğrulaması, CLAUDE.md §2).
+        var stateAmount = request.StateAmount ?? BesCalculator.StateContributionFor(request.OwnAmount);
 
         var bes = holding.BesDetails;
         bes.OwnContribution += request.OwnAmount;
         bes.StateContribution += stateAmount;
+        // Hak ediş durumu sistemde kalış süresinden türetilir (saf hesap).
+        bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, DateTime.UtcNow);
 
         // BES maliyet tabanı = kendi + devlet katkısı (nominal 1 birim). Değer (CurrentPrice) fon getirisini taşır.
         holding.AvgCost = bes.OwnContribution + bes.StateContribution;
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
         await db.SaveChangesAsync(ct);
+        return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
+    public async Task<HoldingDto> UpdateBesAsync(Guid id, UpdateBesRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var holding = await db.Holdings
+            .Include(h => h.Asset)
+            .Include(h => h.BesDetails)
+            .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
+            ?? throw new NotFoundException();
+
+        if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
+            throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
+
+        var bes = holding.BesDetails;
+        if (request.JoinedAtUtc is { } joined)
+        {
+            if (joined > DateTime.UtcNow)
+                throw new ValidationException("joinedAtUtc", "must_not_be_future", "Başlangıç tarihi gelecekte olamaz.");
+            bes.JoinedAtUtc = joined;
+            // Başlangıç tarihi değişince hak ediş durumu yeniden türetilir.
+            bes.VestingState = BesCalculator.VestingStateFor(joined, DateTime.UtcNow);
+            holding.UpdatedAtUtc = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+        }
+
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -167,7 +198,9 @@ public sealed class HoldingService(
             var h = holdings[i];
             var r = results[i];
             var bes = h.BesDetails is { } b
-                ? new BesDto(b.OwnContribution, b.StateContribution, b.VestingState, b.JoinedAtUtc)
+                ? new BesDto(
+                    b.OwnContribution, b.StateContribution,
+                    BesCalculator.VestingStateFor(b.JoinedAtUtc, DateTime.UtcNow), b.JoinedAtUtc)
                 : null;
 
             dtos.Add(new HoldingDto(

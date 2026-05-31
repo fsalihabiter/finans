@@ -103,6 +103,26 @@ rate limit + TLS proxy ayakta**.
 
 ---
 
+### T-BES — Bireysel Emeklilik (BES) Detaylı Analiz (çapraz epik; araştırma tabanlı)
+
+> **Araştırma (2026-05):** Devlet katkısı oranı **%20** (2026-01-01'den; önceki %30 — Resmî Gazete
+> 2026-01-07). Üst sınır = **yıllık brüt asgari ücretin %20'si** (2026 ≈ **79.272 ₺**; 2026 aylık brüt
+> asgari ücret 33.030 ₺ → yıllık 396.360 ₺ × %20). Hak ediş sistemde kalış süresine kademeli (3/6/10 yıl);
+> kesin yüzdeler kaynaklarda farklılık gösterdiğinden uygulamada **kaba durum** (hak edilmedi / kısmi / tam)
+> kullanılır. Emeklilik = 10 yıl + 56 yaş. **Oran ve eşikler mevzuata tabidir → lansman öncesi EGM/SPK ile
+> DOĞRULANMALI** (CLAUDE.md §2). Tek kaynak: `BesRules`. Kaynaklar: egm.org.tr, allianz.com.tr (SSS).
+
+| ID | Görev | Durum |
+|----|-------|-------|
+| T-BES.1 | `BesRules` + `BesCalculator` (devlet katkısı %20; hak ediş = sistemde kalış yılından kaba durum) — saf + birim testli (SC-20) | [x] |
+| T-BES.2 | Katkıda devlet katkısı **%20** (önceki sabit %30 düzeltildi); hak ediş `JoinedAtUtc`'den okuma anında türetilir | [x] |
+| T-BES.3 | `PUT /holdings/{id}/bes` — **başlangıç tarihi güncelle** → hak ediş yeniden türer (SC-21); web detayda "Düzenle" + **devlet katkısı açıklaması** (%20 + üst sınır) + hak ediş kademe notu + disclaimer | [x] |
+| T-BES.4 | Devlet katkısı **yıllık üst sınır** uygulaması (takvim-yılı bazlı katkı toplaması — model genişletmesi gerekir) | [ ] |
+| T-BES.5 | **Fon dağılımı senaryosu (eğitici projeksiyon):** kullanıcı varsayımları (aylık katkı, süre, varsayılan yıllık getiri / fon karması) → biriken tutar + devlet katkısı + kâr/zarar **illüstrasyonu**. **Tahmin/tavsiye DEĞİL** — açık "varsayımsal senaryo" çerçevesi + kalıcı disclaimer (CLAUDE.md §2: senaryo/farkındalık serbest; gelecek tahmini/yönlendirme yasak). Hesap KODDA (deterministik bileşik getiri), girdiler kullanıcıdan. | [ ] |
+| T-BES.6 | Aylık katkı **planı/takvimi** (düzenli ödeme girişi + projeksiyona besleme) | [ ] |
+
+---
+
 ## FAZ 3 — LLM Yorum Katmanı
 
 | ID | Görev | Bağımlılık | Doküman |

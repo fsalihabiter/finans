@@ -159,10 +159,15 @@ export interface UpdateHoldingInput {
   currentPrice: number | null;
 }
 
-/** POST /api/holdings/{id}/bes-contribution — BES'e aylık katkı (kendi + devlet %30 ops.). */
+/** POST /api/holdings/{id}/bes-contribution — BES'e aylık katkı (kendi + devlet %20 ops.). */
 export interface AddBesContributionInput {
   ownAmount: number;
   stateAmount?: number | null;
+}
+
+/** PUT /api/holdings/{id}/bes — BES sözleşme alanları (şimdilik başlangıç tarihi; hak edişi yeniden türetir). */
+export interface UpdateBesInput {
+  joinedAtUtc: string | null;
 }
 
 // ── Ayarlar (04 §4) ──────────────────────────────────────────────────────────

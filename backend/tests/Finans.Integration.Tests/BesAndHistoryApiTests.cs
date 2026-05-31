@@ -59,7 +59,7 @@ public sealed class BesAndHistoryApiTests : IClassFixture<SqliteWebApplicationFa
     [Fact]
     public async Task Bes_contribution_increases_own_state_and_cost()
     {
-        // Kendi katkı 1.000 → devlet %30 = 300. Yeni: own 121.000, state 28.854, maliyet 149.854.
+        // Kendi katkı 1.000 → devlet %20 = 200 (2026 oranı, BesRules). own 121.000, state 28.754, maliyet 149.754.
         var resp = await Client().PostAsJsonAsync(
             $"/api/holdings/{BesHolding}/bes-contribution",
             new AddBesContributionRequest(1000m), Json);
@@ -69,9 +69,50 @@ public sealed class BesAndHistoryApiTests : IClassFixture<SqliteWebApplicationFa
 
         dto!.Bes.Should().NotBeNull();
         dto.Bes!.OwnContribution.Should().Be(121000m);
-        dto.Bes.StateContribution.Should().Be(28854m); // 28.554 + 300
-        dto.AvgCost.Should().Be(149854m);              // kendi + devlet
-        dto.TotalCost.Should().Be(149854m);
+        dto.Bes.StateContribution.Should().Be(28754m); // 28.554 + 200 (%20)
+        dto.AvgCost.Should().Be(149754m);              // kendi + devlet
+        dto.TotalCost.Should().Be(149754m);
+    }
+
+    [Fact]
+    public async Task Update_bes_start_date_rederives_vesting()
+    {
+        // 12 yıl önce → tam hak ediş (Vested).
+        var resp = await Client().PutAsJsonAsync(
+            $"/api/holdings/{BesHolding}/bes",
+            new UpdateBesRequest(new DateTime(2014, 1, 1, 0, 0, 0, DateTimeKind.Utc)), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+        dto!.Bes!.JoinedAtUtc!.Value.Year.Should().Be(2014);
+        dto.Bes.VestingState.Should().Be(VestingState.Vested);
+
+        // ~1 yıl önce → henüz hak edilmedi (NotVested).
+        var recent = await Client().PutAsJsonAsync(
+            $"/api/holdings/{BesHolding}/bes",
+            new UpdateBesRequest(DateTime.UtcNow.AddYears(-1)), Json);
+        var dto2 = await recent.Content.ReadFromJsonAsync<HoldingDto>(Json);
+        dto2!.Bes!.VestingState.Should().Be(VestingState.NotVested);
+    }
+
+    [Fact]
+    public async Task Update_bes_future_date_is_400()
+    {
+        var resp = await Client().PutAsJsonAsync(
+            $"/api/holdings/{BesHolding}/bes",
+            new UpdateBesRequest(DateTime.UtcNow.AddYears(1)), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Update_bes_on_non_bes_is_400()
+    {
+        var resp = await Client().PutAsJsonAsync(
+            $"/api/holdings/{GoldHolding}/bes",
+            new UpdateBesRequest(DateTime.UtcNow.AddYears(-5)), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]

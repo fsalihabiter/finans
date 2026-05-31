@@ -107,3 +107,10 @@ public sealed record UpdateHoldingRequest(
 public sealed record AddBesContributionRequest(
     decimal OwnAmount,
     decimal? StateAmount = null);
+
+/// <summary>
+/// PUT /api/holdings/{id}/bes — BES sözleşme alanlarını günceller (T-BES). Şimdilik
+/// başlangıç tarihi (<paramref name="JoinedAtUtc"/>); değişince hak ediş yeniden türetilir.
+/// </summary>
+public sealed record UpdateBesRequest(
+    DateTime? JoinedAtUtc);

@@ -9,10 +9,16 @@
 **Faz 2 işlevsel DoD ✅ KARŞILANDI** (otomatik güncel değer + yenileme; ≥1 not tetiklenir; dış API çökünce
 çökme yok). Kalan: dağıtım/gözlem altyapısı.
 
-## Sıradaki (öncelik sırası) — Faz 2 altyapı
-1. **T2.8** — Gözlemlenebilirlik yığını (Compose'a Seq + Prometheus + Grafana; OTel metrik exporter →
-   `Finans.Cache` hit/miss + RED + bağımlılık; ilk dashboard/alarm)
-2. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS; güvenlik başlıkları)
+## Sıradaki (öncelik sırası)
+1. **T-BES.5** — BES **fon dağılımı eğitici projeksiyonu** (varsayımsal kâr/zarar senaryosu; tahmin/tavsiye
+   DEĞİL, disclaimer'lı) — kullanıcı talebi. Bkz. 08 T-BES epik.
+2. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
+3. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
+4. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6 (aylık katkı planı)
+
+> ✅ **T-BES.1-3 bitti** — araştırma + `BesRules`/`BesCalculator` (devlet katkısı **%20** 2026, hak ediş
+> `JoinedAtUtc`'den türetilir) + `PUT /holdings/{id}/bes` başlangıç tarihi + web devlet-katkısı açıklaması.
+> Oran/eşik **lansman öncesi EGM/SPK doğrulaması ŞART** (08 T-BES, 03 §A).
 
 > ✅ **T2.1→T2.6 bitti** — fiyat zinciri uçtan uca: sağlayıcılar (Frankfurter+Truncgil, anahtarsız) →
 > `PriceFetchService` (yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) → fallback (`stale`) →
@@ -35,7 +41,7 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **98** (Application 45 + Integration 53) · web **43** · shared **13** · eslint 0 hata · tsc/vite temiz
+- **Yeşil kapı:** backend **110** (Application 54 + Integration 56) · web **43** · shared **13** · eslint 0 hata · tsc/vite temiz
 
 ## Faz 2 tamamlananlar (özet)
 - **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan

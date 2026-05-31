@@ -22,7 +22,9 @@ namespace Finans.Integration.Tests.Pricing;
 /// </summary>
 public sealed class PriceFetchServiceTests : IAsyncLifetime
 {
-    private static readonly DateTimeOffset Now = new(2026, 5, 31, 10, 0, 0, TimeSpan.Zero);
+    // Seed "now" FxRate/snapshot'ları gerçek UtcNow ile yazıldığından, yazdığımız taze
+    // tırnaklar en güncel olsun diye sabit saati GELECEĞE alıyoruz (zaman-bağımsız test).
+    private static readonly DateTimeOffset Now = new(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     private FinansDbContext _db = null!;

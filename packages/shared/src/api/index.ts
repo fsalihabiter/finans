@@ -14,6 +14,7 @@ import type {
   PricesResponse,
   Settings,
   TransactionInput,
+  UpdateBesInput,
   UpdateHoldingInput,
   UpdateSettingsInput,
 } from "../types/index";
@@ -93,6 +94,8 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       send<Holding>("PUT", `/api/holdings/${id}`, input),
     addBesContribution: (id: string, input: AddBesContributionInput) =>
       send<Holding>("POST", `/api/holdings/${id}/bes-contribution`, input),
+    updateBes: (id: string, input: UpdateBesInput) =>
+      send<Holding>("PUT", `/api/holdings/${id}/bes`, input),
     deleteHolding: (id: string) => send<void>("DELETE", `/api/holdings/${id}`),
 
     // ── Canlı fiyat & eğitici notlar (Faz 2 — 04 §5) ──

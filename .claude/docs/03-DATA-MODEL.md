@@ -127,6 +127,14 @@ Kısıt: **`UNIQUE(UserId, AssetId)` (IsDeleted=false)**, `Quantity >= 0`,
 > **ayrı satır** gösterilir ama getiri tabanına dahildir. `Holdings.AvgCost`
 > BES için bu toplamı (notional 1 "pay" üzerinden) yansıtır.
 
+> **Devlet katkısı & hak ediş kuralı (T-BES, araştırma tabanlı — tek kaynak `BesRules`):**
+> Devlet katkısı = kendi katkının **%20'si** (2026-01-01'den; önceki %30 — RG 2026-01-07). Üst sınır =
+> yıllık brüt asgari ücretin %20'si (2026 ≈ 79.272 ₺; **yıllık üst sınır uygulaması T-BES.4'te**).
+> **VestingState artık türetilir** (saklanan değere güvenilmez): `BesCalculator.VestingStateFor(JoinedAtUtc)` —
+> &lt;3 yıl `NotVested` · 3–10 yıl `PartiallyVested` · ≥10 yıl `Vested` (emeklilik 10 yıl + 56 yaş; yaş verisi
+> yok → 10 yıl proxy'si). Kesin hak ediş yüzdeleri kaynaklarda farklı → yalnız kaba durum gösterilir.
+> ⚠️ **Oran/eşikler mevzuata tabidir; lansman öncesi EGM/SPK doğrulaması ŞART** (CLAUDE.md §2).
+
 ### `PriceSnapshots` — fiyat geçmişi (reel getiri & senaryo)
 | Kolon | Tip | Null | Not |
 |-------|-----|------|-----|
