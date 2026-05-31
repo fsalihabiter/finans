@@ -1720,71 +1720,56 @@ body.drawer-lock {
   border-radius: 6px;
 }
 
-/* ───── Canlı fiyat kayan-yazısı (ticker) + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
-.ticker {
-  overflow: hidden;
-  border: 1px solid var(--line, #322b22);
-  border-radius: 100px;
-  background: var(--panel-2, #241f18);
-}
-.ticker-track {
-  display: flex;
-  width: max-content;
-  animation: ticker-scroll 32s linear infinite;
-}
-.ticker:hover .ticker-track {
-  animation-play-state: paused;
-}
-.ticker-seq {
+/* ───── Canlı fiyat şeridi (statik) + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
+.price-bar {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 9px 18px;
-  white-space: nowrap;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  border: 1px solid var(--line, #322b22);
+  border-radius: 14px;
+  background: var(--panel-2, #241f18);
+  padding: 8px 8px 8px 4px;
 }
-.tk-item {
+.pb-items {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.pb-item {
   display: inline-flex;
   align-items: baseline;
   gap: 7px;
-  font-size: 12.5px;
+  font-size: 13px;
+  padding: 2px 16px;
 }
-.tk-ic {
+/* Sütunları ince dikey çizgiyle ayır (ilk hariç). */
+.pb-item + .pb-item {
+  border-left: 1px solid var(--line, #322b22);
+}
+.pb-ic {
   font-size: 13px;
 }
-.tk-k {
+.pb-k {
   color: var(--muted, #a89c89);
 }
-.tk-item b {
+.pb-item b {
   color: var(--text, #f3ede2);
   font-variant-numeric: tabular-nums;
 }
-.tk-item.stale b {
+.pb-item.stale b {
   color: var(--gold, #e0b255);
 }
-.tk-stale {
+.pb-stale {
   color: var(--gold, #e0b255);
   font-size: 11px;
 }
-.tk-src {
+.pb-src {
   color: var(--muted, #a89c89);
   font-size: 11px;
-  opacity: 0.75;
-}
-@keyframes ticker-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track {
-    animation: none;
-  }
-  .ticker {
-    overflow-x: auto;
-  }
+  opacity: 0.8;
+  padding-right: 8px;
 }
 
 .nudge-list {
