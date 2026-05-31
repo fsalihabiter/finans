@@ -30,7 +30,7 @@ export function BesContributionHistory({
         <thead>
           <tr>
             <th scope="col">Tarih</th>
-            <th scope="col" className="num">Kendi</th>
+            <th scope="col" className="num">Katkı Payı</th>
             <th scope="col" className="num">Devlet</th>
             <th scope="col" className="num">İşlem</th>
           </tr>
