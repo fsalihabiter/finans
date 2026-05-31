@@ -30,27 +30,47 @@ public sealed record HoldingDto(
     IReadOnlyList<TransactionDto>? Transactions = null);
 
 /// <summary>
-/// BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1, 03 §A).
-/// BES nominal hesaptır: maliyet = kendi + devlet katkısı; "alış/satış" modeline
-/// uymaz, aylık katkı ile büyür (JoinedAtUtc = sözleşme başlangıcı).
+/// BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1, 03 §A). Tüm toplamlar
+/// katkı satırlarından <b>tarihe göre türetilir</b> (T-BES.8): yalnız <b>yatırılmış</b> katkılar
+/// (<see cref="OwnContribution"/>/<see cref="StateContribution"/>) maliyet/getiri tabanına girer;
+/// henüz yatmamışlar (<see cref="OwnPending"/>/<see cref="StatePending"/>) ayrı gösterilir, toplama
+/// dahil edilmez. Devlet katkısı, kendi katkı ayını izleyen ayın sonunda yatmış sayılır.
 /// </summary>
 public sealed record BesDto(
+    /// <summary>Yatırılmış kendi katkı toplamı (maliyet tabanı).</summary>
     decimal OwnContribution,
+    /// <summary>Yatırılmış devlet katkısı toplamı.</summary>
     decimal StateContribution,
+    /// <summary>Henüz yatmamış (ödeme tarihi gelecekte) kendi katkı toplamı.</summary>
+    decimal OwnPending,
+    /// <summary>Henüz yatmamış devlet katkısı toplamı (kendi katkı ödendi ama devlet yatma tarihi gelmedi + gelecek).</summary>
+    decimal StatePending,
     VestingState VestingState,
+    /// <summary>Kademeli hak ediş oranı (0/0.15/0.35/0.60/1.00).</summary>
+    decimal VestedRate,
+    /// <summary>Hak kazanılan tutar ≈ VestedRate × yatırılmış devlet katkısı (yaklaşık; disclaimer'lı).</summary>
+    decimal VestedAmount,
     DateTime? JoinedAtUtc,
+    int? BirthYear,
+    string? ProviderName,
     IReadOnlyList<BesContributionDto> Contributions,
     bool ContributionDue,
     bool PlanActive,
-    decimal? MonthlyAmount);
+    decimal? MonthlyAmount,
+    int? ContributionDay);
 
-/// <summary>Tek bir BES katkı ödemesi kaydı (T-BES.6). Source: "Manual" | "Plan".</summary>
+/// <summary>
+/// Tek bir BES katkı ödemesi kaydı (T-BES.6). Source: "Opening" | "Manual" | "Plan".
+/// <see cref="Status"/> ve <see cref="StateDepositDate"/> tarihten türetilir (saklanmaz).
+/// </summary>
 public sealed record BesContributionDto(
     Guid Id,
     decimal OwnAmount,
     decimal StateAmount,
     DateTime PaidAtUtc,
-    string Source);
+    string Source,
+    BesContributionStatus Status,
+    DateTime StateDepositDate);
 
 /// <summary>Bir pozisyonun geçmiş işlemi (detayda gösterilir, 04 §4).</summary>
 public sealed record TransactionDto(
@@ -125,17 +145,44 @@ public sealed record AddBesContributionRequest(
     bool Recurring = false);
 
 /// <summary>
-/// PUT /api/holdings/{id}/bes — BES sözleşme alanlarını günceller (T-BES). Şimdilik
-/// başlangıç tarihi (<paramref name="JoinedAtUtc"/>); değişince hak ediş yeniden türetilir.
+/// POST /api/holdings/bes — yeni BES pozisyonu kurar (T-BES.8). Mevcut hesabı yansıtmak için
+/// <b>açılış bakiyesi</b> alır: güncel fon değeri + bugüne dek birikmiş kendi/devlet katkı toplamı
+/// (tek "Opening" katkı kaydı olarak yazılır — geçmiş tek tek girilmez). Düzenli plan opsiyoneldir.
+/// </summary>
+public sealed record CreateBesRequest(
+    string Name,
+    string? ProviderName,
+    CurrencyCode Currency,
+    DateTime JoinedAtUtc,
+    int? BirthYear,
+    /// <summary>Güncel toplam fon değeri (birikimin piyasa değeri).</summary>
+    decimal CurrentFundValue,
+    /// <summary>Bugüne dek ödenmiş toplam kendi katkı (açılış maliyeti).</summary>
+    decimal OpeningOwn,
+    /// <summary>Bugüne dek yatmış toplam devlet katkısı.</summary>
+    decimal OpeningState,
+    decimal? MonthlyAmount = null,
+    int? ContributionDay = null);
+
+/// <summary>
+/// PUT /api/holdings/{id}/bes — BES sözleşme/plan alanlarını günceller (T-BES). Tüm alanlar
+/// opsiyonel (patch): verilen alan güncellenir. Başlangıç/doğum yılı değişince hak ediş yeniden
+/// türetilir. <paramref name="ContributionDay"/> = "ödeme günü" düzenlemesi.
 /// </summary>
 public sealed record UpdateBesRequest(
-    DateTime? JoinedAtUtc);
+    DateTime? JoinedAtUtc = null,
+    string? ProviderName = null,
+    int? BirthYear = null,
+    decimal? MonthlyAmount = null,
+    int? ContributionDay = null,
+    bool? PlanActive = null);
 
 /// <summary>
 /// POST /api/holdings/{id}/bes/contributions — düzenli katkıyı tarih aralığından üretir (T-BES.6):
 /// [<paramref name="FromUtc"/>, <paramref name="ToUtc"/>] aralığında her ay <paramref name="Day"/>
 /// gününde <paramref name="MonthlyAmount"/> tutarlı kayıt. Zaten kaydı olan ay atlanır (idempotent);
-/// gelecek ay üretilmez. Devlet katkısı her ayın tarihindeki orana göre (geriye dönük değil).
+/// ileri tarihli aralık serbest — istenen aylar (gelecek dahil) üretilir (ileriye dönük plan).
+/// Devlet katkısı her ayın tarihindeki orana göre (geriye dönük değil).
 /// </summary>
 public sealed record GenerateBesContributionsRequest(
     decimal MonthlyAmount,

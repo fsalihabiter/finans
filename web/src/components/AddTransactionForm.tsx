@@ -103,7 +103,7 @@ export function AddTransactionForm({
         )}
         <label>
           {cash ? "Tarih" : "İşlem tarihi"}
-          <DateField value={date} onChange={setDate} max={today} required ariaLabel="İşlem tarihi" />
+          <DateField value={date} onChange={setDate} required ariaLabel="İşlem tarihi" />
         </label>
         <button type="submit" disabled={!valid || add.isPending}>
           {add.isPending ? (cash ? "Kaydediliyor…" : "Ekleniyor…") : cash ? "Kaydet" : "Ekle"}

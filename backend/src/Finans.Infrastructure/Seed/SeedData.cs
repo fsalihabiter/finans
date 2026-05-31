@@ -133,6 +133,19 @@ public static class SeedData
             VestingState = VestingState.PartiallyVested,
             ProviderName = "Örnek BES",
             JoinedAtUtc = purchase,
+            BirthYear = 1985,
+        });
+        // Açılış bakiyesi (T-BES.8): toplamlar artık katkı satırlarından türetilir; tek "Opening" kaydı
+        // birikmiş kendi/devlet katkıyı taşır. 2024 tarihli → yatırılmış sayılır (own 120.000, devlet 28.554).
+        db.BesContributions.Add(new BesContribution
+        {
+            Id = Id("bes-opening"),
+            HoldingId = besHolding.Id,
+            OwnAmount = 120000.000000m,
+            StateAmount = 28554.000000m,
+            PaidAtUtc = purchase,
+            Source = "Opening",
+            CreatedAtUtc = now,
         });
 
         await db.SaveChangesAsync(ct);

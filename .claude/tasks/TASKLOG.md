@@ -20,6 +20,223 @@
 
 ---
 
+## 2026-06-01 · BES TR-saat dilimi + Plan-source dedup (manuel girişler planı engellemez)
+- **Görev(ler):** ad-hoc — kullanıcı geri bildirimi: (a) "1 Haziran katkı payı ödemesi gerçekleşmedi, bugün
+  01.06 oldu ama devlet bekliyor durumuna gelmedi", (b) "Düzenli plan dışında manuel giriş ayda birden çok
+  defa olabilir; manuel girişler planı engellememeli, plan yalnız ay başına 1 kayıt."
+- **Tanı (iki ayrı kök):**
+  1. **Saat dilimi:** Tüm BES tarih karşılaştırmaları `DateTime.UtcNow` ile yapıyordu. TR UTC+3 (DST yok);
+     kullanıcı yerel saatte 01.06 olsa bile UTC hâlâ 31.05 olabilir. Sonuç: catch-up gün geçişinde
+     tetiklenmiyor, ayrıca `paidAt=2026-06-01T00:00:00Z` olan kayıt `paidAt.Date > UtcNow.Date` çıkıp
+     **Future** statüsünde kalıyordu (devlet bekliyor görünmüyordu).
+  2. **Dedup birleşik:** `CatchUpBesPlanAsync` ve `GenerateBesContributionsAsync` "bu ayın herhangi bir kaydı"
+     varsa o ayı atlıyordu. Manuel giriş varsa Plan tetiklenmiyordu — kullanıcının zihin modeli ile uyumsuz.
+- **Ne yapıldı (saf hesap + servis):**
+  1. **`HoldingService.TrNow()`** helper (UTC+3 sabit, TR'de DST yok). Kullanım: `ApplyReadPosition` BES
+     dalı (`paidAt.Date ≤ today`), `ToBesDto` (durum/vesting/contributionDue için `asOf`).
+  2. **`ToBesDto(... DateTime asOf)`** — parametre adı `nowUtc`→`asOf` (yanıltıcı Utc suffix kaldırıldı;
+     çağıran timezone seçer). `BuildHoldingDtosAsync` artık `TrNow()` geçirir.
+  3. **Plan-source dedup (kullanıcı kararı):** `IsPlanSource(source)` helper. `CatchUpBesPlanAsync`:
+     `lastPlanPaid` ve `coveredPlanMonths` artık yalnız `Source=="Plan"` satırları sayar — manuel/Opening
+     girişler engellemez. `GenerateBesContributionsAsync`: aynı şekilde `coveredPlanMonths` Plan-only.
+  4. **CatchUp `from` heuristiği:** lastPlanPaid yoksa "bu aydan" başla (geçmiş aylar için plan satırı
+     **geriye dönük üretilmez** — kullanıcının manuel geçmişiyle çakışıp düzinelerce sahte plan kaydı
+     oluşmasın). Backfill için "Düzenli katkı/geçmiş" formu hâlâ kullanılabilir (zaten Plan-source ile).
+  5. **CatchUp `now`** artık `TrNow()` — TR'de 01.06 00:00 geçince catch-up devreye girer.
+- **Davranış değişimi (kullanıcı senaryosu):**
+  - Bugün TR 01.06, plan günü=1, plan aktif → catch-up otomatik Plan-source 01.06 satırı ekler (manuel
+    girişler engel değil); statü doğrudan **StatePending** (devlet bekliyor). Sayfayı açtığında görür.
+  - Aynı ay birden çok manuel katkı → serbest (tek-ekleme formunda zaten dedup yok), plan ayrı serisini
+    yürütür. Manuel + Plan satırları yan yana sıralanır.
+- **Dokunulan dosyalar:** backend `Finans.Infrastructure/Services/HoldingService.cs` (TrNow + IsPlanSource +
+  ApplyReadPosition TR-date + ToBesDto rename + Generate Plan-only dedup + CatchUp Plan-only dedup + TR-now).
+- **Test:** backend **Application.Tests 72/72** · Infrastructure derlendi (0 hata) · web **52/52** + build temiz.
+  ⚠ Integration koşumu VS Api DLL kilidi (PID 20864) nedeniyle bekliyor. Mevcut integration testleri davranışla
+  uyumlu (paidAt günü Generate testinde 2025/9-11 → durum Deposited; UTC↔TR farkı ~3 saat status sonucunu
+  bozmaz).
+- **Karar/Not:** TR sabit UTC+3 (Europe/Istanbul, DST 2016'dan beri kaldırıldı) → AddHours(3) güvenli;
+  Multi-tz kullanıcı geldiğinde `IBesTimezone` servisine taşınabilir. Plan-source dedup, catch-up'ın
+  "her ay TAM bir Plan satırı" prensibini korur — manuel girişler özgürce eklenebilir.
+- **Durum:** kod tam · web tam yeşil · backend birim yeşil. Integration koşumu VS'ye bağlı.
+- **Sıradaki:** Commit + push (kullanıcı isteği) → sonra T-BES.5.
+
+## 2026-05-31 · Düzenli BES katkı planı: "0 kayıt eklendi" hayalet fix + önizleme
+- **Görev(ler):** ad-hoc — kullanıcı geri bildirimi: "Düzenli katkı/geçmiş ile geçmiş tarihli katkı ekliyorum
+  ama hiçbir şey kaydedilmiyor."
+- **Tanı:** `BesContributionPlanner.MonthlyDates` filtresi çok katıydı: `payDate ∈ [from, to]`. Form metni
+  "aralıktaki her ay" diyordu ama mantık sadece günü aralık içinde KALAN ayları üretiyordu. Örn. `from=01.05,
+  to=01.06, day=15` → Mayıs(15.05) dahil ama Haziran(15.06>01.06) düşüyordu. `from=20.04, to=10.05, day=15`
+  → her iki ay da düşüyor → **0 kayıt** üretiliyordu. Backend "başarılı" dönüyor, kullanıcıya hiçbir feedback
+  yok → kullanıcı "kayıt etmiyor" diye yaşıyor.
+- **Ne yapıldı:**
+  1. **Planner fix (saf hesap):** `MonthlyDates` artık `[from.month, to.month]` aralığındaki **her aya** ödeme
+     üretir; gün 1–28'e clamp. Eski "day-in-range" filtresi kaldırıldı. Form metniyle ("aralıktaki her ay")
+     tutarlı. İlgili unit test güncellendi (`Excludes_endpoints_outside_range` → `Includes_every_month_in_range`).
+  2. **Form önizlemesi (UX):** `BesContributionPlanForm` artık gönder ÖNCESİ "Aralıkta <b>N</b> ay · <b>K</b>
+     yeni kayıt eklenecek · <b>M</b> ay zaten kayıtlı (atlanacak)" satırı gösterir (mint/yeşil; willAdd=0 ise
+     coral/sarı uyarı + buton **disabled** + "Tarih aralığını değiştir" ipucu). Frontend hesabı = backend
+     planner ile birebir (her ay, idempotent ay bazlı dedup).
+  3. **Form düzeni:** Submit butonu `.tx-row` dışına çıktı → tam-genişlik gold buton; preview tam görünür.
+     CSS: `.tx-form > button[type="submit"]` (yeni stil + disabled) + `.tx-form .preview` (mint kutu) +
+     `.tx-form .preview.warn` (coral, willAdd=0).
+  4. **Toast geri bildirimi:** Başarılı submit'te `onBesPlanDone(addedCount)` — count > 0 ise "<b>N</b> katkı
+     kaydı oluşturuldu" (success); 0 ise "Seçtiğin ayların hepsi zaten kayıtlıydı — yeni kayıt eklenmedi"
+     (info). Kullanıcı sessiz başarısızlık yaşamaz.
+  5. **Prop sözleşmesi:** `BesContributionPlanForm` artık `existingContributions: BesContribution[]` alır
+     (önizleme için); HoldingDetailPage `h.bes.contributions` geçer.
+- **Dokunulan dosyalar:** backend `Finans.Application/Portfolio/BesContributionPlanner.cs`; test
+  `BesContributionPlannerTests.cs` (Excludes → Includes); web `components/BesContributionPlanForm.tsx`
+  (preview + prop + outside submit); `routes/HoldingDetailPage.tsx` (existingContributions geç + onBesPlanDone
+  count parametresi); `App.css` (.tx-form > submit + .preview/.warn).
+- **Test:** backend **Application.Tests 72/72** (planner unit testleri yeşil) · Infrastructure derlendi (0 hata)
+  · web **52/52** + build temiz. ⚠ Integration koşumu VS Api DLL kilidi (yeni PID 20864) nedeniyle bekliyor;
+  Generate integration testi (3 kayıt, 2025/09-11) yeni davranışla da geçer (aralık 3 ay → 3 kayıt; eski
+  filtre ile de aynıydı çünkü gün ortada).
+- **Karar/Not:** Davranış değişikliği geri uyumlu değil ama gerçek kullanım yalnız iyileşir (önceden silent
+  drop olan uç-aylar artık üretilir, idempotent dedup zaten ay bazlı). Önizleme sayesinde kullanıcı tek
+  bakışta kaç kaydın oluşturulacağını görür.
+- **Durum:** kod tam · web tam yeşil · backend birim yeşil · Integration koşumu VS'ye bağlı.
+- **Sıradaki:** VS Api kilidi bırakılınca `dotnet test backend/Finans.slnx`; sonra T-BES.5.
+
+## 2026-05-31 · BES UX turu (kullanıcı geri bildirimi 4 madde)
+- **Görev(ler):** ad-hoc — kullanıcı feedback'i: (1) listede sağdaki "…" truncation kalksın, (2) "Durum" kolonu
+  gereksiz (lejant açıklıyor) kaldır, (3) "Kendi katkın" → **"Katkı Payı"**, (4) "Bekleyen" devlet katkısı =
+  geçmiş listesindeki "Gelecek Ödeme" satırının devlet değeri (eşleşsin), (5) modal form alanları pencere
+  genişliğine yayılsın.
+- **Ne yapıldı:**
+  1. **`BesContributionHistory.tsx`** — Durum kolonu kaldırıldı (Tarih/Katkı Payı/Devlet/İşlem 4 sütun).
+     Renk durumu zaten sol şerit (`.hist-deposited/.hist-pending/.hist-future`) + lejant ile gösteriliyor.
+  2. **`App.css `.holdings-table.fit`** — `text-overflow: ellipsis` kaldırıldı (üç-nokta YOK; değerler tam
+     görünür). `white-space: nowrap` korundu (tek satır).
+  3. **`App.css `.tx-row input/select` + `.add-form input/select`** — `width: 100%; box-sizing: border-box`
+     eklendi. Etiket flex-column içinde input artık hücreyi tam doldurur → modal genişliğine yayılır.
+  4. **`HoldingService.ToBesDto`** — `statePending` artık **yalnız Future** satırların state'ini toplar
+     (önceki: Future + StatePending). Geçmiş listesindeki "Gelecek Ödeme" satırının devlet değeri ile birebir
+     eşleşir. StatePending satır (own ödendi, devlet henüz yatmadı) **"yolda"**: tabloda görünür, hiçbir toplama
+     girmez. Test güncellendi (`Bes_contribution_increases_own_state_and_cost`: bugün eklenen katkı StatePending
+     → statePending=0).
+  5. **"Kendi katkın" → "Katkı Payı"** (tutarlı, BES standart terminolojisi): `BesContributionForm` ("Katkı Payı
+     (TRY)"), `AddHoldingDialog` ("Birikmiş katkı payın"), `HoldingDetailPage` ("Yatırılan Katkı Payı" + alt
+     açıklama metinleri). İlgili testler güncel.
+- **Dokunulan dosyalar:** web `components/BesContributionHistory(.test).tsx`, `BesContributionForm(.test).tsx`,
+  `AddHoldingDialog(.test).tsx`, `routes/HoldingDetailPage.tsx`, `App.css`. backend `Finans.Infrastructure/Services/
+  HoldingService.cs` (ToBesDto switch); test `BesAndHistoryApiTests.cs` (StatePending=0 + comment).
+- **Test:** web **52/52** + build temiz · backend **Application.Tests 72/72** · Infrastructure derlendi (0 hata).
+  ⚠ Integration test koşumu VS Api DLL kilidi nedeniyle bekliyor (kod hatası yok — Infrastructure compile
+  yeşil ve mantık değişikliği basit toplam değişimi).
+- **Karar/Not:** StatePending satırının state'i hiçbir toplama girmez ("yolda" — Yatırılan ve Bekleyen arasında
+  geçiş halinde). Bu, ownPending ile statePending'i simetrik (her ikisi de Future-only) tutar; kullanıcının
+  beklediği "geçmiş listesindeki Gelecek Ödeme satırının devlet miktarı ile Bekleyen toplamının eşit olması"
+  ilkesini sağlar. Toplam sum (Yatırılan + Bekleyen) tablo toplamından StatePending state kadar az olabilir;
+  kabul edilebilir — kullanıcı satırı tabloda görür.
+- **Durum:** kod tam · web tam yeşil · backend birim yeşil · Integration koşumu VS'ye bağlı.
+- **Sıradaki:** VS Api kilidi bırakılınca `dotnet test backend/Finans.slnx` + migration uygulaması; sonra T-BES.5.
+
+## 2026-05-31 · T-BES.9 kapanış — tüm testler yeşil (134 backend + 52 web)
+- **Görev(ler):** T-BES.9 finalize (önceki turdan kalan): migration uygulama + integration test koşumu + 4 küçük fix.
+- **Ne yapıldı (kapanış):**
+  1. **Migration generated:** `dotnet ef migrations add AddBesBirthYear` — `BesDetails.BirthYear int?` AddColumn
+     üretildi (önceki turdaki dosya boş stub'tı; sildim, yeniden oluşturdum, snapshot güncel). EF
+     `PendingModelChangesWarning` artık atılmıyor — health/correlation testleri startup'ta çökmüyor.
+  2. **`createBes` shared client eklendi** (önceki turda import eklenmişti ama fonksiyon body unutulmuş).
+  3. **ApplyReadPosition fix:** İşlem yoksa saklanan değerleri SİLMEZ (Nakit gibi alış/satış işlemi olmayan
+     pozisyonlar 0'a düşmesin). Önceki tur regression'ı (gold weight 0.310→0.312); doğru fix uygulandı.
+  4. **Test fixture izolasyonu:** `BesContributionPlanApiTests.Generate_creates_monthly_records` — sınıf
+     fixture'ı paylaşımlı (`IClassFixture<Sqlite…>`); önceki `Generate_allows_future_range` testi 2099 Plan
+     kayıtları bırakıyordu → planRows count testin tarih aralığına filtrelendi (2025/9-11).
+  5. **Web test fixture düzeltmeleri:** `BesContributionHistory.test.tsx` — tarih biçimi (gg.aa.yyyy) +
+     lejant-tbody ayrımı (`within(tbody)` kapsama).
+- **Test (final, hepsi YEŞİL):**
+  - backend **Application.Tests 72** (+12 yeni: StateDepositDateFor / ContributionStatusFor / VestedRateFor / AgeFor)
+  - backend **Integration.Tests 62** (BES create/edit/plan + ileri-tarih + statü; SqliteWebApplicationFactory)
+  - web **52** (vitest); `npm run build` (tsc+vite) temiz; eslint 0
+  - backend `Api.csproj` derleme: 0 hata, 0 uyarı
+- **Dokunulan dosyalar (kapanış):** `packages/shared/src/api/index.ts` (+createBes); `web/src/components/BesContributionHistory.test.tsx`
+  (fixture + within); `backend/src/Finans.Infrastructure/Services/HoldingService.cs` (ApplyReadPosition no-tx korur);
+  `backend/src/Finans.Infrastructure/Persistence/Migrations/20260531213800_AddBesBirthYear.{cs,Designer.cs}` (yeni);
+  `backend/src/Finans.Infrastructure/Persistence/Migrations/FinansDbContextModelSnapshot.cs` (BirthYear); `backend/tests/Finans.Integration.Tests/BesContributionPlanApiTests.cs` (filtre).
+- **Karar/Not:** Migration **henüz canlı Postgres'e uygulanmadı** — VS'de `Update-Database` veya CLI'da User
+  Secrets parolasıyla `dotnet ef database update` gerek (additive, nullable; güvenli). T-BES.9 kod açısından
+  TAMAM, yalnız migration uygulaması bekliyor.
+- **Durum:** kod tam · tüm test paketleri yeşil · migration canlı Postgres'e uygulama bekliyor (VS).
+- **Sıradaki:** Migration uygula; sonra T-BES.5 (fon dağılımı eğitici projeksiyonu).
+
+## 2026-05-31 · Ort. maliyet: okuma anında kaynaktan türet (anti-stale) + geçmiş listesi sol yüksekliğe uyar
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: altın+BES ort. maliyet yanlış; geçmiş listeleri sol içerik
+  yüksekliğine uysun)
+- **Tanı:** Ort. maliyet zaten **dinamik** türetiliyordu AMA okuma yolu saklanan `Holding.AvgCost` cache
+  alanını gösteriyordu (`BuildHoldingDtos` satır 436 `h.AvgCost`). Bu alan yalnız **yazma** işlemlerinde
+  güncelleniyor (`ApplyDerivedPosition`/`ApplyBesTotals`); commit 2c4f3d7 (BES own-only) öncesi yazılmış
+  kayıtlarda eski own+state kalmış → ekranda BES 350.573 (−%20,3) görünüyordu, doğrusu own-only 277.060 (+%0,8).
+  Altın zaten doğruydu (6.068,69) çünkü işlemleri sonradan değişmemiş.
+- **Ne yapıldı:**
+  1. **Anti-stale FIX (backend):** `BuildHoldingDtosAsync` artık `Transactions`'ı da Include ediyor ve her
+     holding için yeni **`ApplyReadPosition`** çağırıyor — okuma anında pozisyonu KAYNAKTAN yeniden türetir:
+     BES → `AvgCost = OwnContribution` (cepten ödenen kendi katkı), diğer → `DerivePosition` ile işlemlerden
+     ağırlıklı ort. + miktar. **Salt okunur** (SaveChanges yok); saklanan cache sürüklenmiş olsa bile gösterim
+     daima doğru ve kendi içinde tutarlı (totalCost = avgCost×qty). Böylece backend restart'a gerek kalmadan
+     mevcut DB kayıtları da düzelir.
+  2. **Geçmiş listesi yüksekliği (CSS):** `.detail-grid` `align-items: start`→**`stretch`** (sağ sütun sol
+     yüksekliğe uzar); `.detail-col` +`min-height:0`; **`.detail-col > .card`** `flex:1; column; min-height:0`
+     (kart sütunu doldurur); `.history-scroll` `max-height:320px`→**`flex:1; min-height:0`** (sol yüksekliği
+     doldurur; içerik fazlaysa İÇERİDE dikey kayar, yatay yok); mobil (≤860px) `.history-scroll max-height:60vh`.
+     İşlem + Katkı geçmişine ortak uygulanır.
+- **Dokunulan dosyalar:** backend `Finans.Infrastructure/Services/HoldingService.cs` (Include Transactions +
+  `ApplyReadPosition` + döngü). web `src/App.css` (`.detail-grid`, `.detail-col`, `.detail-col>.card`,
+  `.history-scroll`, mobil media).
+- **Test:** web **49** geçti · `npm run build` temiz · backend Application.Tests **59** + Infrastructure derlendi
+  (0 hata; 2 pre-existing IPAddress warn, alakasız). ⚠ Integration testleri VS Api DLL kilidi yüzünden bu turda
+  koşulamadı (kod sorunu değil).
+- **Karar/Not:** Okuma yolu artık cache'e güvenmiyor — kaynak (işlem/katkı) tek doğruluk kaynağı (§6, CLAUDE.md
+  §3.1 deterministik hesap). Bu, yazıdaki cache drift sınıfını kökten çözer (yalnız bu vaka değil). Yazma yolu
+  hâlâ cache'i günceller (dashboard/summary hızlı okuma) — tutarlı. **TODO (öneri):** eski `Holding.AvgCost`
+  cache alanı tamamen kaldırılabilir mi diye değerlendir (ayrı görev; PortfolioCalculationService.CalculateHoldings
+  imzası buna bağlı).
+- **Durum:** tamam (web + Application/Infrastructure derleme/test yeşil); integration testleri VS kilidi bırakılınca
+- **Sıradaki:** VS Api durdurulunca `dotnet test backend/Finans.slnx`; sonra T-BES.5
+
+## 2026-05-31 · Tarih girişi — native date input + ileri tarih serbest + klavye/Tab/takvim UX
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: ileri tarihli katkı engellenmesin; tarih autocomplete/takvim +
+  ↑↓ artır-azalt + ←→ segment geçişi; Tab ile alanlar arası geçiş çalışsın)
+- **Ne yapıldı:**
+  1. **`DateField` → native `<input type="date">`** (özel maskeli metin alanı kaldırıldı). Tarayıcı tek başına:
+     takvim açılır (autocomplete), ↑/↓ gün-ay-yıl artır-azalt, ←/→ segment geçişi, **Tab** ile gezinme. Değer
+     sözleşmesi aynı (ISO `YYYY-MM-DD`). `min` prop'u eklendi. `src/lib/dateMask.ts` silindi (artık gereksiz).
+  2. **İleri tarih serbest:** Tüm katkı/işlem DateField'larında `max={today}` kaldırıldı (yalnız BES **başlangıç
+     tarihi**/joined date'te kaldı — sözleşme geçmişte başlar). Backend'de `must_not_be_future` kontrolleri
+     kaldırıldı: `AddBesContribution`, `UpdateBesContribution`, `GenerateBesContributions` (artık istenen aralık
+     aynen üretilir, gelecek aylar dahil). Plan formu metni güncellendi (ileriye dönük plan).
+  3. **Tema:** native date input için `input.date-input { color-scheme: dark }` + takvim ikonu altın tonu (filter);
+     koyu temaya ve mevcut input stiline (`.tx-row input`) tam uyumlu. Tab geçişi native input'larla otomatik düzeldi.
+- **Dokunulan dosyalar:** web `components/DateField.tsx` (yeniden yazıldı), `DateField.test.tsx` (native testler),
+  `AddTransactionForm.tsx`, `BesContributionForm(.test).tsx`, `BesContributionPlanForm.tsx`, `routes/HoldingDetailPage.tsx`,
+  `App.css` (date-input teması); `lib/dateMask.ts` (silindi). backend `Finans.Infrastructure/Services/HoldingService.cs`
+  (3 future-check kaldırıldı), `Finans.Application/Portfolio/PortfolioDtos.cs` (doc). testler `BesContributionPlanApiTests.cs`
+  (+Generate_allows_future_range), `BesContributionEditApiTests.cs` (+Add_and_edit_allow_future_paid_date)
+- **Test:** web **49** geçti · `npm run build` temiz · backend Domain/Application/Infrastructure + Application.Tests
+  **derlendi (0 hata)**. ⚠ Integration testleri VS Api'yi (PID kilidi) bıraktıktan sonra çalıştırılacak (DLL kopyalama
+  kilidi; kodum değil). Yeni 2 integration testi yazıldı (ileri-tarih serbest doğrular)
+- **Karar/Not:** Native `<input type=date>` seçildi (kullanıcı onayı) — takvim/ok-tuş/segment/Tab davranışı native,
+  bug riski en düşük; "önceki gibi autocomplete" buydu. Gösterim biçimi tarayıcı diline bağlı (TR→gg.aa.yyyy);
+  salt-gösterim tarihleri yine `formatDate` ile garanti gg.aa.yyyy (NFR-7). BES joined-date'te ileri tarih hâlâ
+  yasak (sözleşme geçmişte başlar). İleri tarihli katkıda devlet katkısı oranı ödeme tarihine göre (≥2026 → %20).
+- **Durum:** kod tamam; backend integration test çalıştırma VS'ye bağlı (bekliyor)
+- **Sıradaki:** VS Api durdurulunca `dotnet test backend/Finans.slnx`; sonra T-BES.5
+
+## 2026-05-31 · UX fix — İşlem ekle modalı: scroll/kırpma yerine alana sığan ızgara
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: modal scroll/kırpma kabul edilemez, temaya uygun olmalı)
+- **Ne yapıldı:** "İşlem ekle" modalında 3 alan (Miktar/Birim fiyat/İşlem tarihi) + buton dar modala yatay
+  zorlanıp tarih alanı kırpılıyor ve scroll çıkıyordu. `.tx-row` grid `1fr 1fr auto` → **`repeat(auto-fit,
+  minmax(150px, 1fr))`**; gönder butonu `grid-column: 1 / -1` ile kendi satırında tam genişlik. Modal
+  `max-width` 480→**540px**. Geniş alanda 3 alan yan yana sığar, dar/mobilde alt alta iner — hiçbir
+  koşulda yatay scroll/kırpma yok. Tarih alanı zaten `.tx-row input` temasını alıyor (tutarlı).
+- **Dokunulan dosyalar:** web `src/App.css` (`.modal` max-width, `.tx-row` grid + submit full-width)
+- **Test:** web **51** geçti · `npm run build` (tsc/vite) temiz
+- **Karar/Not:** İlke — geliştirmelerde scroll'a kaçmadan alana sığan/uyarlanan, temaya uygun layout
+  varsayılan olsun (kullanıcı geri bildirimi, kalıcı kural; bellekte de saklandı)
+- **Durum:** tamam
+- **Sıradaki:** T-BES.5 (fon dağılımı eğitici projeksiyonu) — değişmedi
+
 ## 2026-05-31 · BES — maliyet=kendi katkı + katkı düzenle/sil + düzenli plan (checkbox+otomatik devam) + geçmiş UX (T-BES.6b/7)
 - **Görev(ler):** T-BES.6b (tamam), T-BES.7 (tamam) — kullanıcı geri bildirimi (6 madde).
 - **Ne yapıldı:**

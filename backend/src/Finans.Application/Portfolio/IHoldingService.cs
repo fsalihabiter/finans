@@ -15,6 +15,9 @@ public interface IHoldingService
 
     Task<HoldingDto> CreateAsync(CreateHoldingRequest request, CancellationToken ct = default);
 
+    /// <summary>Açılış bakiyesiyle yeni BES pozisyonu kurar (Holding+BesDetails+Opening katkı, T-BES.8).</summary>
+    Task<HoldingDto> CreateBesAsync(CreateBesRequest request, CancellationToken ct = default);
+
     Task<HoldingDto> AddTransactionAsync(Guid id, TransactionRequest request, CancellationToken ct = default);
 
     Task<HoldingDto> UpdateAsync(Guid id, UpdateHoldingRequest request, CancellationToken ct = default);

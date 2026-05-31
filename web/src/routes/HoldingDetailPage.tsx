@@ -32,7 +32,7 @@ const VESTING_TR: Record<string, string> = {
   Vested: "Tamamlandı",
 };
 
-type ActiveModal = null | "tx" | "bes" | "price" | "besdate" | "besplan";
+type ActiveModal = null | "tx" | "bes" | "price" | "bessettings" | "besplan";
 
 /** ISO tarihten <input type="date"> değeri (YYYY-MM-DD). */
 function toDateInput(iso: string | null): string {
@@ -60,6 +60,8 @@ export function HoldingDetailPage() {
 
   const [price, setPrice] = useState("");
   const [besDate, setBesDate] = useState("");
+  const [besBirth, setBesBirth] = useState("");
+  const [besDay, setBesDay] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [modal, setModal] = useState<ActiveModal>(null);
   const [editingC, setEditingC] = useState<BesContribution | null>(null);
@@ -118,9 +120,14 @@ export function HoldingDetailPage() {
     notify("BES katkısı eklendi.", "success");
   };
 
-  const onBesPlanDone = () => {
+  const onBesPlanDone = (addedCount: number) => {
     closeModal();
-    notify("Düzenli katkı kayıtları oluşturuldu.", "success");
+    notify(
+      addedCount > 0
+        ? `${addedCount} katkı kaydı oluşturuldu.`
+        : "Seçtiğin ayların hepsi zaten kayıtlıydı — yeni kayıt eklenmedi.",
+      addedCount > 0 ? "success" : "info",
+    );
   };
 
   const openEditContribution = (c: BesContribution) => {
@@ -147,20 +154,26 @@ export function HoldingDetailPage() {
     });
   };
 
-  const openBesDate = () => {
+  const openBesSettings = () => {
     setBesDate(toDateInput(h.bes?.joinedAtUtc ?? null));
-    setModal("besdate");
+    setBesBirth(h.bes?.birthYear ? String(h.bes.birthYear) : "");
+    setBesDay(h.bes?.contributionDay ? String(h.bes.contributionDay) : "");
+    setModal("bessettings");
   };
 
-  const onUpdateBesDate = (e: React.FormEvent) => {
+  const onUpdateBesSettings = (e: React.FormEvent) => {
     e.preventDefault();
     if (!besDate) return;
+    const birthYear = besBirth.trim() === "" ? null : Number(besBirth);
+    const day = besDay.trim() === "" ? null : Number(besDay);
+    if (birthYear !== null && (!Number.isInteger(birthYear) || birthYear < 1920 || birthYear > new Date().getFullYear())) return;
+    if (day !== null && (!Number.isInteger(day) || day < 1 || day > 28)) return;
     updateBes.mutate(
-      { joinedAtUtc: `${besDate}T00:00:00Z` },
+      { joinedAtUtc: `${besDate}T00:00:00Z`, birthYear, contributionDay: day },
       {
         onSuccess: () => {
           closeModal();
-          notify("Başlangıç tarihi güncellendi.", "success");
+          notify("BES ayarları güncellendi.", "success");
         },
       },
     );
@@ -256,26 +269,58 @@ export function HoldingDetailPage() {
                 </div>
               )}
               <div className="split">
-                <div className="sh"><span className="sl">Kendi katkın</span><span className="sr tnum">{formatCurrency(h.bes.ownContribution, h.currency)}</span></div>
-                <div className="sd">Senin yatırdığın katkı payları — gerçek <b>yatırım performansının</b> tabanı.</div>
+                <div className="sh"><span className="sl">Yatırılan Katkı Payı</span><span className="sr tnum">{formatCurrency(h.bes.ownContribution, h.currency)}</span></div>
+                <div className="sd">Cebinden ödediğin, hesabına geçmiş katkı payları — gerçek <b>yatırım performansının</b> tabanı.</div>
               </div>
               <div className="split">
-                <div className="sh"><span className="sl">Devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
-                <div className="sd">Devletin eklediği <b>sübvansiyon</b>: kendi katkının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — oran geriye dönük değil, geçmiş katkılar etkilenmez). Üst sınır yıllık brüt asgari ücretin %20'si. Yatırım başarın değildir, ayrı gösterilir.</div>
+                <div className="sh"><span className="sl">Yatırılan devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
+                <div className="sd">Devletin eklediği <b>sübvansiyon</b> (hesabına geçmiş kısım): katkı payının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — geriye dönük değil). Üst sınır yıllık brüt asgari ücretin %20'si. Ayrı gösterilir.</div>
               </div>
-              <div className="drow"><span className="dk">Hak ediş</span><span className="dv">{VESTING_TR[h.bes.vestingState] ?? h.bes.vestingState}</span></div>
+              {(h.bes.ownPending > 0 || h.bes.statePending > 0) && (
+                <div className="split">
+                  <div className="sh">
+                    <span className="sl">Bekleyen</span>
+                    <span className="sr tnum">
+                      {h.bes.ownPending > 0 && <span className="pend-own">{formatCurrency(h.bes.ownPending, h.currency)}</span>}
+                      {h.bes.ownPending > 0 && h.bes.statePending > 0 && <span className="muted"> + </span>}
+                      {h.bes.statePending > 0 && <span className="pend-state">{formatCurrency(h.bes.statePending, h.currency)} devlet</span>}
+                    </span>
+                  </div>
+                  <div className="sd">
+                    Henüz hesaba geçmemiş tutarlar — devlet katkısı, katkı payı ödemesini izleyen ayın sonunda yatar.
+                    <b> Toplam birikime ve getiriye dahil edilmez.</b>
+                  </div>
+                </div>
+              )}
+              <div className="drow">
+                <span className="dk">Hak ediş</span>
+                <span className="dv">{VESTING_TR[h.bes.vestingState] ?? h.bes.vestingState} · <b>%{Math.round(h.bes.vestedRate * 100)}</b></span>
+              </div>
+              <div className="drow">
+                <span className="dk">Hak kazanılan tutar</span>
+                <span className="dv tnum up">{formatCurrency(h.bes.vestedAmount, h.currency)}</span>
+              </div>
               <div className="drow">
                 <span className="dk">Başlangıç</span>
+                <span className="dv">{h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}</span>
+              </div>
+              <div className="drow">
+                <span className="dk">Ödeme günü</span>
+                <span className="dv">{h.bes.contributionDay ? `Her ayın ${h.bes.contributionDay}. günü` : "—"}</span>
+              </div>
+              <div className="drow">
+                <span className="dk">Doğum yılı</span>
                 <span className="dv">
-                  {h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}
+                  {h.bes.birthYear ?? "—"}
                   <span className="muted"> · </span>
-                  <button type="button" className="edit-link" onClick={openBesDate}>Düzenle</button>
+                  <button type="button" className="edit-link" onClick={openBesSettings}>Ayarları düzenle</button>
                 </span>
               </div>
               <p className="note-muted">
-                Hak ediş sistemde kalış süresine bağlıdır: <b>&lt;3 yıl</b> hak edilmez · <b>3–10 yıl</b> kısmi ·{" "}
-                <b>10 yıl</b> (ve 56 yaş) tam. Oran ve eşikler mevzuata tabidir; bilgilendirme amaçlıdır,
-                yatırım tavsiyesi değildir.
+                Hak ediş sistemde kalış süresine bağlıdır: <b>&lt;3 yıl %0</b> · <b>3–6 yıl %15</b> ·{" "}
+                <b>6–10 yıl %35</b> · <b>10 yıl+ %60</b> · <b>10 yıl + 56 yaş %100</b>. Hak kazanılan tutar
+                yalnız <b>devlet katkısına</b> uygulanır (katkı payın her zaman senindir); yaklaşık değerdir.
+                Oran ve eşikler mevzuata tabidir; bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
               </p>
               {h.bes.planActive && (
                 <p className="note-muted">
@@ -287,8 +332,8 @@ export function HoldingDetailPage() {
           )}
         </div>
 
-        {/* Sağ sütun: işlem geçmişi */}
-        <div className="detail-col">
+        {/* Sağ sütun: işlem/katkı geçmişi — yükseklik sol içeriğe göre (detail-col--history) */}
+        <div className="detail-col detail-col--history">
           <div className="card">
             <div className="card-head"><h3>{isBes ? "Katkı Geçmişi" : "İşlem Geçmişi"}</h3></div>
             {isBes ? (
@@ -343,7 +388,11 @@ export function HoldingDetailPage() {
       )}
       {modal === "besplan" && (
         <Modal title="Düzenli katkı / geçmişi doldur" onClose={closeModal}>
-          <BesContributionPlanForm holdingId={h.id} onDone={onBesPlanDone} />
+          <BesContributionPlanForm
+            holdingId={h.id}
+            existingContributions={h.bes?.contributions ?? []}
+            onDone={onBesPlanDone}
+          />
         </Modal>
       )}
       {editingC && (
@@ -356,7 +405,7 @@ export function HoldingDetailPage() {
               </label>
               <label>
                 Ödeme tarihi
-                <DateField value={editDate} onChange={setEditDate} max={today} required ariaLabel="Ödeme tarihi" />
+                <DateField value={editDate} onChange={setEditDate} required ariaLabel="Ödeme tarihi" />
               </label>
               <button type="submit" disabled={updateContribution.isPending}>
                 {updateContribution.isPending ? "Kaydediliyor…" : "Kaydet"}
@@ -366,23 +415,43 @@ export function HoldingDetailPage() {
           </form>
         </Modal>
       )}
-      {modal === "besdate" && (
-        <Modal title="BES başlangıç tarihi" onClose={closeModal}>
-          <form className="price-form bare" onSubmit={onUpdateBesDate}>
-            <div className="price-row">
-              <DateField
-                id="besdate"
-                value={besDate}
-                onChange={setBesDate}
-                max={today}
-                autoFocus
-                ariaLabel="BES başlangıç tarihi"
-              />
+      {modal === "bessettings" && (
+        <Modal title="BES ayarları" onClose={closeModal}>
+          <form className="tx-form" onSubmit={onUpdateBesSettings} aria-label="BES ayarları">
+            <div className="tx-row">
+              <label>
+                Başlangıç tarihi
+                <DateField value={besDate} onChange={setBesDate} max={today} required ariaLabel="Başlangıç tarihi" />
+              </label>
+              <label>
+                Doğum yılı (ops.)
+                <input
+                  inputMode="numeric"
+                  value={besBirth}
+                  onChange={(e) => setBesBirth(e.target.value)}
+                  placeholder="örn. 1985"
+                />
+              </label>
+              <label>
+                Ödeme günü (1–28)
+                <input
+                  type="number"
+                  min={1}
+                  max={28}
+                  value={besDay}
+                  onChange={(e) => setBesDay(e.target.value)}
+                  placeholder="1"
+                />
+              </label>
               <button type="submit" disabled={updateBes.isPending || besDate === ""}>
-                Kaydet
+                {updateBes.isPending ? "Kaydediliyor…" : "Kaydet"}
               </button>
             </div>
-            {updateBes.isError && <p className="neg">Güncelleme başarısız.</p>}
+            <p className="note-muted">
+              Doğum yılı yalnız tam hak ediş (%100) için 56 yaş kontrolünde kullanılır. Ödeme günü, düzenli
+              katkı planının her ay hangi gün işleneceğini belirler.
+            </p>
+            {updateBes.isError && <p className="neg" role="alert">Güncelleme başarısız.</p>}
           </form>
         </Modal>
       )}

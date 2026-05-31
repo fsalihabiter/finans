@@ -75,6 +75,28 @@ public sealed class BesContributionEditApiTests : IClassFixture<SqliteWebApplica
     }
 
     [Fact]
+    public async Task Add_and_edit_allow_future_paid_date()
+    {
+        var client = Client();
+        var future = new DateTime(2099, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // İleri tarihli katkı artık serbest (ileriye dönük katkı/planlama).
+        var add = await client.PostAsJsonAsync($"/api/holdings/{BesHolding}/bes-contribution",
+            new AddBesContributionRequest(1000m, null, future), Json);
+        add.StatusCode.Should().Be(HttpStatusCode.OK);
+        var afterAdd = (await add.Content.ReadFromJsonAsync<HoldingDto>(Json))!;
+        var rec = afterAdd.Bes!.Contributions.First(c => c.PaidAtUtc == future);
+
+        // Düzenlemede de ileri tarih kabul edilir.
+        var laterFuture = new DateTime(2099, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+        var edit = await client.PutAsJsonAsync($"/api/holdings/{BesHolding}/bes/contributions/{rec.Id}",
+            new UpdateBesContributionRequest(1500m, laterFuture), Json);
+        edit.StatusCode.Should().Be(HttpStatusCode.OK);
+        var afterEdit = (await edit.Content.ReadFromJsonAsync<HoldingDto>(Json))!;
+        afterEdit.Bes!.Contributions.Should().Contain(c => c.Id == rec.Id && c.PaidAtUtc == laterFuture);
+    }
+
+    [Fact]
     public async Task Recurring_flag_activates_plan()
     {
         var client = Client();

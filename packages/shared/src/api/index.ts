@@ -5,6 +5,7 @@
 import type {
   AddBesContributionInput,
   ApiErrorEnvelope,
+  CreateBesInput,
   CreateHoldingInput,
   CurrencyCode,
   GenerateBesContributionsInput,
@@ -90,6 +91,8 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       get<Holding>(withBaseCurrency(`/api/holdings/${id}`, baseCurrency)),
     createHolding: (input: CreateHoldingInput) =>
       send<Holding>("POST", "/api/holdings", input),
+    createBes: (input: CreateBesInput) =>
+      send<Holding>("POST", "/api/holdings/bes", input),
     addTransaction: (id: string, input: TransactionInput) =>
       send<Holding>("POST", `/api/holdings/${id}/transactions`, input),
     updateHolding: (id: string, input: UpdateHoldingInput) =>

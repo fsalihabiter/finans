@@ -3,30 +3,54 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { BesContributionHistory } from "./BesContributionHistory";
 import type { BesContribution } from "@finans/shared";
 
-const items: BesContribution[] = [
-  { id: "c1", ownAmount: 1000, stateAmount: 200, paidAtUtc: "2026-03-05T00:00:00Z", source: "Plan" },
-  { id: "c2", ownAmount: 1000, stateAmount: 300, paidAtUtc: "2025-12-05T00:00:00Z", source: "Manual" },
+const rows: BesContribution[] = [
+  {
+    id: "c1", ownAmount: 1000, stateAmount: 200, paidAtUtc: "2026-03-05T00:00:00Z",
+    source: "Manual", status: "Deposited", stateDepositDate: "2026-04-30T00:00:00Z",
+  },
+  {
+    id: "c2", ownAmount: 1000, stateAmount: 300, paidAtUtc: "2025-12-05T00:00:00Z",
+    source: "Plan", status: "Deposited", stateDepositDate: "2026-01-31T00:00:00Z",
+  },
 ];
 
 describe("BesContributionHistory", () => {
-  it("düzenle/sil ikon butonlarını gösterir ve geri çağırır", () => {
+  it("satırları render eder + düzenle/sil çağrılır", () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();
-    render(<BesContributionHistory contributions={items} onEdit={onEdit} onDelete={onDelete} />);
+    render(<BesContributionHistory contributions={rows} onEdit={onEdit} onDelete={onDelete} />);
+    // Fixture: paidAt 2026-03-05 → 05.03.2026; 2025-12-05 → 05.12.2025.
+    expect(screen.getByText("05.03.2026")).toBeInTheDocument();
+    expect(screen.getByText("05.12.2025")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByLabelText("Düzenle")[0]);
+    expect(onEdit).toHaveBeenCalledWith(rows[0]);
+    fireEvent.click(screen.getAllByLabelText("Sil")[1]);
+    expect(onDelete).toHaveBeenCalledWith(rows[1]);
+  });
 
-    const editButtons = screen.getAllByRole("button", { name: "Düzenle" });
-    const deleteButtons = screen.getAllByRole("button", { name: "Sil" });
-    expect(editButtons).toHaveLength(2);
-    expect(deleteButtons).toHaveLength(2);
+  it("durumu sol şerit (CSS sınıfı) ile gösterir — ayrı kolon YOK", () => {
+    const mixed: BesContribution[] = [
+      { ...rows[0], id: "d", status: "Deposited" },
+      { ...rows[0], id: "p", status: "StatePending" },
+      { ...rows[0], id: "f", status: "Future" },
+    ];
+    const { container } = render(<BesContributionHistory contributions={mixed} />);
+    // Lejant durumu zaten açıklar; satırda durum metin sütunu olmamalı (Tarih/Katkı/Devlet/İşlem).
+    expect(container.querySelectorAll("thead th")).toHaveLength(4);
+    // Renk durumu sınıf üzerinden uygulanır.
+    expect(container.querySelector("tr.hist-deposited")).not.toBeNull();
+    expect(container.querySelector("tr.hist-pending")).not.toBeNull();
+    expect(container.querySelector("tr.hist-future")).not.toBeNull();
+  });
 
-    fireEvent.click(editButtons[0]);
-    expect(onEdit).toHaveBeenCalledWith(items[0]);
-    fireEvent.click(deleteButtons[1]);
-    expect(onDelete).toHaveBeenCalledWith(items[1]);
+  it("açılış kaydını 'Açılış' olarak gösterir", () => {
+    const opening: BesContribution[] = [{ ...rows[0], id: "o", source: "Opening" }];
+    render(<BesContributionHistory contributions={opening} />);
+    expect(screen.getByText("Açılış")).toBeInTheDocument();
   });
 
   it("boşsa bilgi metni gösterir", () => {
     render(<BesContributionHistory contributions={[]} />);
-    expect(screen.getByText(/Henüz katkı kaydı yok/)).toBeInTheDocument();
+    expect(screen.getByText("Henüz katkı kaydı yok.")).toBeInTheDocument();
   });
 });

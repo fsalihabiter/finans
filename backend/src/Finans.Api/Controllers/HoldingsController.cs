@@ -33,6 +33,15 @@ public sealed class HoldingsController(IHoldingService holdings) : ControllerBas
         return Created($"/api/holdings/{created.Id}", created);
     }
 
+    /// <summary>POST /api/holdings/bes — açılış bakiyesiyle yeni BES pozisyonu (T-BES.8, 201).</summary>
+    [HttpPost("bes")]
+    public async Task<ActionResult<HoldingDto>> CreateBes(
+        [FromBody] CreateBesRequest request, CancellationToken ct)
+    {
+        var created = await holdings.CreateBesAsync(request, ct);
+        return Created($"/api/holdings/{created.Id}", created);
+    }
+
     /// <summary>POST /api/holdings/{id}/transactions — mevcut pozisyona alış/satış.</summary>
     [HttpPost("{id:guid}/transactions")]
     public async Task<ActionResult<HoldingDto>> AddTransaction(

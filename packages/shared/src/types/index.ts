@@ -37,21 +37,46 @@ export interface ApiErrorEnvelope {
 
 // ── Portföy (04 §4) ──────────────────────────────────────────────────────────
 
-/** Tek bir BES katkı ödemesi kaydı (T-BES.6). source: "Manual" | "Plan". */
+/** Bir BES katkı kaydının tarihten türetilen durumu (T-BES.8). */
+export type BesContributionStatus = "Deposited" | "StatePending" | "Future";
+
+/** Tek bir BES katkı ödemesi kaydı (T-BES.6). source: "Opening" | "Manual" | "Plan". */
 export interface BesContribution {
   id: string;
   ownAmount: number;
   stateAmount: number;
   paidAtUtc: string;
   source: string;
+  /** Tarihten türetilen durum: yatırıldı / devlet bekliyor / gelecek. */
+  status: BesContributionStatus;
+  /** Devlet katkısının yatma tarihi (ödeme ayını izleyen ayın sonu). */
+  stateDepositDate: string;
 }
 
-/** BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1). */
+/**
+ * BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1). Toplamlar katkı
+ * satırlarından TARİHE göre türetilir: yatırılmış (ownContribution/stateContribution) tabana
+ * girer; bekleyenler (ownPending/statePending) ayrı, toplama dahil edilmez.
+ */
 export interface Bes {
+  /** Yatırılmış kendi katkı toplamı (maliyet tabanı). */
   ownContribution: number;
+  /** Yatırılmış devlet katkısı toplamı. */
   stateContribution: number;
+  /** Henüz ödenmemiş (gelecek tarihli) kendi katkı toplamı. */
+  ownPending: number;
+  /** Henüz yatmamış devlet katkısı toplamı. */
+  statePending: number;
   vestingState: VestingState;
+  /** Kademeli hak ediş oranı (0 / 0.15 / 0.35 / 0.60 / 1.00). */
+  vestedRate: number;
+  /** Hak kazanılan tutar ≈ vestedRate × yatırılmış devlet katkısı (yaklaşık). */
+  vestedAmount: number;
   joinedAtUtc: string | null;
+  /** Doğum yılı (opsiyonel; %100 hak ediş için 56 yaş kontrolü). */
+  birthYear: number | null;
+  /** Plan/şirket adı. */
+  providerName: string | null;
   /** Katkı ödeme kayıtları (en yeni üstte) — işlem geçmişi. */
   contributions: BesContribution[];
   /** Bu ayın katkısı henüz girilmedi mi? ("Katkı payını gir" hatırlatması). */
@@ -60,6 +85,8 @@ export interface Bes {
   planActive: boolean;
   /** Aktif plan aylık tutarı (varsa). */
   monthlyAmount: number | null;
+  /** Ödeme günü (1–28). */
+  contributionDay: number | null;
 }
 
 /** Bir pozisyonun geçmiş işlemi (detayda gösterilir). */
@@ -192,9 +219,31 @@ export interface UpdateBesContributionInput {
   paidAtUtc: string;
 }
 
-/** PUT /api/holdings/{id}/bes — BES sözleşme alanları (şimdilik başlangıç tarihi; hak edişi yeniden türetir). */
+/** POST /api/holdings/bes — açılış bakiyesiyle yeni BES pozisyonu (T-BES.8). */
+export interface CreateBesInput {
+  name: string;
+  providerName?: string | null;
+  currency: CurrencyCode;
+  joinedAtUtc: string;
+  birthYear?: number | null;
+  /** Güncel toplam fon değeri. */
+  currentFundValue: number;
+  /** Bugüne dek ödenmiş toplam kendi katkı (açılış maliyeti). */
+  openingOwn: number;
+  /** Bugüne dek yatmış toplam devlet katkısı. */
+  openingState: number;
+  monthlyAmount?: number | null;
+  contributionDay?: number | null;
+}
+
+/** PUT /api/holdings/{id}/bes — BES sözleşme/plan alanları (patch). Verilen alan güncellenir. */
 export interface UpdateBesInput {
-  joinedAtUtc: string | null;
+  joinedAtUtc?: string | null;
+  providerName?: string | null;
+  birthYear?: number | null;
+  monthlyAmount?: number | null;
+  contributionDay?: number | null;
+  planActive?: boolean | null;
 }
 
 /** POST /api/holdings/{id}/bes/contributions — düzenli katkıyı tarih aralığından üretir (T-BES.6). */

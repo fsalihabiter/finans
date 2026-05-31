@@ -532,7 +532,8 @@
   display: grid;
   grid-template-columns: 1.35fr 1fr;
   gap: 18px;
-  align-items: start;
+  /* stretch: sağ sütun (geçmiş kartı) sol sütunun yüksekliğine uzar — boş alan kalmaz. */
+  align-items: stretch;
   margin-top: 6px;
 }
 .detail-col {
@@ -540,6 +541,15 @@
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+  min-height: 0;
+}
+/* Yalnız sağ sütunda kart var: sütunu doldursun ki içindeki geçmiş listesi sol yükseklikle
+   eşit olsun (kısa içerikte uzar; uzun içerikte kart yüksekliğince İÇERİDE dikey kayar). */
+.detail-col > .card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .detail-actions {
   display: flex;
@@ -550,6 +560,10 @@
 @media (max-width: 860px) {
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+  /* Tek sütunda eşitlenecek sol yükseklik yok → liste sayfayı domine etmesin: makul tavan + iç kayma. */
+  .history-scroll {
+    max-height: 60vh;
   }
 }
 .detail-back {
@@ -712,11 +726,18 @@
 .tx-type button.active.sell {
   background: var(--coral, #e58e6e);
 }
+/* Alana göre uyarlanır: dar modalda alanlar alt alta, geniş alanda yan yana
+   sığar (auto-fit). Hiçbir koşulda yatay scroll/kırpma olmaz. */
 .tx-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.7rem;
   align-items: end;
+}
+/* Gönder butonu her zaman kendi satırında, tam genişlik. */
+.tx-row > button[type="submit"] {
+  grid-column: 1 / -1;
+  justify-self: stretch;
 }
 .tx-row label,
 .price-form label {
@@ -727,6 +748,7 @@
   font-size: 0.8rem;
 }
 .tx-row input,
+.tx-row select,
 .price-row input {
   background: var(--bg, #14110d);
   border: 1px solid var(--line, #322b22);
@@ -734,14 +756,33 @@
   color: var(--text, #f3ede2);
   font: inherit;
   padding: 0.5rem 0.7rem;
+  /* Hücreyi tam doldur (kullanıcı geri bildirimi: modal genişliğine yayılma). */
+  width: 100%;
+  box-sizing: border-box;
 }
 .tx-row input:focus-visible,
 .price-row input:focus-visible {
   outline: 2px solid var(--gold, #e0b255);
   outline-offset: 1px;
 }
+/* Native <input type="date"> — koyu temaya uydur (takvim açılır + segmentler + ikon).
+   color-scheme: dark hem segment metnini hem açılan takvimi koyu tema yapar. */
+input.date-input {
+  color-scheme: dark;
+}
+input.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.65;
+  /* Beyazımsı varsayılan ikonu altın tonuna çevir (tema). */
+  filter: invert(78%) sepia(38%) saturate(560%) hue-rotate(5deg) brightness(95%);
+  transition: opacity 0.15s;
+}
+input.date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
 .tx-row button,
-.price-row button {
+.price-row button,
+.tx-form > button[type="submit"] {
   appearance: none;
   font: inherit;
   font-weight: 600;
@@ -749,14 +790,33 @@
   color: #14110d;
   border: none;
   border-radius: 13px;
-  padding: 0.55rem 1.1rem;
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
+}
+/* Form-altı submit (.tx-row dışında): tam genişlik (modal alanını kapla). */
+.tx-form > button[type="submit"] {
+  width: 100%;
 }
 .tx-row button:disabled,
 .price-row button:disabled,
+.tx-form > button[type="submit"]:disabled,
 .btn-danger:disabled {
   opacity: 0.55;
   cursor: default;
+}
+/* "N ay · K yeni · M zaten" önizleme satırı (BesContributionPlanForm). */
+.tx-form .preview {
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(95, 201, 160, 0.08);
+  border-left: 3px solid var(--mint, #5fc9a0);
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+.tx-form .preview.warn {
+  background: rgba(229, 142, 110, 0.10);
+  border-left-color: var(--coral, #e58e6e);
+  color: var(--text, #f3ede2);
 }
 .price-row {
   display: flex;
@@ -896,7 +956,7 @@
 }
 .modal {
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
   max-height: 90dvh;
   overflow-y: auto;
   background: var(--bg, #14110d);
@@ -952,6 +1012,9 @@
   font: inherit;
   font-size: 0.95rem;
   padding: 0.6rem 0.75rem;
+  /* Etiket flex-column içinde input doğal genişlikte kalmasın → modal alanını tam doldur. */
+  width: 100%;
+  box-sizing: border-box;
 }
 .add-form input:focus-visible,
 .add-form select:focus-visible {
@@ -1804,7 +1867,10 @@ body.drawer-lock {
 
 /* ───── Geçmiş tabloları: dikey kaydırma + yatay kaydırma YOK + sütun otomatik sığdırma (T-BES.6) ───── */
 .history-scroll {
-  max-height: 320px;
+  /* Kart gövdesini doldurur (sol sütun yüksekliğine eşit); içerik fazlaysa İÇERİDE dikey kayar,
+     yatay kayma yok. Sabit max-height yerine flex → boş alan/kırpma olmadan otomatik büyür. */
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -1818,9 +1884,9 @@ body.drawer-lock {
 }
 .holdings-table.fit th,
 .holdings-table.fit td {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  /* Elips/"…" YOK (kullanıcı geri bildirimi): değerler tam görünür. table-layout:fixed +
+     min-width:0 ile sütunlar genişliğe paylaşılır; içerik sığmazsa hücre genişler. */
 }
 /* Sticky başlık (kaydırırken görünür kalsın). */
 .history-scroll thead th {
@@ -1829,6 +1895,61 @@ body.drawer-lock {
   background: var(--panel, #1c1813);
   z-index: 1;
 }
+
+/* ── BES katkı durumu renklendirmesi (T-BES.8): yatırıldı (yeşil) / devlet bekliyor (sarı) /
+   gelecek (gri). Satırın solunda renkli şerit + durum rozeti. ── */
+.hist-row .stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hist-row .stat::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+}
+.hist-deposited td:first-child { box-shadow: inset 3px 0 0 var(--mint, #5fc9a0); }
+.hist-pending td:first-child { box-shadow: inset 3px 0 0 var(--gold, #e0b255); }
+.hist-future td:first-child { box-shadow: inset 3px 0 0 var(--muted, #a89c89); }
+.hist-deposited .stat { color: var(--mint, #5fc9a0); }
+.hist-pending .stat { color: var(--gold, #e0b255); }
+.hist-future .stat { color: var(--muted, #a89c89); }
+.hist-future td { opacity: 0.72; }
+/* Açılış bakiyesi satırı: hafif vurgulu. */
+.hist-opening td { font-style: italic; }
+/* Geçmiş lejantı + "bekleyenler dahil değil" notu. */
+.hist-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 2px 10px;
+  font-size: 11px;
+  color: var(--muted, #a89c89);
+}
+.hist-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.hist-legend .lg::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot, #888);
+}
+.hist-legend .lg.dep::before { background: var(--mint, #5fc9a0); }
+.hist-legend .lg.pen::before { background: var(--gold, #e0b255); }
+.hist-legend .lg.fut::before { background: var(--muted, #a89c89); }
+/* BES detayda "Bekleyen" tutar renkleri: kendi katkı (gri) + devlet (sarı). */
+.pend-own { color: var(--muted, #a89c89); }
+.pend-state { color: var(--gold, #e0b255); }
 
 .row-actions {
   display: inline-flex;

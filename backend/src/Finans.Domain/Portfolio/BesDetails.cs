@@ -22,6 +22,9 @@ public class BesDetails : Entity
     public string? ProviderName { get; set; }
     public DateTime? JoinedAtUtc { get; set; }
 
+    /// <summary>Katılımcının doğum yılı (opsiyonel). Tam hak ediş (%100) için 56 yaş kontrolünde kullanılır.</summary>
+    public int? BirthYear { get; set; }
+
     // ── Düzenli katkı planı (T-BES.6b): "bundan sonraki katkılar için kullan" ──
     /// <summary>Aktif plan tutarı (aylık). Değiştirilene kadar geçerli; gün geldikçe otomatik kayıt.</summary>
     public decimal? MonthlyAmount { get; set; }

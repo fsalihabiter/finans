@@ -41,4 +41,34 @@ public static class BesCalculator
             return VestingState.PartiallyVested;
         return VestingState.NotVested;
     }
+
+    /// <summary>
+    /// Devlet katkısının yatma tarihi (katkı ayını izleyen ayın sonu, <see cref="BesRules.StateDepositDateOn"/>).
+    /// </summary>
+    public static DateTime StateDepositDateFor(DateTime contributionDateUtc) =>
+        BesRules.StateDepositDateOn(contributionDateUtc);
+
+    /// <summary>
+    /// Bir katkının durumu (tarihten): ödeme gelecekteyse <see cref="BesContributionStatus.Future"/>;
+    /// ödeme geçti ama devlet yatma tarihi gelmediyse <see cref="BesContributionStatus.StatePending"/>;
+    /// devlet yatma tarihi de geçtiyse <see cref="BesContributionStatus.Deposited"/>.
+    /// </summary>
+    public static BesContributionStatus ContributionStatusFor(DateTime paidAtUtc, DateTime asOfUtc)
+    {
+        if (paidAtUtc.Date > asOfUtc.Date)
+            return BesContributionStatus.Future;
+        return StateDepositDateFor(paidAtUtc).Date <= asOfUtc.Date
+            ? BesContributionStatus.Deposited
+            : BesContributionStatus.StatePending;
+    }
+
+    /// <summary>Doğum yılından kaba yaş (asOf yılı − doğum yılı). Yıl yoksa null.</summary>
+    public static int? AgeFor(int? birthYear, DateTime asOfUtc) =>
+        birthYear is { } y ? asOfUtc.Year - y : null;
+
+    /// <summary>
+    /// Kademeli hak ediş oranı (0/0.15/0.35/0.60/1.00) — sistemde kalış süresi + (opsiyonel) yaştan.
+    /// </summary>
+    public static decimal VestedRateFor(DateTime? joinedAtUtc, int? age, DateTime asOfUtc) =>
+        BesRules.VestedRateFor(YearsInSystem(joinedAtUtc, asOfUtc), age);
 }

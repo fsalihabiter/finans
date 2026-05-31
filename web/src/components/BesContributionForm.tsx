@@ -47,7 +47,7 @@ export function BesContributionForm({
     <form className="tx-form" onSubmit={onSubmit} aria-label="Aylık katkı ekle">
       <div className="tx-row">
         <label>
-          Kendi katkın (TRY)
+          Katkı Payı (TRY)
           <input
             inputMode="decimal"
             value={own}
@@ -58,7 +58,7 @@ export function BesContributionForm({
         </label>
         <label>
           Ödeme tarihi
-          <DateField value={paidAt} onChange={setPaidAt} max={today} required ariaLabel="Ödeme tarihi" />
+          <DateField value={paidAt} onChange={setPaidAt} required ariaLabel="Ödeme tarihi" />
         </label>
         <button type="submit" disabled={!valid || add.isPending}>
           {add.isPending ? "Ekleniyor…" : "Katkı ekle"}
@@ -75,7 +75,7 @@ export function BesContributionForm({
         <p className="muted">
           Tahmini devlet katkısı (%{Math.round(rate * 100)}):{" "}
           <strong>{formatCurrency(estimatedState, "TRY")}</strong> — fon değerine eklenir (maliyet =
-          yalnız kendi katkın).
+          yalnız katkı payın).
         </p>
       )}
       {add.isError && (

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { AssetType, CreateHoldingInput, CurrencyCode } from "@finans/shared";
-import { useCreateHolding } from "../lib/hooks";
+import type { AssetType, CreateBesInput, CreateHoldingInput, CurrencyCode } from "@finans/shared";
+import { useCreateBes, useCreateHolding } from "../lib/hooks";
 import { useToast } from "./Toast";
 import { ASSET_META } from "../lib/assetMeta";
+import { DateField } from "./DateField";
 
 const ASSET_TYPES: { value: AssetType; label: string; unit: string }[] = [
   { value: "Gold", label: "Altın", unit: "gram" },
@@ -23,6 +24,15 @@ interface FormState {
   unit: string;
   quantity: string;
   unitPrice: string;
+  // ── BES'e özel açılış bakiyesi alanları (assetType === "Bes") ──
+  providerName: string;
+  joinedAt: string;
+  birthYear: string;
+  currentFundValue: string;
+  openingOwn: string;
+  openingState: string;
+  monthlyAmount: string;
+  contributionDay: string;
 }
 
 const INITIAL: FormState = {
@@ -33,6 +43,14 @@ const INITIAL: FormState = {
   unit: "gram",
   quantity: "",
   unitPrice: "",
+  providerName: "",
+  joinedAt: "",
+  birthYear: "",
+  currentFundValue: "",
+  openingOwn: "",
+  openingState: "",
+  monthlyAmount: "",
+  contributionDay: "",
 };
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
@@ -41,25 +59,24 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
- * "Varlık Ekle" modalı (13 §4, FR-1.1) → POST /api/holdings. İlk alış işlemiyle
- * pozisyon oluşturur; backend ort. maliyeti işlemden türetir. Sayısal hesap YOK —
- * sadece girdi toplar. Tür seçimi görsel chip'lerle; ilk alana autofocus, Tab
- * odak tuzağı (a11y); dolu formda yanlışlıkla dışına tıklama kapatmaz (veri korunur).
+ * "Varlık Ekle" modalı (13 §4, FR-1.1). Standart varlıklar (altın/döviz/hisse/fon/nakit) ilk alış
+ * işlemiyle `POST /api/holdings`'e gider. **BES** seçilince form BES'e özel **açılış bakiyesi**
+ * alanlarına döner (T-BES.8): plan adı, başlangıç/doğum yılı, güncel fon değeri + birikmiş kendi/
+ * devlet katkı toplamları + opsiyonel düzenli plan → `POST /api/holdings/bes`. Sayısal hesap YOK.
+ * İlk alana autofocus, Tab odak tuzağı (a11y); dolu formda dışına tıklama kapatmaz (veri korunur).
  */
 export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const create = useCreateHolding();
+  const createBes = useCreateBes();
   const { notify } = useToast();
   const [form, setForm] = useState<FormState>(INITIAL);
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
-  // Açılışta ilk alana odaklan. (Form durumu sıfırlamaya gerek yok: bileşen
-  // yalnızca açıkken mount edilir — her açılış taze state ile başlar.)
   useEffect(() => {
     if (open) requestAnimationFrame(() => firstFieldRef.current?.focus());
   }, [open]);
 
-  // Escape ile kapat + Tab odak tuzağı (modal dışına çıkmasın).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -89,25 +106,44 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
   if (!open) return null;
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
+  const isBes = form.assetType === "Bes";
+  const today = new Date().toISOString().slice(0, 10);
+  const thisYear = new Date().getFullYear();
 
   const onAssetTypeChange = (value: AssetType) => {
     const preset = ASSET_TYPES.find((a) => a.value === value);
     set({ assetType: value, unit: preset?.unit ?? form.unit });
   };
 
+  // ── Doğrulama: standart vs BES ──
   const quantity = toNumber(form.quantity);
   const unitPrice = toNumber(form.unitPrice);
-  const valid =
+  const standardValid =
     form.name.trim() !== "" &&
     form.unit.trim() !== "" &&
-    Number.isFinite(quantity) &&
-    quantity > 0 &&
-    Number.isFinite(unitPrice) &&
-    unitPrice >= 0;
+    Number.isFinite(quantity) && quantity > 0 &&
+    Number.isFinite(unitPrice) && unitPrice >= 0;
+
+  const fundValue = toNumber(form.currentFundValue);
+  const openingOwn = toNumber(form.openingOwn);
+  const openingState = toNumber(form.openingState);
+  const birthYear = form.birthYear.trim() === "" ? null : Number(form.birthYear);
+  const contributionDay = form.contributionDay.trim() === "" ? null : Number(form.contributionDay);
+  const besValid =
+    form.name.trim() !== "" &&
+    form.joinedAt !== "" &&
+    Number.isFinite(fundValue) && fundValue >= 0 &&
+    Number.isFinite(openingOwn) && openingOwn >= 0 &&
+    Number.isFinite(openingState) && openingState >= 0 &&
+    (birthYear === null || (Number.isInteger(birthYear) && birthYear >= 1920 && birthYear <= thisYear)) &&
+    (contributionDay === null || (Number.isInteger(contributionDay) && contributionDay >= 1 && contributionDay <= 28));
+
+  const valid = isBes ? besValid : standardValid;
+  const pending = isBes ? createBes.isPending : create.isPending;
+  const err = isBes ? createBes.error : create.error;
+  const isError = isBes ? createBes.isError : create.isError;
 
   const dirty = JSON.stringify(form) !== JSON.stringify(INITIAL);
-
-  // Dolu formda yanlışlıkla overlay tıklamasıyla veri kaybını önle.
   const onOverlayClick = () => {
     if (!dirty) onClose();
   };
@@ -115,6 +151,28 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
+    if (isBes) {
+      const monthly = toNumber(form.monthlyAmount);
+      const input: CreateBesInput = {
+        name: form.name.trim(),
+        providerName: form.providerName.trim() || null,
+        currency: form.currency,
+        joinedAtUtc: `${form.joinedAt}T00:00:00Z`,
+        birthYear,
+        currentFundValue: fundValue,
+        openingOwn,
+        openingState,
+        monthlyAmount: Number.isFinite(monthly) && monthly > 0 ? monthly : null,
+        contributionDay,
+      };
+      createBes.mutate(input, {
+        onSuccess: () => {
+          notify(`${input.name} portföyüne eklendi.`, "success");
+          onClose();
+        },
+      });
+      return;
+    }
     const input: CreateHoldingInput = {
       assetType: form.assetType,
       name: form.name.trim(),
@@ -165,74 +223,119 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
           </div>
 
           <label>
-            Ad
+            {isBes ? "Plan / şirket adı" : "Ad"}
             <input
               ref={firstFieldRef}
               value={form.name}
               onChange={(e) => set({ name: e.target.value })}
-              placeholder="örn. Altın (gram)"
+              placeholder={isBes ? "örn. Kadın Temel Emeklilik Planı" : "örn. Altın (gram)"}
               required
             />
           </label>
 
-          <div className="add-row">
-            <label>
-              Sembol (ops.)
-              <input value={form.symbol} onChange={(e) => set({ symbol: e.target.value })} placeholder="XAU" />
-            </label>
-            <label>
-              Para birimi
-              <select value={form.currency} onChange={(e) => set({ currency: e.target.value as CurrencyCode })}>
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Birim
-              <input value={form.unit} onChange={(e) => set({ unit: e.target.value })} placeholder="gram" required />
-            </label>
-          </div>
+          {isBes ? (
+            <>
+              <p className="form-hint">
+                BES'te bugünkü durumu <b>açılış bakiyesi</b> olarak gir — geçmiş katkıları tek tek
+                girmene gerek yok. Güncel fon değeri ile bugüne dek birikmiş kendi ve devlet katkı
+                toplamlarını yaz; sonrasını aylık katkı/düzenli plan ile sürdürürsün.
+              </p>
+              <div className="add-row">
+                <label>
+                  Başlangıç tarihi
+                  <DateField value={form.joinedAt} onChange={(v) => set({ joinedAt: v })} max={today} required ariaLabel="BES başlangıç tarihi" />
+                </label>
+                <label>
+                  Doğum yılı (ops.)
+                  <input inputMode="numeric" value={form.birthYear} onChange={(e) => set({ birthYear: e.target.value })} placeholder="1985" />
+                </label>
+                <label>
+                  Para birimi
+                  <select value={form.currency} onChange={(e) => set({ currency: e.target.value as CurrencyCode })}>
+                    {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
+                  </select>
+                </label>
+              </div>
+              <label>
+                Güncel fon değeri ({form.currency})
+                <input inputMode="decimal" value={form.currentFundValue} onChange={(e) => set({ currentFundValue: e.target.value })} placeholder="örn. 279.378" required />
+              </label>
+              <div className="add-row">
+                <label>
+                  Birikmiş katkı payın ({form.currency})
+                  <input inputMode="decimal" value={form.openingOwn} onChange={(e) => set({ openingOwn: e.target.value })} placeholder="örn. 120.000" required />
+                </label>
+                <label>
+                  Birikmiş devlet katkısı ({form.currency})
+                  <input inputMode="decimal" value={form.openingState} onChange={(e) => set({ openingState: e.target.value })} placeholder="örn. 28.554" required />
+                </label>
+              </div>
+              <div className="add-row">
+                <label>
+                  Aylık katkı (ops.)
+                  <input inputMode="decimal" value={form.monthlyAmount} onChange={(e) => set({ monthlyAmount: e.target.value })} placeholder="örn. 7.500" />
+                </label>
+                <label>
+                  Ödeme günü (1–28)
+                  <input type="number" min={1} max={28} value={form.contributionDay} onChange={(e) => set({ contributionDay: e.target.value })} placeholder="1" />
+                </label>
+              </div>
+              <p className="form-hint">
+                Aylık katkı + ödeme günü girersen <b>düzenli plan</b> kurulur; ay geldikçe katkı kaydı
+                otomatik eklenir. Devlet katkısı, kendi katkı ödemeni izleyen ayın sonunda yatmış sayılır.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="add-row">
+                <label>
+                  Sembol (ops.)
+                  <input value={form.symbol} onChange={(e) => set({ symbol: e.target.value })} placeholder="XAU" />
+                </label>
+                <label>
+                  Para birimi
+                  <select value={form.currency} onChange={(e) => set({ currency: e.target.value as CurrencyCode })}>
+                    {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
+                  </select>
+                </label>
+                <label>
+                  Birim
+                  <input value={form.unit} onChange={(e) => set({ unit: e.target.value })} placeholder="gram" required />
+                </label>
+              </div>
+              <div className="add-row">
+                <label>
+                  Miktar
+                  <input inputMode="decimal" value={form.quantity} onChange={(e) => set({ quantity: e.target.value })} placeholder="40" required />
+                </label>
+                <label>
+                  Alış birim fiyatı ({form.currency})
+                  <input inputMode="decimal" value={form.unitPrice} onChange={(e) => set({ unitPrice: e.target.value })} placeholder="4546,275" required />
+                </label>
+              </div>
+            </>
+          )}
 
-          <div className="add-row">
-            <label>
-              Miktar
-              <input
-                inputMode="decimal"
-                value={form.quantity}
-                onChange={(e) => set({ quantity: e.target.value })}
-                placeholder="40"
-                required
-              />
-            </label>
-            <label>
-              Alış birim fiyatı ({form.currency})
-              <input
-                inputMode="decimal"
-                value={form.unitPrice}
-                onChange={(e) => set({ unitPrice: e.target.value })}
-                placeholder="4546,275"
-                required
-              />
-            </label>
-          </div>
-
-          {create.isError && (
+          {isError && (
             <p className="neg" role="alert">
-              {create.error instanceof Error ? create.error.message : "Eklenemedi."}
+              {err instanceof Error ? err.message : "Eklenemedi."}
             </p>
           )}
 
-          {!valid && !create.isError && (
-            <p className="form-hint">Ad, miktar ve alış fiyatı zorunlu. Miktar 0'dan büyük olmalı.</p>
+          {!valid && !isError && (
+            <p className="form-hint">
+              {isBes
+                ? "Plan adı, başlangıç tarihi, fon değeri ve katkı toplamları zorunlu."
+                : "Ad, miktar ve alış fiyatı zorunlu. Miktar 0'dan büyük olmalı."}
+            </p>
           )}
 
           <div className="add-actions">
             <button type="button" className="btn-ghost" onClick={onClose}>
               Vazgeç
             </button>
-            <button type="submit" disabled={!valid || create.isPending}>
-              {create.isPending ? "Ekleniyor…" : "Ekle"}
+            <button type="submit" disabled={!valid || pending}>
+              {pending ? "Ekleniyor…" : "Ekle"}
             </button>
           </div>
         </form>

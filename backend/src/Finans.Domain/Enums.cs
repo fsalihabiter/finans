@@ -27,6 +27,22 @@ public enum VestingState
     Vested,
 }
 
+/// <summary>
+/// Bir BES katkı kaydının (tarihten türetilen) durumu. Saklanmaz; ödeme/devlet-yatma
+/// tarihleri ile "bugün" karşılaştırılarak okuma anında hesaplanır (T-BES.8).
+/// </summary>
+public enum BesContributionStatus
+{
+    /// <summary>Kendi katkı ödendi ve devlet katkısı da yatırıldı (ödeme ayını izleyen ayın sonu geçti).</summary>
+    Deposited,
+
+    /// <summary>Kendi katkı ödendi (tarih geçti) ama devlet katkısı henüz yatmadı (izleyen ay sonu gelmedi).</summary>
+    StatePending,
+
+    /// <summary>Ödeme tarihi gelecekte — kendi katkı da henüz ödenmedi (ileriye dönük plan girişi).</summary>
+    Future,
+}
+
 /// <summary>ISO 4217 alt kümesi (allow-list, 03 §2). @finans/shared CurrencyCode ile birebir.</summary>
 public enum CurrencyCode
 {

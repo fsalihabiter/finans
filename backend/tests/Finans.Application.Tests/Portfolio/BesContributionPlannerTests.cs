@@ -15,11 +15,12 @@ public sealed class BesContributionPlannerTests
     }
 
     [Fact]
-    public void Excludes_endpoints_outside_range()
+    public void Includes_every_month_in_range_regardless_of_day()
     {
-        // Ocak 15 < from(20) → Ocak yok; Mart 10 < Mart 15 → Mart yok; sadece Şubat.
+        // Eski davranış: Ocak 15<20, Mart 10<15 → sadece Şubat. Yeni (UX fix): aralıktaki HER aya
+        // bir ödeme — form metniyle ("aralıktaki her ay") tutarlı, kullanıcı sessizce 0 kayıt yaşamaz.
         var dates = BesContributionPlanner.MonthlyDates(15, D(2025, 1, 20), D(2025, 3, 10));
-        Assert.Equal(new[] { D(2025, 2, 15) }, dates);
+        Assert.Equal(new[] { D(2025, 1, 15), D(2025, 2, 15), D(2025, 3, 15) }, dates);
     }
 
     [Fact]

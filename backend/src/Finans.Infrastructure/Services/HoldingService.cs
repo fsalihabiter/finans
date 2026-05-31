@@ -18,6 +18,16 @@ public sealed class HoldingService(
     PortfolioCalculationService calc,
     IFxRateProvider fxRateProvider) : IHoldingService
 {
+    /// <summary>
+    /// TR yerel "şimdi" (UTC+3 sabit; Türkiye 2016'dan beri DST uygulamıyor). BES tarih
+    /// karşılaştırmalarında — kullanıcının pencerede gördüğü gün — gün geçişinde yanıltıcı
+    /// "Future/StatePending" yaşamasın diye `DateTime.UtcNow` yerine kullanılır (T-BES.9 fix).
+    /// </summary>
+    private static DateTime TrNow() => DateTime.UtcNow.AddHours(3);
+
+    /// <summary>"Plan" türevli (otomatik üretilen) kaynaklar: düzenli plan dedup'unda kullanılır.</summary>
+    private static bool IsPlanSource(string source) => source == "Plan";
+
     public async Task<IReadOnlyList<HoldingDto>> GetAllAsync(CurrencyCode? baseCurrency = null, CancellationToken ct = default) =>
         await BuildHoldingDtosAsync(baseCurrency, ct);
 
@@ -59,6 +69,86 @@ public sealed class HoldingService(
         var holding = new Holding { UserId = userId, AssetId = asset.Id, CurrentPrice = null, CreatedAtUtc = now };
         holding.Transactions.Add(ToEntity(request.Transaction, holding.Id, now));
         ApplyDerivedPosition(holding);
+
+        db.Holdings.Add(holding);
+        await SaveHandlingConflictAsync(ct);
+
+        return await GetByIdAsync(holding.Id, request.Currency, ct);
+    }
+
+    public async Task<HoldingDto> CreateBesAsync(CreateBesRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new ValidationException("name", "required", "Plan adı zorunludur.");
+        if (request.CurrentFundValue < 0m)
+            throw new ValidationException("currentFundValue", "must_be_non_negative", "Fon değeri negatif olamaz.");
+        if (request.OpeningOwn < 0m || request.OpeningState < 0m)
+            throw new ValidationException("opening", "must_be_non_negative", "Açılış katkı tutarları negatif olamaz.");
+        if (request.JoinedAtUtc > DateTime.UtcNow)
+            throw new ValidationException("joinedAtUtc", "must_not_be_future", "Başlangıç tarihi gelecekte olamaz.");
+        if (request.ContributionDay is { } cd && cd is < 1 or > 28)
+            throw new ValidationException("contributionDay", "out_of_range", "Ödeme günü 1–28 arasında olmalı.");
+
+        var userId = currentUser.UserId;
+        var now = DateTime.UtcNow;
+
+        // BES varlığı (kullanıcıdan bağımsız katalog): eşleşeni bul, yoksa oluştur.
+        var asset = await db.Assets.FirstOrDefaultAsync(
+            a => a.Type == AssetType.Bes && a.Name == request.Name.Trim() && a.PricingCurrency == request.Currency, ct);
+        if (asset is null)
+        {
+            asset = new Asset
+            {
+                Type = AssetType.Bes,
+                Name = request.Name.Trim(),
+                Symbol = null,
+                Unit = "birim",
+                PricingCurrency = request.Currency,
+                CreatedAtUtc = now,
+            };
+            db.Assets.Add(asset);
+        }
+
+        var alreadyHeld = await db.Holdings.AnyAsync(h => h.UserId == userId && h.AssetId == asset.Id, ct);
+        if (alreadyHeld)
+            throw new ConflictException("Bu BES planında zaten bir pozisyonunuz var.");
+
+        var planActive = request.MonthlyAmount is > 0m && request.ContributionDay is not null;
+
+        var holding = new Holding
+        {
+            UserId = userId,
+            AssetId = asset.Id,
+            Quantity = 1m,
+            AvgCost = request.OpeningOwn,            // okuma yolunda yeniden türetilir; tutarlı başlat
+            CurrentPrice = request.CurrentFundValue, // BES "güncel fiyat" = toplam fon değeri (miktar 1)
+            CreatedAtUtc = now,
+        };
+        holding.BesDetails = new BesDetails
+        {
+            HoldingId = holding.Id,
+            OwnContribution = request.OpeningOwn,
+            StateContribution = request.OpeningState,
+            VestingState = BesCalculator.VestingStateFor(request.JoinedAtUtc, now),
+            ProviderName = string.IsNullOrWhiteSpace(request.ProviderName) ? null : request.ProviderName.Trim(),
+            JoinedAtUtc = request.JoinedAtUtc,
+            BirthYear = request.BirthYear,
+            MonthlyAmount = request.MonthlyAmount,
+            ContributionDay = request.ContributionDay,
+            PlanActive = planActive,
+        };
+        // Açılış bakiyesi = tek "Opening" katkı kaydı (başlangıç tarihli → yatırılmış sayılır).
+        // Geçmiş tek tek girilmez; verilen güncel toplamlar bu satıra yazılır.
+        holding.BesContributions.Add(new BesContribution
+        {
+            HoldingId = holding.Id,
+            OwnAmount = request.OpeningOwn,
+            StateAmount = request.OpeningState,
+            PaidAtUtc = request.JoinedAtUtc,
+            Source = "Opening",
+            CreatedAtUtc = now,
+        });
 
         db.Holdings.Add(holding);
         await SaveHandlingConflictAsync(ct);
@@ -124,10 +214,10 @@ public sealed class HoldingService(
         if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
             throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
 
-        // Ödeme tarihi (verilmezse şimdi). Gelecek olamaz; oran bu tarihe göre seçilir (geriye dönük değil).
+        // Ödeme tarihi (verilmezse şimdi). İleri tarihli katkı serbest (ileriye dönük planlama;
+        // kullanıcı henüz ödenmemiş/ileride ödenecek katkıyı da girebilir). Devlet katkısı oranı
+        // bu tarihe göre seçilir (geriye dönük değil).
         var paidAt = request.PaidAtUtc ?? DateTime.UtcNow;
-        if (paidAt > DateTime.UtcNow)
-            throw new ValidationException("paidAtUtc", "must_not_be_future", "Ödeme tarihi gelecekte olamaz.");
 
         // Devlet katkısı verilmezse, katkının ödendiği tarihteki orana göre (2026 öncesi %30, sonrası
         // %20) — BesRules/BesCalculator (yıllık üst sınır T-BES.4; lansman öncesi EGM/SPK, CLAUDE.md §2).
@@ -181,17 +271,32 @@ public sealed class HoldingService(
         if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
             throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
 
+        if (request.ContributionDay is { } cd && cd is < 1 or > 28)
+            throw new ValidationException("contributionDay", "out_of_range", "Ödeme günü 1–28 arasında olmalı.");
+
         var bes = holding.BesDetails;
+
         if (request.JoinedAtUtc is { } joined)
         {
             if (joined > DateTime.UtcNow)
                 throw new ValidationException("joinedAtUtc", "must_not_be_future", "Başlangıç tarihi gelecekte olamaz.");
             bes.JoinedAtUtc = joined;
-            // Başlangıç tarihi değişince hak ediş durumu yeniden türetilir.
-            bes.VestingState = BesCalculator.VestingStateFor(joined, DateTime.UtcNow);
-            holding.UpdatedAtUtc = DateTime.UtcNow;
-            await db.SaveChangesAsync(ct);
         }
+        if (request.ProviderName is not null)
+            bes.ProviderName = string.IsNullOrWhiteSpace(request.ProviderName) ? null : request.ProviderName.Trim();
+        if (request.BirthYear is not null)
+            bes.BirthYear = request.BirthYear;
+        if (request.MonthlyAmount is not null)
+            bes.MonthlyAmount = request.MonthlyAmount;
+        if (request.ContributionDay is not null)
+            bes.ContributionDay = request.ContributionDay;
+        if (request.PlanActive is { } pa)
+            bes.PlanActive = pa;
+
+        // Başlangıç tarihi / doğum yılı değişince hak ediş durumu yeniden türetilir.
+        bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, DateTime.UtcNow);
+        holding.UpdatedAtUtc = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
 
         return await GetByIdAsync(holding.Id, ct: ct);
     }
@@ -206,8 +311,7 @@ public sealed class HoldingService(
             throw new ValidationException("day", "out_of_range", "Ödeme günü 1–28 arasında olmalı.");
         if (request.ToUtc < request.FromUtc)
             throw new ValidationException("toUtc", "invalid_range", "Bitiş tarihi başlangıçtan önce olamaz.");
-        if (request.FromUtc > DateTime.UtcNow)
-            throw new ValidationException("fromUtc", "must_not_be_future", "Başlangıç tarihi gelecekte olamaz.");
+        // İleri tarihli aralık serbest (ileriye dönük plan); istenen aralık aynen üretilir.
 
         var holding = await db.Holdings
             .Include(h => h.Asset)
@@ -220,20 +324,23 @@ public sealed class HoldingService(
             throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
 
         var now = DateTime.UtcNow;
-        // "Ödeme günü gelince sayılır" → gelecekteki ay'ları üretme (bitişi en fazla bugüne kıskaçla).
-        var to = request.ToUtc > now ? now : request.ToUtc;
-        var dates = BesContributionPlanner.MonthlyDates(request.Day, request.FromUtc, to);
+        // İstenen aralık aynen üretilir (ileri tarihli aylar dahil — ileriye dönük plan serbest).
+        var dates = BesContributionPlanner.MonthlyDates(request.Day, request.FromUtc, request.ToUtc);
 
-        // İdempotent: zaten kaydı olan ay'lar atlanır (yeniden üretimde çiftleme yok).
-        var coveredMonths = holding.BesContributions
+        // İdempotent: zaten **Plan** satırı olan ay'lar atlanır (yeniden üretimde çiftleme yok).
+        // Manuel girişler dedup'a girmez — kullanıcı aynı ay içinde değişken tutarlı manuel katkıları
+        // (her ay birden çok kez, değişken miktarda) yapmaya devam edebilir; düzenli plan ayrı bir
+        // seridir (kullanıcı feedback, T-BES.9).
+        var coveredPlanMonths = holding.BesContributions
+            .Where(c => IsPlanSource(c.Source))
             .Select(c => c.PaidAtUtc.Year * 100 + c.PaidAtUtc.Month)
             .ToHashSet();
 
         var bes = holding.BesDetails;
         foreach (var date in dates)
         {
-            if (!coveredMonths.Add(date.Year * 100 + date.Month))
-                continue; // bu ay zaten ödenmiş sayılmış
+            if (!coveredPlanMonths.Add(date.Year * 100 + date.Month))
+                continue; // bu ay için zaten Plan satırı var (manuel olanlar engel değil)
 
             var state = BesCalculator.StateContributionFor(request.MonthlyAmount, date);
             db.BesContributions.Add(new BesContribution
@@ -263,8 +370,7 @@ public sealed class HoldingService(
         ArgumentNullException.ThrowIfNull(request);
         if (request.OwnAmount <= 0m)
             throw new ValidationException("ownAmount", "must_be_positive", "Katkı tutarı 0'dan büyük olmalı.");
-        if (request.PaidAtUtc > DateTime.UtcNow)
-            throw new ValidationException("paidAtUtc", "must_not_be_future", "Ödeme tarihi gelecekte olamaz.");
+        // İleri tarihli ödeme serbest (ileriye dönük katkı); oran ödeme tarihine göre.
 
         var holding = await LoadBesWithContributionsAsync(id, ct);
         var bes = holding.BesDetails!;
@@ -314,12 +420,19 @@ public sealed class HoldingService(
         if (holding?.BesDetails is not { PlanActive: true, MonthlyAmount: { } amount, ContributionDay: { } day })
             return;
 
-        var now = DateTime.UtcNow;
-        var lastPaid = holding.BesContributions.Count > 0
-            ? holding.BesContributions.Max(c => c.PaidAtUtc)
-            : (DateTime?)null;
-        // Son katkının ayından SONRAKİ aydan başla (yoksa bu aydan).
-        var from = lastPaid is { } lp
+        // TR yerel "şimdi" — kullanıcı pencerede 1 Haz görüyorken UTC hâlâ 31 May olabilir; gün geçişinde
+        // catch-up tetiklensin (T-BES.9 fix; UTC+3 sabit, DST yok).
+        var now = TrNow();
+
+        // Plan-source dedup: manuel girişler düzenli planı engellemez (kullanıcı feedback). Yalnız
+        // "Plan" türevli satırlar lastPaid/covered için sayılır. lastPlanPaid yoksa "bu aydan" başla
+        // (geçmiş aylar için plan satırı geriye dönük üretilmez; backfill için "Düzenli katkı/geçmiş" formu).
+        var lastPlanPaid = holding.BesContributions
+            .Where(c => IsPlanSource(c.Source))
+            .Select(c => (DateTime?)c.PaidAtUtc)
+            .DefaultIfEmpty(null)
+            .Max();
+        var from = lastPlanPaid is { } lp
             ? new DateTime(lp.Year, lp.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1)
             : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -327,13 +440,16 @@ public sealed class HoldingService(
         if (dates.Count == 0)
             return;
 
-        var covered = holding.BesContributions.Select(c => c.PaidAtUtc.Year * 100 + c.PaidAtUtc.Month).ToHashSet();
+        var coveredPlanMonths = holding.BesContributions
+            .Where(c => IsPlanSource(c.Source))
+            .Select(c => c.PaidAtUtc.Year * 100 + c.PaidAtUtc.Month)
+            .ToHashSet();
         var bes = holding.BesDetails;
         var added = false;
         foreach (var date in dates)
         {
-            if (!covered.Add(date.Year * 100 + date.Month))
-                continue;
+            if (!coveredPlanMonths.Add(date.Year * 100 + date.Month))
+                continue; // bu ay zaten Plan satırı var — manuel olanlar engel değil
             var state = BesCalculator.StateContributionFor(amount, date);
             db.BesContributions.Add(new BesContribution
             {
@@ -342,7 +458,7 @@ public sealed class HoldingService(
                 StateAmount = state,
                 PaidAtUtc = date,
                 Source = "Plan",
-                CreatedAtUtc = now,
+                CreatedAtUtc = DateTime.UtcNow,
             });
             bes.OwnContribution += amount;
             bes.StateContribution += state;
@@ -381,24 +497,57 @@ public sealed class HoldingService(
     }
 
     /// <summary>BES detayını (devlet katkısı/hak ediş/katkı geçmişi/"bu ay katkını gir" durumu) eşler.</summary>
-    private static BesDto? ToBesDto(BesDetails? bes, ICollection<BesContribution> contributions, DateTime nowUtc)
+    private static BesDto? ToBesDto(BesDetails? bes, ICollection<BesContribution> contributions, DateTime asOf)
     {
         if (bes is null)
             return null;
 
+        // Her katkıya tarihten türetilen durum + devlet yatma tarihi (saklanmaz).
         var list = contributions
             .OrderByDescending(c => c.PaidAtUtc)
-            .Select(c => new BesContributionDto(c.Id, c.OwnAmount, c.StateAmount, c.PaidAtUtc, c.Source))
+            .Select(c => new BesContributionDto(
+                c.Id, c.OwnAmount, c.StateAmount, c.PaidAtUtc, c.Source,
+                BesCalculator.ContributionStatusFor(c.PaidAtUtc, asOf),
+                BesCalculator.StateDepositDateFor(c.PaidAtUtc)))
             .ToList();
 
-        // "Bu ay katkını gir" hatırlatması: kayıt varsa ve en son katkı bu aydan önceyse.
-        var monthStart = new DateTime(nowUtc.Year, nowUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var due = list.Count > 0 && list[0].PaidAtUtc < monthStart;
+        // Toplamlar tarihten türetilir (T-BES.8). "Bekleyen" yalnız **Future** satırlardır — kendi
+        // katkı ile devlet katkısı için simetrik (kullanıcı geri bildirimi): geçmiş listesindeki
+        // "Gelecek Ödeme" satırının değerleriyle birebir eşleşir. StatePending satır (kendi katkı
+        // ödendi, devlet henüz yatmadı) "yolda" sayılır — tabloda görünür ama hiçbir toplama girmez.
+        decimal ownDeposited = 0m, stateDeposited = 0m, ownPending = 0m, statePending = 0m;
+        foreach (var c in list)
+        {
+            switch (c.Status)
+            {
+                case BesContributionStatus.Future:
+                    ownPending += c.OwnAmount;
+                    statePending += c.StateAmount;
+                    break;
+                case BesContributionStatus.Deposited:
+                    ownDeposited += c.OwnAmount;
+                    stateDeposited += c.StateAmount;
+                    break;
+                case BesContributionStatus.StatePending:
+                    ownDeposited += c.OwnAmount; // kendi katkı ödendi
+                    // devlet katkısı "yolda" — toplama dahil değil
+                    break;
+            }
+        }
+
+        var vestedRate = BesCalculator.VestedRateFor(bes.JoinedAtUtc, BesCalculator.AgeFor(bes.BirthYear, asOf), asOf);
+        var vestedAmount = Math.Round(vestedRate * stateDeposited, 2);
+
+        // "Bu ay katkını gir" hatırlatması: kayıt varsa ve en son YATIRILMIŞ katkı bu aydan önceyse.
+        var monthStart = new DateTime(asOf.Year, asOf.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var lastDeposited = list.Where(c => c.Status != BesContributionStatus.Future).Select(c => (DateTime?)c.PaidAtUtc).FirstOrDefault();
+        var due = lastDeposited is { } lp && lp < monthStart;
 
         return new BesDto(
-            bes.OwnContribution, bes.StateContribution,
-            BesCalculator.VestingStateFor(bes.JoinedAtUtc, nowUtc), bes.JoinedAtUtc, list, due,
-            bes.PlanActive, bes.MonthlyAmount);
+            ownDeposited, stateDeposited, ownPending, statePending,
+            BesCalculator.VestingStateFor(bes.JoinedAtUtc, asOf), vestedRate, vestedAmount,
+            bes.JoinedAtUtc, bes.BirthYear, bes.ProviderName, list, due,
+            bes.PlanActive, bes.MonthlyAmount, bes.ContributionDay);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -421,8 +570,15 @@ public sealed class HoldingService(
             .Include(h => h.Asset)
             .Include(h => h.BesDetails)
             .Include(h => h.BesContributions)
+            .Include(h => h.Transactions)
             .OrderBy(h => h.CreatedAtUtc)
             .ToListAsync(ct);
+
+        // Pozisyonu KAYNAKTAN yeniden türet (cache'e güvenme): miktar/ort. maliyet her okumada
+        // işlemlerden (BES değilse) veya kendi katkı toplamından (BES) hesaplanır. Böylece saklanan
+        // cache alanı eski kalsa bile gösterim her zaman doğru ve kendi içinde tutarlıdır.
+        foreach (var h in holdings)
+            ApplyReadPosition(h);
 
         var converter = await fxRateProvider.GetConverterAsync(ct);
         var results = calc.CalculateHoldings(HoldingMapping.ToInputs(holdings, converter, baseCcy));
@@ -432,7 +588,10 @@ public sealed class HoldingService(
         {
             var h = holdings[i];
             var r = results[i];
-            var bes = ToBesDto(h.BesDetails, h.BesContributions, DateTime.UtcNow);
+            // TR yerel "şimdi" — durum (Future/StatePending/Deposited) ve "bu ay katkı" hatırlatması
+            // kullanıcının pencerede gördüğü güne göre. Saat dilimi farkıyla "gün geçti ama hâlâ Future"
+            // yaşanmasın (T-BES.9 fix; TR sabit UTC+3, DST yok).
+            var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow());
 
             dtos.Add(new HoldingDto(
                 h.Id, h.Asset.Type, h.Asset.Name, h.Asset.Symbol, h.Asset.PricingCurrency, h.Asset.Unit,
@@ -441,6 +600,37 @@ public sealed class HoldingService(
         }
 
         return dtos;
+    }
+
+    /// <summary>
+    /// Okuma anında pozisyonu kaynaktan yeniden türetir (§6, T1.5): miktar/ort. maliyet
+    /// saklanan cache alanından DEĞİL, gerçek işlemlerden (BES değilse) ya da kendi katkı
+    /// toplamından (BES — maliyet = cepten ödenen kendi katkı; devlet katkısı maliyet değil)
+    /// hesaplanır. Salt okunur şekillendirme — kalıcılaştırılmaz (çağrı sonrası SaveChanges yok).
+    /// Eski/sürüklenmiş cache değerlerini gösterimde otomatik düzeltir.
+    /// </summary>
+    private static void ApplyReadPosition(Holding h)
+    {
+        if (h.BesDetails is not null)
+        {
+            // BES nominal hesap; miktar 1 sabit. Maliyet = CEPTEN ödenen = YATIRILMIŞ kendi katkı
+            // toplamı (ödeme tarihi ≤ kullanıcının BUGÜN'ü). TR yerel — gün geçiş anında doğru sayım.
+            var today = TrNow().Date;
+            h.AvgCost = h.BesContributions
+                .Where(c => c.PaidAtUtc.Date <= today)
+                .Sum(c => c.OwnAmount);
+            return;
+        }
+
+        // İşlem yoksa türetim 0/0 döner — saklanan değerleri SİLMEZ (örn. Nakit: doğrudan miktar
+        // tutulur, alış/satış işlemi olmaz). Yalnız işlem varsa kaynaktan yeniden türetilir.
+        if (h.Transactions.Count == 0)
+            return;
+
+        var pos = PortfolioCalculationService.DerivePosition(
+            h.Transactions.Select(t => new TransactionInput(t.Type, t.Quantity, t.UnitPrice, t.Fee)));
+        h.Quantity = pos.Quantity;
+        h.AvgCost = pos.AvgCost;
     }
 
     /// <summary>Kullanıcıya ait pozisyonu getirir; yoksa/başkasınınsa 404 (IDOR yok).</summary>

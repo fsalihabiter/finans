@@ -10,6 +10,7 @@
 çökme yok). Kalan: dağıtım/gözlem altyapısı.
 
 ## Sıradaki (öncelik sırası)
+0. ⚠ **`AddBesBirthYear` migration'ını canlı Postgres'e uygula** (VS'den Update-Database; additive nullable). Kod tarafı tüm test paketleri yeşil — yalnız DB uygulanması bekliyor.
 1. **T-BES.5** — BES **fon dağılımı eğitici projeksiyonu** (varsayımsal kâr/zarar senaryosu; tahmin/tavsiye
    DEĞİL, disclaimer'lı) — kullanıcının bir sonraki sırası. Bkz. 08 T-BES epik.
 2. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
@@ -19,6 +20,25 @@
 > ✅ **T-BES.6b/7 bitti** — maliyet=kendi katkı (own-only); katkı düzenle/sil; düzenli plan checkbox +
 > lazy otomatik devam; geçmiş UX (dikey scroll/sığdırma/ikon butonlar). Migration'lar (`BesContributions`,
 > `BesContributionPlan`) canlı Postgres'e uygulandı (additive). Backend'i **VS'den çalıştır** (ben arka planda bırakmıyorum).
+
+> ✅ **T-BES.9 bitti (2026-05-31) — BES yeniden tasarımı kapandı:** katkı durumu tarihten türer
+> (Deposited/StatePending/Future; devlet katkısı ödeme ayını izleyen ayın sonunda yatar, ~+1 ay; bekleyenler
+> toplama girmez); geçmiş listesinde **yeşil/sarı/gri** renk + lejant. Kademeli hak ediş %0/15/35/60/100
+> (10y+56yaş için `BirthYear`) + **hak kazanılan tutar**. **`POST /api/holdings/bes`** açılış bakiyesiyle BES
+> kurma (Opening katkı kaydı) + BES'e özel ekleme formu. `PUT /bes` ödeme günü/doğum yılı düzenleme.
+> Geçmiş paneli **sol içerik yüksekliğine uyar** (sağ kart absolute → satır=sol; iç dikey scroll).
+> Tüm toplamlar katkı satırlarından okuma anında türetilir. `AddBesBirthYear` migration üretildi (canlı
+> Postgres'e uygulama bekliyor). **Backend: 72 unit + 62 integration · Web: 52 · eslint/build temiz.**
+
+> ✅ **UX turu (2026-05-31, geri bildirim):** (1) "İşlem ekle" modalı scroll/kırpma yerine alana sığan ızgara
+> (`.tx-row` auto-fit + buton tam genişlik, modal 540px). (2) Tarih girişi **native `<input type=date>`** —
+> takvim/autocomplete + ↑↓ artır-azalt + ←→ segment + **Tab** (özel maskeli `DateField` ve `dateMask.ts` kaldırıldı).
+> (3) **İleri tarihli katkı/plan serbest** (backend `must_not_be_future` ×3 kaldırıldı; `max` yalnız BES joined-date'te).
+> (4) **Ort. maliyet anti-stale:** okuma yolu (`BuildHoldingDtosAsync` → yeni `ApplyReadPosition`) pozisyonu artık
+> her GET'te KAYNAKTAN türetir (cache `Holding.AvgCost`'a güvenmez) — sürüklenmiş BES own+state değeri (350.573)
+> gösterimde otomatik own-only'ye (277.060) düzelir; salt okunur. (5) Geçmiş listesi sol sütun yüksekliğine uyar
+> (`.detail-grid` stretch + `.detail-col>.card` flex + `.history-scroll` flex:1). web 49 yeşil + build temiz;
+> backend App.Tests 59 + Infra derlendi (0 hata). ⚠ **Integration testleri VS Api kilidi bırakılınca** koşulacak.
 
 > ✅ **T-BES.1-3 bitti** — araştırma + `BesRules`/`BesCalculator` (devlet katkısı **%20** 2026, hak ediş
 > `JoinedAtUtc`'den türetilir) + `PUT /holdings/{id}/bes` başlangıç tarihi + web devlet-katkısı açıklaması.
@@ -45,7 +65,8 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **119** (Application 59 + Integration 60) · web **51** · shared **15** · eslint 0 hata · tsc/vite temiz
+- **Yeşil kapı:** backend **119** (Application 59 + Integration 60) · web **49** (DateField native testleri) · shared **15** · eslint 0 hata · tsc/vite temiz
+  · ⚠ ileri-tarih için +2 integration testi (Generate_allows_future_range, Add_and_edit_allow_future_paid_date) — VS Api kilidi bırakılınca koşulacak
 - **Tarih biçimi (NFR-7):** gösterimler `formatDate` → **gg.aa.yyyy** (noktalı, UTC). Girişler **özel `DateField`**
   (maskeli gg.aa.yyyy, her OS/locale'de aynı, ISO emit) — native `<input type=date>` yerine. **İşlem ekle** artık
   **işlem tarihi** alır (geçmiş tarihli işlem; performans/maliyet için, backend `Date ?? now`).

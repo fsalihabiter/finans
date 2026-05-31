@@ -57,17 +57,42 @@ public sealed class BesContributionPlanApiTests : IClassFixture<SqliteWebApplica
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var dto = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
 
-        // Seed: own 120.000, state 28.554. +3×1.000 own, +3×300 state (2025 → %30).
+        // Seed açılış kaydı (own 120.000, state 28.554, 2024 → yatırılmış) + 3×1.000 own, +3×300 state
+        // (2025 → %30, yatırılmış). Toplamlar yatırılmış katkılardan türetilir.
         dto!.Bes!.OwnContribution.Should().Be(123000m);
         dto.Bes.StateContribution.Should().Be(29454m); // 28.554 + 900
-        dto.Bes.Contributions.Should().HaveCount(3);
-        dto.Bes.Contributions.Should().OnlyContain(c => c.Source == "Plan" && c.OwnAmount == 1000m && c.StateAmount == 300m);
+        // Üretilen Plan kayıtları yalnız 2025'in 9-11. aylarına ait (sınıf fixture'ı paylaşıldığı için
+        // başka testin ileri tarihli kayıtlarını dışla — xUnit test sırası garanti edilmez).
+        var planRowsFor2025 = dto.Bes.Contributions
+            .Where(c => c.Source == "Plan" && c.PaidAtUtc.Year == 2025 && c.PaidAtUtc.Month is >= 9 and <= 11)
+            .ToList();
+        planRowsFor2025.Should().HaveCount(3);
+        planRowsFor2025.Should().OnlyContain(c => c.OwnAmount == 1000m && c.StateAmount == 300m);
 
-        // İdempotent: aynı aralık tekrar → yeni kayıt/etki yok.
+        // İdempotent: aynı aralık tekrar → yeni kayıt/etki yok (toplam 2025/9-11 sayısı 3 kalır).
         var again = await Client().PostAsJsonAsync($"/api/holdings/{BesHolding}/bes/contributions", req, Json);
         var dto2 = await again.Content.ReadFromJsonAsync<HoldingDto>(Json);
-        dto2!.Bes!.Contributions.Should().HaveCount(3);
-        dto2.Bes.OwnContribution.Should().Be(123000m);
+        dto2!.Bes!.Contributions
+            .Count(c => c.Source == "Plan" && c.PaidAtUtc.Year == 2025 && c.PaidAtUtc.Month is >= 9 and <= 11)
+            .Should().Be(3);
+    }
+
+    [Fact]
+    public async Task Generate_allows_future_range()
+    {
+        // İleriye dönük plan: 2099 aralığı → istenen aylar (gelecek dahil) üretilir (artık engellenmez).
+        var req = new GenerateBesContributionsRequest(
+            1000m, 5,
+            new DateTime(2099, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            new DateTime(2099, 3, 31, 0, 0, 0, DateTimeKind.Utc));
+
+        var resp = await Client().PostAsJsonAsync($"/api/holdings/{BesHolding}/bes/contributions", req, Json);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+
+        // 2099-01/02/03 → 3 ileri tarihli kayıt üretilir.
+        dto!.Bes!.Contributions.Should().Contain(c => c.PaidAtUtc.Year == 2099);
+        dto.Bes.Contributions.Count(c => c.PaidAtUtc.Year == 2099).Should().Be(3);
     }
 
     [Fact]

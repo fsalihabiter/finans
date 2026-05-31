@@ -67,10 +67,16 @@ public sealed class BesAndHistoryApiTests : IClassFixture<SqliteWebApplicationFa
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var dto = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
 
+        // Bugün tarihli katkı: kendi katkı hemen YATIRILMIŞ (ödeme ≤ bugün) → own 120.000 + 1.000 = 121.000,
+        // maliyet = own = 121.000. Devlet katkısı (200, %20) ödeme ayını izleyen ayın sonunda yatar → kayıt
+        // **StatePending** durumunda; yatırılmış devlet seed'deki 28.554 olarak kalır. Bekleyen toplamı yalnız
+        // **Future** satırları sayar (geçmiş listesindeki "Gelecek Ödeme" ile birebir eşleşmesi için);
+        // StatePending durumundaki kayıt "yolda" — tabloda görünür ama statePending'e GİRMEZ.
         dto!.Bes.Should().NotBeNull();
-        dto.Bes!.OwnContribution.Should().Be(121000m);
-        dto.Bes.StateContribution.Should().Be(28754m); // 28.554 + 200 (%20)
-        dto.AvgCost.Should().Be(121000m);              // maliyet = kendi katkı (cepten): 120.000 + 1.000
+        dto.Bes!.OwnContribution.Should().Be(121000m);  // yatırılmış kendi katkı
+        dto.Bes.StateContribution.Should().Be(28554m);  // yatırılmış devlet
+        dto.Bes.StatePending.Should().Be(0m);           // hiç Future satır yok
+        dto.AvgCost.Should().Be(121000m);               // maliyet = kendi katkı (cepten)
         dto.TotalCost.Should().Be(121000m);
     }
 

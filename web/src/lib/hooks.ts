@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import type {
   AddBesContributionInput,
+  CreateBesInput,
   CreateHoldingInput,
   CurrencyCode,
   GenerateBesContributionsInput,
@@ -99,6 +100,14 @@ export function useCreateHolding() {
   const invalidate = useInvalidatePortfolio();
   return useMutation({
     mutationFn: (input: CreateHoldingInput) => api.createHolding(input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCreateBes() {
+  const invalidate = useInvalidatePortfolio();
+  return useMutation({
+    mutationFn: (input: CreateBesInput) => api.createBes(input),
     onSuccess: invalidate,
   });
 }
