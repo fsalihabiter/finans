@@ -37,12 +37,24 @@ export interface ApiErrorEnvelope {
 
 // ── Portföy (04 §4) ──────────────────────────────────────────────────────────
 
+/** Tek bir BES katkı ödemesi kaydı (T-BES.6). source: "Manual" | "Plan". */
+export interface BesContribution {
+  ownAmount: number;
+  stateAmount: number;
+  paidAtUtc: string;
+  source: string;
+}
+
 /** BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1). */
 export interface Bes {
   ownContribution: number;
   stateContribution: number;
   vestingState: VestingState;
   joinedAtUtc: string | null;
+  /** Katkı ödeme kayıtları (en yeni üstte) — işlem geçmişi. */
+  contributions: BesContribution[];
+  /** Bu ayın katkısı henüz girilmedi mi? ("Katkı payını gir" hatırlatması). */
+  contributionDue: boolean;
 }
 
 /** Bir pozisyonun geçmiş işlemi (detayda gösterilir). */
@@ -170,6 +182,14 @@ export interface AddBesContributionInput {
 /** PUT /api/holdings/{id}/bes — BES sözleşme alanları (şimdilik başlangıç tarihi; hak edişi yeniden türetir). */
 export interface UpdateBesInput {
   joinedAtUtc: string | null;
+}
+
+/** POST /api/holdings/{id}/bes/contributions — düzenli katkıyı tarih aralığından üretir (T-BES.6). */
+export interface GenerateBesContributionsInput {
+  monthlyAmount: number;
+  day: number;
+  fromUtc: string;
+  toUtc: string;
 }
 
 // ── Ayarlar (04 §4) ──────────────────────────────────────────────────────────

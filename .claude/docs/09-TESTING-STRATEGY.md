@@ -156,6 +156,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-W6 | FR-1.1 | **Web:** Nakit pozisyonunda işlem formu **"Para ekle/çıkar"** (fiyat alanı yok, `unitPrice=1` gönderilir); geçmiş "Para eklendi/çıkarıldı" | Bileşen (RTL) | [x] (AddTransactionForm cash testi) |
 | SC-20 | §03 §A | **BES:** devlet katkısı = kendi katkı × **%20** (2026); hak ediş sistemde kalış yılından kaba türetilir (&lt;3 NotVested · 3–10 PartiallyVested · ≥10 Vested) | Unit (`BesCalculator`) | [x] (T-BES.1; 9 senaryo) |
 | SC-21 | FR-1.8 | **BES:** `PUT /holdings/{id}/bes` başlangıç tarihini günceller → hak ediş yeniden türer; gelecek tarih → 400; BES olmayan → 400; başkasının id'si → 404 (IDOR) | Integration | [x] (T-BES.3; 3 senaryo) |
+| SC-22 | FR-1.1 | **BES:** tarih aralığından aylık katkı üretimi — kapsanan aylar için kayıt (her ayın oranıyla), işlem geçmişine yansır, **idempotent** (tekrar→çiftleme yok), gelecek ay üretilmez; BES olmayan→400 | Unit (`BesContributionPlanner`) + Integration | [x] (T-BES.6; planner 4 + e2e 2) |
 | SC-M1 | NFR-2/7 | (Faz M) Mobil format + Analiz disclaimer pariteleri | Unit/Bileşen (mobil) | [ ] |
 | **SC-13** | **NFR-12, `11`§3** | **Güvenlik:** Kullanıcı A, B'nin holding id'siyle istek atar → **404** (IDOR/BOLA yok). **Kimlik açılmadan zorunlu.** | Integration | [x] (T1.6; GET/DELETE başkasının id'si→404, boş liste/sıfır özet, integration) |
 | SC-14 | NFR-4, `11`§5 | **Güvenlik:** Eşik üstü istek → **429** (rate limit) | Integration | [ ] |

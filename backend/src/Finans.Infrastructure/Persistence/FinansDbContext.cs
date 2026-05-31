@@ -19,6 +19,7 @@ public class FinansDbContext(DbContextOptions<FinansDbContext> options) : DbCont
     public DbSet<Holding> Holdings => Set<Holding>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<BesDetails> BesDetails => Set<BesDetails>();
+    public DbSet<BesContribution> BesContributions => Set<BesContribution>();
     public DbSet<PriceSnapshot> PriceSnapshots => Set<PriceSnapshot>();
     public DbSet<FxRate> FxRates => Set<FxRate>();
     public DbSet<InflationRate> InflationRates => Set<InflationRate>();

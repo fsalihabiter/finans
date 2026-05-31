@@ -11,10 +11,13 @@
 
 ## Sıradaki (öncelik sırası)
 1. **T-BES.5** — BES **fon dağılımı eğitici projeksiyonu** (varsayımsal kâr/zarar senaryosu; tahmin/tavsiye
-   DEĞİL, disclaimer'lı) — kullanıcı talebi. Bkz. 08 T-BES epik.
+   DEĞİL, disclaimer'lı) — kullanıcının bir sonraki sırası. Bkz. 08 T-BES epik.
 2. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
 3. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
-4. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6 (aylık katkı planı)
+4. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı)
+
+> ⚠️ **Migration:** `BesContributions` tablosu eklendi → canlı Postgres'e `dotnet ef database update`
+> (veya `dotnet run -- seed`) ile uygulanmalı (additive; testler EnsureCreated ile otomatik).
 
 > ✅ **T-BES.1-3 bitti** — araştırma + `BesRules`/`BesCalculator` (devlet katkısı **%20** 2026, hak ediş
 > `JoinedAtUtc`'den türetilir) + `PUT /holdings/{id}/bes` başlangıç tarihi + web devlet-katkısı açıklaması.
@@ -41,7 +44,7 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **111** (Application 55 + Integration 56) · web **43** · shared **13** · eslint 0 hata · tsc/vite temiz
+- **Yeşil kapı:** backend **117** (Application 59 + Integration 58) · web **45** · shared **13** · eslint 0 hata · tsc/vite temiz
 
 ## Faz 2 tamamlananlar (özet)
 - **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan

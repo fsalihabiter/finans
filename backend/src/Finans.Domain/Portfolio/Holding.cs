@@ -33,4 +33,5 @@ public class Holding : Entity, ISoftDelete
     public Asset Asset { get; set; } = null!;
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public BesDetails? BesDetails { get; set; }
+    public ICollection<BesContribution> BesContributions { get; set; } = new List<BesContribution>();
 }

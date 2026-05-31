@@ -119,7 +119,8 @@ rate limit + TLS proxy ayakta**.
 | T-BES.3 | `PUT /holdings/{id}/bes` — **başlangıç tarihi güncelle** → hak ediş yeniden türer (SC-21); web detayda "Düzenle" + **devlet katkısı açıklaması** (%20 + üst sınır) + hak ediş kademe notu + disclaimer | [x] |
 | T-BES.4 | Devlet katkısı **yıllık üst sınır** uygulaması (takvim-yılı bazlı katkı toplaması — model genişletmesi gerekir) | [ ] |
 | T-BES.5 | **Fon dağılımı senaryosu (eğitici projeksiyon):** kullanıcı varsayımları (aylık katkı, süre, varsayılan yıllık getiri / fon karması) → biriken tutar + devlet katkısı + kâr/zarar **illüstrasyonu**. **Tahmin/tavsiye DEĞİL** — açık "varsayımsal senaryo" çerçevesi + kalıcı disclaimer (CLAUDE.md §2: senaryo/farkındalık serbest; gelecek tahmini/yönlendirme yasak). Hesap KODDA (deterministik bileşik getiri), girdiler kullanıcıdan. | [ ] |
-| T-BES.6 | Aylık katkı **planı/takvimi** (düzenli ödeme girişi + projeksiyona besleme) | [ ] |
+| T-BES.6 | **Düzenli katkı:** tarih aralığından **aylık kayıt üretimi** (`POST /holdings/{id}/bes/contributions`; kapsanan aylar, idempotent, gelecek hariç, her ayın oranı) + **katkı işlem geçmişi** (`BesContribution` tablosu) + **"bu ay katkını gir" hatırlatması** (SC-22). Tek katkı da kayıt oluşturur. | [x] |
+| T-BES.6b | Katkı planı **kalıcılığı + otomatik zamanlayıcı** (arka plan job ile ödeme günü gelince otomatik kayıt; şimdilik "bugüne dek üret" ile elle tetiklenir) | [ ] |
 
 ---
 

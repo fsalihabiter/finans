@@ -7,6 +7,7 @@ import type {
   ApiErrorEnvelope,
   CreateHoldingInput,
   CurrencyCode,
+  GenerateBesContributionsInput,
   HealthResponse,
   Holding,
   NudgesResponse,
@@ -96,6 +97,8 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       send<Holding>("POST", `/api/holdings/${id}/bes-contribution`, input),
     updateBes: (id: string, input: UpdateBesInput) =>
       send<Holding>("PUT", `/api/holdings/${id}/bes`, input),
+    generateBesContributions: (id: string, input: GenerateBesContributionsInput) =>
+      send<Holding>("POST", `/api/holdings/${id}/bes/contributions`, input),
     deleteHolding: (id: string) => send<void>("DELETE", `/api/holdings/${id}`),
 
     // ── Canlı fiyat & eğitici notlar (Faz 2 — 04 §5) ──

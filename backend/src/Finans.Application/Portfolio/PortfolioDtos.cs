@@ -38,7 +38,16 @@ public sealed record BesDto(
     decimal OwnContribution,
     decimal StateContribution,
     VestingState VestingState,
-    DateTime? JoinedAtUtc);
+    DateTime? JoinedAtUtc,
+    IReadOnlyList<BesContributionDto> Contributions,
+    bool ContributionDue);
+
+/// <summary>Tek bir BES katkı ödemesi kaydı (T-BES.6). Source: "Manual" | "Plan".</summary>
+public sealed record BesContributionDto(
+    decimal OwnAmount,
+    decimal StateAmount,
+    DateTime PaidAtUtc,
+    string Source);
 
 /// <summary>Bir pozisyonun geçmiş işlemi (detayda gösterilir, 04 §4).</summary>
 public sealed record TransactionDto(
@@ -116,3 +125,15 @@ public sealed record AddBesContributionRequest(
 /// </summary>
 public sealed record UpdateBesRequest(
     DateTime? JoinedAtUtc);
+
+/// <summary>
+/// POST /api/holdings/{id}/bes/contributions — düzenli katkıyı tarih aralığından üretir (T-BES.6):
+/// [<paramref name="FromUtc"/>, <paramref name="ToUtc"/>] aralığında her ay <paramref name="Day"/>
+/// gününde <paramref name="MonthlyAmount"/> tutarlı kayıt. Zaten kaydı olan ay atlanır (idempotent);
+/// gelecek ay üretilmez. Devlet katkısı her ayın tarihindeki orana göre (geriye dönük değil).
+/// </summary>
+public sealed record GenerateBesContributionsRequest(
+    decimal MonthlyAmount,
+    int Day,
+    DateTime FromUtc,
+    DateTime ToUtc);

@@ -20,6 +20,36 @@
 
 ---
 
+## 2026-05-31 · BES düzenli katkı — tarih aralığından aylık kayıt üretimi + katkı geçmişi + hatırlatma (T-BES.6) + "Düzenle" buton teması
+- **Görev(ler):** T-BES.6 (tamam); T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı) planlandı.
+- **Ne yapıldı:**
+  1. **`BesContribution` tablosu** (HoldingId, OwnAmount, StateAmount, PaidAtUtc, Source) + EF config +
+     **migration** (`BesContributions`). `Holding.BesContributions` nav.
+  2. **Üretim:** `BesContributionPlanner.MonthlyDates` (saf; aralık→aylık ödeme tarihleri, gün 1–28 kıskaç) +
+     `GenerateBesContributionsAsync` (`POST /holdings/{id}/bes/contributions`): kapsanan aylar için kayıt,
+     **idempotent** (kayıtlı ay atlanır), **gelecek ay üretilmez** (to≤bugün), devlet katkısı her ayın
+     **tarihindeki orana** göre. Tek katkı (`AddBesContribution`) da artık kayıt oluşturur.
+  3. **Katkı geçmişi:** `BesDto.Contributions` + `ContributionDue`; detay sağ sütununda BES için
+     **"Katkı Geçmişi"** (tarih/kendi/devlet/kaynak) — `Transaction` yok, bu kayıtlar gösterilir.
+  4. **Hatırlatma:** son katkı bu aydan eskiyse `ContributionDue=true` → detayda **"bu ayın katkısını gir"** notu.
+  5. **Web:** shared `Bes.contributions/contributionDue` + `GenerateBesContributionsInput` + `generateBesContributions`;
+     `useGenerateBesContributions`; `BesContributionPlanForm` (tutar/gün/aralık) + `BesContributionHistory` (+test);
+     detayda "Düzenli katkı / geçmiş" butonu + modal + due notu.
+  6. **"Düzenle" buton teması:** tanımsız `.link` → varsayılan buton chrome (kutu) görünüyordu; temalı
+     `.edit-link` (gold inline-link, hover/focus) eklendi, buton ona geçti.
+- **Dokunulan dosyalar:** backend yeni `Domain/Portfolio/BesContribution.cs`, `Application/Portfolio/
+  BesContributionPlanner.cs`, migration `*_BesContributions`; düzenlenen `Holding.cs`, `FinansDbContext.cs`,
+  `PortfolioConfigurations.cs`, `HoldingService.cs` (Generate + kayıt + ToBesDto), `IHoldingService.cs`,
+  `PortfolioDtos.cs`, `HoldingsController.cs`; testler `BesContributionPlannerTests.cs`,
+  `BesContributionPlanApiTests.cs`. web yeni `BesContributionPlanForm/History(.test).tsx`; `shared/{types,api}`,
+  `lib/hooks.ts`, `routes/HoldingDetailPage.tsx`, `App.css` (.edit-link). doküman `08`(T-BES.6/6b), `09`(SC-22).
+- **Test:** backend **App 59 + Integration 58 = 117** · web **45** · shared 13 · lint/build temiz.
+- **Karar/Not:** Tam **otomatik zamanlayıcı** (job ile gün gelince otomatik kayıt) ve **plan kalıcılığı**
+  T-BES.6b'ye bırakıldı (scheduler altyapısı yok); şimdilik "tarih aralığından bugüne dek üret" = backfill +
+  "devam". **Migration canlı Postgres'e uygulanmalı** (`dotnet ef database update` — additive: yeni tablo).
+- **Durum:** T-BES.6 tamam.
+- **Sıradaki:** **T-BES.5 — fon dağılımı eğitici kâr/zarar projeksiyonu** (kullanıcının sırası).
+
 ## 2026-05-31 · BES devlet katkısı oranı TARİHE BAĞLI yapıldı — geriye dönük değil (kullanıcı geri bildirimi)
 - **Görev(ler):** T-BES.1/2 düzeltmesi (kullanıcı haklı uyarısı: %30→%20 değişimi geçmiş katkıları etkilememeli).
 - **Sorun:** `BesRules.StateContributionRate` tek sabit %20 idi → "oran her zaman %20" anlamına geliyordu;

@@ -25,6 +25,9 @@ public interface IHoldingService
     /// <summary>BES sözleşme alanlarını günceller (örn. başlangıç tarihi → hak ediş yeniden türer). BES değilse 400.</summary>
     Task<HoldingDto> UpdateBesAsync(Guid id, UpdateBesRequest request, CancellationToken ct = default);
 
+    /// <summary>Düzenli BES katkısını tarih aralığından üretir (kapsanan aylar için kayıt; idempotent). BES değilse 400.</summary>
+    Task<HoldingDto> GenerateBesContributionsAsync(Guid id, GenerateBesContributionsRequest request, CancellationToken ct = default);
+
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
 

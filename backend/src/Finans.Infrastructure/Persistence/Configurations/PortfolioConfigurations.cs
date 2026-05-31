@@ -101,6 +101,25 @@ internal sealed class BesDetailsConfiguration : IEntityTypeConfiguration<BesDeta
     }
 }
 
+internal sealed class BesContributionConfiguration : IEntityTypeConfiguration<BesContribution>
+{
+    public void Configure(EntityTypeBuilder<BesContribution> b)
+    {
+        b.ToTable("BesContributions", t =>
+        {
+            t.HasCheckConstraint("CK_BesContributions_Own", "\"OwnAmount\" >= 0");
+            t.HasCheckConstraint("CK_BesContributions_State", "\"StateAmount\" >= 0");
+        });
+        b.Property(x => x.Source).HasMaxLength(20).IsRequired();
+        b.HasIndex(x => new { x.HoldingId, x.PaidAtUtc }).IsDescending(false, true);
+
+        b.HasOne(x => x.Holding)
+            .WithMany(h => h.BesContributions)
+            .HasForeignKey(x => x.HoldingId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class PriceSnapshotConfiguration : IEntityTypeConfiguration<PriceSnapshot>
 {
     public void Configure(EntityTypeBuilder<PriceSnapshot> b)

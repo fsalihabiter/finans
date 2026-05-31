@@ -4,6 +4,8 @@ import { formatCurrency, formatNumber, formatPercent } from "@finans/shared";
 import type { TransactionType } from "@finans/shared";
 import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
+import { BesContributionPlanForm } from "../components/BesContributionPlanForm";
+import { BesContributionHistory } from "../components/BesContributionHistory";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Modal } from "../components/Modal";
@@ -29,7 +31,7 @@ const VESTING_TR: Record<string, string> = {
   Vested: "Tamamlandı",
 };
 
-type ActiveModal = null | "tx" | "bes" | "price" | "besdate";
+type ActiveModal = null | "tx" | "bes" | "price" | "besdate" | "besplan";
 
 /** ISO tarihten <input type="date"> değeri (YYYY-MM-DD). */
 function toDateInput(iso: string | null): string {
@@ -109,6 +111,11 @@ export function HoldingDetailPage() {
     notify("BES katkısı eklendi.", "success");
   };
 
+  const onBesPlanDone = () => {
+    closeModal();
+    notify("Düzenli katkı kayıtları oluşturuldu.", "success");
+  };
+
   const openBesDate = () => {
     setBesDate(toDateInput(h.bes?.joinedAtUtc ?? null));
     setModal("besdate");
@@ -172,9 +179,14 @@ export function HoldingDetailPage() {
 
           <div className="detail-actions">
             {isBes ? (
-              <button type="button" className="btn-primary" onClick={() => setModal("bes")}>
-                ＋ Aylık katkı ekle
-              </button>
+              <>
+                <button type="button" className="btn-primary" onClick={() => setModal("bes")}>
+                  ＋ Aylık katkı ekle
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setModal("besplan")}>
+                  Düzenli katkı / geçmiş
+                </button>
+              </>
             ) : (
               <button type="button" className="btn-primary" onClick={() => setModal("tx")}>
                 ＋ {isCash ? "Para ekle / çıkar" : "İşlem ekle"}
@@ -203,6 +215,15 @@ export function HoldingDetailPage() {
           {h.bes && (
             <>
               <div className="detail-section-title">Bireysel Emeklilik (BES)</div>
+              {h.bes.contributionDue && (
+                <div className="nudge nudge-info">
+                  <div className="nudge-ic" aria-hidden="true">💡</div>
+                  <div className="nudge-tx">
+                    Bu ayın katkısını henüz girmedin. <b>"Aylık katkı ekle"</b> ile girebilir ya da
+                    <b> "Düzenli katkı / geçmiş"</b> ile bugüne kadar tamamlayabilirsin.
+                  </div>
+                </div>
+              )}
               <div className="split">
                 <div className="sh"><span className="sl">Kendi katkın</span><span className="sr tnum">{formatCurrency(h.bes.ownContribution, h.currency)}</span></div>
                 <div className="sd">Senin yatırdığın katkı payları — gerçek <b>yatırım performansının</b> tabanı.</div>
@@ -216,7 +237,8 @@ export function HoldingDetailPage() {
                 <span className="dk">Başlangıç</span>
                 <span className="dv">
                   {h.bes.joinedAtUtc ? formatDate(h.bes.joinedAtUtc) : "—"}
-                  <button type="button" className="link" onClick={openBesDate}> · Düzenle</button>
+                  <span className="muted"> · </span>
+                  <button type="button" className="edit-link" onClick={openBesDate}>Düzenle</button>
                 </span>
               </div>
               <p className="note-muted">
@@ -231,13 +253,17 @@ export function HoldingDetailPage() {
         {/* Sağ sütun: işlem geçmişi */}
         <div className="detail-col">
           <div className="card">
-            <div className="card-head"><h3>İşlem Geçmişi</h3></div>
-            <TransactionHistory
-              transactions={h.transactions ?? []}
-              currency={h.currency}
-              unit={h.unit}
-              cash={isCash}
-            />
+            <div className="card-head"><h3>{isBes ? "Katkı Geçmişi" : "İşlem Geçmişi"}</h3></div>
+            {isBes ? (
+              <BesContributionHistory contributions={h.bes?.contributions ?? []} />
+            ) : (
+              <TransactionHistory
+                transactions={h.transactions ?? []}
+                currency={h.currency}
+                unit={h.unit}
+                cash={isCash}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -272,6 +298,11 @@ export function HoldingDetailPage() {
       {modal === "bes" && (
         <Modal title="Aylık katkı ekle" onClose={closeModal}>
           <BesContributionForm holdingId={h.id} onDone={onBesDone} />
+        </Modal>
+      )}
+      {modal === "besplan" && (
+        <Modal title="Düzenli katkı / geçmişi doldur" onClose={closeModal}>
+          <BesContributionPlanForm holdingId={h.id} onDone={onBesPlanDone} />
         </Modal>
       )}
       {modal === "besdate" && (
