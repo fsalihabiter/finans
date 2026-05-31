@@ -66,7 +66,7 @@ describe("AddTransactionForm", () => {
     expect(screen.queryByLabelText(/Birim fiyat/)).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Tutar/), { target: { value: "1000" } });
-    fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
+    fireEvent.click(screen.getByRole("button", { name: "Kaydet" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject({

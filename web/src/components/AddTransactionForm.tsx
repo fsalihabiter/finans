@@ -96,7 +96,7 @@ export function AddTransactionForm({
           </label>
         )}
         <button type="submit" disabled={!valid || add.isPending}>
-          {add.isPending ? "Ekleniyor…" : "Ekle"}
+          {add.isPending ? (cash ? "Kaydediliyor…" : "Ekleniyor…") : cash ? "Kaydet" : "Ekle"}
         </button>
       </div>
 

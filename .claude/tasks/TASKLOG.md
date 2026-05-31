@@ -39,7 +39,8 @@
   5. **Nakit "Para ekle / çıkar" relabel (kullanıcı onayı):** `AddTransactionForm` `cash` modu → "Para ekle"/
      "Para çıkar", **birim fiyat alanı yok**, tutar = miktar, `unitPrice=1` gönderilir (backend değişmedi).
      `TransactionHistory` `cash` → "Para eklendi/çıkarıldı". Detay: buton "＋ Para ekle / çıkar", modal başlığı
-     + toast nakit'e göre. Hisse/Fon/BES'te eski Alış/Satış aynı.
+     + toast nakit'e göre. Hisse/Fon/BES'te eski Alış/Satış aynı. Nakit modunda gönder butonu **"Kaydet"**
+     ("Para çıkar" seçiliyken "Ekle" kafa karıştırıcıydı; Alış/Satış formunda "Ekle" kaldı).
 - **Dokunulan dosyalar:** yeni `web/src/components/PriceTicker.tsx`(+test), `routes/HoldingDetailPage.test.tsx`;
   düzenlenen `routes/PortfolioPage.tsx`, `routes/HoldingDetailPage.tsx`, `App.css`; silinen
   `components/LivePrices.tsx`(+test); doküman `09` (SC-W4 güncel + SC-W5).
