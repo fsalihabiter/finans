@@ -4,10 +4,14 @@ using Finans.Domain.Enums;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Seed;
+using Finans.Application.Common;
+using Finans.Infrastructure.Caching;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace Finans.Integration.Tests.Pricing;
 
@@ -38,9 +42,13 @@ public sealed class PriceFetchServiceTests : IAsyncLifetime
         await _connection.DisposeAsync();
     }
 
+    private static IAppCache NewCache() =>
+        new DistributedAppCache(
+            new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions())),
+            new CacheMetrics());
+
     private PriceFetchService Build(params IPriceProvider[] providers) =>
-        new(_db, providers, new MemoryCache(new MemoryCacheOptions()),
-            new FixedTimeProvider(Now), NullLogger<PriceFetchService>.Instance);
+        new(_db, providers, NewCache(), new FixedTimeProvider(Now), NullLogger<PriceFetchService>.Instance);
 
     private static StubPriceProvider GoldStub(decimal price) =>
         new("truncgil-test",

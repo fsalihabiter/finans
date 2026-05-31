@@ -50,12 +50,20 @@
 | **Portföy özeti** | hesaplanmış summary | portföy hash'i değişince geçersiz | 1-2 |
 | **LLM yorumu** | commentary kartları | portföy hash / günde 1 (`07` §6) | 3 |
 
-- **Araç:** Faz 1 in-memory (`IMemoryCache`); Faz 2+ **Redis** (dağıtık —
-  birden çok API örneği aynı cache'i paylaşsın, §5 için şart).
+- **Araç (T2.7 — uygulandı):** Tek port **`IAppCache`** (`IDistributedCache` üstünde
+  JSON). **Redis opsiyonel:** `ConnectionStrings:Redis` verilirse Redis (dağıtık, §5 çoklu
+  replika için), yoksa **in-memory** distributed cache → **yerel dev Redis'siz çalışır**
+  (Docker'sız geliştirme). Compose yığını Redis kullanır. Şu an taşındı: FX kuru, enflasyon,
+  fiyat (`prices:refresh`). Cache'lenen tip **serileştirilebilir** olmalı (JSON).
 - **Cache anahtarı:** kullanıcı + girdi hash'i. **Kullanıcılar arası cache
-  sızıntısı olmamalı** (anahtar mutlaka `UserId` içerir — `11` ile ilişkili).
-- **Stampede koruması:** popüler anahtarda eşzamanlı yeniden-hesabı tek
-  çalıştır (lock/`GetOrCreateAsync`).
+  sızıntısı olmamalı** (anahtar mutlaka `UserId` içerir — `11` ile ilişkili). *Not: fiyat/FX/
+  enflasyon kullanıcı-bağımsız (global piyasa) → bunlarda `UserId` yok; per-user summary cache'i
+  geldiğinde anahtar `UserId` içerecek.*
+- **Stampede koruması (T2.7 — uygulandı):** `IAppCache.SingleFlightAsync` / `GetOrCreateAsync`
+  popüler anahtarda eşzamanlı üretimi **tek çalıştırır** (süreç-içi `SemaphoreSlim`). Çoklu-replika
+  dağıtık kilidi ileride; kısa TTL + idempotent yazımlar arada köprüler.
+- **Cache isabet metriği (T2.7):** `Meter "Finans.Cache"` → `finans.cache.requests{result,cache}`
+  (hit/miss). T2.8'de Prometheus exporter bu meter'ı toplar (`12` §4).
 
 ---
 

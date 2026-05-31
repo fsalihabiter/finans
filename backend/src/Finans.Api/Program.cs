@@ -61,7 +61,8 @@ try
     var connectionString = builder.Configuration.GetConnectionString("Postgres")
         ?? throw new InvalidOperationException("ConnectionStrings:Postgres yapılandırılmamış.");
     builder.Services.AddInfrastructure(connectionString,
-        pricing => builder.Configuration.GetSection(PricingOptions.SectionName).Bind(pricing));
+        pricing => builder.Configuration.GetSection(PricingOptions.SectionName).Bind(pricing),
+        builder.Configuration.GetConnectionString("Redis"));
 
     // Health: /health (liveness) + /health/ready (DB erişilebilir mi) — 12 §8.
     builder.Services.AddHealthChecks()

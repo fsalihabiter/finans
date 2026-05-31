@@ -18,10 +18,9 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 2 altyapı: `T2.7` Redis cache · `T2.8` Seq/Prometheus/Grafana · `T2.9` reverse proxy+rate limit**
-(Faz 0 ✅ · Faz 1 ✅ · **T2.1→T2.6 ✅** — fiyat zinciri uçtan uca: sağlayıcılar → `PriceFetchService` →
-fallback → `GET /api/prices`+`NudgeRuleEngine`/`GET /nudges` → **Web** (canlı fiyat çipleri + Yenile +
-stale etiketi + Nudge kartı)). **Faz 2 işlevsel DoD karşılandı**; kalan T2.7-2.9 dağıtım/gözlem altyapısı.
+**Sıradaki adım → FAZ 2 altyapı: `T2.8` Gözlemlenebilirlik (Seq + Prometheus + Grafana; OTel metrik) · `T2.9` reverse proxy + rate limit**
+(Faz 0 ✅ · Faz 1 ✅ · **T2.1→T2.6 ✅** fiyat zinciri uçtan uca + Web · **T2.7 ✅** dağıtık cache (`IAppCache`,
+Redis-opsiyonel) + single-flight + hit/miss metrik). **Faz 2 işlevsel DoD karşılandı**; kalan T2.8-2.9 dağıtım/gözlem.
 
 ---
 
@@ -94,7 +93,7 @@ testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.
 | T2.4 | `GET /api/prices` + summary'i canlı fiyatla besle | T2.2 | `04` §5 | [x] (`PricesController` → `RefreshAsync`; `PricesResponse`/`PriceDto` (kind/currency/price/asOf/source/**stale**); `Holding.CurrentPrice` yazımı → summary/holdings besleme; e2e test stub sağlayıcıyla, ağsız) |
 | T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 | [x] (saf `NudgeRuleEngine`: yoğunlaşma/tek-varlık/düşük-nakit eşikleri → eğitici not, **tavsiye değil**; `Nudge`/`NudgesResponse`; `INudgeService`→summary; `GET /api/portfolio/nudges` per-user; SC-09 6 unit+2 e2e) |
 | T2.6 | **Web:** yenile + son güncelleme/"yaklaşık" etiketi + Nudge kartı | T2.4 | `13` §4 | [x] (shared `PriceDto`/`PricesResponse`/`Nudge`/`NudgesResponse`+`getPrices`/`getNudges`; web `usePrices`/`useNudges`; `LivePrices` çipleri + "Yenile" + stale etiketi; `NudgesCard` (disclaimer); fiyat tazelenince summary/holdings invalidate; PortfolioInsights inline nudge kaldırıldı; 4 yeni test) |
-| T2.7 | **Redis cache katmanı:** fiyat/FX/summary cache Redis'e (dağıtık); stampede koruması; cache isabet metriği | T2.2 | `10` §3 | [ ] |
+| T2.7 | **Redis cache katmanı:** fiyat/FX/summary cache Redis'e (dağıtık); stampede koruması; cache isabet metriği | T2.2 | `10` §3 | [x] (`IAppCache` `IDistributedCache` üstünde: Redis ya da in-memory (yerel dev Redis'siz çalışır); **single-flight** stampede koruması; **hit/miss `Meter`** (T2.8'e hazır); FX/enflasyon/fiyat decorator'ları taşındı; compose'a redis servisi; SC-19) |
 | T2.8 | **Gözlemlenebilirlik yığını:** Compose'a Seq + Prometheus + Grafana; OTel metrikleri (RED + bağımlılık + cache); ilk dashboard'lar + alarmlar | T0.11 | `12` §2,§4,§6 | [ ] |
 | T2.9 | **Reverse proxy + sınırlama:** Traefik/Caddy (TLS/Let's Encrypt) + rate limiting + güvenlik başlıkları; iç servisler dışarı kapalı | T0.13 | `11` §5, `10` §5 | [ ] |
 

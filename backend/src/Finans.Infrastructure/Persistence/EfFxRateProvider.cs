@@ -11,7 +11,8 @@ namespace Finans.Infrastructure.Persistence;
 /// </summary>
 public sealed class EfFxRateProvider(FinansDbContext db) : IFxRateProvider
 {
-    public async Task<CurrencyConverter> GetConverterAsync(CancellationToken ct = default)
+    /// <summary>En güncel (her pb çifti) tırnakları döndürür — <b>serileştirilebilir</b> (cache için, T2.7).</summary>
+    public async Task<List<FxQuote>> GetQuotesAsync(CancellationToken ct = default)
     {
         // Sırala + projekte SQL'de; en güncel tırnağı (her pb çifti) bellekte seç.
         // (EF, gruptan entity seçen GroupBy.First()'i SQL'e çeviremez; FxRates tablosu
@@ -21,11 +22,13 @@ public sealed class EfFxRateProvider(FinansDbContext db) : IFxRateProvider
             .Select(r => new { r.FromCurrency, r.ToCurrency, r.Rate })
             .ToListAsync(ct);
 
-        var quotes = rows
+        return rows
             .GroupBy(r => (r.FromCurrency, r.ToCurrency))
             .Select(g => g.First()) // AsOfUtc'a göre azalan sıralı → ilki en güncel
-            .Select(r => new FxQuote(r.FromCurrency, r.ToCurrency, r.Rate));
-
-        return new CurrencyConverter(quotes);
+            .Select(r => new FxQuote(r.FromCurrency, r.ToCurrency, r.Rate))
+            .ToList();
     }
+
+    public async Task<CurrencyConverter> GetConverterAsync(CancellationToken ct = default) =>
+        new(await GetQuotesAsync(ct));
 }

@@ -10,9 +10,9 @@
 çökme yok). Kalan: dağıtım/gözlem altyapısı.
 
 ## Sıradaki (öncelik sırası) — Faz 2 altyapı
-1. **T2.7** — Redis cache katmanı (fiyat/FX/summary dağıtık cache; stampede koruması; isabet metriği)
-2. **T2.8** — Gözlemlenebilirlik yığını (Compose'a Seq + Prometheus + Grafana; OTel metrikleri; dashboard)
-3. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS; güvenlik başlıkları)
+1. **T2.8** — Gözlemlenebilirlik yığını (Compose'a Seq + Prometheus + Grafana; OTel metrik exporter →
+   `Finans.Cache` hit/miss + RED + bağımlılık; ilk dashboard/alarm)
+2. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS; güvenlik başlıkları)
 
 > ✅ **T2.1→T2.6 bitti** — fiyat zinciri uçtan uca: sağlayıcılar (Frankfurter+Truncgil, anahtarsız) →
 > `PriceFetchService` (yönlendirme + 10 dk cache + snapshot/fxrate/CurrentPrice yazımı) → fallback (`stale`) →
@@ -35,7 +35,7 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **95** (Application 45 + Integration 50) · web **37** · shared **13** · eslint 0 hata · tsc/vite temiz
+- **Yeşil kapı:** backend **98** (Application 45 + Integration 53) · web **37** · shared **13** · eslint 0 hata · tsc/vite temiz
 
 ## Faz 2 tamamlananlar (özet)
 - **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan
@@ -55,6 +55,9 @@
 - **T2.6:** Web — shared tipler/istemci (`getPrices`/`getNudges`) + `usePrices`/`useNudges`; `LivePrices`
   çipleri + "↻ Yenile" + stale "yaklaşık" etiketi; `NudgesCard` (disclaimer); fiyat tazelenince
   summary/holdings invalidate (canlı yansır); PortfolioInsights inline nudge kaldırıldı. web 33→37. SC-W4.
+- **T2.7:** Dağıtık cache — `IAppCache` (`IDistributedCache` üstünde JSON) Redis-opsiyonel (yoksa in-memory,
+  yerel dev Redis'siz); **single-flight** stampede koruması; hit/miss `Meter` (T2.8'e hazır). FX/enflasyon/
+  fiyat decorator'ları taşındı; compose'a redis. SC-19. backend 95→98 (App 45 + Integration 53).
 
 ## Devam eden / Bloke
 - (yok)

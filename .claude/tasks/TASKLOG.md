@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-05-31 · Dağıtık cache katmanı — IAppCache (Redis-opsiyonel) + single-flight + metrik (T2.7)
+- **Görev(ler):** T2.7 (tamam).
+- **Ne yapıldı:**
+  1. **`IAppCache` portu (Application/Common):** `GetOrCreateAsync`/`GetAsync`/`SetAsync`/`SingleFlightAsync`.
+  2. **`DistributedAppCache` (Infrastructure/Caching):** `IDistributedCache` üstünde JSON serileştirme +
+     per-anahtar **single-flight** (in-process `SemaphoreSlim`, stampede koruması) + hit/miss metriği.
+  3. **Redis OPSİYONEL:** `ConnectionStrings:Redis` varsa `AddStackExchangeRedisCache`, yoksa
+     `AddDistributedMemoryCache`. **Yerel dev Redis'siz çalışır** ([[local-dev-database]] — Docker'sız);
+     compose'a `redis:7-alpine` + `ConnectionStrings__Redis=redis:6379` eklendi (yalnız compose yığını).
+  4. **`CacheMetrics`:** `System.Diagnostics.Metrics.Meter "Finans.Cache"` → `finans.cache.requests`
+     sayacı (etiket: result=hit/miss, cache=anahtar öneki). OTel-uyumlu → T2.8 Prometheus exporter bağlar.
+  5. **Taşıma:** `CachedFxRateProvider` (artık serileştirilebilir `List<FxQuote>` cache'ler → converter'ı
+     her çağrı kurar; `EfFxRateProvider.GetQuotesAsync` eklendi), `CachedInflationRateProvider`
+     (`InflationHolder`), `PriceFetchService` (GetAsync/SetAsync + **SingleFlightAsync** → eşzamanlı
+     /prices dış API'yi bir kez tetikler). `IMemoryCache` kullanımı kaldırıldı.
+- **Dokunulan dosyalar:** yeni `Application/Common/IAppCache.cs`, `Infrastructure/Caching/{CacheMetrics,
+  DistributedAppCache}.cs`; düzenlenen `Infrastructure/{DependencyInjection.cs, Finans.Infrastructure.csproj
+  (+StackExchangeRedis), Persistence/EfFxRateProvider.cs, Services/Cached{Fx,Inflation}RateProvider.cs,
+  Pricing/PriceFetchService.cs}`, `Api/{Program.cs, appsettings.json}`, `docker-compose.yml`; testler
+  yeni `Integration.Tests/Caching/DistributedAppCacheTests.cs`, düzenlenen `Pricing/PriceFetchServiceTests.cs`.
+- **Test:** **SC-19** (3: GetOrCreate ilk-sonra-cache, single-flight 8 eşzamanlı→factory 1, miss→null/set).
+  Mevcut FX-cache (ProviderCacheTests) + PriceFetchService cache testleri davranış korunarak yeşil.
+  `dotnet test` **yeşil: Application 45 + Integration 53 = 98**, 0 hata.
+- **Karar/Not:** Cache değerleri JSON serileştirilir → cache'lenen tip serileştirilebilir olmalı
+  (FxQuote/InflationHolder/PriceRefreshResult öyle). Single-flight şimdilik süreç-içi (en sık stampede);
+  çoklu-replika dağıtık kilidi ileride — kısa TTL + idempotent yazımlar (snapshot/fxrate dedupe) köprüler.
+  Yerel dev hiç etkilenmedi (in-memory fallback). Bkz. [[local-dev-database]].
+- **Durum:** tamamlandı
+- **Sıradaki:** T2.8 — gözlemlenebilirlik yığını (Compose'a Seq + Prometheus + Grafana; OTel metrik
+  exporter → `Finans.Cache` + RED + bağımlılık; ilk dashboard/alarm). Ardından T2.9 reverse proxy + rate limit.
+
 ## 2026-05-31 · Web — canlı fiyat + nudge görünürlüğü (T2.6)
 - **Görev(ler):** T2.6 (tamam). Faz 2 fiyat zinciri **kullanıcıya görünür** hale geldi.
 - **Ne yapıldı:**

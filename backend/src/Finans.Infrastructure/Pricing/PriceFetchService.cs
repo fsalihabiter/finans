@@ -1,9 +1,9 @@
+using Finans.Application.Common;
 using Finans.Application.Pricing;
 using Finans.Domain.Enums;
 using Finans.Domain.Portfolio;
 using Finans.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Finans.Infrastructure.Pricing;
@@ -19,7 +19,7 @@ namespace Finans.Infrastructure.Pricing;
 public sealed class PriceFetchService(
     FinansDbContext db,
     IEnumerable<IPriceProvider> providers,
-    IMemoryCache cache,
+    IAppCache cache,
     TimeProvider clock,
     ILogger<PriceFetchService> logger) : IPriceFetchService
 {
@@ -31,8 +31,20 @@ public sealed class PriceFetchService(
 
     public async Task<PriceRefreshResult> RefreshAsync(CancellationToken ct = default)
     {
-        if (cache.TryGetValue(CacheKey, out PriceRefreshResult? cached) && cached is not null)
+        var cached = await cache.GetAsync<PriceRefreshResult>(CacheKey, ct);
+        if (cached is not null)
             return cached with { FromCache = true };
+
+        // Single-flight (T2.7): eşzamanlı çağrılar dış API'yi + yazımı yalnız bir kez tetikler.
+        return await cache.SingleFlightAsync(CacheKey, RefreshInternalAsync, ct);
+    }
+
+    private async Task<PriceRefreshResult> RefreshInternalAsync(CancellationToken ct)
+    {
+        // Kilidi beklerken başka çağrı doldurmuş olabilir → tekrar bak.
+        var again = await cache.GetAsync<PriceRefreshResult>(CacheKey, ct);
+        if (again is not null)
+            return again with { FromCache = true };
 
         // 1) Fiyatlanabilir aktif varlıklar → enstrüman eşlemesi (Faz 2: altın + döviz).
         var assets = await db.Assets
@@ -52,7 +64,11 @@ public sealed class PriceFetchService(
         var refreshedAt = clock.GetUtcNow().UtcDateTime;
 
         if (assetsByInstrument.Count == 0)
-            return CacheAndReturn(new PriceRefreshResult([], refreshedAt, FromCache: false, FailedSources: []));
+        {
+            var empty = new PriceRefreshResult([], refreshedAt, FromCache: false, FailedSources: []);
+            await cache.SetAsync(CacheKey, empty, Ttl, ct);
+            return empty;
+        }
 
         // 2) Sağlayıcılara CanQuote'a göre yönlendir; her sağlayıcı izole. Çökerse → son
         //    bilinen fiyattan bayat (stale) tırnak üret (T2.3, NFR-5) — uygulama çökmez.
@@ -86,12 +102,7 @@ public sealed class PriceFetchService(
             [.. fresh, .. stale], refreshedAt, FromCache: false, FailedSources: failed);
 
         // Bir kaynak çöktüyse kısa TTL → yakında yeniden dene; aksi halde tam TTL.
-        return CacheAndReturn(result, failed.Count == 0 ? Ttl : StaleRetryTtl);
-    }
-
-    private PriceRefreshResult CacheAndReturn(PriceRefreshResult result, TimeSpan? ttl = null)
-    {
-        cache.Set(CacheKey, result, ttl ?? Ttl);
+        await cache.SetAsync(CacheKey, result, failed.Count == 0 ? Ttl : StaleRetryTtl, ct);
         return result;
     }
 

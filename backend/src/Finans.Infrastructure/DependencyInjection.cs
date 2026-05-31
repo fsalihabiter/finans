@@ -1,5 +1,7 @@
+using Finans.Application.Common;
 using Finans.Application.Pricing;
 using Finans.Application.Portfolio;
+using Finans.Infrastructure.Caching;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Services;
@@ -14,14 +16,24 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         string connectionString,
-        Action<PricingOptions>? configurePricing = null)
+        Action<PricingOptions>? configurePricing = null,
+        string? redisConnectionString = null)
     {
         services.AddDbContext<FinansDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        // Kur/enflasyon sağlayıcılar DbContext'e bağlı → scoped; in-memory cache decorator'ı
-        // ile sarılır (10 §3-4: dış çağrı/DB cache'lenir). Cache singleton, decorator scoped.
-        services.AddMemoryCache();
+        // Dağıtık cache (T2.7, 10 §3-4): Redis (yapılandırılmışsa) ya da in-memory (yerel dev —
+        // Redis kurulu değil). IAppCache single-flight (stampede koruması) + hit/miss metriği
+        // sağlar; FX/enflasyon/fiyat decorator'ları bunu kullanır.
+        if (!string.IsNullOrWhiteSpace(redisConnectionString))
+            services.AddStackExchangeRedisCache(o => o.Configuration = redisConnectionString);
+        else
+            services.AddDistributedMemoryCache();
+        services.AddSingleton<CacheMetrics>();
+        services.AddSingleton<IAppCache, DistributedAppCache>();
+
+        // Kur/enflasyon sağlayıcılar DbContext'e bağlı → scoped; cache decorator'ı (IAppCache)
+        // ile sarılır. IAppCache singleton, decorator scoped.
         services.AddScoped<EfFxRateProvider>();
         services.AddScoped<IFxRateProvider, CachedFxRateProvider>();
         services.AddScoped<EfInflationRateProvider>();

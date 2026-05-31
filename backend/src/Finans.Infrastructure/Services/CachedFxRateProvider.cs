@@ -1,26 +1,23 @@
+using Finans.Application.Common;
 using Finans.Application.Portfolio;
 using Finans.Infrastructure.Persistence;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Finans.Infrastructure.Services;
 
 /// <summary>
-/// <see cref="IFxRateProvider"/> için in-memory cache decorator'ı (10 §3-4 / 13 §13:
-/// dış çağrı/DB cache'lenir). Kurlar kullanıcı-bağımsız ve seyrek değişir → kısa TTL'li
-/// global anahtar. <see cref="CurrencyConverter"/> değişmez, paylaşımı güvenli.
+/// <see cref="IFxRateProvider"/> için cache decorator'ı (10 §3-4 / T2.7: dağıtık cache +
+/// single-flight). Kurlar kullanıcı-bağımsız ve seyrek değişir → kısa TTL'li global anahtar.
+/// <b>Serileştirilebilir</b> tırnaklar (<see cref="FxQuote"/>) cache'lenir; saf
+/// <see cref="CurrencyConverter"/> her çağrıda bunlardan kurulur (ucuz, paylaşımı güvenli).
 /// </summary>
-public sealed class CachedFxRateProvider(EfFxRateProvider inner, IMemoryCache cache) : IFxRateProvider
+public sealed class CachedFxRateProvider(EfFxRateProvider inner, IAppCache cache) : IFxRateProvider
 {
-    internal const string CacheKey = "fx:converter";
+    internal const string CacheKey = "fx:quotes";
     internal static readonly TimeSpan Ttl = TimeSpan.FromSeconds(60);
 
     public async Task<CurrencyConverter> GetConverterAsync(CancellationToken ct = default)
     {
-        if (cache.TryGetValue(CacheKey, out CurrencyConverter? cached) && cached is not null)
-            return cached;
-
-        var converter = await inner.GetConverterAsync(ct);
-        cache.Set(CacheKey, converter, Ttl);
-        return converter;
+        var quotes = await cache.GetOrCreateAsync(CacheKey, Ttl, inner.GetQuotesAsync, ct);
+        return new CurrencyConverter(quotes);
     }
 }

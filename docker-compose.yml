@@ -20,6 +20,17 @@ services:
       timeout: 3s
       retries: 10
 
+  # Dağıtık cache (T2.7). Yerel `dotnet run` bunu KULLANMAZ (in-memory'e düşer);
+  # yalnız compose yığını dağıtık cache kullanır. Prod'da iç ağda kalır (dışarı kapalı).
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: ./backend
@@ -27,6 +38,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=finans;Username=finans;Password=${POSTGRES_PASSWORD:-finans_dev}"
+      # Redis verilince IAppCache dağıtık cache'i (Redis) kullanır (T2.7).
+      ConnectionStrings__Redis: "redis:6379"
       # Container HTTP servis eder (TLS proxy'de — 11 §5); başlangıçta migrate+seed.
       Security__UseHttpsRedirection: "false"
       Database__ApplyMigrationsOnStartup: "true"
@@ -35,6 +48,8 @@ services:
       Cors__AllowedOrigins__1: "http://localhost:5174"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "8080:8080"
