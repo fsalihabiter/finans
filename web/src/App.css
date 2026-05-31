@@ -1808,10 +1808,13 @@ body.drawer-lock {
   overflow-y: auto;
   overflow-x: hidden;
 }
-/* Sütunlar genişliğe sığsın (yatay taşma yok); uzun metin … ile kesilir. */
+/* Sütunlar genişliğe sığsın (yatay taşma yok); uzun metin … ile kesilir.
+   Not: taban `.holdings-table` 620px min-width taşır (dashboard yatay kaydırma için) →
+   burada SIFIRLA, yoksa dar detay sütununda sağ kolonlar kırpılır. */
 .holdings-table.fit {
   width: 100%;
   table-layout: fixed;
+  min-width: 0;
 }
 .holdings-table.fit th,
 .holdings-table.fit td {
