@@ -1720,35 +1720,71 @@ body.drawer-lock {
   border-radius: 6px;
 }
 
-/* ───── Canlı fiyat çipleri + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
-.price-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+/* ───── Canlı fiyat kayan-yazısı (ticker) + nudge listesi/şiddet + bayat etiketi (T2.6) ───── */
+.ticker {
+  overflow: hidden;
+  border: 1px solid var(--line, #322b22);
+  border-radius: 100px;
+  background: var(--panel-2, #241f18);
 }
-.price-chip {
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 32s linear infinite;
+}
+.ticker:hover .ticker-track {
+  animation-play-state: paused;
+}
+.ticker-seq {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 9px 18px;
+  white-space: nowrap;
+}
+.tk-item {
   display: inline-flex;
   align-items: baseline;
   gap: 7px;
-  background: var(--panel-2, #241f18);
-  border: 1px solid var(--line, #322b22);
-  border-radius: 100px;
-  padding: 7px 13px;
   font-size: 12.5px;
 }
-.price-chip .pc-k {
+.tk-ic {
+  font-size: 13px;
+}
+.tk-k {
   color: var(--muted, #a89c89);
 }
-.price-chip b {
+.tk-item b {
   color: var(--text, #f3ede2);
   font-variant-numeric: tabular-nums;
 }
-.price-chip.stale {
-  border-color: rgba(224, 178, 85, 0.35);
+.tk-item.stale b {
+  color: var(--gold, #e0b255);
 }
-.price-chip .pc-stale {
+.tk-stale {
   color: var(--gold, #e0b255);
   font-size: 11px;
+}
+.tk-src {
+  color: var(--muted, #a89c89);
+  font-size: 11px;
+  opacity: 0.75;
+}
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker {
+    overflow-x: auto;
+  }
 }
 
 .nudge-list {

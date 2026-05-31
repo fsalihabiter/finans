@@ -103,6 +103,12 @@ export function HoldingDetailPage() {
   const profitSign = h.profit !== null && h.profit > 0 ? "+" : "";
   const priceLabel = isBes ? "Fon değerini güncelle" : "Fiyatı güncelle";
 
+  // Elle fiyat girişi yalnız fiyatı sabit/canlı OLMAYAN varlıklarda anlamlı:
+  // Nakit → sabit ₺1; Altın/Döviz → canlı kaynaktan (otomatik, elle giriş ezilir).
+  const isCash = h.assetType === "Cash";
+  const isLivePriced = h.assetType === "Gold" || h.assetType === "Fx";
+  const canEditPrice = !isCash && !isLivePriced;
+
   return (
     <section className="detail">
       <Link to="/" className="detail-back">← Portföy</Link>
@@ -142,10 +148,19 @@ export function HoldingDetailPage() {
                 ＋ İşlem ekle
               </button>
             )}
-            <button type="button" className="btn-ghost outlined" onClick={() => setModal("price")}>
-              {priceLabel}
-            </button>
+            {canEditPrice && (
+              <button type="button" className="btn-ghost outlined" onClick={() => setModal("price")}>
+                {priceLabel}
+              </button>
+            )}
           </div>
+          {!canEditPrice && (
+            <p className="note-muted">
+              {isCash
+                ? "Nakit fiyatı sabittir (₺1,00) — güncelleme gerekmez."
+                : "Fiyat canlı kaynaktan otomatik güncellenir (Frankfurter/Truncgil) — elle giriş gerekmez."}
+            </p>
+          )}
 
           <div className="drow"><span className="dk">Miktar</span><span className="dv tnum">{formatNumber(h.quantity)} {h.unit}</span></div>
           <div className="drow"><span className="dk">Ortalama maliyet</span><span className="dv tnum">{formatCurrency(h.avgCost, h.currency)}</span></div>

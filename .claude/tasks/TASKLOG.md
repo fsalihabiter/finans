@@ -20,6 +20,30 @@
 
 ---
 
+## 2026-05-31 · UX tutarlılığı — canlı fiyat ticker'ı + nakit/canlı varlıkta elle fiyat kaldırma (ad-hoc, kullanıcı geri bildirimi)
+- **Görev(ler):** ad-hoc (T2.6 üstüne kullanıcı geri bildirimi). İki soru: (a) nakit için elle fiyat/işlem
+  gerekli mi? (b) canlı veriyi kayan-yazı olarak görmek.
+- **Ne yapıldı:**
+  1. **`PriceTicker` (kayan yazı):** statik `LivePrices` çiplerinin yerine geçti. Altın/döviz değerleri +
+     **kaynak etiketi** ("Kaynak: Frankfurter (döviz) · Truncgil (altın)") kesintisiz akar (içerik 2×, CSS
+     marquee); hover'da durur; `prefers-reduced-motion`'da akış kapanır + yatay kaydırma (a11y). `stale`→"~yaklaşık".
+  2. **Elle "Fiyatı güncelle" görünürlük kuralı (detay sayfası):** yalnız fiyatı **sabit/canlı OLMAYAN**
+     varlıklarda (Hisse/Fon/BES). **Nakit** (sabit ₺1) ve **Altın/Döviz** (canlı, otomatik — elle giriş bir
+     sonraki tazelemede ezilirdi) için buton gizlendi + bağlam notu ("Nakit fiyatı sabittir"/"canlı kaynaktan
+     otomatik"). Çakışma/tuzak ("girdim ama döndü") giderildi → her varlıkta tek doğruluk kaynağı.
+  3. `LivePrices.tsx` + testi kaldırıldı (PriceTicker ikamesi); App.css çip stilleri ticker stilleriyle değişti.
+- **Dokunulan dosyalar:** yeni `web/src/components/PriceTicker.tsx`(+test), `routes/HoldingDetailPage.test.tsx`;
+  düzenlenen `routes/PortfolioPage.tsx`, `routes/HoldingDetailPage.tsx`, `App.css`; silinen
+  `components/LivePrices.tsx`(+test); doküman `09` (SC-W4 güncel + SC-W5).
+- **Test:** web **37→40** (PriceTicker 2 + HoldingDetailPage 3; LivePrices 2 çıktı). `tsc -b`+`vite build`+
+  **eslint 0** temiz. (SC-W4 güncellendi, SC-W5 eklendi.)
+- **Karar/Not (kullanıcıya cevap):** "Canlı" = çekme + cache (push değil) → bir tetikleyici hep gerek;
+  **Yenile butonu kalır** (ileride otomatik yoklama/odak-tazeleme opsiyonu). **Nakit:** fiyat sabit (₺1) →
+  elle güncelleme YOK; bakiye değişimi için "para ekle/çıkar" gerekir — şimdilik mevcut "İşlem ekle" (Alış/Satış)
+  mekanizması duruyor, **Alış/Satış→"Para ekle/çıkar" yeniden adlandırması önerisi açık** (uygulanmadı).
+- **Durum:** tamamlandı (ticker + elle-fiyat kuralı); nakit işlem yeniden-adlandırması bekliyor (kullanıcı kararı).
+- **Sıradaki:** (kullanıcı bakacak) — sonra T2.8 gözlemlenebilirlik. İstenirse nakit "para ekle/çıkar" relabel.
+
 ## 2026-05-31 · Dağıtık cache katmanı — IAppCache (Redis-opsiyonel) + single-flight + metrik (T2.7)
 - **Görev(ler):** T2.7 (tamam).
 - **Ne yapıldı:**

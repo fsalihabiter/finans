@@ -6,7 +6,7 @@ import { KpiGrid } from "../components/KpiGrid";
 import { AllocationDonut } from "../components/AllocationDonut";
 import { PortfolioInsights } from "../components/PortfolioInsights";
 import { NudgesCard } from "../components/NudgesCard";
-import { LivePrices } from "../components/LivePrices";
+import { PriceTicker } from "../components/PriceTicker";
 import { CurrencySelector } from "../components/CurrencySelector";
 import { HoldingsTable } from "../components/HoldingsTable";
 import { PortfolioSkeleton } from "../components/Skeleton";
@@ -114,7 +114,7 @@ export function PortfolioPage() {
         </div>
       </div>
 
-      <LivePrices prices={prices.data?.prices ?? []} />
+      <PriceTicker prices={prices.data?.prices ?? []} />
 
       {summary.isLoading && <PortfolioSkeleton />}
 
