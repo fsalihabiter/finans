@@ -17,11 +17,17 @@ export function TransactionHistory({
   transactions,
   currency,
   unit,
+  cash = false,
 }: {
   transactions: Transaction[];
   currency: CurrencyCode;
   unit: string;
+  cash?: boolean;
 }) {
+  const typeLabel = (type: Transaction["type"]) =>
+    cash
+      ? type === "Buy" ? "Para eklendi" : "Para çıkarıldı"
+      : type === "Buy" ? "Alış" : "Satış";
   return (
     <section className="tx-history">
       {transactions.length === 0 ? (
@@ -43,7 +49,7 @@ export function TransactionHistory({
                 <tr key={t.id}>
                   <td>{formatDate(t.transactedAtUtc)}</td>
                   <td className={t.type === "Buy" ? "pos" : "neg"}>
-                    {t.type === "Buy" ? "Alış" : "Satış"}
+                    {typeLabel(t.type)}
                   </td>
                   <td className="num">
                     {formatNumber(t.quantity)} <span className="muted">{unit}</span>

@@ -55,4 +55,24 @@ describe("AddTransactionForm", () => {
     renderWithProviders(<AddTransactionForm holdingId="h1" currency="TRY" unit="gram" />);
     expect(screen.getByRole("button", { name: "Ekle" })).toBeDisabled();
   });
+
+  it("cash modu: 'Para ekle/çıkar', fiyat alanı yok, unitPrice=1 gönderir", async () => {
+    const fetchMock = mockOk();
+    renderWithProviders(<AddTransactionForm holdingId="cash1" currency="TRY" unit="TRY" cash />);
+
+    // Etiketler nakit'e göre + birim fiyat alanı yok.
+    expect(screen.getByRole("button", { name: "Para ekle" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Para çıkar" })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Birim fiyat/)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Tutar/), { target: { value: "1000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject({
+      type: "Buy",
+      quantity: 1000,
+      unitPrice: 1,
+    });
+  });
 });

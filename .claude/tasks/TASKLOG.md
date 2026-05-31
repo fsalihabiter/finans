@@ -32,17 +32,24 @@
      sonraki tazelemede ezilirdi) için buton gizlendi + bağlam notu ("Nakit fiyatı sabittir"/"canlı kaynaktan
      otomatik"). Çakışma/tuzak ("girdim ama döndü") giderildi → her varlıkta tek doğruluk kaynağı.
   3. `LivePrices.tsx` + testi kaldırıldı (PriceTicker ikamesi); App.css çip stilleri ticker stilleriyle değişti.
+  4. **Otomatik tazeleme (seçenek b):** `usePrices`/`useNudges` → `refetchInterval` 5 dk (sekme önplanda) +
+     `refetchOnWindowFocus`. Backend 10 dk cache → poll'lar çoğunlukla cache-hit (dış API'ye gitmez); arka
+     planda durur. Fiyat `refreshedAtUtc` değişince mevcut effect summary/holdings'i invalidate eder.
+     "↻ Yenile" butonu açık kontrol olarak kalır.
+  5. **Nakit "Para ekle / çıkar" relabel (kullanıcı onayı):** `AddTransactionForm` `cash` modu → "Para ekle"/
+     "Para çıkar", **birim fiyat alanı yok**, tutar = miktar, `unitPrice=1` gönderilir (backend değişmedi).
+     `TransactionHistory` `cash` → "Para eklendi/çıkarıldı". Detay: buton "＋ Para ekle / çıkar", modal başlığı
+     + toast nakit'e göre. Hisse/Fon/BES'te eski Alış/Satış aynı.
 - **Dokunulan dosyalar:** yeni `web/src/components/PriceTicker.tsx`(+test), `routes/HoldingDetailPage.test.tsx`;
   düzenlenen `routes/PortfolioPage.tsx`, `routes/HoldingDetailPage.tsx`, `App.css`; silinen
   `components/LivePrices.tsx`(+test); doküman `09` (SC-W4 güncel + SC-W5).
-- **Test:** web **37→40** (PriceTicker 2 + HoldingDetailPage 3; LivePrices 2 çıktı). `tsc -b`+`vite build`+
-  **eslint 0** temiz. (SC-W4 güncellendi, SC-W5 eklendi.)
-- **Karar/Not (kullanıcıya cevap):** "Canlı" = çekme + cache (push değil) → bir tetikleyici hep gerek;
-  **Yenile butonu kalır** (ileride otomatik yoklama/odak-tazeleme opsiyonu). **Nakit:** fiyat sabit (₺1) →
-  elle güncelleme YOK; bakiye değişimi için "para ekle/çıkar" gerekir — şimdilik mevcut "İşlem ekle" (Alış/Satış)
-  mekanizması duruyor, **Alış/Satış→"Para ekle/çıkar" yeniden adlandırması önerisi açık** (uygulanmadı).
-- **Durum:** tamamlandı (ticker + elle-fiyat kuralı); nakit işlem yeniden-adlandırması bekliyor (kullanıcı kararı).
-- **Sıradaki:** (kullanıcı bakacak) — sonra T2.8 gözlemlenebilirlik. İstenirse nakit "para ekle/çıkar" relabel.
+- **Test:** web **37→41** (PriceTicker 2 + HoldingDetailPage 3 + AddTransactionForm cash 1; LivePrices 2 çıktı).
+  `tsc -b`+`vite build`+**eslint 0** temiz. (SC-W4 güncel, SC-W5 + SC-W6 eklendi.)
+- **Karar/Not (kullanıcıya cevap):** "Canlı" = çekme + cache (push değil) → tetikleyici gerek; **otomatik
+  tazeleme eklendi** (5 dk + odak) + **Yenile butonu** açık kontrol olarak kaldı. **Nakit:** fiyat sabit (₺1)
+  → elle güncelleme YOK; işlem modeli **"Para ekle/çıkar"** olarak yeniden adlandırıldı (alış/satış değil).
+- **Durum:** tamamlandı (ticker + elle-fiyat kuralı + otomatik tazeleme + nakit relabel).
+- **Sıradaki:** (kullanıcı bakacak) — sonra T2.8 gözlemlenebilirlik.
 
 ## 2026-05-31 · Dağıtık cache katmanı — IAppCache (Redis-opsiyonel) + single-flight + metrik (T2.7)
 - **Görev(ler):** T2.7 (tamam).

@@ -56,12 +56,19 @@ export function useSettings() {
   });
 }
 
-/** Canlı altın/döviz fiyatları (T2.6). Sorgu, backend'de tazeleme turunu tetikler (cache'li). */
+// Otomatik tazeleme: sekme önplandayken 5 dk'da bir + sekmeye dönünce. Backend 10 dk
+// cache'lediği için poll'lar çoğunlukla cache-hit (dış API'ye gitmez); arka planda durur
+// (refetchIntervalInBackground varsayılan kapalı). "Yenile" butonu açık kontrol olarak kalır.
+const LIVE_REFETCH_MS = 5 * 60_000;
+
+/** Canlı altın/döviz fiyatları (T2.6). Sorgu backend'de tazeleme turunu tetikler (cache'li). */
 export function usePrices() {
   return useQuery({
     queryKey: queryKeys.prices,
     queryFn: () => api.getPrices(),
-    staleTime: 60_000, // fiyatlar yavaş değişir; backend zaten 10 dk cache'liyor
+    staleTime: 60_000,
+    refetchInterval: LIVE_REFETCH_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -71,6 +78,8 @@ export function useNudges() {
     queryKey: queryKeys.nudges,
     queryFn: () => api.getNudges(),
     staleTime: 120_000,
+    refetchInterval: LIVE_REFETCH_MS,
+    refetchOnWindowFocus: true,
   });
 }
 

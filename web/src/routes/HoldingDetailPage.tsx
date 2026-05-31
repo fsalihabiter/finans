@@ -62,6 +62,12 @@ export function HoldingDetailPage() {
   const h = holding.data;
   const isBes = h.bes !== null;
 
+  // Elle fiyat girişi yalnız fiyatı sabit/canlı OLMAYAN varlıklarda anlamlı:
+  // Nakit → sabit ₺1 + "para ekle/çıkar"; Altın/Döviz → canlı kaynaktan (otomatik, elle giriş ezilir).
+  const isCash = h.assetType === "Cash";
+  const isLivePriced = h.assetType === "Gold" || h.assetType === "Fx";
+  const canEditPrice = !isCash && !isLivePriced;
+
   const closeModal = () => setModal(null);
 
   const onUpdatePrice = (e: React.FormEvent) => {
@@ -82,7 +88,10 @@ export function HoldingDetailPage() {
 
   const onTxDone = (type: TransactionType) => {
     closeModal();
-    notify(type === "Buy" ? "Alış işlemi eklendi." : "Satış işlemi eklendi.", "success");
+    const msg = isCash
+      ? type === "Buy" ? "Para eklendi." : "Para çıkarıldı."
+      : type === "Buy" ? "Alış işlemi eklendi." : "Satış işlemi eklendi.";
+    notify(msg, "success");
   };
 
   const onBesDone = () => {
@@ -102,12 +111,6 @@ export function HoldingDetailPage() {
   const meta = ASSET_META[h.assetType];
   const profitSign = h.profit !== null && h.profit > 0 ? "+" : "";
   const priceLabel = isBes ? "Fon değerini güncelle" : "Fiyatı güncelle";
-
-  // Elle fiyat girişi yalnız fiyatı sabit/canlı OLMAYAN varlıklarda anlamlı:
-  // Nakit → sabit ₺1; Altın/Döviz → canlı kaynaktan (otomatik, elle giriş ezilir).
-  const isCash = h.assetType === "Cash";
-  const isLivePriced = h.assetType === "Gold" || h.assetType === "Fx";
-  const canEditPrice = !isCash && !isLivePriced;
 
   return (
     <section className="detail">
@@ -145,7 +148,7 @@ export function HoldingDetailPage() {
               </button>
             ) : (
               <button type="button" className="btn-primary" onClick={() => setModal("tx")}>
-                ＋ İşlem ekle
+                ＋ {isCash ? "Para ekle / çıkar" : "İşlem ekle"}
               </button>
             )}
             {canEditPrice && (
@@ -193,6 +196,7 @@ export function HoldingDetailPage() {
               transactions={h.transactions ?? []}
               currency={h.currency}
               unit={h.unit}
+              cash={isCash}
             />
           </div>
         </div>
@@ -215,8 +219,14 @@ export function HoldingDetailPage() {
 
       {/* ───── Modallar (#2) ───── */}
       {modal === "tx" && (
-        <Modal title="İşlem ekle" onClose={closeModal}>
-          <AddTransactionForm holdingId={h.id} currency={h.currency} unit={h.unit} onDone={onTxDone} />
+        <Modal title={isCash ? "Para ekle / çıkar" : "İşlem ekle"} onClose={closeModal}>
+          <AddTransactionForm
+            holdingId={h.id}
+            currency={h.currency}
+            unit={h.unit}
+            cash={isCash}
+            onDone={onTxDone}
+          />
         </Modal>
       )}
       {modal === "bes" && (

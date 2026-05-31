@@ -35,7 +35,7 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **98** (Application 45 + Integration 53) · web **40** · shared **13** · eslint 0 hata · tsc/vite temiz
+- **Yeşil kapı:** backend **98** (Application 45 + Integration 53) · web **41** · shared **13** · eslint 0 hata · tsc/vite temiz
 
 ## Faz 2 tamamlananlar (özet)
 - **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan
