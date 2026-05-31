@@ -1,13 +1,5 @@
-import { formatCurrency, formatNumber } from "@finans/shared";
+import { formatCurrency, formatDate, formatNumber } from "@finans/shared";
 import type { CurrencyCode, Transaction } from "@finans/shared";
-
-/** ISO tarihi tr-TR kısa biçimde (gün ay yıl). */
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? "—"
-    : new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", year: "numeric" }).format(d);
-}
 
 /**
  * Pozisyonun geçmiş işlemleri (alış/satış). En yeni üstte. Birim fiyat varlığın

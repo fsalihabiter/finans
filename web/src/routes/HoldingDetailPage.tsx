@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { formatCurrency, formatNumber, formatPercent } from "@finans/shared";
+import { formatCurrency, formatDate, formatNumber, formatPercent } from "@finans/shared";
 import type { BesContribution, TransactionType } from "@finans/shared";
 import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
@@ -23,13 +23,6 @@ import { ASSET_META, softBg } from "../lib/assetMeta";
 function tone(value: number | null): string {
   if (value === null || value === 0) return "";
   return value > 0 ? "up" : "down";
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? "—"
-    : new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
 }
 
 const VESTING_TR: Record<string, string> = {

@@ -1,5 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { formatCurrency, formatPercent } from "./index";
+import { formatCurrency, formatDate, formatPercent } from "./index";
+
+describe("formatDate (tr-TR noktalı)", () => {
+  it("ISO tarihi gg.aa.yyyy biçiminde döndürür", () => {
+    expect(formatDate("2026-03-01T00:00:00Z")).toBe("01.03.2026");
+    expect(formatDate("2025-08-25T10:00:00Z")).toBe("25.08.2025");
+  });
+
+  it("geçersiz tarihte — döndürür", () => {
+    expect(formatDate("yok")).toBe("—");
+  });
+});
 
 describe("formatCurrency (tr-TR)", () => {
   it("binlik ayraç nokta, ondalık virgül kullanır", () => {

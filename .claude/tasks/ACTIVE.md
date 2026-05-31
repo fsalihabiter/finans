@@ -45,7 +45,9 @@
   (yoğunluk), tüm taslak menüleri (İşlemler/Performans/Senaryo/Hisse/Eğitim) + nav grupları,
   Performans sayfası (dönem sekmeleri + gerçek getiri çubukları), **mobil menü CSS-sıra hatası fix**,
   sticky topbar top:0. Canlı doğrulandı (5173+5298+PostgreSQL).
-- **Yeşil kapı:** backend **119** (Application 59 + Integration 60) · web **45** · shared **13** · eslint 0 hata · tsc/vite temiz
+- **Yeşil kapı:** backend **119** (Application 59 + Integration 60) · web **45** · shared **15** · eslint 0 hata · tsc/vite temiz
+- **Tarih biçimi (NFR-7):** tüm gösterimler `@finans/shared` `formatDate` → **gg.aa.yyyy** ("01.03.2026", UTC, noktalı).
+  Tarih girişleri native `<input type="date">` (tr-TR locale → zaten noktalı gg.aa.yyyy).
 
 ## Faz 2 tamamlananlar (özet)
 - **T2.1:** Fiyat sağlayıcı seçimi + `IPriceProvider`. Döviz=Frankfurter (ECB, anahtarsız, doğrudan

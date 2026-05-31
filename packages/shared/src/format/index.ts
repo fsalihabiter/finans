@@ -28,6 +28,22 @@ export function formatCurrency(value: number, currency: CurrencyCode = "TRY"): s
 }
 
 /**
+ * ISO tarihi tr-TR <b>noktalı sayısal</b> biçimde: "01.03.2026" (gg.aa.yyyy). Geçersizse "—".
+ * Tüm projede tek tarih gösterim biçimi (NFR-7).
+ */
+export function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat("tr-TR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "UTC", // tarih takvim-günü; izleyenin saat dilimi günü kaydırmasın
+      }).format(d);
+}
+
+/**
  * Oranı yüzde olarak tr-TR biçiminde döndürür.
  * Girdi oran (0.516) ya da hazır yüzde olabilir; `asRatio` ile belirtilir.
  * `signed` true ise pozitifte "+" eklenir (getiri için); ağırlık/oran gösteriminde false.

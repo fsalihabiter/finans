@@ -1,12 +1,5 @@
-import { formatCurrency } from "@finans/shared";
+import { formatCurrency, formatDate } from "@finans/shared";
 import type { BesContribution } from "@finans/shared";
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? "—"
-    : new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", year: "numeric" }).format(d);
-}
 
 /**
  * BES katkı ödeme geçmişi (en yeni üstte): tarih + kendi/devlet katkısı + satır içi
