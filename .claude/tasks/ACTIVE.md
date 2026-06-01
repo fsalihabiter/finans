@@ -11,8 +11,14 @@
 
 ## Sıradaki (öncelik sırası)
 1. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
-2. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
-3. T-BES.6b ileri (otomatik zamanlayıcı/plan kalıcılığı — uygulama kapalıyken arka plan job)
+2. T-BES.6b ileri (otomatik zamanlayıcı/plan kalıcılığı — uygulama kapalıyken arka plan job)
+
+> ✅ **T2.9 bitti (2026-06-02) — Caddy reverse proxy + TLS + RateLimiter:** `compose/caddy/Caddyfile`
+> (localhost `tls internal`, güvenlik başlıkları, /api+/health proxy); compose'da api/postgres/redis
+> iç ağa kapandı (sadece Caddy 80/443 dışarı). ASP.NET `AddRateLimiter`: global Sliding 120/dk,
+> "prices" Fixed 10/dk, "nudges" Fixed 30/dk; partition kullanıcı/IP; 429 ApiError zarfı + Retry-After;
+> /health bypass. **+2 integration test** (kilit bırakılınca koşar). Application 99/99 yeşil.
+> ⚠ Web compose'a girmedi (pnpm dev ayrı). Manuel doğrulama: `docker compose up --build`.
 
 > ✅ **`AddBesBirthYear` migration uygulandı (2026-06-02)** — `BesDetails.BirthYear integer NULL` canlı
 > Postgres'te (`dotnet ef database update`, additive). `__EFMigrationsHistory` 4/4 migration'la

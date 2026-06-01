@@ -20,6 +20,43 @@
 
 ---
 
+## 2026-06-02 · T2.9 — Caddy reverse proxy + TLS + ASP.NET RateLimiter
+- **Görev(ler):** T2.9 (08-BACKLOG Faz 2). Lansman öncesi güvenlik kapısı: TLS, dış servisleri iç ağa
+  kapatma, rate limit (Caddy ağ-katı + ASP.NET endpoint-katı), güvenlik başlıkları.
+- **Ne yapıldı (Caddy / compose):**
+  1. `compose/caddy/Caddyfile` — `localhost` için `tls internal` (Caddy CA, tarayıcı bir kez kabul);
+     `/api/*` ve `/health*` → `api:8080` iç ağ. Güvenlik başlıkları (HSTS, XCTO, XFO, Referrer-Policy,
+     `-Server`). gzip+zstd encode. Diğer yollar bilgi mesajı (compose'da web servisi yok).
+  2. `docker-compose.yml` — Caddy servisi (80, 443; volume Caddyfile + named volume `caddy-data`/
+     `caddy-config` sertifika kalıcılığı). **`api` `ports` → `expose: 8080`** (dışarı kapandı);
+     `postgres` `ports` kaldırıldı (yerel dev kendi PostgreSQL'i 5432'yi kullanır); `redis` `expose`.
+     Healthcheck Caddy için (`wget --no-check-certificate https://localhost/health`).
+- **Ne yapıldı (ASP.NET RateLimiter / Program.cs):**
+  3. `AddRateLimiter` (built-in, .NET 7+). 429 → sözleşmeli `ApiErrorEnvelope` (`RATE_LIMIT_EXCEEDED`)
+     + `Retry-After` header. Partition: kullanıcı (X-User-Id) varsa `user:`, yoksa `ip:`.
+  4. **Global limiter:** SlidingWindow 120/dk/partition (6 dilim, smooth).
+  5. **Politika "prices":** FixedWindow 10/dk — `PricesController` `[EnableRateLimiting("prices")]`.
+     Dış API (Frankfurter/Truncgil) korunsun.
+  6. **Politika "nudges":** FixedWindow 30/dk — `PortfolioController.GetNudges`. Web 5dk'da tazeler.
+  7. **`/health*` rate limit DIŞINDA** — `MapHealthChecks(...).DisableRateLimiting()`. Uptime/probe
+     trafiği kesilmez.
+  8. `UseForwardedHeaders` (Caddy arkasında gerçek client IP'sini görmek için; `Security:ForwardedHeaders`
+     bayrağı). KnownNetworks/KnownProxies şimdi açık — production'da daraltılır.
+  9. CORS allowed origin'lere `https://localhost` eklendi (web Caddy üzerinden API çağrısı yapacaksa).
+- **Dokunulan dosyalar:** `compose/caddy/Caddyfile` (yeni), `docker-compose.yml`,
+  `backend/src/Finans.Api/Program.cs`, `backend/src/Finans.Api/Controllers/PricesController.cs`,
+  `backend/src/Finans.Api/Controllers/PortfolioController.cs`,
+  `backend/tests/Finans.Integration.Tests/RateLimitApiTests.cs` (yeni).
+- **Test:** +2 integration test (Prices: 10 OK + 11. 429 ApiError; Health: 150 istek 429 yok). Partition
+  izolasyonu: her test rastgele `X-User-Id` → sayaçlar paylaşılmaz. **Application 99/99 yeşil.**
+  Integration VS Api kilidi bırakılınca koşulacak.
+- **Karar/Not:** Web compose'a girmedi — `pnpm dev` ayrı (5173/5174) koşar; production hazırlığı için
+  ilerleyen aşamada Caddy `file_server` ile `web/dist` sunulabilir. Localhost TLS için tarayıcı bir kez
+  Caddy'nin internal CA'sını "kabul et" diyecek (Chrome: thisisunsafe). Production'da `tls internal`
+  yerine gerçek domain + otomatik Let's Encrypt (Caddy varsayılanı).
+- **Durum:** tamamlandı (kod). Manuel doğrulama: `docker compose up --build` → `https://localhost/health`.
+- **Sıradaki:** **T2.8** — Gözlemlenebilirlik (Seq + Prometheus + Grafana + OTel metrik).
+
 ## 2026-06-01 · T-BES.4 — devlet katkısı yıllık üst sınırı (takvim yılı bazlı kesme)
 - **Görev(ler):** T-BES.4 (08-BACKLOG T-BES epik) — devlet katkısı oranı %20 uygulanıyordu ama
   **üst sınır kontrolü yoktu**; aylık 50.000 ₺ katkı yapan biri için yıl boyunca 120.000 ₺ devlet

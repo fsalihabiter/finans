@@ -1,0 +1,53 @@
+# Caddy reverse proxy (T2.9) — localhost TLS, API'yi iç ağda tutar.
+#
+# Dev compose yığını için: 443'te TLS terminasyonu (Caddy'nin internal CA'sı; tarayıcı bir kez
+# "Bu siteye git" diye uyaracak), 80 → 443 yönlendirme. /api/* ve /health* → api:8080 iç ağda.
+# Diğer yollar: kısa info mesajı (compose'da web servisi yok — `pnpm dev` ayrı koşar; lansman
+# öncesi prod profili burada file_server /srv ile web/dist sunacak).
+#
+# Production (gerçek domain) için: `localhost` yerine domain adı, `tls internal` yerine
+# Let's Encrypt'le otomatik HTTPS (Caddy varsayılanı zaten). 11 §5 + 10 §5.
+
+{
+	# Otomatik HTTP→HTTPS yönlendirme açık (varsayılan). Localhost için internal CA → tls internal.
+	auto_https disable_redirects
+	# Log'lar stdout (compose log driver toplar → T2.8 ile Seq).
+}
+
+localhost {
+	tls internal
+
+	# Güvenlik başlıkları (11 §5). HSTS yalnız HTTPS akışı doğrulandıktan sonra (preload yok).
+	header {
+		# XSS/clickjacking/MIME-sniffing temel korumalar
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# HSTS (1 yıl) — geliştirme tarayıcısında localhost için cache temizlemek isteyebilirsin.
+		Strict-Transport-Security "max-age=31536000"
+		# Caddy header
+		-Server
+	}
+
+	encode gzip zstd
+
+	# API rotaları — backend container iç ağda 8080'de.
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	# Health endpoint'leri — uptime izleme + container orchestration (rate limit yok, T2.9.b).
+	handle /health* {
+		reverse_proxy api:8080
+	}
+
+	# Diğer her şey: bilgi mesajı (web compose'da yok — Vite dev ayrı koşar; prod'da file_server).
+	handle {
+		respond "Finans API · use /api/* or /health" 200
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

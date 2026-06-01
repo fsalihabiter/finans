@@ -1,6 +1,11 @@
-# Lokal geliştirme yığını (02 §6): API + PostgreSQL.
-# `docker compose up --build` → migrate+seed'li API http://localhost:8080.
+# Lokal geliştirme yığını (02 §6): Caddy (TLS reverse proxy) + API + Postgres + Redis.
+# `docker compose up --build` → migrate+seed'li API; **https://localhost** (Caddy'nin internal CA'sıyla;
+# tarayıcı bir kez "Bu siteye git" uyarısı verir → kabul et). HTTP 80 → 443 otomatik yönlendirilir.
 # Parola: env/.env ile ver (repoda yok — 11 §6); dev varsayılanı finans_dev.
+#
+# T2.9: Postgres + Redis + API artık **iç ağa kapanmış** (ports kaldırıldı, expose'la sadece
+# servisler arası); dışarıdan yalnız Caddy üzerinden erişim (TLS + rate limit + güvenlik başlıkları).
+# Yerel dev (compose dışı `dotnet run`) hâlâ doğrudan kendi PostgreSQL'inle çalışır — değişmedi.
 
 services:
   postgres:
@@ -11,9 +16,10 @@ services:
       POSTGRES_DB: finans
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    # Dev'de host'tan erişim için; prod'da KALDIR (iç ağda kalsın — 11 §5).
-    ports:
-      - "5433:5432"
+    # ⚠ Dışarı port AÇMA (11 §5). Yerel dev'de elle kurulu PostgreSQL'i (5432) kullan.
+    # Compose içindeki postgres yalnız compose servislerine açıktır.
+    expose:
+      - "5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U finans -d finans"]
       interval: 5s
@@ -21,10 +27,12 @@ services:
       retries: 10
 
   # Dağıtık cache (T2.7). Yerel `dotnet run` bunu KULLANMAZ (in-memory'e düşer);
-  # yalnız compose yığını dağıtık cache kullanır. Prod'da iç ağda kalır (dışarı kapalı).
+  # yalnız compose yığını dağıtık cache kullanır. İç ağda kalır (dışarı kapalı — 11 §5).
   redis:
     image: redis:7-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
+    expose:
+      - "6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -44,15 +52,43 @@ services:
       Security__UseHttpsRedirection: "false"
       Database__ApplyMigrationsOnStartup: "true"
       Database__Seed: "true"
+      # Web Caddy üzerinden çağrı yapacak (https://localhost) + dev Vite (5173/5174).
       Cors__AllowedOrigins__0: "http://localhost:5173"
       Cors__AllowedOrigins__1: "http://localhost:5174"
+      Cors__AllowedOrigins__2: "https://localhost"
+      # Üretim için aşağıdaki TrustedProxies Caddy container IP'sini içermeli (gerçek client IP'sini
+      # rate limit/log'da görmek için). Compose default bridge IP'leri 172.x.x.x — şimdilik açık.
+      Security__ForwardedHeaders: "true"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # ⚠ Dışarı port AÇMA — Caddy'den geç (11 §5).
+    expose:
+      - "8080"
+
+  # Reverse proxy + TLS + güvenlik başlıkları (T2.9). 443: TLS (internal CA, localhost); 80: redirect.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./compose/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data       # Sertifikalar (internal CA root + leaf'ler) burada kalıcı
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "--no-check-certificate", "https://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:
+  caddy-data:
+  caddy-config:

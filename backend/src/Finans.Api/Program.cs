@@ -1,4 +1,7 @@
+using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Finans.Api.Auth;
 using Finans.Api.ErrorHandling;
 using Finans.Api.Observability;
@@ -8,7 +11,9 @@ using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Seed;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -74,6 +79,78 @@ try
     builder.Services.AddCors(options => options.AddPolicy(corsPolicy, policy =>
         policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
+    // Reverse proxy (Caddy) arkasında gerçek client IP/protokolünü görmek için (rate limit + log).
+    // Compose default bridge'inde Caddy IP'si runtime'da bilinmediği için known network'leri açtık;
+    // production'da spesifik known proxy/network kısıtlanır (11 §5).
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
+    // ── Rate limiting (T2.9 — 11 §5, 10 §5) ────────────────────────────────────
+    // Bölümlendirme: kullanıcı kimliği varsa onu, yoksa IP. Aynı NAT arkasındaki çoklu
+    // kullanıcılar haksız 429 almasın (kimlikli yol daha doğru); henüz JWT yok, X-User-Id proxy.
+    // Caddy ön katmandaki kaba (global IP) limit; burada **endpoint başı** ince ayar yapılır.
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.OnRejected = async (context, ct) =>
+        {
+            // Sözleşmeli ApiError zarfı (04 §2 — diğer hatalarla simetri). Retry-After header.
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retry))
+                context.HttpContext.Response.Headers.RetryAfter =
+                    ((int)retry.TotalSeconds).ToString(CultureInfo.InvariantCulture);
+
+            var envelope = new ApiErrorEnvelope(new ApiError(
+                "RATE_LIMIT_EXCEEDED",
+                "Çok fazla istek. Lütfen biraz bekleyin.",
+                Array.Empty<ApiErrorDetail>()));
+            context.HttpContext.Response.ContentType = "application/json";
+            await context.HttpContext.Response.WriteAsync(
+                JsonSerializer.Serialize(envelope, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                }), ct);
+        };
+
+        // Global limiter: tüm istekler partition başına (sliding window, daha smooth).
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        {
+            var key = ResolvePartitionKey(httpContext);
+            return RateLimitPartition.GetSlidingWindowLimiter(key, _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 120,        // dakikada 120 istek (genel kullanıcı tavanı)
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,    // 10sn'lik 6 dilim — kayan pencere yumuşatma
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            });
+        });
+
+        // "prices" politikası: fiyat tazeleme dış API çağırır + 10dk cache var → düşük tavan yeter.
+        options.AddPolicy("prices", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(ResolvePartitionKey(httpContext),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+
+        // "nudges": eğitici notlar — daha az pahalı ama yine sınırlı.
+        options.AddPolicy("nudges", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(ResolvePartitionKey(httpContext),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+    });
+
     var app = builder.Build();
 
     // `dotnet run -- seed`: migration uygula + idempotent seed çalıştır, sonra çık.
@@ -97,6 +174,11 @@ try
             await SeedData.SeedAsync(db);
     }
 
+    // Reverse proxy başlıkları (X-Forwarded-*) — UseRouting/UseAuthorization'dan ÖNCE gelmeli ki
+    // rate limit ve log'lar gerçek client IP'sini görsün (11 §5).
+    if (app.Configuration.GetValue<bool>("Security:ForwardedHeaders"))
+        app.UseForwardedHeaders();
+
     // Boru hattı: hata yakalama (en dış) → korelasyon → istek log'u.
     app.UseExceptionHandler();
     app.UseMiddleware<CorrelationIdMiddleware>();
@@ -111,12 +193,17 @@ try
         app.UseHttpsRedirection();
 
     app.UseCors(corsPolicy);
+    // Rate limit: CORS'tan SONRA (preflight'lar limit'e takılmasın), MapControllers'tan ÖNCE.
+    app.UseRateLimiter();
     app.UseAuthorization();
 
     app.MapControllers();
 
-    app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => false });
-    app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
+    // Health endpoint'leri rate limit DIŞINDA — uptime izleme + orchestration probe'ları (11 §5).
+    app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => false })
+        .DisableRateLimiting();
+    app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
+        .DisableRateLimiting();
 
     app.Run();
 }
@@ -135,6 +222,19 @@ static string ToCamel(string key) =>
         ? key
         : string.Join('.', key.TrimStart('$', '.').Split('.')
             .Select(seg => seg.Length == 0 ? seg : char.ToLowerInvariant(seg[0]) + seg[1..]));
+
+/// <summary>
+/// Rate limit partition anahtarı (T2.9): kimlik biliniyorsa kullanıcı, yoksa IP. Paylaşılan NAT
+/// arkasındaki farklı kullanıcılar haksız 429 almasın diye user-bazlı tercih edilir (Faz 5 JWT
+/// gelince burası daha güvenli olur — şimdi X-User-Id proxy). 11 §5 + 10 §5.
+/// </summary>
+static string ResolvePartitionKey(HttpContext ctx)
+{
+    if (ctx.Request.Headers.TryGetValue(HttpCurrentUser.UserHeader, out var u) &&
+        !string.IsNullOrWhiteSpace(u))
+        return $"user:{u}";
+    return $"ip:{ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+}
 
 /// <summary>
 /// Integration testlerinin (WebApplicationFactory) erişebilmesi için açılan

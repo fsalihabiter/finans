@@ -1,5 +1,6 @@
 using Finans.Application.Pricing;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Finans.Api.Controllers;
 
@@ -12,6 +13,9 @@ namespace Finans.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+// Sıkı rate limit: bu endpoint dış API çağırır (Frankfurter/Truncgil). Cache 10dk olsa da
+// upstream koruması için kullanıcı başına dakikada 10 — yeterli (T2.9, 10 §5).
+[EnableRateLimiting("prices")]
 public sealed class PricesController(IPriceFetchService priceFetch) : ControllerBase
 {
     /// <summary>GET /api/prices — güncel altın/döviz fiyatları (+ stale/asOf/source).</summary>

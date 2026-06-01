@@ -1,6 +1,7 @@
 using Finans.Application.Portfolio;
 using Finans.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Finans.Api.Controllers;
 
@@ -23,6 +24,8 @@ public sealed class PortfolioController(IPortfolioService portfolio, INudgeServi
     /// çerçeve sunar; **yatırım tavsiyesi değildir** (CLAUDE.md §2, UI disclaimer ile gösterilir).
     /// </summary>
     [HttpGet("nudges")]
+    // Orta sıkılıkta rate limit: dakikada 30/kullanıcı (web tarafında 5dk'da bir tazelenir).
+    [EnableRateLimiting("nudges")]
     public async Task<ActionResult<NudgesResponse>> GetNudges(
         [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
         Ok(new NudgesResponse(await nudges.GetNudgesAsync(baseCurrency, ct)));
