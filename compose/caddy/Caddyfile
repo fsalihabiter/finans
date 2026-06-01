@@ -9,8 +9,8 @@
 # Let's Encrypt'le otomatik HTTPS (Caddy varsayılanı zaten). 11 §5 + 10 §5.
 
 {
-	# Otomatik HTTP→HTTPS yönlendirme açık (varsayılan). Localhost için internal CA → tls internal.
-	auto_https disable_redirects
+	# Otomatik HTTP→HTTPS yönlendirme açık (Caddy varsayılanı): 80 → 308 → 443.
+	# Localhost için internal CA → site bloğundaki `tls internal` ile.
 	# Log'lar stdout (compose log driver toplar → T2.8 ile Seq).
 }
 
