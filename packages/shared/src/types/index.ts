@@ -253,6 +253,10 @@ export interface BesProjection {
   stateProfit: number;
   annualReturnRatio: number;
   yearly: BesProjectionYear[];
+  /** Süre sonunda hak ediş oranı (0/0.15/0.35/0.60/1.00) — sözleşme kademeleri (3/6/10/+56). */
+  vestedRateAtEnd: number;
+  /** Süre sonunda hak kazanılan devlet katkısı ≈ rate × stateValue. */
+  vestedStateAmountAtEnd: number;
 }
 
 /** Her yıl sonu birikim/değer (büyüme eğrisi için). */

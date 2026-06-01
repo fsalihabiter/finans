@@ -85,6 +85,14 @@ public static class BesProjectionCalculator
         var finalOwnValue = TotalShare(fund, own, state, isOwn: true);
         var finalStateValue = TotalShare(fund, own, state, isOwn: false);
 
+        // Süre sonu hak ediş: sözleşme başı (varsa JoinedAtUtc, yoksa StartDate) + Years yıl sonra
+        // sistemde kalış süresi; doğum yılı varsa o tarihteki yaş ile 56+ kontrolü.
+        var asOfEnd = startDate.AddYears(input.Years);
+        var joinedForVesting = input.JoinedAtUtc ?? startDate;
+        var ageAtEnd = input.BirthYear is { } by ? asOfEnd.Year - by : (int?)null;
+        var vestedRate = BesCalculator.VestedRateFor(joinedForVesting, ageAtEnd, asOfEnd);
+        var vestedStateAmount = Math.Round(vestedRate * finalStateValue, 2);
+
         return new BesProjectionResult(
             Math.Round(own, 2),
             Math.Round(state, 2),
@@ -94,7 +102,9 @@ public static class BesProjectionCalculator
             Math.Round(finalOwnValue - own, 2),
             Math.Round(finalStateValue - state, 2),
             input.AnnualReturnRatio,
-            yearly);
+            yearly,
+            vestedRate,
+            vestedStateAmount);
     }
 
     /// <summary>
@@ -111,11 +121,18 @@ public static class BesProjectionCalculator
 }
 
 /// <summary>BES projeksiyon girdileri — kullanıcı varsayımları (T-BES.5).</summary>
+/// <param name="JoinedAtUtc">
+/// Sözleşme başlangıcı (varsa). Süre sonu hak ediş oranı (3-6-10 yıl kademeleri) bundan türer.
+/// Yoksa <c>StartDate</c> kullanılır (kullanıcı yeni sözleşme yapacakmış gibi).
+/// </param>
+/// <param name="BirthYear">Doğum yılı (opsiyonel) — 10 yıl + 56 yaş = %100 hak ediş kontrolü için.</param>
 public sealed record BesProjectionInput(
     decimal OwnMonthly,
     int Years,
     decimal AnnualReturnRatio,
-    DateTime StartDate);
+    DateTime StartDate,
+    DateTime? JoinedAtUtc = null,
+    int? BirthYear = null);
 
 /// <summary>BES projeksiyon sonucu — varsayımsal birikim illüstrasyonu (T-BES.5).</summary>
 public sealed record BesProjectionResult(
@@ -134,7 +151,17 @@ public sealed record BesProjectionResult(
     /// <summary>Devlet katkısının fon getiri kâr/zararı.</summary>
     decimal StateProfit,
     decimal AnnualReturnRatio,
-    IReadOnlyList<BesProjectionYear> Yearly);
+    IReadOnlyList<BesProjectionYear> Yearly,
+    /// <summary>
+    /// Süre sonunda hak ediş oranı (0/0,15/0,35/0,60/1,00) — sistemde kalış + (varsa) 56 yaş kontrolü.
+    /// <c>JoinedAtUtc</c> verilmediyse <c>StartDate</c>'ten itibaren <c>Years</c> yıl sonrası baz alınır.
+    /// </summary>
+    decimal VestedRateAtEnd,
+    /// <summary>
+    /// Süre sonunda hak kazanılan devlet katkısı tutarı ≈ <c>VestedRateAtEnd × StateValue</c>
+    /// (yatırılmış devlet katkısının güncel değerinin hak edilen oranı). Yaklaşıktır.
+    /// </summary>
+    decimal VestedStateAmountAtEnd);
 
 /// <summary>Her yıl sonundaki birikim/değer durumu (büyüme eğrisi için).</summary>
 public sealed record BesProjectionYear(

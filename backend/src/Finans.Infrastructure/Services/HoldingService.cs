@@ -646,8 +646,11 @@ public sealed class HoldingService(
         try
         {
             // Saf hesap — pozisyonu değiştirmez; başlangıç bugün (UTC). Hesap deterministik (T-BES.5).
+            // Sözleşme başı + doğum yılı calculator'a yedirilir: süre sonu hak ediş kademesi (3/6/10/+56)
+            // bilinçli hesaplanır (mevcut sözleşme süresi de hesaba katılır).
             return BesProjectionCalculator.Project(new BesProjectionInput(
-                request.OwnMonthly, request.Years, request.AnnualReturnRatio, DateTime.UtcNow));
+                request.OwnMonthly, request.Years, request.AnnualReturnRatio, DateTime.UtcNow,
+                holding.BesDetails.JoinedAtUtc, holding.BesDetails.BirthYear));
         }
         catch (ArgumentException ex)
         {

@@ -91,6 +91,63 @@ public sealed class BesProjectionCalculatorTests
         Assert.Equal(0m, r.StateProfit);
     }
 
+    // ── Süre sonu hak ediş (T-BES.5 ek): sözleşme kademeleri 3/6/10/+56 yaş ──
+
+    [Fact]
+    public void VestedRateAtEnd_zero_for_under_three_years_in_system()
+    {
+        // Yeni sözleşme (joined = start), 2 yıl projeksiyon → süre sonunda 2 yıl, %0.
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            1000m, 2, 0m, Start2026, JoinedAtUtc: Start2026, BirthYear: null));
+
+        Assert.Equal(0m, r.VestedRateAtEnd);
+        Assert.Equal(0m, r.VestedStateAmountAtEnd);
+    }
+
+    [Fact]
+    public void VestedRateAtEnd_15_percent_at_three_to_six_years()
+    {
+        // 5 yıl sonra → 3-6 yıl bandında: %15.
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            1000m, 5, 0m, Start2026, JoinedAtUtc: Start2026, BirthYear: null));
+
+        Assert.Equal(0.15m, r.VestedRateAtEnd);
+        // VestedStateAmount = 0,15 × state_value (= state, sıfır getiri).
+        Assert.Equal(Math.Round(0.15m * r.StateValue, 2), r.VestedStateAmountAtEnd);
+    }
+
+    [Fact]
+    public void VestedRateAtEnd_60_percent_at_ten_years_without_age()
+    {
+        // 10 yıl → 56 yaş kontrolü yapılamıyor (BirthYear null) → %60 (10+ yaşsız).
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            1000m, 10, 0m, Start2026, JoinedAtUtc: Start2026, BirthYear: null));
+
+        Assert.Equal(0.60m, r.VestedRateAtEnd);
+    }
+
+    [Fact]
+    public void VestedRateAtEnd_100_percent_at_ten_years_with_age_over_56()
+    {
+        // 10 yıl + süre sonunda 56+ yaş → tam emeklilik hak edişi (%100).
+        // BirthYear=1965, StartDate=2026 → süre sonu 2036, yaş 71 → 56+.
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            1000m, 10, 0m, Start2026, JoinedAtUtc: Start2026, BirthYear: 1965));
+
+        Assert.Equal(1.00m, r.VestedRateAtEnd);
+    }
+
+    [Fact]
+    public void VestedRateAtEnd_uses_existing_contract_years_when_joined_in_past()
+    {
+        // Sözleşme 2020'de başlamış (6 yıl önce), 4 yıl projeksiyon → süre sonu 10 yıl → %60.
+        var joined = new DateTime(2020, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            1000m, 4, 0m, Start2026, JoinedAtUtc: joined, BirthYear: null));
+
+        Assert.Equal(0.60m, r.VestedRateAtEnd);
+    }
+
     [Theory]
     [InlineData(-100, 5, 0.20)]    // negatif aylık
     [InlineData(1000, 0, 0.20)]    // 0 yıl

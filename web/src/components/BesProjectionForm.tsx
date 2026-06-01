@@ -1,19 +1,56 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { formatCurrency, formatPercent, formatNumber } from "@finans/shared";
 import type { BesProjection } from "@finans/shared";
 import { useBesProjection } from "../lib/hooks";
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
-/** Ortak süre seçenekleri (yıl) — sık başvurulan eşikler. */
-const YEAR_PRESETS = [1, 3, 5, 10, 15, 20, 25, 30] as const;
-/** Yıllık getiri öneri çipleri (%) — TR enflasyon/fon piyasasında yaygın varsayımlar. */
+/** Yıllık getiri öneri çipleri (%) — TR'de yaygın varsayımlar. */
 const RATE_PRESETS = [15, 25, 35, 50] as const;
 
+/** Sözleşme kademe preset'i — yıl + etiket + hak ediş yüzdesi. */
+interface YearPreset { years: number; label: string; sublabel: string; }
+
 /**
- * BES eğitici projeksiyon formu + sonuç gösterimi (T-BES.5). Kullanıcı varsayımları girer
- * (aylık katkı, süre, yıllık getiri); backend deterministik bileşik getiri uygular ve birikim
- * illüstrasyonu döner.
+ * BES sözleşme kademelerine göre süre preset'leri üret. Mevcut sözleşmenin başlangıcı varsa,
+ * "kalan yıl" mantığıyla 3/6/10 yıl noktalarına ulaşana kadar gereken süreyi hesaplar.
+ * Emeklilik (10 yıl + 56 yaş): doğum yılı varsa hedef yıla kalan, yoksa preset gizlenir.
+ */
+function buildYearPresets(joinedAtUtc: string | null, birthYear: number | null): YearPreset[] {
+  const now = new Date();
+  const yearsInSystem = joinedAtUtc
+    ? Math.max(0, Math.floor((now.getTime() - new Date(joinedAtUtc).getTime()) / (365.25 * 24 * 3600 * 1000)))
+    : 0;
+  // "X yıl noktasına" ulaşmak için kalan; yeni sözleşme (joined yoksa) için tam X.
+  const toMilestone = (m: number) => Math.max(1, m - yearsInSystem);
+
+  const presets: YearPreset[] = [
+    { years: toMilestone(3), label: "3. yıl", sublabel: "Kısmen hak ediş %15" },
+    { years: toMilestone(6), label: "6. yıl", sublabel: "Kademe %35" },
+    { years: toMilestone(10), label: "10. yıl", sublabel: "Kademe %60" },
+  ];
+
+  // Emeklilik: 10 yıl tamamlanmış + 56+ yaş. Doğum yılı yoksa preset üretme.
+  if (birthYear !== null) {
+    const ageNow = now.getFullYear() - birthYear;
+    const yearsTo56 = Math.max(0, 56 - ageNow);
+    const yearsTo10 = Math.max(0, 10 - yearsInSystem);
+    const yearsToRetirement = Math.max(1, Math.max(yearsTo56, yearsTo10));
+    presets.push({
+      years: yearsToRetirement,
+      label: "Emeklilik",
+      sublabel: `~${yearsToRetirement} yıl · Tam hak ediş %100`,
+    });
+  }
+
+  return presets;
+}
+
+/**
+ * BES eğitici projeksiyon formu + sonuç gösterimi (T-BES.5). Kullanıcı sözleşme kademelerine
+ * göre yıl preset'i seçer (3 / 6 / 10 / Emeklilik) — etiketinde **süre sonu hak ediş yüzdesi**
+ * — veya "Özel" alanına kendi yılını yazar. Backend deterministik bileşik getiri uygular ve
+ * birikim illüstrasyonu döner.
  *
  * <p><b>YATIRIM TAVSİYESİ DEĞİL</b> (CLAUDE.md §2): yalnız "varsayımlarının sonucu" çerçevesi.
  * Gelecek tahmini değil, somut yönlendirme yok. Disclaimer kalıcı + sonuç başında görünür.</p>
@@ -21,14 +58,23 @@ const RATE_PRESETS = [15, 25, 35, 50] as const;
 export function BesProjectionForm({
   holdingId,
   defaultMonthly,
+  joinedAtUtc,
+  birthYear,
 }: {
   holdingId: string;
   /** Mevcut düzenli plan varsa o tutarla ön-doldur; yoksa boş. */
   defaultMonthly: number | null;
+  /** BES sözleşme başlangıcı (varsa) — süre preset'leri buna göre türetilir. */
+  joinedAtUtc: string | null;
+  /** Doğum yılı (varsa) — "Emeklilik" preset'i için. */
+  birthYear: number | null;
 }) {
   const project = useBesProjection(holdingId);
+  const presets = useMemo(() => buildYearPresets(joinedAtUtc, birthYear), [joinedAtUtc, birthYear]);
+
   const [monthly, setMonthly] = useState(defaultMonthly ? String(defaultMonthly) : "");
-  const [years, setYears] = useState<number>(10);
+  // Başlangıçta ilk preset (3. yıl) seçili — kullanıcının bir anlam yüklü değerle başlaması için.
+  const [years, setYears] = useState<number>(presets[0]?.years ?? 5);
   const [ratePct, setRatePct] = useState<string>("25");
 
   const monthlyNum = toNumber(monthly);
@@ -36,7 +82,7 @@ export function BesProjectionForm({
   const valid =
     Number.isFinite(monthlyNum) && monthlyNum >= 0 &&
     Number.isFinite(rateNum) && rateNum >= -99 && rateNum <= 200 &&
-    years >= 1 && years <= 50;
+    Number.isFinite(years) && years >= 1 && years <= 50;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,14 +115,43 @@ export function BesProjectionForm({
               required
             />
           </label>
-          <label>
-            Süre (yıl)
-            <select value={years} onChange={(e) => setYears(Number(e.target.value))}>
-              {YEAR_PRESETS.map((y) => (
-                <option key={y} value={y}>{y} yıl</option>
-              ))}
-            </select>
+        </div>
+
+        <div className="proj-years">
+          <div className="proj-years-h">Süre (sözleşme kademelerine göre)</div>
+          <div className="proj-years-chips" role="group" aria-label="Süre preset'leri">
+            {presets.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                className={`year-chip ${years === p.years ? "sel" : ""}`}
+                onClick={() => setYears(p.years)}
+                aria-pressed={years === p.years}
+              >
+                <span className="yc-main">{p.label} · {p.years} yıl</span>
+                <span className="yc-sub">{p.sublabel}</span>
+              </button>
+            ))}
+          </div>
+          <label className="proj-years-custom">
+            Özel:
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={50}
+              value={years}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                if (Number.isFinite(n)) setYears(Math.min(50, Math.max(1, Math.floor(n))));
+              }}
+              aria-label="Özel yıl sayısı"
+            />
+            yıl
           </label>
+        </div>
+
+        <div className="tx-row">
           <label>
             Yıllık getiri varsayımı (%)
             <input
@@ -100,6 +175,7 @@ export function BesProjectionForm({
             </button>
           ))}
         </div>
+
         <button type="submit" disabled={!valid || project.isPending} className="btn-primary">
           {project.isPending ? "Hesaplanıyor…" : "Senaryoyu hesapla"}
         </button>
@@ -110,12 +186,12 @@ export function BesProjectionForm({
         )}
       </form>
 
-      {project.data && <BesProjectionResultCard data={project.data} />}
+      {project.data && <BesProjectionResultCard data={project.data} years={years} />}
     </section>
   );
 }
 
-function BesProjectionResultCard({ data }: { data: BesProjection }) {
+function BesProjectionResultCard({ data, years }: { data: BesProjection; years: number }) {
   const ownReturnPct = data.totalOwnContribution > 0
     ? data.ownProfit / data.totalOwnContribution
     : 0;
@@ -127,7 +203,7 @@ function BesProjectionResultCard({ data }: { data: BesProjection }) {
     <div className="proj-result">
       <div className="proj-hero">
         <div className="dh-v tnum">{formatCurrency(data.fundValue, "TRY")}</div>
-        <div className="dh-sub">Süre sonu varsayımsal fon değeri</div>
+        <div className="dh-sub">{years}. yıl sonu varsayımsal fon değeri</div>
       </div>
 
       <div className="proj-grid">
@@ -167,6 +243,27 @@ function BesProjectionResultCard({ data }: { data: BesProjection }) {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Süre sonu hak ediş kartı — sözleşme kademesi + hak kazanılan devlet katkısı (T-BES.5). */}
+      <div className="proj-vesting">
+        <div className="proj-vesting-h">Süre sonu hak ediş</div>
+        <div className="drow">
+          <span className="dk">Hak ediş oranı</span>
+          <span className="dv">
+            <b>{formatPercent(data.vestedRateAtEnd)}</b>
+            <span className="muted">{" · "}sözleşme kademesi</span>
+          </span>
+        </div>
+        <div className="drow">
+          <span className="dk">Hak kazanılan devlet katkısı</span>
+          <span className="dv tnum up">{formatCurrency(data.vestedStateAmountAtEnd, "TRY")}</span>
+        </div>
+        <p className="note-muted">
+          Hak ediş <b>devlet katkısının</b> sana kalan kısmı. Kademeler:{" "}
+          <b>&lt;3 yıl %0</b> · <b>3-6 yıl %15</b> · <b>6-10 yıl %35</b> · <b>10 yıl+ %60</b> ·{" "}
+          <b>10 yıl + 56 yaş %100</b>. Kendi katkı payın <b>her zaman senindir</b>.
+        </p>
       </div>
 
       {data.yearly.length > 0 && (

@@ -482,6 +482,8 @@ export function HoldingDetailPage() {
           <BesProjectionForm
             holdingId={h.id}
             defaultMonthly={h.bes?.monthlyAmount ?? null}
+            joinedAtUtc={h.bes?.joinedAtUtc ?? null}
+            birthYear={h.bes?.birthYear ?? null}
           />
         </Modal>
       )}

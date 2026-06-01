@@ -20,6 +20,41 @@
 
 ---
 
+## 2026-06-01 · T-BES.5 ext — sözleşme kademesi süre preset'leri + süre sonu hak ediş
+- **Görev(ler):** T-BES.5 uzantısı — kullanıcı: "Sözleşmeye göre 3-6, 10 veya emeklilik zamanı
+  diyordu bunları otomatik hesaplasın; ama istediğim yıl değerini de girebileyim."
+- **Ne yapıldı (backend):**
+  1. `BesProjectionInput` — opsiyonel `JoinedAtUtc` + `BirthYear` parametreleri.
+  2. `BesProjectionResult` — `VestedRateAtEnd` (0/0,15/0,35/0,60/1,00) + `VestedStateAmountAtEnd`
+     (rate × süre sonu state değeri).
+  3. `BesProjectionCalculator.Project` süre sonu hak edişi `BesCalculator.VestedRateFor` ile hesaplar:
+     **mevcut sözleşme süresi de hesaba katılır** (joined=2020+4 yıl projeksiyon → süre sonu 10y → %60).
+  4. `HoldingService.ProjectBesAsync` Holding'in `BesDetails.JoinedAtUtc`/`BirthYear`'ı calculator'a yedirir.
+- **Ne yapıldı (web):**
+  5. `BesProjectionForm`: `buildYearPresets(joinedAtUtc, birthYear)` — sözleşme kademeleri
+     (3/6/10 yıl noktalarına kalan süre + Emeklilik = max(56'a kalan, 10y'a kalan)). Doğum yılı
+     yoksa "Emeklilik" preset'i gizli. **"Özel yıl" inputu** (number, 1-50) kullanıcı kendi yılını
+     yazabilir.
+  6. Preset chip'i 2 satır: yıl + kademe hak ediş yüzdesi (örn. "3. yıl · 3 yıl" / "Kısmen hak
+     ediş %15"). Form prop'ları: `joinedAtUtc`, `birthYear`.
+  7. **Süre sonu hak ediş kartı** (yeşil tonlu): hak ediş oranı + hak kazanılan devlet katkısı +
+     kademe açıklaması.
+  8. CSS: `.proj-years`/`.year-chip`/`.proj-years-custom` (grid auto-fit chip'ler + özel input),
+     `.proj-vesting` (yeşilimsi border, vurgu).
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Portfolio/BesProjectionCalculator.cs`,
+  `backend/src/Finans.Infrastructure/Services/HoldingService.cs`,
+  `backend/tests/Finans.Application.Tests/Portfolio/BesProjectionCalculatorTests.cs`,
+  `packages/shared/src/types/index.ts`, `web/src/components/BesProjectionForm.tsx`,
+  `web/src/routes/HoldingDetailPage.tsx`, `web/src/App.css`.
+- **Test:** +5 unit (VestedRateAtEnd: <3y %0 / 3-6y %15 / 10y (no age) %60 / 10y+age 56+ %100 /
+  mevcut sözleşme yılları sayılır) yeşil. Toplam projeksiyon unit: **15/15**. Web 52/52 + build temiz.
+- **Karar/Not:** "Emeklilik" preset için doğum yılı şart — yoksa preset gizlenir, kullanıcı
+  ayarlardan girebilir. Mevcut sözleşmesi olan kullanıcı için "3. yıl"/"6. yıl"/"10. yıl"
+  preset'leri **kalan süre**yi gösterir (1 yıl alt sınır). Sonuç kartında 56 yaş kademesi yalnız
+  `BirthYear` set ise %100'e ulaşır.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T2.8 (Gözlemlenebilirlik) ya da T-BES.4 (devlet katkısı yıllık üst sınır).
+
 ## 2026-06-01 · T-BES.5 — BES eğitici projeksiyon (varsayımsal birikim illüstrasyonu)
 - **Görev(ler):** T-BES.5 (08-BACKLOG, T-BES epik).
 - **Tanı:** Kullanıcının "ne kadar biriktirebilirim?" sorusunu yatırım tavsiyesi vermeden, kendi
