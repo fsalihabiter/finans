@@ -11,6 +11,19 @@ function stateRateOn(dateStr: string): number {
 }
 
 /**
+ * Yıllık devlet katkısı üst sınırı (T-BES.4) — backend `BesRules.AnnualCaps` ile eşlek.
+ * Mevzuata tabidir; lansman öncesi EGM/SPK doğrulaması gerekir (CLAUDE.md §2).
+ */
+const ANNUAL_STATE_CAPS: Record<number, number> = {
+  2024: 51_006,
+  2025: 66_312,
+  2026: 79_272,
+};
+function annualCapFor(year: number): number {
+  return ANNUAL_STATE_CAPS[year] ?? ANNUAL_STATE_CAPS[2026];
+}
+
+/**
  * BES'e **aylık katkı** ekler (kendi katkı + devlet katkısı). BES nominal hesaptır;
  * alış/satış değil — maliyet tabanı (kendi+devlet) büyür, fon getirisi güncel değerden gelir.
  * Devlet katkısı **ödeme tarihindeki orana** göre hesaplanır (2026 öncesi %30, sonrası %20);
@@ -72,11 +85,27 @@ export function BesContributionForm({
         </span>
       </label>
       {valid && (
-        <p className="muted">
-          Tahmini devlet katkısı (%{Math.round(rate * 100)}):{" "}
-          <strong>{formatCurrency(estimatedState, "TRY")}</strong> — fon değerine eklenir (maliyet =
-          yalnız katkı payın).
-        </p>
+        <>
+          <p className="muted">
+            Tahmini devlet katkısı (%{Math.round(rate * 100)}):{" "}
+            <strong>{formatCurrency(estimatedState, "TRY")}</strong> — fon değerine eklenir (maliyet =
+            yalnız katkı payın).
+          </p>
+          {(() => {
+            const year = new Date(paidAt).getFullYear();
+            const cap = annualCapFor(year);
+            // Tavanı aşacak kadar büyük tek katkı ise kullanıcıyı uyar (backend zaten keser; bilgi).
+            if (estimatedState > cap) {
+              return (
+                <p className="muted" style={{ color: "var(--gold, #e0b255)" }}>
+                  ⚠ {year} yıllık devlet katkısı tavanı <strong>{formatCurrency(cap, "TRY")}</strong>.
+                  Bu katkı tavanı aştığı için fazla kısım yatmayacak.
+                </p>
+              );
+            }
+            return null;
+          })()}
+        </>
       )}
       {add.isError && (
         <p className="neg" role="alert">

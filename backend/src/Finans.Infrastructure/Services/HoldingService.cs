@@ -268,6 +268,7 @@ public sealed class HoldingService(
         var holding = await db.Holdings
             .Include(h => h.Asset)
             .Include(h => h.BesDetails)
+            .Include(h => h.BesContributions) // T-BES.4: yıllık state toplamı için
             .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
             ?? throw new NotFoundException();
 
@@ -280,8 +281,13 @@ public sealed class HoldingService(
         var paidAt = request.PaidAtUtc ?? DateTime.UtcNow;
 
         // Devlet katkısı verilmezse, katkının ödendiği tarihteki orana göre (2026 öncesi %30, sonrası
-        // %20) — BesRules/BesCalculator (yıllık üst sınır T-BES.4; lansman öncesi EGM/SPK, CLAUDE.md §2).
-        var stateAmount = request.StateAmount ?? BesCalculator.StateContributionFor(request.OwnAmount, paidAt);
+        // %20) — BesRules/BesCalculator. **T-BES.4:** yıllık brüt asgari ücretin %20'si üst sınırı
+        // uygulanır; aynı takvim yılındaki diğer state toplamına göre kesme yapılır (kota dolduysa 0).
+        var rawState = request.StateAmount ?? BesCalculator.StateContributionFor(request.OwnAmount, paidAt);
+        var alreadyInYear = holding.BesContributions
+            .Where(c => c.PaidAtUtc.Year == paidAt.Year)
+            .Sum(c => c.StateAmount);
+        var stateAmount = BesCalculator.ApplyAnnualStateCap(rawState, paidAt.Year, alreadyInYear);
 
         var bes = holding.BesDetails;
         bes.OwnContribution += request.OwnAmount;
@@ -397,12 +403,21 @@ public sealed class HoldingService(
             .ToHashSet();
 
         var bes = holding.BesDetails;
+        // T-BES.4: takvim yılı bazlı state toplamını tut → her ay için cap'i uygula. Mevcut tüm
+        // BES katkı satırları (Plan/Manuel/Opening) sayılır; bu Generate çağrısı sırasında üretilen
+        // satırlar da kümülatife eklenir (sıralı geçiş — aynı yıl içinde birikim doğru artar).
+        var stateByYear = new Dictionary<int, decimal>();
+        foreach (var existing in holding.BesContributions)
+            stateByYear[existing.PaidAtUtc.Year] = stateByYear.GetValueOrDefault(existing.PaidAtUtc.Year, 0m) + existing.StateAmount;
+
         foreach (var date in dates)
         {
             if (!coveredPlanMonths.Add(date.Year * 100 + date.Month))
                 continue; // bu ay için zaten Plan satırı var (manuel olanlar engel değil)
 
-            var state = BesCalculator.StateContributionFor(request.MonthlyAmount, date);
+            var rawState = BesCalculator.StateContributionFor(request.MonthlyAmount, date);
+            var alreadyInYear = stateByYear.GetValueOrDefault(date.Year, 0m);
+            var state = BesCalculator.ApplyAnnualStateCap(rawState, date.Year, alreadyInYear);
             db.BesContributions.Add(new BesContribution
             {
                 HoldingId = holding.Id,
@@ -414,6 +429,7 @@ public sealed class HoldingService(
             });
             bes.OwnContribution += request.MonthlyAmount;
             bes.StateContribution += state;
+            stateByYear[date.Year] = alreadyInYear + state;
         }
 
         bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, now);
@@ -437,8 +453,14 @@ public sealed class HoldingService(
         var c = holding.BesContributions.FirstOrDefault(x => x.Id == contributionId)
             ?? throw new NotFoundException();
 
-        // Devlet katkısı yeni tarihteki orana göre yeniden hesaplanır; kümülatif delta ile güncellenir.
-        var newState = BesCalculator.StateContributionFor(request.OwnAmount, request.PaidAtUtc);
+        // Devlet katkısı yeni tarihteki orana göre yeniden hesaplanır; **T-BES.4** yıllık üst sınırı
+        // mevcut katkıyı hariç tutarak (kendini saymadan) uygular. Yıl değişimi de doğru ele alınır:
+        // eski yıl kümülatifinden c.StateAmount düşülür (delta ile), yeni yıl için diğer kayıtlar baz.
+        var rawState = BesCalculator.StateContributionFor(request.OwnAmount, request.PaidAtUtc);
+        var alreadyInYearExclSelf = holding.BesContributions
+            .Where(x => x.Id != contributionId && x.PaidAtUtc.Year == request.PaidAtUtc.Year)
+            .Sum(x => x.StateAmount);
+        var newState = BesCalculator.ApplyAnnualStateCap(rawState, request.PaidAtUtc.Year, alreadyInYearExclSelf);
         bes.OwnContribution += request.OwnAmount - c.OwnAmount;
         bes.StateContribution += newState - c.StateAmount;
         c.OwnAmount = request.OwnAmount;
@@ -504,13 +526,21 @@ public sealed class HoldingService(
             .Where(c => IsPlanSource(c.Source))
             .Select(c => c.PaidAtUtc.Year * 100 + c.PaidAtUtc.Month)
             .ToHashSet();
+        // T-BES.4: yıl bazlı state kümülatifi (tüm kaynaklar). Lazy-catchup sırasında üretilen her ay
+        // için cap uygulanır; aynı yıl içinde tavan dolduktan sonra otomatik kayıt 0 state ile devam eder.
+        var stateByYear = new Dictionary<int, decimal>();
+        foreach (var existing in holding.BesContributions)
+            stateByYear[existing.PaidAtUtc.Year] = stateByYear.GetValueOrDefault(existing.PaidAtUtc.Year, 0m) + existing.StateAmount;
+
         var bes = holding.BesDetails;
         var added = false;
         foreach (var date in dates)
         {
             if (!coveredPlanMonths.Add(date.Year * 100 + date.Month))
                 continue; // bu ay zaten Plan satırı var — manuel olanlar engel değil
-            var state = BesCalculator.StateContributionFor(amount, date);
+            var rawState = BesCalculator.StateContributionFor(amount, date);
+            var alreadyInYear = stateByYear.GetValueOrDefault(date.Year, 0m);
+            var state = BesCalculator.ApplyAnnualStateCap(rawState, date.Year, alreadyInYear);
             db.BesContributions.Add(new BesContribution
             {
                 HoldingId = holding.Id,
@@ -522,6 +552,7 @@ public sealed class HoldingService(
             });
             bes.OwnContribution += amount;
             bes.StateContribution += state;
+            stateByYear[date.Year] = alreadyInYear + state;
             added = true;
         }
 

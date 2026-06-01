@@ -151,6 +151,49 @@ public sealed class BesCalculatorTests
         Assert.Equal(0m, r.StateProfit);
     }
 
+    // ── Yıllık devlet katkısı üst sınırı (T-BES.4) ─────────────────────────────
+
+    [Fact]
+    public void ApplyAnnualStateCap_returns_full_amount_when_room_remaining()
+    {
+        // 2026 tavan 79.272; bu yıl önceden 10.000 yatmış → kalan 69.272. Önerilen 200 → tam geçer.
+        var result = BesCalculator.ApplyAnnualStateCap(200m, 2026, alreadyContributedInYear: 10_000m);
+        Assert.Equal(200m, result);
+    }
+
+    [Fact]
+    public void ApplyAnnualStateCap_clamps_to_remaining_when_near_limit()
+    {
+        // 2026 tavan 79.272; önceden 79.000 yatmış → kalan 272. Önerilen 500 → 272'de kesilir.
+        var result = BesCalculator.ApplyAnnualStateCap(500m, 2026, alreadyContributedInYear: 79_000m);
+        Assert.Equal(272m, result);
+    }
+
+    [Fact]
+    public void ApplyAnnualStateCap_returns_zero_when_quota_exhausted()
+    {
+        // Tavan dolmuş → 0; negatif kalan olmaz.
+        var result = BesCalculator.ApplyAnnualStateCap(500m, 2026, alreadyContributedInYear: 79_272m);
+        Assert.Equal(0m, result);
+    }
+
+    [Fact]
+    public void ApplyAnnualStateCap_returns_zero_for_non_positive_proposed()
+    {
+        Assert.Equal(0m, BesCalculator.ApplyAnnualStateCap(0m, 2026, 0m));
+        Assert.Equal(0m, BesCalculator.ApplyAnnualStateCap(-50m, 2026, 0m));
+    }
+
+    [Fact]
+    public void AnnualStateContributionCapFor_unknown_year_falls_back_to_latest_known()
+    {
+        // Tablo dışı yıl (2030) → en son bilinen yıl (2026) tavanını döner — illüstrasyon dostu.
+        Assert.Equal(BesRules.AnnualStateContributionCapFor(2026),
+                     BesRules.AnnualStateContributionCapFor(2030));
+        // Bilinen yıllar tablodakini döner.
+        Assert.Equal(79_272m, BesRules.AnnualStateContributionCapFor(2026));
+    }
+
     [Fact]
     public void FundReturnFor_zero_base_returns_null_rate()
     {

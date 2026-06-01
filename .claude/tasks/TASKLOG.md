@@ -20,6 +20,50 @@
 
 ---
 
+## 2026-06-01 · T-BES.4 — devlet katkısı yıllık üst sınırı (takvim yılı bazlı kesme)
+- **Görev(ler):** T-BES.4 (08-BACKLOG T-BES epik) — devlet katkısı oranı %20 uygulanıyordu ama
+  **üst sınır kontrolü yoktu**; aylık 50.000 ₺ katkı yapan biri için yıl boyunca 120.000 ₺ devlet
+  katkısı hesaplıyorduk, oysa 2026 tavanı 79.272 ₺.
+- **Ne yapıldı (saf kurallar/hesap):**
+  1. `BesRules` — `AnnualCaps` dictionary (2024: 51.006 · 2025: 66.312 · 2026: 79.272 ₺ — yıllık brüt
+     asgari ücret × oran). `AnnualStateContributionCapFor(year)` tablo dışı yıl için **en son bilinen
+     yılın değeri**ne düşer (gelecek projeksiyonu için makul; tablo güncellenir). EGM/SPK doğrulaması
+     ŞART (CLAUDE.md §2 — kod yorumunda belirtildi).
+  2. `BesCalculator.ApplyAnnualStateCap(proposedState, year, alreadyContributedInYear)` — kalan kotaya
+     göre kesme; kota dolduysa 0; negatif proposed → 0.
+- **Ne yapıldı (servis — 4 katkı metodu):**
+  3. `AddBesContributionAsync` — `Include(BesContributions)` eklendi; aynı yıl kümülatif toplama göre kesme.
+  4. `UpdateBesContributionAsync` — mevcut katkıyı hariç tutarak (`Id != contributionId`) aynı yıl
+     toplamına göre kesme; yıl değişimi doğru ele alınır (eski yıl delta'sı + yeni yıl kotası).
+  5. `GenerateBesContributionsAsync` — `Dictionary<int, decimal>` yıllık kümülatif; sıralı geçişte yıl
+     içinde birikim doğru artar.
+  6. `CatchUpBesPlanAsync` — aynı desen (lazy plan üretimi tavanı dolduktan sonra 0 state ile devam eder).
+- **Ne yapıldı (projeksiyon):**
+  7. `BesProjectionCalculator.Project` — her ay yıllık kümülatif tutar; yıl değişiminde otomatik sıfırlanır
+     (yeni anahtar). Aylık 50.000 ₺ × 12 = 600.000 ₺ own (cap own'u etkilemez) + state cap'te 79.272'de durur.
+- **Ne yapıldı (web — bilgi):**
+  8. `BesContributionForm` — `ANNUAL_STATE_CAPS` tablosu (backend ile eşlek); tahmini devlet katkısı
+     tavanı aşıyorsa **altın renkli uyarı** ("⚠ Bu katkı tavanı aştığı için fazla kısım yatmayacak").
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Portfolio/BesRules.cs`,
+  `backend/src/Finans.Application/Portfolio/BesCalculator.cs`,
+  `backend/src/Finans.Application/Portfolio/BesProjectionCalculator.cs`,
+  `backend/src/Finans.Infrastructure/Services/HoldingService.cs`,
+  `backend/tests/Finans.Application.Tests/Portfolio/BesCalculatorTests.cs`,
+  `backend/tests/Finans.Application.Tests/Portfolio/BesProjectionCalculatorTests.cs`,
+  `backend/tests/Finans.Integration.Tests/BesAndHistoryApiTests.cs`,
+  `web/src/components/BesContributionForm.tsx`.
+- **Test:** +5 unit (`ApplyAnnualStateCap`: tam geçer / tavana yakın kesme / tükenmiş 0 / non-positive 0 /
+  bilinmeyen yıl fallback). +3 unit (`Projection`: tavanda durur / yeni yıl sıfırlanır / tavanın altında
+  kesme yok). **Application.Tests 99/99 yeşil.** +3 integration (Add: kesme / kota dolu→0 / yeni yıl
+  sıfır) — VS Api kilidi bırakılınca koşulacak. Web 52/52 + build temiz.
+- **Karar/Not:** Tavan tablosu **mevzuata tabidir**, lansman öncesi EGM/SPK ile doğrulanmalı. 2025
+  değeri (66.312 ₺) varsayım — eski oran %25 brüt yıllık asgari ücret formülü; gerçek sayı kaynaklarda
+  tutarsız (EGM ile teyit gerekli). Tablo dışı yıl fallback = son bilinen yıl (gelecek projeksiyonu
+  için pragmatik). `DeleteBesContribution` cap'i etkilemez (yalnız düşer). `CreateBes` Opening
+  bakiyesi cap'le kontrol edilmez (kullanıcı geçmiş yıllar boyunca birikmiş toplamı bildirir, tek satır).
+- **Durum:** tamamlandı (kod). VS Api kilidi bırakılınca integration testleri koşulacak.
+- **Sıradaki:** T-BES kapandı. Faz 2 dağıtımı (T2.8 gözlemlenebilirlik + T2.9 reverse proxy + rate limit).
+
 ## 2026-06-01 · T-BES.5 ext — sözleşme kademesi süre preset'leri + süre sonu hak ediş
 - **Görev(ler):** T-BES.5 uzantısı — kullanıcı: "Sözleşmeye göre 3-6, 10 veya emeklilik zamanı
   diyordu bunları otomatik hesaplasın; ama istediğim yıl değerini de girebileyim."

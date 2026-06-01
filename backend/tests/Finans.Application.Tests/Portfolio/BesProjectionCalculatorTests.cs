@@ -148,6 +148,51 @@ public sealed class BesProjectionCalculatorTests
         Assert.Equal(0.60m, r.VestedRateAtEnd);
     }
 
+    // ── Yıllık devlet katkısı üst sınırı (T-BES.4) projeksiyonda da uygulanır ──
+
+    [Fact]
+    public void Projection_caps_state_at_annual_limit_for_high_monthly_contributions()
+    {
+        // 2026 cap = 79.272 ₺. Yıl başından başla, 1 yıl: aylık 50.000 × 12 × %20 = 120.000 raw → 79.272'de kesilir.
+        var start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            OwnMonthly: 50_000m, Years: 1, AnnualReturnRatio: 0m, StartDate: start));
+
+        // Own kapasiteyle alakasız: 12 × 50.000 = 600.000 ₺ tam yatar.
+        Assert.Equal(600_000m, r.TotalOwnContribution);
+        // State 2026 tavanında durur — tam 79.272 ₺.
+        Assert.Equal(79_272m, r.TotalStateContribution);
+    }
+
+    [Fact]
+    public void Projection_state_resets_at_new_calendar_year()
+    {
+        // Yıl başından, 2 yıl: yıl 1 (2026) cap dolar; yıl 2 (2027) tavan tekrar açılır (fallback son bilinen).
+        var start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            OwnMonthly: 50_000m, Years: 2, AnnualReturnRatio: 0m, StartDate: start));
+
+        // 2 yıl × 79.272 = 158.544 (her yıl tavan; 2027 fallback olarak 2026 tavanını kullanır).
+        Assert.Equal(158_544m, r.TotalStateContribution);
+
+        // Yıllık seri **kümülatif** değerleri tutar: yıl 1 sonu 79272 (yıl 1 capped), yıl 2 sonu 158544.
+        // Yıl 2'nin tek başına eklediği = 158544 − 79272 = 79272 → cap tekrar açıldığı kanıtı.
+        Assert.Equal(2, r.Yearly.Count);
+        Assert.Equal(79_272m, r.Yearly[0].StateContribution);
+        Assert.Equal(158_544m, r.Yearly[1].StateContribution);
+        Assert.Equal(79_272m, r.Yearly[1].StateContribution - r.Yearly[0].StateContribution);
+    }
+
+    [Fact]
+    public void Projection_does_not_cap_when_under_limit()
+    {
+        // Aylık 1.000 × 12 × %20 = 2.400 (2026 cap 79.272'nin çok altı) → kesme yok.
+        var r = BesProjectionCalculator.Project(new BesProjectionInput(
+            OwnMonthly: 1_000m, Years: 1, AnnualReturnRatio: 0m, StartDate: Start2026));
+
+        Assert.Equal(2_400m, r.TotalStateContribution);
+    }
+
     [Theory]
     [InlineData(-100, 5, 0.20)]    // negatif aylık
     [InlineData(1000, 0, 0.20)]    // 0 yıl

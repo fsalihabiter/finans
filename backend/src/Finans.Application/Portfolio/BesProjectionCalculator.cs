@@ -53,11 +53,20 @@ public static class BesProjectionCalculator
             ? DateTime.UtcNow.Date
             : input.StartDate.Date;
 
+        // T-BES.4: takvim yılı bazlı devlet katkısı kümülatifi → her ay için cap'i uygula. Yıl değişimi
+        // doğal olarak yeni anahtar açar (sıfırdan başlar). Bu sayede projeksiyon kullanıcıya gerçekçi
+        // bir illüstrasyon verir (kotayı aşan aylarda state ekleme durur, fakat kendi katkı devam eder).
+        var stateByYear = new Dictionary<int, decimal>();
+
         for (int month = 1; month <= n; month++)
         {
             var contribDate = startDate.AddMonths(month - 1);
             var stateRate = BesRules.StateContributionRateOn(contribDate);
-            var stateThis = Math.Round(input.OwnMonthly * stateRate, 2);
+            var rawState = Math.Round(input.OwnMonthly * stateRate, 2);
+            var year = contribDate.Year;
+            var alreadyInYear = stateByYear.GetValueOrDefault(year, 0m);
+            var stateThis = BesCalculator.ApplyAnnualStateCap(rawState, year, alreadyInYear);
+            stateByYear[year] = alreadyInYear + stateThis;
 
             own += input.OwnMonthly;
             state += stateThis;

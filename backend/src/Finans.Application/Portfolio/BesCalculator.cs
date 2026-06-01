@@ -73,6 +73,22 @@ public static class BesCalculator
         BesRules.VestedRateFor(YearsInSystem(joinedAtUtc, asOfUtc), age);
 
     /// <summary>
+    /// Yıllık devlet katkısı üst sınırını uygular (T-BES.4): önerilen <paramref name="proposedState"/>
+    /// ile <paramref name="alreadyContributedInYear"/>'in (aynı takvim yılındaki diğer state katkıları)
+    /// toplamı tavanı aşarsa, kalan kotaya kadar keser. Kota tükendiyse 0 döner (negatif olamaz).
+    /// </summary>
+    /// <param name="proposedState">Bu katkı için hesaplanan ham devlet katkısı (orana göre).</param>
+    /// <param name="year">Ödeme tarihinin takvim yılı (cap yıl başına uygulanır).</param>
+    /// <param name="alreadyContributedInYear">Aynı yıl içinde mevcut yatırılmış devlet katkısı toplamı.</param>
+    public static decimal ApplyAnnualStateCap(decimal proposedState, int year, decimal alreadyContributedInYear)
+    {
+        if (proposedState <= 0m) return 0m;
+        var cap = BesRules.AnnualStateContributionCapFor(year);
+        var remaining = Math.Max(0m, cap - alreadyContributedInYear);
+        return Math.Min(proposedState, remaining);
+    }
+
+    /// <summary>
     /// BES fon getirisi (T-BES.10): fon, hem kendi katkı hem devlet katkısı üzerinde işleyerek büyür;
     /// dolayısıyla her ikisinin AYRI kâr/zararı vardır ve ikisi de **aynı oranla** (r) yansır.
     /// <c>r = fundValue / (own+state) − 1</c>. <paramref name="fundValue"/> yoksa veya taban 0 ise

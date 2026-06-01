@@ -31,10 +31,42 @@ public static class BesRules
 
     /// <summary>
     /// Yıllık devlet katkısı üst sınırı (2026 ≈ 79.272 ₺ = yıllık brüt asgari ücret × %20).
-    /// Yıllık güncellenir. <b>Not:</b> takvim-yılı bazında uygulanır; tam uygulanması için yıl-bazlı
-    /// katkı toplaması gerekir (henüz model tutmuyor → şimdilik bilgi amaçlı, T-BES planında).
+    /// Yıllık güncellenir. T-BES.4: takvim-yılı bazında uygulanır (servis kümülatife göre keser).
     /// </summary>
     public const decimal AnnualStateContributionCap2026 = 79_272m;
+
+    /// <summary>
+    /// Takvim yılı → devlet katkısı üst sınırı (₺). <b>Kaynak:</b> yıllık brüt asgari ücret × ilgili
+    /// yılın oranı (2026 öncesi %25 eski mevzuat, 2026+ %20). <b>Mevzuata tabidir — lansman öncesi
+    /// EGM/SPK ile DOĞRULANMALI</b> (CLAUDE.md §2). Tablo dışı yıl için <see cref="AnnualStateContributionCapFor"/>
+    /// fallback uygular.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<int, decimal> AnnualCaps = new Dictionary<int, decimal>
+    {
+        // 2024 brüt aylık asgari ücret 17.002 ₺ × 12 × %25 ≈ 51.006 ₺ (doğrulama ŞART).
+        [2024] = 51_006m,
+        // 2025 brüt aylık 22.104 ₺ × 12 × %25 ≈ 66.312 ₺ (doğrulama ŞART; oran o yıl %30 idi ama
+        // sınır yıllık brüt asgari ücretin %25'i — kaynaklar tutarsız, EGM/SPK doğrulansın).
+        [2025] = 66_312m,
+        // 2026 brüt aylık 33.030 ₺ × 12 × %20 = 79.272 ₺ (RG 2026-01-07).
+        [2026] = AnnualStateContributionCap2026,
+    };
+
+    /// <summary>
+    /// Bir takvim yılındaki devlet katkısı üst sınırı (₺). Tablo dışı yıl için <b>en son bilinen
+    /// yılın değerine</b> düşer — illüstrasyon amaçlı muhafazakar yaklaşım; gerçek değer açıklanınca
+    /// tablo güncellenir. Negatif sonsuz/0 dönmez (illüstrasyon bozulmasın).
+    /// </summary>
+    public static decimal AnnualStateContributionCapFor(int year)
+    {
+        if (AnnualCaps.TryGetValue(year, out var cap))
+            return cap;
+        // Tablo dışı → en son bilinen yılın sınırı (gelecek için ileri-projeksiyon dostu).
+        var latestKnownYear = 0;
+        foreach (var k in AnnualCaps.Keys)
+            if (k > latestKnownYear) latestKnownYear = k;
+        return AnnualCaps[latestKnownYear];
+    }
 
     /// <summary>Kısmi hak ediş eşiği (yıl): bu süreden önce sistemden çıkışta devlet katkısı alınmaz.</summary>
     public const int PartialVestingYears = 3;

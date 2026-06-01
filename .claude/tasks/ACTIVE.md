@@ -13,7 +13,15 @@
 0. ⚠ **`AddBesBirthYear` migration'ını canlı Postgres'e uygula** (VS'den Update-Database; additive nullable). Kod tarafı tüm test paketleri yeşil — yalnız DB uygulanması bekliyor.
 1. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
 2. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
-3. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı)
+3. T-BES.6b ileri (otomatik zamanlayıcı/plan kalıcılığı — uygulama kapalıyken arka plan job)
+
+> ✅ **T-BES.4 bitti (2026-06-01) — Devlet katkısı yıllık üst sınırı:** `BesRules.AnnualCaps` tablosu
+> (2024 51.006 · 2025 66.312 · 2026 79.272 ₺) + `BesCalculator.ApplyAnnualStateCap` saf helper. Servisin
+> 4 BES katkı metoduna ve `BesProjectionCalculator`'a takvim yılı bazlı kesme eklendi (kümülatif state
+> takip, yıl değişiminde sıfırlanır). Web: tahmini katkı tavanı aşıyorsa altın uyarı.
+> **+8 unit yeşil · Application 99/99 · integration VS kilidi bırakılınca · web 52/52 + build temiz.**
+> ⚠ Tavan değerleri **mevzuata tabidir** — lansman öncesi EGM/SPK ile doğrulanmalı (özellikle 2025).
+> **T-BES epiği kapandı.**
 
 > ✅ **T-BES.5 bitti (2026-06-01) — BES eğitici projeksiyon:** `BesProjectionCalculator` saf hesap (aylık
 > iterasyon, devlet katkısı oranı ödeme tarihine göre, fon compound). `POST /api/holdings/{id}/bes/projection`.
