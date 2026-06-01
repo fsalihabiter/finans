@@ -236,6 +236,66 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    // ── BES eğitici projeksiyon (T-BES.5) ────────────────────────────────────
+
+    [Fact]
+    public async Task Bes_projection_returns_zero_growth_for_zero_return()
+    {
+        var client = ClientAs(Investor);
+
+        var resp = await client.PostAsJsonAsync(
+            $"/api/holdings/{BesHolding}/bes/projection",
+            new BesProjectionRequest(OwnMonthly: 1000m, Years: 1, AnnualReturnRatio: 0m), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await resp.Content.ReadFromJsonAsync<BesProjectionResult>(Json);
+        result!.TotalOwnContribution.Should().Be(12000m);
+        // 2026 yıl içi → tüm aylar %20 oran (start UtcNow=2026-06-01 sonrası): 12 × 200 = 2.400
+        result.TotalStateContribution.Should().Be(2400m);
+        result.FundValue.Should().Be(14400m);
+        result.OwnProfit.Should().Be(0m);
+        result.StateProfit.Should().Be(0m);
+        result.Yearly.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Bes_projection_rejected_for_non_bes_holding()
+    {
+        var client = ClientAs(Investor);
+
+        var resp = await client.PostAsJsonAsync(
+            $"/api/holdings/{GoldHolding}/bes/projection",
+            new BesProjectionRequest(1000m, 5, 0.20m), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorCodeAsync(resp)).Should().Be("VALIDATION_ERROR");
+    }
+
+    [Fact]
+    public async Task Bes_projection_idor_returns_404_for_other_user()
+    {
+        var admin = ClientAs(Admin);
+
+        var resp = await admin.PostAsJsonAsync(
+            $"/api/holdings/{BesHolding}/bes/projection",
+            new BesProjectionRequest(1000m, 5, 0.20m), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Bes_projection_invalid_input_returns_400()
+    {
+        var client = ClientAs(Investor);
+
+        var resp = await client.PostAsJsonAsync(
+            $"/api/holdings/{BesHolding}/bes/projection",
+            new BesProjectionRequest(1000m, 51, 0.20m), Json); // 50 yıl üstü
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorCodeAsync(resp)).Should().Be("VALIDATION_ERROR");
+    }
+
     // ── BES fon getirisi (T-BES.10): own ve state için ayrı kâr/zarar ─────────
 
     [Fact]

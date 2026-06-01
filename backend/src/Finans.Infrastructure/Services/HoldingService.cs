@@ -629,6 +629,33 @@ public sealed class HoldingService(
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task<BesProjectionResult> ProjectBesAsync(Guid id, BesProjectionRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Per-user kapsam (IDOR yok) + BES doğrulaması — diğer BES metotlarıyla aynı şablon.
+        var holding = await db.Holdings
+            .Include(h => h.Asset)
+            .Include(h => h.BesDetails)
+            .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
+            ?? throw new NotFoundException();
+
+        if (holding.Asset.Type != AssetType.Bes || holding.BesDetails is null)
+            throw new ValidationException("id", "not_a_bes", "Bu pozisyon bir BES hesabı değil.");
+
+        try
+        {
+            // Saf hesap — pozisyonu değiştirmez; başlangıç bugün (UTC). Hesap deterministik (T-BES.5).
+            return BesProjectionCalculator.Project(new BesProjectionInput(
+                request.OwnMonthly, request.Years, request.AnnualReturnRatio, DateTime.UtcNow));
+        }
+        catch (ArgumentException ex)
+        {
+            // Calculator validation hatalarını API zarfına çevir (sınır ihlali, negatif, vs.).
+            throw new ValidationException("projection", "invalid_input", ex.Message);
+        }
+    }
+
     // ── Yardımcılar ──────────────────────────────────────────────────────────
 
     private async Task<List<HoldingDto>> BuildHoldingDtosAsync(CurrencyCode? baseCurrency, CancellationToken ct)

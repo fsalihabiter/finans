@@ -5,6 +5,8 @@
 import type {
   AddBesContributionInput,
   ApiErrorEnvelope,
+  BesProjection,
+  BesProjectionInput,
   CreateBesInput,
   CreateHoldingInput,
   CurrencyCode,
@@ -111,6 +113,8 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       send<Holding>("PUT", `/api/holdings/${id}/bes/contributions/${contributionId}`, input),
     deleteBesContribution: (id: string, contributionId: string) =>
       send<Holding>("DELETE", `/api/holdings/${id}/bes/contributions/${contributionId}`),
+    projectBes: (id: string, input: BesProjectionInput) =>
+      send<BesProjection>("POST", `/api/holdings/${id}/bes/projection`, input),
     deleteHolding: (id: string) => send<void>("DELETE", `/api/holdings/${id}`),
 
     // ── Canlı fiyat & eğitici notlar (Faz 2 — 04 §5) ──

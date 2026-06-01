@@ -941,6 +941,49 @@ input.date-input::-webkit-calendar-picker-indicator:hover {
   cursor: default;
 }
 
+/* ───── BES Eğitici Senaryo (T-BES.5) ───── */
+.bes-proj { display: flex; flex-direction: column; gap: 14px; }
+.proj-disclaimer {
+  padding: 10px 13px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted, #a89c89);
+  background: rgba(224, 178, 85, 0.06);
+  border: 1px dashed var(--gold, #e0b255);
+  border-radius: 12px;
+}
+.proj-disclaimer b { color: var(--gold, #e0b255); }
+.proj-rate-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: -4px; }
+.proj-result { display: flex; flex-direction: column; gap: 12px; }
+.proj-hero {
+  text-align: center;
+  padding: 14px 12px;
+  background: var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 14px;
+}
+.proj-hero .dh-v { font-size: 28px; font-weight: 700; color: var(--gold, #e0b255); }
+.proj-hero .dh-sub { font-size: 12px; color: var(--muted, #a89c89); margin-top: 2px; }
+.proj-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 560px) { .proj-grid { grid-template-columns: 1fr; } }
+.proj-card {
+  padding: 12px;
+  background: var(--panel-2, #241f18);
+  border: 1px solid var(--line, #322b22);
+  border-radius: 12px;
+}
+.proj-card-h {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--text, #f3ede2);
+}
+.proj-series th, .proj-series td { font-size: 12px; }
+
 /* ───── Disclaimer ───── */
 .disclaimer {
   margin: 0;

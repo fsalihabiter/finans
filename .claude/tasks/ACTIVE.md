@@ -11,11 +11,16 @@
 
 ## Sıradaki (öncelik sırası)
 0. ⚠ **`AddBesBirthYear` migration'ını canlı Postgres'e uygula** (VS'den Update-Database; additive nullable). Kod tarafı tüm test paketleri yeşil — yalnız DB uygulanması bekliyor.
-1. **T-BES.5** — BES **fon dağılımı eğitici projeksiyonu** (varsayımsal kâr/zarar senaryosu; tahmin/tavsiye
-   DEĞİL, disclaimer'lı) — kullanıcının bir sonraki sırası. Bkz. 08 T-BES epik.
-2. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
-3. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
-4. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı)
+1. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
+2. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
+3. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı)
+
+> ✅ **T-BES.5 bitti (2026-06-01) — BES eğitici projeksiyon:** `BesProjectionCalculator` saf hesap (aylık
+> iterasyon, devlet katkısı oranı ödeme tarihine göre, fon compound). `POST /api/holdings/{id}/bes/projection`.
+> Web: BES detayda "📊 Eğitici senaryo" modalı — aylık katkı (plan ön-doldur) + süre + yıllık getiri (chip
+> önerili) → fon değeri (hero), own/state ayrı kart, yıllık seri tablo. **Kalıcı disclaimer**: yatırım
+> tavsiyesi DEĞİL; vergi/enflasyon dahil değil; gerçek getiri farklı (CLAUDE.md §2). **+10 unit yeşil,
+> integration VS kilidi bırakılınca · web 52/52 + build temiz.**
 
 > ✅ **T-BES.10 bitti (2026-06-01) — BES fon getirisi own+state'e ayrı yansır:** `BesCalculator.FundReturnFor`
 > saf hesap (taban=own+state; r=fund/taban−1; null/sıfır taban → null oran). BesDto'ya `FundReturnRatio`,

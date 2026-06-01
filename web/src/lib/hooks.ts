@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import type {
   AddBesContributionInput,
+  BesProjectionInput,
   CreateBesInput,
   CreateHoldingInput,
   CurrencyCode,
@@ -207,6 +208,16 @@ export function useUpdateBesContribution(id: string) {
       invalidate();
       void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });
     },
+  });
+}
+
+/**
+ * BES eğitici projeksiyon (T-BES.5) — kullanıcının verdiği varsayımlardan birikim illüstrasyonu.
+ * Sonuç pozisyonu DEĞİŞTİRMEZ; bu nedenle invalidate yok (saf hesap). Yatırım tavsiyesi DEĞİL.
+ */
+export function useBesProjection(id: string) {
+  return useMutation({
+    mutationFn: (input: BesProjectionInput) => api.projectBes(id, input),
   });
 }
 

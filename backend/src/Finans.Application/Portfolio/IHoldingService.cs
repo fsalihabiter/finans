@@ -43,6 +43,12 @@ public interface IHoldingService
     /// <summary>Tek BES katkı kaydını siler (kümülatif + maliyet düşülür).</summary>
     Task<HoldingDto> DeleteBesContributionAsync(Guid id, Guid contributionId, CancellationToken ct = default);
 
+    /// <summary>
+    /// BES eğitici projeksiyon (T-BES.5): kullanıcının verdiği varsayımlardan birikim illüstrasyonu.
+    /// Pozisyonu değiştirmez (saf okuma). BES değilse 400; başkasınınsa 404 (IDOR).
+    /// </summary>
+    Task<BesProjectionResult> ProjectBesAsync(Guid id, BesProjectionRequest request, CancellationToken ct = default);
+
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
 

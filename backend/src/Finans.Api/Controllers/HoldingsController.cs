@@ -96,6 +96,12 @@ public sealed class HoldingsController(IHoldingService holdings) : ControllerBas
         Guid id, Guid contributionId, CancellationToken ct) =>
         Ok(await holdings.DeleteBesContributionAsync(id, contributionId, ct));
 
+    /// <summary>POST /api/holdings/{id}/bes/projection — BES eğitici projeksiyon (T-BES.5).</summary>
+    [HttpPost("{id:guid}/bes/projection")]
+    public async Task<ActionResult<BesProjectionResult>> ProjectBes(
+        Guid id, [FromBody] BesProjectionRequest request, CancellationToken ct) =>
+        Ok(await holdings.ProjectBesAsync(id, request, ct));
+
     /// <summary>DELETE /api/holdings/{id} — pozisyonu sil (soft-delete, 204).</summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

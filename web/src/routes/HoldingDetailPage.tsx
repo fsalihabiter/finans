@@ -6,6 +6,7 @@ import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
 import { BesContributionPlanForm } from "../components/BesContributionPlanForm";
 import { BesContributionHistory } from "../components/BesContributionHistory";
+import { BesProjectionForm } from "../components/BesProjectionForm";
 import { DateField } from "../components/DateField";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -34,7 +35,7 @@ const VESTING_TR: Record<string, string> = {
   Vested: "Tamamlandı",
 };
 
-type ActiveModal = null | "tx" | "bes" | "price" | "bessettings" | "besplan";
+type ActiveModal = null | "tx" | "bes" | "price" | "bessettings" | "besplan" | "besproj";
 
 /** ISO tarihten <input type="date"> değeri (YYYY-MM-DD). */
 function toDateInput(iso: string | null): string {
@@ -286,6 +287,9 @@ export function HoldingDetailPage() {
                 <button type="button" className="btn-ghost" onClick={() => setModal("besplan")}>
                   Düzenli katkı / geçmiş
                 </button>
+                <button type="button" className="btn-ghost outlined" onClick={() => setModal("besproj")}>
+                  📊 Eğitici senaryo
+                </button>
               </>
             ) : (
               <button type="button" className="btn-primary" onClick={() => setModal("tx")}>
@@ -470,6 +474,14 @@ export function HoldingDetailPage() {
             holdingId={h.id}
             existingContributions={h.bes?.contributions ?? []}
             onDone={onBesPlanDone}
+          />
+        </Modal>
+      )}
+      {modal === "besproj" && (
+        <Modal title="BES Eğitici Senaryo (varsayımsal)" onClose={closeModal}>
+          <BesProjectionForm
+            holdingId={h.id}
+            defaultMonthly={h.bes?.monthlyAmount ?? null}
           />
         </Modal>
       )}

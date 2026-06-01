@@ -232,6 +232,41 @@ export interface UpdateBesContributionInput {
   paidAtUtc: string;
 }
 
+/** POST /api/holdings/{id}/bes/projection — eğitici varsayımsal projeksiyon girdileri (T-BES.5). */
+export interface BesProjectionInput {
+  /** Varsayılan aylık katkı (TRY). */
+  ownMonthly: number;
+  /** Süre (yıl, 1-50). */
+  years: number;
+  /** Yıllık nominal getiri varsayımı (örn. 0.20 = %20). */
+  annualReturnRatio: number;
+}
+
+/** BES projeksiyon sonucu — varsayımsal birikim illüstrasyonu (T-BES.5). */
+export interface BesProjection {
+  totalOwnContribution: number;
+  totalStateContribution: number;
+  fundValue: number;
+  ownValue: number;
+  stateValue: number;
+  ownProfit: number;
+  stateProfit: number;
+  annualReturnRatio: number;
+  yearly: BesProjectionYear[];
+}
+
+/** Her yıl sonu birikim/değer (büyüme eğrisi için). */
+export interface BesProjectionYear {
+  year: number;
+  ownContribution: number;
+  stateContribution: number;
+  fundValue: number;
+  ownValue: number;
+  stateValue: number;
+  ownProfit: number;
+  stateProfit: number;
+}
+
 /** POST /api/holdings/bes — açılış bakiyesiyle yeni BES pozisyonu (T-BES.8). */
 export interface CreateBesInput {
   name: string;

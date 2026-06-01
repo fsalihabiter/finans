@@ -20,6 +20,56 @@
 
 ---
 
+## 2026-06-01 · T-BES.5 — BES eğitici projeksiyon (varsayımsal birikim illüstrasyonu)
+- **Görev(ler):** T-BES.5 (08-BACKLOG, T-BES epik).
+- **Tanı:** Kullanıcının "ne kadar biriktirebilirim?" sorusunu yatırım tavsiyesi vermeden, kendi
+  varsayımlarıyla hesaplanmış bir illüstrasyon olarak göster (CLAUDE.md §2).
+- **Ne yapıldı (saf hesap):**
+  1. `BesProjectionCalculator.Project(input)` — aylık iteratif simülasyon: her ay başında
+     `ownMonthly` yatırılır, oranı ödeme ayına göre devlet katkısı hesaplanır
+     (`BesRules.StateContributionRateOn` — 2026 öncesi %30, sonrası %20); ay sonu fon `(1+r_m)` ile
+     compound. `r_m = (1+r_y)^(1/12)−1` (double → decimal yaklaşıklığı, ~15 ondalık; illüstrasyon
+     için yeterli). Final özet + her yıl sonu için snapshot (yıllık seri).
+  2. `BesProjectionInput`/`Result`/`Year` record'ları. Validasyon: yıl 1-50, getiri -0,99..+2,0,
+     aylık ≥0.
+  3. own/state dilimleri tabandaki orana göre (her ikisi aynı r ile büyüdüğünden bu doğru).
+- **Ne yapıldı (servis + endpoint):**
+  4. `IHoldingService.ProjectBesAsync` + impl: BES değilse 400, IDOR 404; calculator
+     `ArgumentException` → `ValidationException` zarfı.
+  5. `POST /api/holdings/{id}/bes/projection` — `BesProjectionRequest`/`BesProjectionResult`.
+- **Ne yapıldı (shared+web):**
+  6. `@finans/shared` tipler + `projectBes` api.
+  7. `useBesProjection(id)` mutation — saf hesap, invalidate yok.
+  8. `BesProjectionForm` bileşeni: kalıcı **disclaimer**, aylık katkı (plan varsa ön-doldur),
+     süre select (1-30 yıl), yıllık getiri input + chip önerileri (%15/25/35/50). Sonuç kartı:
+     fon değeri (hero), own/state için ayrı yatırılan/değer/kâr-zarar kartları, yıllık seri
+     tablosu. Açıklama dipnotu: vergi/enflasyon/komisyon dahil değil, devlet katkısı gecikmesi
+     ihmal edildi, **yatırım tavsiyesi değildir**.
+  9. `HoldingDetailPage`: BES aksiyon satırında "📊 Eğitici senaryo" butonu + modal.
+  10. CSS: `.bes-proj`, `.proj-disclaimer` (altın dashed border, dikkat çekici), `.proj-hero`,
+      `.proj-card`, `.proj-rate-chips`, `.proj-series` (mobilde tek sütun).
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Portfolio/BesProjectionCalculator.cs` (yeni),
+  `backend/src/Finans.Application/Portfolio/PortfolioDtos.cs`,
+  `backend/src/Finans.Application/Portfolio/IHoldingService.cs`,
+  `backend/src/Finans.Infrastructure/Services/HoldingService.cs`,
+  `backend/src/Finans.Api/Controllers/HoldingsController.cs`,
+  `backend/tests/Finans.Application.Tests/Portfolio/BesProjectionCalculatorTests.cs` (yeni),
+  `backend/tests/Finans.Integration.Tests/PortfolioApiTests.cs`,
+  `packages/shared/src/types/index.ts`, `packages/shared/src/api/index.ts`,
+  `web/src/lib/hooks.ts`, `web/src/components/BesProjectionForm.tsx` (yeni),
+  `web/src/routes/HoldingDetailPage.tsx`, `web/src/App.css`.
+- **Test:** 10 yeni unit (BesProjectionCalculator: sıfır getiri / pozitif getiri orantısal /
+  yıllık seri sayısı / oran tarih yıla göre değişir / sıfır aylık / 5 geçersiz girdi parametrize)
+  yeşil. 4 yeni integration (zero_growth / non_bes_400 / IDOR_404 / invalid_400) — VS Api kilidi
+  bırakılınca koşulacak. Web 52/52 + vite build temiz.
+- **Karar/Not:** Devlet katkısının ~1 ay gecikmeli yatması bu illüstrasyonda göz ardı edildi
+  (kullanıcının "varsayımsal sonuç" amacında detay; disclaimer'da belirtildi). Vergi/komisyon/
+  enflasyon yok — gerçek getiri farklı olur. T-BES.4 yıllık üst sınır ileride eklenirken bu hesaba
+  da iliştirilmeli (ileri tarihli yıllar için brüt asgari ücret bilinmediğinden şu an açık tutuldu).
+- **Durum:** tamamlandı (kod). VS Api kilidi bırakılınca integration testleri koşulacak.
+- **Sıradaki:** Faz 2 dağıtım altyapısı — **T2.8** (Seq + Prometheus + Grafana) ya da T-BES.4
+  (devlet katkısı yıllık üst sınır).
+
 ## 2026-06-01 · BES fon getirisi: own + state için ayrı kâr/zarar (T-BES.10)
 - **Görev(ler):** T-BES.10 (ad-hoc) — kullanıcı: "Devlet katkısı da fon üzerinden işletiliyor, kâr elde
   ediliyor; katkı payına yapılan fon getirisi gibi devlet katkısı için de fon getirisi hesaplanmalı."

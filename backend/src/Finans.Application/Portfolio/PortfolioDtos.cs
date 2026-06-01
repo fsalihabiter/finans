@@ -207,3 +207,15 @@ public sealed record GenerateBesContributionsRequest(
 public sealed record UpdateBesContributionRequest(
     decimal OwnAmount,
     DateTime PaidAtUtc);
+
+/// <summary>
+/// POST /api/holdings/{id}/bes/projection — BES eğitici projeksiyon (T-BES.5). Kullanıcının
+/// **varsayımlarıyla** birikim illüstrasyonu üretir; yatırım tavsiyesi DEĞİL (CLAUDE.md §2).
+/// </summary>
+public sealed record BesProjectionRequest(
+    /// <summary>Varsayılan aylık katkı (TRY); plan varsa ön-doldurmadan değiştirilebilir.</summary>
+    decimal OwnMonthly,
+    /// <summary>Süre (yıl, 1-50).</summary>
+    int Years,
+    /// <summary>Yıllık nominal getiri varsayımı (örn. 0.20 = %20; -0.99..+2.00).</summary>
+    decimal AnnualReturnRatio);
