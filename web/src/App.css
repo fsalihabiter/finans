@@ -1985,9 +1985,13 @@ body.drawer-lock {
 /* ───── Geçmiş tabloları: dikey kaydırma + yatay kaydırma YOK + sütun otomatik sığdırma (T-BES.6) ───── */
 .history-scroll {
   /* Kart gövdesini doldurur (sol sütun yüksekliğine eşit); içerik fazlaysa İÇERİDE dikey kayar,
-     yatay kayma yok. Sabit max-height yerine flex → boş alan/kırpma olmadan otomatik büyür. */
+     yatay kayma yok. Sabit max-height yerine flex → boş alan/kırpma olmadan otomatik büyür.
+     **Üst sınır (kullanıcı geri bildirimi):** sol sütun çok uzunsa (BES açıklama+plan+hak ediş notları)
+     bu kart da uzuyordu → sayfayı yormamak için max-height ekrana göre sınırlandı; bu sınırı aşan
+     katkı/işlem listesi tablo içinde dikey kayar (sticky header + tfoot kalır). */
   flex: 1;
   min-height: 0;
+  max-height: min(60vh, 540px);
   overflow-y: auto;
   overflow-x: hidden;
 }
