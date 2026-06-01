@@ -10,10 +10,14 @@
 çökme yok). Kalan: dağıtım/gözlem altyapısı.
 
 ## Sıradaki (öncelik sırası)
-0. ⚠ **`AddBesBirthYear` migration'ını canlı Postgres'e uygula** (VS'den Update-Database; additive nullable). Kod tarafı tüm test paketleri yeşil — yalnız DB uygulanması bekliyor.
 1. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
 2. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
 3. T-BES.6b ileri (otomatik zamanlayıcı/plan kalıcılığı — uygulama kapalıyken arka plan job)
+
+> ✅ **`AddBesBirthYear` migration uygulandı (2026-06-02)** — `BesDetails.BirthYear integer NULL` canlı
+> Postgres'te (`dotnet ef database update`, additive). `__EFMigrationsHistory` 4/4 migration'la
+> güncel. BES "Ayarları düzenle" formunda doğum yılı kalıcı kaydedilebilir; T-BES.5 projeksiyonunda
+> "Emeklilik" preset chip'i (10y + 56 yaş) artık tam çalışır.
 
 > ✅ **T-BES.4 bitti (2026-06-01) — Devlet katkısı yıllık üst sınırı:** `BesRules.AnnualCaps` tablosu
 > (2024 51.006 · 2025 66.312 · 2026 79.272 ₺) + `BesCalculator.ApplyAnnualStateCap` saf helper. Servisin
