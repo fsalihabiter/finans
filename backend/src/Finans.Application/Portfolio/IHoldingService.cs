@@ -20,6 +20,12 @@ public interface IHoldingService
 
     Task<HoldingDto> AddTransactionAsync(Guid id, TransactionRequest request, CancellationToken ct = default);
 
+    /// <summary>Tek işlemi düzenler — miktar/ort. maliyet işlemlerden yeniden türetilir (BES'te yok).</summary>
+    Task<HoldingDto> UpdateTransactionAsync(Guid id, Guid transactionId, TransactionRequest request, CancellationToken ct = default);
+
+    /// <summary>Tek işlemi siler — miktar/ort. maliyet yeniden türetilir. Son işlemi silmek için pozisyonu silin.</summary>
+    Task<HoldingDto> DeleteTransactionAsync(Guid id, Guid transactionId, CancellationToken ct = default);
+
     Task<HoldingDto> UpdateAsync(Guid id, UpdateHoldingRequest request, CancellationToken ct = default);
 
     /// <summary>BES pozisyonuna aylık katkı ekler (kendi + devlet). BES değilse 400.</summary>

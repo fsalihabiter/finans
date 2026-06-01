@@ -57,7 +57,20 @@ public sealed record BesDto(
     bool ContributionDue,
     bool PlanActive,
     decimal? MonthlyAmount,
-    int? ContributionDay);
+    int? ContributionDay,
+    // ── Fon getirisi (T-BES.10): fon, hem kendi hem devlet birikimi üzerinden büyür.
+    // Aynı oran r = fund/(own+state) − 1 her iki katkıya işler; her birinin ayrı kâr/zararı vardır.
+    // Fon değeri (Holding.CurrentPrice) ya da (own+state) tabanı yoksa null/0 (gösterimde "—").
+    /// <summary>Fon getiri oranı (yalnız yatırılmış kısımda): (fundValue / (own+state)) - 1.</summary>
+    decimal? FundReturnRatio = null,
+    /// <summary>Kendi katkının güncel değeri ≈ own × (1+r); oran yoksa own.</summary>
+    decimal OwnValue = 0m,
+    /// <summary>Kendi katkının fon getiri kâr/zararı ≈ own × r; oran yoksa 0.</summary>
+    decimal OwnProfit = 0m,
+    /// <summary>Devlet katkısının güncel değeri ≈ state × (1+r); oran yoksa state.</summary>
+    decimal StateValue = 0m,
+    /// <summary>Devlet katkısının fon getiri kâr/zararı ≈ state × r; oran yoksa 0.</summary>
+    decimal StateProfit = 0m);
 
 /// <summary>
 /// Tek bir BES katkı ödemesi kaydı (T-BES.6). Source: "Opening" | "Manual" | "Plan".

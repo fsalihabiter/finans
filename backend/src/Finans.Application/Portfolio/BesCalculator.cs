@@ -71,4 +71,34 @@ public static class BesCalculator
     /// </summary>
     public static decimal VestedRateFor(DateTime? joinedAtUtc, int? age, DateTime asOfUtc) =>
         BesRules.VestedRateFor(YearsInSystem(joinedAtUtc, asOfUtc), age);
+
+    /// <summary>
+    /// BES fon getirisi (T-BES.10): fon, hem kendi katkı hem devlet katkısı üzerinde işleyerek büyür;
+    /// dolayısıyla her ikisinin AYRI kâr/zararı vardır ve ikisi de **aynı oranla** (r) yansır.
+    /// <c>r = fundValue / (own+state) − 1</c>. <paramref name="fundValue"/> yoksa veya taban 0 ise
+    /// oran null; değerler katkıların kendisine (kâr/zarar 0). Yuvarlama: tutarlar 2 ondalık (TRY
+    /// gösterimi); oran yuvarlanmaz (oransal aritmetik kayıpsız).
+    /// </summary>
+    public static BesFundReturn FundReturnFor(decimal own, decimal state, decimal? fundValue)
+    {
+        var costBase = own + state;
+        if (fundValue is not { } fv || costBase <= 0m)
+            return new BesFundReturn(null, own, 0m, state, 0m);
+
+        var r = fv / costBase - 1m;
+        return new BesFundReturn(
+            r,
+            Math.Round(own * (1m + r), 2),
+            Math.Round(own * r, 2),
+            Math.Round(state * (1m + r), 2),
+            Math.Round(state * r, 2));
+    }
 }
+
+/// <summary>BES fonun her bir katkı kalemine yansıyan getirisi (T-BES.10).</summary>
+public readonly record struct BesFundReturn(
+    decimal? Rate,
+    decimal OwnValue,
+    decimal OwnProfit,
+    decimal StateValue,
+    decimal StateProfit);

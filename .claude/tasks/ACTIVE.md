@@ -17,6 +17,17 @@
 3. **T2.9** — Reverse proxy + rate limit (Traefik/Caddy TLS)
 4. T-BES.4 (devlet katkısı yıllık üst sınır) · T-BES.6b (otomatik zamanlayıcı/plan kalıcılığı)
 
+> ✅ **T-BES.10 bitti (2026-06-01) — BES fon getirisi own+state'e ayrı yansır:** `BesCalculator.FundReturnFor`
+> saf hesap (taban=own+state; r=fund/taban−1; null/sıfır taban → null oran). BesDto'ya `FundReturnRatio`,
+> `OwnValue`/`OwnProfit`/`StateValue`/`StateProfit`. Web: BES split'inde her iki katkı için mini-satır
+> (güncel değer + kâr/zarar + oran). Hero değişmedi (önceki "maliyet=own" kararı korunur). **+4 unit yeşil,
+> integration VS kilidi bırakılınca · web 52/52 + build temiz.**
+
+> ✅ **T-TX.1 bitti (2026-06-01) — İşlem geçmişinde düzenle/sil:** `PUT/DELETE /api/holdings/{id}/transactions/{txId}`
+> + servis tarafında miktar/AvgCost **işlemlerden yeniden türetilir**; son işlem silinemez (`cannot_delete_last`
+> → "Pozisyonu sil"e yönlendir); BES'te düz tx reddedilir; **IDOR 404**. Web: TransactionHistory ✎/🗑 ikonlar,
+> düzenleme modalı + ConfirmDialog. **+5 integration / 52 web yeşil.**
+
 > ✅ **T-BES.6b/7 bitti** — maliyet=kendi katkı (own-only); katkı düzenle/sil; düzenli plan checkbox +
 > lazy otomatik devam; geçmiş UX (dikey scroll/sığdırma/ikon butonlar). Migration'lar (`BesContributions`,
 > `BesContributionPlan`) canlı Postgres'e uygulandı (additive). Backend'i **VS'den çalıştır** (ben arka planda bırakmıyorum).

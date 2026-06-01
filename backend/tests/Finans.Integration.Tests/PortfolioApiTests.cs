@@ -236,6 +236,154 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    // ── BES fon getirisi (T-BES.10): own ve state için ayrı kâr/zarar ─────────
+
+    [Fact]
+    public async Task Bes_holding_exposes_fund_return_for_own_and_state()
+    {
+        var client = ClientAs(Investor);
+
+        var holdings = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json);
+        var bes = holdings!.Single(h => h.AssetType == AssetType.Bes);
+        bes.Bes.Should().NotBeNull();
+
+        var own = bes.Bes!.OwnContribution;        // 120.000 (seed)
+        var state = bes.Bes.StateContribution;      // 28.554 (seed)
+        var fund = bes.CurrentPrice!.Value;         // 279.378 (seed)
+        var costBase = own + state;                 // 148.554
+        var r = fund / costBase - 1m;               // ≈ 0,8806
+
+        // Fon getiri oranı tabandan (own+state) türetilir — saf aritmetik (yuvarlama yok).
+        bes.Bes.FundReturnRatio.Should().NotBeNull();
+        bes.Bes.FundReturnRatio!.Value.Should().Be(r);
+
+        // own ve state aynı r'yi paylaşır — her birinin kâr/zararı kendi tabanı × r.
+        bes.Bes.OwnProfit.Should().Be(Math.Round(own * r, 2));
+        bes.Bes.StateProfit.Should().Be(Math.Round(state * r, 2));
+        bes.Bes.OwnValue.Should().Be(Math.Round(own * (1m + r), 2));
+        bes.Bes.StateValue.Should().Be(Math.Round(state * (1m + r), 2));
+
+        // Birikim tabanı kontrolü: yatırılmış toplamlar (own+state) doğru taban.
+        costBase.Should().Be(148554m);
+    }
+
+    // ── İşlem düzenle / sil (T-TX.1) — miktar & ort. maliyet yeniden türetilir ──
+
+    [Fact]
+    public async Task Update_transaction_recomputes_quantity_and_avg_cost()
+    {
+        var client = ClientAs(Investor);
+
+        // 2 işlem: 100 @ 10 + 100 @ 20 → 200 / ort 15
+        var create = await CreateFundWithTransactionsAsync(client, name: "TX Düzenle",
+            new TransactionRequest(TransactionType.Buy, 100m, 10m),
+            new TransactionRequest(TransactionType.Buy, 100m, 20m));
+        create.Quantity.Should().Be(200m);
+        create.AvgCost.Should().Be(15m);
+
+        // İlk işlemi (Buy 100 @ 10) → Buy 100 @ 30 olarak güncelle. Beklenen ort.: (100×30 + 100×20)/200 = 25
+        var firstTx = create.Transactions.Single(t => t.UnitPrice == 10m);
+        var resp = await client.PutAsJsonAsync(
+            $"/api/holdings/{create.Id}/transactions/{firstTx.Id}",
+            new TransactionRequest(TransactionType.Buy, 100m, 30m), Json);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var updated = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+        updated!.Quantity.Should().Be(200m);
+        updated.AvgCost.Should().Be(25m);
+    }
+
+    [Fact]
+    public async Task Delete_transaction_recomputes_quantity_and_avg_cost()
+    {
+        var client = ClientAs(Investor);
+
+        var create = await CreateFundWithTransactionsAsync(client, name: "TX Sil",
+            new TransactionRequest(TransactionType.Buy, 100m, 10m),
+            new TransactionRequest(TransactionType.Buy, 100m, 20m));
+
+        // İkinci işlemi sil → tek alış kalır (100 @ 10).
+        var secondTx = create.Transactions.Single(t => t.UnitPrice == 20m);
+        var resp = await client.DeleteAsync(
+            $"/api/holdings/{create.Id}/transactions/{secondTx.Id}");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var afterDelete = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+        afterDelete!.Quantity.Should().Be(100m);
+        afterDelete.AvgCost.Should().Be(10m);
+        afterDelete.Transactions.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task Delete_last_transaction_returns_400_with_use_position_delete()
+    {
+        var client = ClientAs(Investor);
+
+        var create = await CreateFundWithTransactionsAsync(client, name: "TX Son",
+            new TransactionRequest(TransactionType.Buy, 50m, 10m));
+        var onlyTx = create.Transactions.Single();
+
+        var resp = await client.DeleteAsync(
+            $"/api/holdings/{create.Id}/transactions/{onlyTx.Id}");
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorCodeAsync(resp)).Should().Be("VALIDATION_ERROR");
+    }
+
+    [Fact]
+    public async Task Idor_cannot_update_or_delete_other_users_transaction()
+    {
+        var admin = ClientAs(Admin);
+
+        // Yatırımcının seed altın holding'inden bir tx id'sini al (admin endpointe direkt vurur).
+        var investorClient = ClientAs(Investor);
+        var goldHolding = await investorClient.GetFromJsonAsync<HoldingDto>(
+            $"/api/holdings/{GoldHolding}", Json);
+        var realTxId = goldHolding!.Transactions.First().Id;
+
+        var putResp = await admin.PutAsJsonAsync(
+            $"/api/holdings/{GoldHolding}/transactions/{realTxId}",
+            new TransactionRequest(TransactionType.Buy, 1m, 1m), Json);
+        putResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        var delResp = await admin.DeleteAsync(
+            $"/api/holdings/{GoldHolding}/transactions/{realTxId}");
+        delResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Update_transaction_not_allowed_for_bes()
+    {
+        var client = ClientAs(Investor);
+
+        var resp = await client.PutAsJsonAsync(
+            $"/api/holdings/{BesHolding}/transactions/{Guid.NewGuid()}",
+            new TransactionRequest(TransactionType.Buy, 1m, 1m), Json);
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorCodeAsync(resp)).Should().Be("VALIDATION_ERROR");
+    }
+
+    private async Task<HoldingDto> CreateFundWithTransactionsAsync(
+        HttpClient client, string name, params TransactionRequest[] transactions)
+    {
+        var first = transactions[0];
+        var createReq = new CreateHoldingRequest(
+            AssetType.Fund, name, Symbol: null, CurrencyCode.TRY, "adet", first);
+        var createResp = await client.PostAsJsonAsync("/api/holdings", createReq, Json);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = (await createResp.Content.ReadFromJsonAsync<HoldingDto>(Json))!;
+
+        foreach (var tx in transactions.Skip(1))
+        {
+            var addResp = await client.PostAsJsonAsync(
+                $"/api/holdings/{created.Id}/transactions", tx, Json);
+            addResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        // İşlem id'leri için GET (DTO'da Transactions dolu döner).
+        return (await client.GetFromJsonAsync<HoldingDto>($"/api/holdings/{created.Id}", Json))!;
+    }
+
     private static async Task<string?> ErrorCodeAsync(HttpResponseMessage resp)
     {
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());

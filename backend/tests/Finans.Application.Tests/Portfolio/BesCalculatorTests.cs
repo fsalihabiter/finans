@@ -104,4 +104,63 @@ public sealed class BesCalculatorTests
         Assert.Equal(41, BesCalculator.AgeFor(1985, AsOf));
         Assert.Null(BesCalculator.AgeFor(null, AsOf));
     }
+
+    // ── Fon getirisi (T-BES.10): own ve state aynı oranla işler ─────────────
+
+    [Fact]
+    public void FundReturnFor_distributes_growth_to_own_and_state_with_same_rate()
+    {
+        // own=120.000, state=28.554, fund=279.378 → taban 148.554; r ≈ 0,8806.
+        var r = BesCalculator.FundReturnFor(120000m, 28554m, 279378m);
+
+        Assert.NotNull(r.Rate);
+        Assert.Equal(279378m / 148554m - 1m, r.Rate!.Value);
+
+        // own*r ve state*r — taban × r toplamı = fon kâr/zararı (own_value + state_value ≈ fund).
+        Assert.Equal(Math.Round(120000m * r.Rate.Value, 2), r.OwnProfit);
+        Assert.Equal(Math.Round(28554m * r.Rate.Value, 2), r.StateProfit);
+        Assert.Equal(Math.Round(120000m * (1m + r.Rate.Value), 2), r.OwnValue);
+        Assert.Equal(Math.Round(28554m * (1m + r.Rate.Value), 2), r.StateValue);
+        // Round farkı her birinde ±0,5 kuruş → toplam ≈ fund ±0,01.
+        Assert.InRange(r.OwnValue + r.StateValue, 279378m - 0.01m, 279378m + 0.01m);
+    }
+
+    [Fact]
+    public void FundReturnFor_negative_rate_for_loss()
+    {
+        // 100.000 yatırıldı, fon 90.000'e düştü → r = -0,1; her iki katkı için kayıp.
+        var r = BesCalculator.FundReturnFor(80000m, 20000m, 90000m);
+
+        Assert.Equal(-0.1m, r.Rate!.Value);
+        Assert.Equal(-8000m, r.OwnProfit);
+        Assert.Equal(-2000m, r.StateProfit);
+        Assert.Equal(72000m, r.OwnValue);
+        Assert.Equal(18000m, r.StateValue);
+    }
+
+    [Fact]
+    public void FundReturnFor_no_fund_value_returns_null_rate_and_principal()
+    {
+        // Fon değeri girilmediyse: oran yok; değerler tabana eşit; kâr/zarar 0.
+        var r = BesCalculator.FundReturnFor(100000m, 25000m, fundValue: null);
+
+        Assert.Null(r.Rate);
+        Assert.Equal(100000m, r.OwnValue);
+        Assert.Equal(25000m, r.StateValue);
+        Assert.Equal(0m, r.OwnProfit);
+        Assert.Equal(0m, r.StateProfit);
+    }
+
+    [Fact]
+    public void FundReturnFor_zero_base_returns_null_rate()
+    {
+        // Henüz katkı yok ama fon değeri girilmiş → oran tanımsız (taban 0); bölme yok.
+        var r = BesCalculator.FundReturnFor(0m, 0m, 500m);
+
+        Assert.Null(r.Rate);
+        Assert.Equal(0m, r.OwnValue);
+        Assert.Equal(0m, r.StateValue);
+        Assert.Equal(0m, r.OwnProfit);
+        Assert.Equal(0m, r.StateProfit);
+    }
 }

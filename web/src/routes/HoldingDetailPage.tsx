@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@finans/shared";
-import type { BesContribution, TransactionType } from "@finans/shared";
+import type { BesContribution, Transaction, TransactionType } from "@finans/shared";
 import { AddTransactionForm } from "../components/AddTransactionForm";
 import { BesContributionForm } from "../components/BesContributionForm";
 import { BesContributionPlanForm } from "../components/BesContributionPlanForm";
@@ -14,10 +14,12 @@ import { useToast } from "../components/Toast";
 import {
   useDeleteBesContribution,
   useDeleteHolding,
+  useDeleteTransaction,
   useHolding,
   useUpdateBes,
   useUpdateBesContribution,
   useUpdateHolding,
+  useUpdateTransaction,
 } from "../lib/hooks";
 import { ASSET_META, softBg } from "../lib/assetMeta";
 
@@ -55,6 +57,8 @@ export function HoldingDetailPage() {
   const updateBes = useUpdateBes(id);
   const updateContribution = useUpdateBesContribution(id);
   const deleteContribution = useDeleteBesContribution(id);
+  const updateTransaction = useUpdateTransaction(id);
+  const deleteTransaction = useDeleteTransaction(id);
   const remove = useDeleteHolding();
   const { notify } = useToast();
 
@@ -68,6 +72,12 @@ export function HoldingDetailPage() {
   const [editOwn, setEditOwn] = useState("");
   const [editDate, setEditDate] = useState("");
   const [deletingC, setDeletingC] = useState<BesContribution | null>(null);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [editTxType, setEditTxType] = useState<TransactionType>("Buy");
+  const [editTxQty, setEditTxQty] = useState("");
+  const [editTxPrice, setEditTxPrice] = useState("");
+  const [editTxDate, setEditTxDate] = useState("");
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
   const today = new Date().toISOString().slice(0, 10);
 
   if (holding.isLoading) return <p className="muted">Yükleniyor…</p>;
@@ -151,6 +161,52 @@ export function HoldingDetailPage() {
     if (!deletingC) return;
     deleteContribution.mutate(deletingC.id, {
       onSuccess: () => { setDeletingC(null); notify("Katkı silindi.", "info"); },
+    });
+  };
+
+  const openEditTransaction = (t: Transaction) => {
+    setEditTxType(t.type);
+    setEditTxQty(String(t.quantity));
+    setEditTxPrice(String(t.unitPrice));
+    setEditTxDate(toDateInput(t.transactedAtUtc));
+    setEditingTx(t);
+  };
+
+  const onEditTransactionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTx) return;
+    const qty = Number(editTxQty.replace(",", "."));
+    const price = isCash ? 1 : Number(editTxPrice.replace(",", "."));
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    if (!isCash && (!Number.isFinite(price) || price < 0)) return;
+    if (editTxDate === "") return;
+    updateTransaction.mutate(
+      {
+        transactionId: editingTx.id,
+        input: {
+          type: editTxType,
+          quantity: qty,
+          unitPrice: price,
+          date: `${editTxDate}T00:00:00Z`,
+        },
+      },
+      {
+        onSuccess: () => {
+          setEditingTx(null);
+          notify("İşlem güncellendi.", "success");
+        },
+      },
+    );
+  };
+
+  const onDeleteTransaction = () => {
+    if (!deletingTx) return;
+    deleteTransaction.mutate(deletingTx.id, {
+      onSuccess: () => { setDeletingTx(null); notify("İşlem silindi.", "info"); },
+      onError: (err) => {
+        // Son işlemi silmeye çalışırsa backend 400 döner; mesajı kullanıcıya göster.
+        notify(err instanceof Error ? err.message : "İşlem silinemedi.", "error");
+      },
     });
   };
 
@@ -270,11 +326,31 @@ export function HoldingDetailPage() {
               )}
               <div className="split">
                 <div className="sh"><span className="sl">Yatırılan Katkı Payı</span><span className="sr tnum">{formatCurrency(h.bes.ownContribution, h.currency)}</span></div>
-                <div className="sd">Cebinden ödediğin, hesabına geçmiş katkı payları — gerçek <b>yatırım performansının</b> tabanı.</div>
+                {h.bes.fundReturnRatio !== null && (
+                  <div className="bes-fund-row">
+                    <span className="muted">Güncel değer</span>
+                    <span className="tnum">{formatCurrency(h.bes.ownValue, h.currency)}</span>
+                    <span className={`tnum ${tone(h.bes.ownProfit)}`}>
+                      {h.bes.ownProfit > 0 ? "+" : ""}{formatCurrency(h.bes.ownProfit, h.currency)}
+                      {" · "}{formatPercent(h.bes.fundReturnRatio)}
+                    </span>
+                  </div>
+                )}
+                <div className="sd">Cebinden ödediğin, hesabına geçmiş katkı payları — gerçek <b>yatırım performansının</b> tabanı. Fon getirisi <b>kendi payına da</b> işler.</div>
               </div>
               <div className="split">
                 <div className="sh"><span className="sl">Yatırılan devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
-                <div className="sd">Devletin eklediği <b>sübvansiyon</b> (hesabına geçmiş kısım): katkı payının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — geriye dönük değil). Üst sınır yıllık brüt asgari ücretin %20'si. Ayrı gösterilir.</div>
+                {h.bes.fundReturnRatio !== null && (
+                  <div className="bes-fund-row">
+                    <span className="muted">Güncel değer</span>
+                    <span className="tnum">{formatCurrency(h.bes.stateValue, h.currency)}</span>
+                    <span className={`tnum ${tone(h.bes.stateProfit)}`}>
+                      {h.bes.stateProfit > 0 ? "+" : ""}{formatCurrency(h.bes.stateProfit, h.currency)}
+                      {" · "}{formatPercent(h.bes.fundReturnRatio)}
+                    </span>
+                  </div>
+                )}
+                <div className="sd">Devletin eklediği <b>sübvansiyon</b> (hesabına geçmiş kısım): katkı payının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — geriye dönük değil). Bu tutar <b>fonda işletilir</b>; getirisi ayrı kâr/zarar olarak yukarıda görünür.</div>
               </div>
               {(h.bes.ownPending > 0 || h.bes.statePending > 0) && (
                 <div className="split">
@@ -348,6 +424,8 @@ export function HoldingDetailPage() {
                 currency={h.currency}
                 unit={h.unit}
                 cash={isCash}
+                onEdit={openEditTransaction}
+                onDelete={setDeletingTx}
               />
             )}
           </div>
@@ -412,6 +490,65 @@ export function HoldingDetailPage() {
               </button>
             </div>
             {updateContribution.isError && <p className="neg" role="alert">Güncelleme başarısız.</p>}
+          </form>
+        </Modal>
+      )}
+      {editingTx && (
+        <Modal title={isCash ? "Hareketi düzenle" : "İşlemi düzenle"} onClose={() => setEditingTx(null)}>
+          <form className="tx-form" onSubmit={onEditTransactionSubmit} aria-label={isCash ? "Hareketi düzenle" : "İşlemi düzenle"}>
+            <div className="tx-type" role="group" aria-label={isCash ? "Hareket türü" : "İşlem türü"}>
+              <button
+                type="button"
+                className={editTxType === "Buy" ? "active" : ""}
+                aria-pressed={editTxType === "Buy"}
+                onClick={() => setEditTxType("Buy")}
+              >
+                {isCash ? "Para ekle" : "Alış"}
+              </button>
+              <button
+                type="button"
+                className={editTxType === "Sell" ? "active sell" : ""}
+                aria-pressed={editTxType === "Sell"}
+                onClick={() => setEditTxType("Sell")}
+              >
+                {isCash ? "Para çıkar" : "Satış"}
+              </button>
+            </div>
+            <div className="tx-row">
+              <label>
+                {isCash ? `Tutar (${h.currency})` : `Miktar (${h.unit})`}
+                <input
+                  inputMode="decimal"
+                  autoFocus
+                  value={editTxQty}
+                  onChange={(e) => setEditTxQty(e.target.value)}
+                  required
+                />
+              </label>
+              {!isCash && (
+                <label>
+                  Birim fiyat ({h.currency})
+                  <input
+                    inputMode="decimal"
+                    value={editTxPrice}
+                    onChange={(e) => setEditTxPrice(e.target.value)}
+                    required
+                  />
+                </label>
+              )}
+              <label>
+                {isCash ? "Tarih" : "İşlem tarihi"}
+                <DateField value={editTxDate} onChange={setEditTxDate} required ariaLabel="İşlem tarihi" />
+              </label>
+              <button type="submit" disabled={updateTransaction.isPending}>
+                {updateTransaction.isPending ? "Kaydediliyor…" : "Kaydet"}
+              </button>
+            </div>
+            {updateTransaction.isError && (
+              <p className="neg" role="alert">
+                {updateTransaction.error instanceof Error ? updateTransaction.error.message : "Güncelleme başarısız."}
+              </p>
+            )}
           </form>
         </Modal>
       )}
@@ -484,6 +621,18 @@ export function HoldingDetailPage() {
         busy={deleteContribution.isPending}
         onConfirm={onDeleteContribution}
         onCancel={() => setDeletingC(null)}
+      />
+
+      <ConfirmDialog
+        open={deletingTx !== null}
+        title={isCash ? "Hareketi sil?" : "İşlemi sil?"}
+        message={isCash
+          ? "Bu para hareketi silinecek; bakiye buna göre güncellenecek."
+          : "Bu işlem silinecek; miktar ve ortalama maliyet işlemlerden yeniden hesaplanacak."}
+        confirmLabel="Evet, sil"
+        busy={deleteTransaction.isPending}
+        onConfirm={onDeleteTransaction}
+        onCancel={() => setDeletingTx(null)}
       />
 
       <ConfirmDialog

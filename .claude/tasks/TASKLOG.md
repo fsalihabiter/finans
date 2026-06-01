@@ -20,6 +20,75 @@
 
 ---
 
+## 2026-06-01 · BES fon getirisi: own + state için ayrı kâr/zarar (T-BES.10)
+- **Görev(ler):** T-BES.10 (ad-hoc) — kullanıcı: "Devlet katkısı da fon üzerinden işletiliyor, kâr elde
+  ediliyor; katkı payına yapılan fon getirisi gibi devlet katkısı için de fon getirisi hesaplanmalı."
+- **Tanı:** Mevcut model "maliyet = own (cebimden ödenen)" idi; devlet katkısı "bonus" sayılıyordu — kendi
+  kâr/zararı görünmüyor, yalnız `stateContribution` toplamı vardı. Oysa fon değeri **own + state birikiminin
+  toplamı** üzerinde büyüyor; aynı oran her iki katkıya da işliyor.
+- **Karar:** Düşük invaziv yol — Hero "yatırım performansım" (own perspektifi) değişmedi; yalnız BES split
+  bölümünde **her iki katkı için ayrı güncel değer + kâr/zarar** göster. Fon getirisi `r = fund/(own+state)−1`.
+- **Ne yapıldı (saf hesap, BesCalculator):**
+  1. `BesFundReturn` (record struct: Rate, OwnValue, OwnProfit, StateValue, StateProfit).
+  2. `BesCalculator.FundReturnFor(own, state, fundValue?)` — taban 0 veya fundValue null ise oran null +
+     değerler tabana eşit (0 kâr/zarar); aksi halde `r` ve `own*r`/`state*r` (2 ondalık yuvarlama; ratio
+     yuvarlanmaz).
+- **Ne yapıldı (servis + DTO):**
+  3. `BesDto` 5 yeni alan: `FundReturnRatio?`, `OwnValue`, `OwnProfit`, `StateValue`, `StateProfit`.
+  4. `HoldingService.ToBesDto` `fundValue` parametresi alır (`Holding.CurrentPrice`); helper'ı çağırır.
+- **Ne yapıldı (shared+web):**
+  5. `@finans/shared` `Bes` tipine 5 yeni alan.
+  6. `HoldingDetailPage` BES split: her iki katkı altında **mini-satır** — "Güncel değer · Kâr/Zarar (renk
+     tonlu) · oran". Açıklamalar genişletildi (devlet katkısı da fonda işletilir).
+  7. CSS: `.bes-fund-row` — başlığın altına dashed separator + 3 sütun (etiket / değer / kâr-zarar).
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Portfolio/BesCalculator.cs`,
+  `backend/src/Finans.Application/Portfolio/PortfolioDtos.cs`,
+  `backend/src/Finans.Infrastructure/Services/HoldingService.cs`,
+  `backend/tests/Finans.Application.Tests/Portfolio/BesCalculatorTests.cs`,
+  `backend/tests/Finans.Integration.Tests/PortfolioApiTests.cs`,
+  `packages/shared/src/types/index.ts`, `web/src/routes/HoldingDetailPage.tsx`, `web/src/App.css`.
+- **Test:** 4 yeni unit (FundReturnFor: standart kazanç + kayıp + null fund + sıfır taban) yeşil
+  (Application.Tests). 1 yeni integration (Bes_holding_exposes_fund_return_for_own_and_state) — VS Api kilidi
+  bırakılınca koşulacak. Web 52/52 yeşil + vite build temiz.
+- **Karar/Not:** Hero kâr ve portföy TotalCost önceki "maliyet = own" modeliyle devam eder — devlet katkısı
+  "bonus" olarak yatırım performansını şişirmeye devam (kullanıcının bilinçli kararı). Yeni alanlar **ek
+  görüntü** (split satırında); ileride hero'yu fon getirisine geçirmek istersek küçük bir adım kalır.
+- **Durum:** tamamlandı (kod). VS Api kilidi bırakılınca Integration testleri koşulacak.
+- **Sıradaki:** sıradaki — T-BES.5 (BES fon dağılımı eğitici projeksiyon).
+
+## 2026-06-01 · İşlem geçmişine düzenle/sil — backend uçları + servis recompute + web UX
+- **Görev(ler):** ad-hoc (T-TX.1) — kullanıcı geri bildirimi: "İşlem Geçmişi'nde sil/güncelle yok, BES katkı
+  geçmişiyle aynı olmalı."
+- **Tanı:** Backend'de yalnız `POST /api/holdings/{id}/transactions` vardı; PUT/DELETE yoktu. UI tarafında
+  `TransactionHistory` salt-listesi (BES `BesContributionHistory` ✎/🗑 ikonlarına eşdeğer yok).
+- **Ne yapıldı (backend):**
+  1. `IHoldingService.UpdateTransactionAsync` + `DeleteTransactionAsync` eklendi.
+  2. `HoldingService` implementasyonu: BES'i reddet (`not_allowed_for_bes`), `LoadOwnedWithTransactionsAsync`
+     ile **UserId-scoped** yükle (IDOR yok), tx'i bul/yoksa 404, `ApplyDerivedPosition` ile **Miktar/AvgCost
+     işlemlerden yeniden türetilir**. Delete: son işlem için 400 (`cannot_delete_last`, "Pozisyonu sil"e yönlendir).
+  3. `HoldingsController`: `PUT/DELETE /api/holdings/{id}/transactions/{transactionId}`.
+- **Ne yapıldı (shared+web):**
+  1. `@finans/shared` api: `updateTransaction`, `deleteTransaction`. Tip: mevcut `TransactionInput` reuse.
+  2. `lib/hooks`: `useUpdateTransaction`, `useDeleteTransaction` — başarıda holding + portföy invalidate.
+  3. `TransactionHistory`: opsiyonel `onEdit`/`onDelete` → BES'tekiyle aynı ✎/🗑 ikonları + "İşlem" sütunu
+     (bağlanmamışsa sütun gizlenir; geriye dönük uyumlu).
+  4. `HoldingDetailPage`: düzenleme **modalı** (tür/miktar/birim fiyat/tarih — nakit modu birim fiyat
+     gizler) + silme **ConfirmDialog**. Hata kullanıcıya `notify` ile aktarılır (son işlem silme uyarısı).
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Portfolio/IHoldingService.cs`,
+  `backend/src/Finans.Infrastructure/Services/HoldingService.cs`,
+  `backend/src/Finans.Api/Controllers/HoldingsController.cs`,
+  `backend/tests/Finans.Integration.Tests/PortfolioApiTests.cs`,
+  `packages/shared/src/api/index.ts`, `web/src/lib/hooks.ts`,
+  `web/src/components/TransactionHistory.tsx`, `web/src/routes/HoldingDetailPage.tsx`.
+- **Test:** 5 yeni integration (Update_recomputes, Delete_recomputes, Delete_last→400, IDOR_PUT/DELETE→404,
+  Update_BES_400). Tüm backend integration + 52/52 web testi yeşil. Senaryolar: SC-06 (ort. maliyet türetimi)
+  ve SC-13 (IDOR 404) kapsanır.
+- **Karar/Not:** Son işlemi silmek yasak — pozisyonu sıfır miktarda bırakmak kullanıcı niyetiyle örtüşmez;
+  bunun yerine danger-zone "Pozisyonu sil" var. BES'te düz tx düzenle/sil yok (zaten katkı geçmişinde
+  ✎/🗑 var). Düzenleme tarih bırakılırsa mevcut tarih korunur (request.Date null path).
+- **Durum:** tamamlandı.
+- **Sıradaki:** sıradaki — T-BES.5 (BES fon dağılımı eğitici projeksiyon).
+
 ## 2026-06-01 · BES TR-saat dilimi + Plan-source dedup (manuel girişler planı engellemez)
 - **Görev(ler):** ad-hoc — kullanıcı geri bildirimi: (a) "1 Haziran katkı payı ödemesi gerçekleşmedi, bugün
   01.06 oldu ama devlet bekliyor durumuna gelmedi", (b) "Düzenli plan dışında manuel giriş ayda birden çok

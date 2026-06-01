@@ -48,6 +48,18 @@ public sealed class HoldingsController(IHoldingService holdings) : ControllerBas
         Guid id, [FromBody] TransactionRequest request, CancellationToken ct) =>
         Ok(await holdings.AddTransactionAsync(id, request, ct));
 
+    /// <summary>PUT /api/holdings/{id}/transactions/{txId} — tek işlemi düzenle.</summary>
+    [HttpPut("{id:guid}/transactions/{transactionId:guid}")]
+    public async Task<ActionResult<HoldingDto>> UpdateTransaction(
+        Guid id, Guid transactionId, [FromBody] TransactionRequest request, CancellationToken ct) =>
+        Ok(await holdings.UpdateTransactionAsync(id, transactionId, request, ct));
+
+    /// <summary>DELETE /api/holdings/{id}/transactions/{txId} — tek işlemi sil (son işlem silinemez).</summary>
+    [HttpDelete("{id:guid}/transactions/{transactionId:guid}")]
+    public async Task<ActionResult<HoldingDto>> DeleteTransaction(
+        Guid id, Guid transactionId, CancellationToken ct) =>
+        Ok(await holdings.DeleteTransactionAsync(id, transactionId, ct));
+
     /// <summary>PUT /api/holdings/{id} — güncel fiyatı elle güncelle (FR-1.8).</summary>
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<HoldingDto>> Update(

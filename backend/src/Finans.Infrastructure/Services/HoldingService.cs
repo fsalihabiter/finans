@@ -183,6 +183,66 @@ public sealed class HoldingService(
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
+    public async Task<HoldingDto> UpdateTransactionAsync(
+        Guid id, Guid transactionId, TransactionRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ValidateTransaction(request, isFirst: false);
+
+        var holding = await LoadOwnedWithTransactionsAsync(id, ct);
+
+        // BES nominal hesaptır; düz işlem yok (AddTransactionAsync ile aynı simetri).
+        if (holding.Asset.Type == AssetType.Bes)
+            throw new ValidationException("transaction", "not_allowed_for_bes",
+                "BES pozisyonunda alış/satış işlemi düzenlenemez.");
+
+        var transaction = holding.Transactions.FirstOrDefault(t => t.Id == transactionId)
+            ?? throw new NotFoundException();
+
+        // Tarih bağlamı — null verilirse mevcut tarih korunur.
+        transaction.Type = request.Type;
+        transaction.Quantity = request.Quantity;
+        transaction.UnitPrice = request.UnitPrice;
+        transaction.Fee = request.Fee;
+        if (request.Date is { } d)
+            transaction.TransactedAtUtc = d;
+
+        // Pozisyonu yeniden türet — kalan dizi negatif miktar verirse 400 atar (ApplyDerivedPosition).
+        ApplyDerivedPosition(holding);
+        holding.UpdatedAtUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+        return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
+    public async Task<HoldingDto> DeleteTransactionAsync(Guid id, Guid transactionId, CancellationToken ct = default)
+    {
+        var holding = await LoadOwnedWithTransactionsAsync(id, ct);
+
+        if (holding.Asset.Type == AssetType.Bes)
+            throw new ValidationException("transaction", "not_allowed_for_bes",
+                "BES pozisyonunda alış/satış işlemi silinemez.");
+
+        var transaction = holding.Transactions.FirstOrDefault(t => t.Id == transactionId)
+            ?? throw new NotFoundException();
+
+        // Son işlemi silmek → pozisyon "boş" kalır (Qty=0). Kullanıcının niyetiyle örtüşmez:
+        // bu pozisyonu silmek istiyorsa "Pozisyonu sil" düğmesi var. Yanlışlıkla boş bırakmayı engelle.
+        if (holding.Transactions.Count <= 1)
+            throw new ValidationException("transaction", "cannot_delete_last",
+                "Son işlemi silemezsiniz. Pozisyonu tamamen kaldırmak için 'Pozisyonu sil'i kullanın.");
+
+        holding.Transactions.Remove(transaction);
+        db.Transactions.Remove(transaction);
+
+        // Yeniden türet — negatif miktar olursa 400 (satış zincirini kırarsa kullanıcı uyarılır).
+        ApplyDerivedPosition(holding);
+        holding.UpdatedAtUtc = DateTime.UtcNow;
+
+        await db.SaveChangesAsync(ct);
+        return await GetByIdAsync(holding.Id, ct: ct);
+    }
+
     public async Task<HoldingDto> UpdateAsync(Guid id, UpdateHoldingRequest request, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -497,7 +557,12 @@ public sealed class HoldingService(
     }
 
     /// <summary>BES detayını (devlet katkısı/hak ediş/katkı geçmişi/"bu ay katkını gir" durumu) eşler.</summary>
-    private static BesDto? ToBesDto(BesDetails? bes, ICollection<BesContribution> contributions, DateTime asOf)
+    /// <param name="fundValue">
+    /// Toplam fon değeri (<c>Holding.CurrentPrice</c>). Hem kendi hem devlet birikimi üzerinde işleyen
+    /// fon getirisi <c>r = fund / (own+state) − 1</c> bu değerden türetilir; her iki katkı için ayrı
+    /// güncel değer + kâr/zarar hesaplanır (T-BES.10). Null veya taban 0 ise getiri alanları null/0.
+    /// </param>
+    private static BesDto? ToBesDto(BesDetails? bes, ICollection<BesContribution> contributions, DateTime asOf, decimal? fundValue)
     {
         if (bes is null)
             return null;
@@ -543,11 +608,17 @@ public sealed class HoldingService(
         var lastDeposited = list.Where(c => c.Status != BesContributionStatus.Future).Select(c => (DateTime?)c.PaidAtUtc).FirstOrDefault();
         var due = lastDeposited is { } lp && lp < monthStart;
 
+        // Fon getirisi (T-BES.10): saf hesap BesCalculator'da — fon hem own hem state birikimi üzerinde
+        // büyür, aynı r ikisine işler. Taban = yatırılmış toplamlar (StatePending'in state kısmı "yolda",
+        // tabana ve getiri hesabına girmez — kendi içinde tutarlı).
+        var fund = BesCalculator.FundReturnFor(ownDeposited, stateDeposited, fundValue);
+
         return new BesDto(
             ownDeposited, stateDeposited, ownPending, statePending,
             BesCalculator.VestingStateFor(bes.JoinedAtUtc, asOf), vestedRate, vestedAmount,
             bes.JoinedAtUtc, bes.BirthYear, bes.ProviderName, list, due,
-            bes.PlanActive, bes.MonthlyAmount, bes.ContributionDay);
+            bes.PlanActive, bes.MonthlyAmount, bes.ContributionDay,
+            fund.Rate, fund.OwnValue, fund.OwnProfit, fund.StateValue, fund.StateProfit);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -591,7 +662,9 @@ public sealed class HoldingService(
             // TR yerel "şimdi" — durum (Future/StatePending/Deposited) ve "bu ay katkı" hatırlatması
             // kullanıcının pencerede gördüğü güne göre. Saat dilimi farkıyla "gün geçti ama hâlâ Future"
             // yaşanmasın (T-BES.9 fix; TR sabit UTC+3, DST yok).
-            var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow());
+            // Fon değeri (CurrentPrice) BES için "toplam birikimin piyasa değeri" — own+state'i içerir;
+            // ToBesDto bunu kullanarak her bir katkı için ayrı fon getirisi hesaplar (T-BES.10).
+            var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow(), h.CurrentPrice);
 
             dtos.Add(new HoldingDto(
                 h.Id, h.Asset.Type, h.Asset.Name, h.Asset.Symbol, h.Asset.PricingCurrency, h.Asset.Unit,

@@ -87,6 +87,19 @@ export interface Bes {
   monthlyAmount: number | null;
   /** Ödeme günü (1–28). */
   contributionDay: number | null;
+  // ── Fon getirisi (T-BES.10): fon hem own hem state birikimi üzerinde işler;
+  //    aynı oran r = fund/(own+state) − 1 her iki katkıya yansır. Fon değeri yoksa
+  //    veya taban 0 ise oran null; değerler tabana eşit (kâr/zarar 0).
+  /** Fon getiri oranı; (own+state)>0 ve fonValue varsa, aksi halde null. */
+  fundReturnRatio: number | null;
+  /** Kendi katkının güncel değeri ≈ own × (1+r). */
+  ownValue: number;
+  /** Kendi katkının fon getiri kâr/zararı ≈ own × r. */
+  ownProfit: number;
+  /** Devlet katkısının güncel değeri ≈ state × (1+r). */
+  stateValue: number;
+  /** Devlet katkısının fon getiri kâr/zararı ≈ state × r. */
+  stateProfit: number;
 }
 
 /** Bir pozisyonun geçmiş işlemi (detayda gösterilir). */

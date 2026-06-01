@@ -676,6 +676,20 @@
   color: var(--muted, #a89c89);
   line-height: 1.45;
 }
+/* BES fon getirisi mini-satırı (T-BES.10): split başlığı altında, açıklamanın üstünde.
+   Üç sütun: etiket · güncel değer · kâr/zarar (renkli). Mevcut split tipografisine uyum. */
+.split .bes-fund-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  margin: 4px 0 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line, #322b22);
+}
+.split .bes-fund-row > span:first-child { color: var(--muted, #a89c89); }
+.split .bes-fund-row > span:not(:first-child) { font-weight: 600; }
 .detail-section-title {
   font-family: var(--font-display, Georgia, serif);
   font-size: 15px;

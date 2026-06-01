@@ -124,6 +124,31 @@ export function useAddTransaction(id: string) {
   });
 }
 
+export function useUpdateTransaction(id: string) {
+  const invalidate = useInvalidatePortfolio();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ transactionId, input }: { transactionId: string; input: TransactionInput }) =>
+      api.updateTransaction(id, transactionId, input),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });
+    },
+  });
+}
+
+export function useDeleteTransaction(id: string) {
+  const invalidate = useInvalidatePortfolio();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (transactionId: string) => api.deleteTransaction(id, transactionId),
+    onSuccess: () => {
+      invalidate();
+      void qc.invalidateQueries({ queryKey: queryKeys.holding(id) });
+    },
+  });
+}
+
 export function useUpdateHolding(id: string) {
   const invalidate = useInvalidatePortfolio();
   const qc = useQueryClient();

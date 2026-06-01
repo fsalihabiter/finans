@@ -95,6 +95,10 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
       send<Holding>("POST", "/api/holdings/bes", input),
     addTransaction: (id: string, input: TransactionInput) =>
       send<Holding>("POST", `/api/holdings/${id}/transactions`, input),
+    updateTransaction: (id: string, transactionId: string, input: TransactionInput) =>
+      send<Holding>("PUT", `/api/holdings/${id}/transactions/${transactionId}`, input),
+    deleteTransaction: (id: string, transactionId: string) =>
+      send<Holding>("DELETE", `/api/holdings/${id}/transactions/${transactionId}`),
     updateHolding: (id: string, input: UpdateHoldingInput) =>
       send<Holding>("PUT", `/api/holdings/${id}`, input),
     addBesContribution: (id: string, input: AddBesContributionInput) =>
