@@ -11,6 +11,12 @@
 2. T3.6 — Cache (portföy hash / günde bir; son başarılı fallback'i)
 3. T3.9 — LLM maliyet/çağrı metriği + bütçe alarmı (Prometheus)
 
+> ✅ **T3.1 ek (2026-06-05) — OpenRouter sağlayıcı eklendi:** Geliştirme aşamasında ücretsiz LLM
+> seçeneği. `OpenRouterLlmClient` (OpenAI-uyumlu `/v1/chat/completions`); JSON şema verilince
+> sistem promptuna şemayı ekler + `response_format=json_object`. `Llm:Provider="OpenRouter"` +
+> `Llm:Model` (ör. `meta-llama/llama-3.3-70b-instruct:free`) + `Llm:BaseUrl="https://openrouter.ai/api/"`.
+> **+4 stub HTTP test.** Application 127/127.
+
 > ✅ **T3.4 + T3.7 + T3.8 bitti (2026-06-05) — LLM yorum hattı uçtan uca görünür:**
 > - T3.4 parse hardening: cards ≤5, body/title min-max (kısa→düş, uzun→kırp), meter [0,1] clamp,
 >   tags filtrele/≤4, boş etiketli meter null. +9 edge test.

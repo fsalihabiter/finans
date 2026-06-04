@@ -20,6 +20,43 @@
 
 ---
 
+## 2026-06-05 · T3.1 ek — OpenRouter sağlayıcı (ücretsiz dev katmanı)
+- **Görev(ler):** T3.1'in genişletilmesi. Geliştirme aşamasında Anthropic kredi maliyetinden kaçınmak
+  için **ücretsiz** bir sağlayıcı (`Llm:Provider="OpenRouter"`). Soyutlama (`ILlmClient`) zaten
+  vardı → yeni dal eklendi, sözleşme değişmedi.
+- **Ne yapıldı (Infrastructure — yeni dal):**
+  1. `OpenRouterLlmClient` — typed HttpClient, OpenAI-uyumlu `/v1/chat/completions`. Bearer auth +
+     `HTTP-Referer`/`X-Title` OpenRouter meta header'ları. JSON şema verilince:
+     (a) sistem promptuna "Çıktın AŞAĞIDAKİ JSON şemasına KESİNLİKLE uyan tek bir JSON objesi olsun"
+     direktifi + ham şema eklenir, (b) `response_format: { type: "json_object" }` zorlanır.
+     `json_schema` mode'unu tüm OpenRouter modelleri desteklemediği için daha geniş uyum sağlayan
+     `json_object` tercih edildi; üst katman T3.4 hardening zaten şemayı ikinci kez dayatıyor.
+  2. `LlmOptions`: yeni alanlar `OpenRouterAppUrl`, `OpenRouterAppName`. Yorum güncel:
+     `Provider` "Anthropic" | "OpenRouter" | (boş→Noop). Sözleşme aynı.
+  3. `DependencyInjection`: yeni dal — `Provider="OpenRouter"` ise `AddHttpClient<ILlmClient, OpenRouterLlmClient>`.
+     BaseUrl varsayılanı (Anthropic) verilmişse otomatik `openrouter.ai/api/` ile değiştirilir
+     (kullanıcı override edebilir).
+  4. `appsettings.json`: `_openRouterExample` notu + yeni alanların boş varsayılanları.
+  5. Aynı hata akışı: HTTP/network/timeout/parse → `Fail(reason)` (07 §5).
+- **Ne yapıldı (test):**
+  6. `Finans.Integration.Tests.Llm.OpenRouterLlmClientTests` (+4 stub): API key yokken Fail; Bearer
+     auth + meta header'lar + text yanıt parse; JSON şema verilince `response_format=json_object` +
+     sistem promptuna şemanın eklenmesi; 5xx → `http_503` Fail (throw değil).
+- **Dokunulan dosyalar:** `backend/src/Finans.Infrastructure/Llm/OpenRouterLlmClient.cs` (yeni),
+  `backend/src/Finans.Infrastructure/Llm/LlmOptions.cs`,
+  `backend/src/Finans.Infrastructure/DependencyInjection.cs`,
+  `backend/src/Finans.Api/appsettings.json`,
+  `backend/tests/Finans.Integration.Tests/Llm/OpenRouterLlmClientTests.cs` (yeni),
+  `.claude/docs/07-LLM-INTEGRATION.md` (§2 sağlayıcı dalları açıklaması).
+- **Test:** **Application 127/127 yeşil.** OpenRouter testleri (Integration) VS Api kilidi
+  bırakılınca koşacak — bu projenin normal akışı.
+- **Karar/Not:** `json_schema` modu yerine `json_object` + sistem prompt şeması seçildi: tüm free
+  modeller `json_schema`'yı tam desteklemiyor; `json_object` geniş uyum. T3.4 hardening üst katmanda
+  şema sınırlarını ikinci kez dayatıyor → uyumsuz kart düşer, iyi kart kalır.
+- **Durum:** tamamlandı.
+- **Sıradaki:** Kullanıcının OpenRouter API key alıp `Llm:Provider=OpenRouter` + `Llm:Model` set
+  etmesi. Sonra **T3.5** (çıktı güvenlik filtresi — yasaklı yönlendirme kalıbı).
+
 ## 2026-06-05 · T3.4 + T3.7 + T3.8 — LLM yorum: parse hardening + endpoint + Web Analiz sayfası
 - **Görev(ler):** T3.4 + T3.7 + T3.8 (08-BACKLOG Faz 3). Hedef: "kullanıcı Web'de Analiz sekmesini
   açıp LLM kartlarını (yoksa fallback'i) gerçekten görsün". Üç dilim:

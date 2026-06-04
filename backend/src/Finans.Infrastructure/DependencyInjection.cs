@@ -98,6 +98,18 @@ public static class DependencyInjection
                 c.Timeout = TimeSpan.FromSeconds(Math.Max(1, llm.TimeoutSeconds));
             });
         }
+        else if (!string.IsNullOrWhiteSpace(llm.ApiKey) && llm.Provider.Equals("OpenRouter", StringComparison.OrdinalIgnoreCase))
+        {
+            // OpenRouter dev-friendly: BaseUrl varsayılan farklı; kullanıcı appsettings'te belirtmediyse override.
+            var baseUrl = llm.BaseUrl.Contains("anthropic.com", StringComparison.OrdinalIgnoreCase)
+                ? "https://openrouter.ai/api/"
+                : llm.BaseUrl;
+            services.AddHttpClient<ILlmClient, OpenRouterLlmClient>(c =>
+            {
+                c.BaseAddress = new Uri(baseUrl);
+                c.Timeout = TimeSpan.FromSeconds(Math.Max(1, llm.TimeoutSeconds));
+            });
+        }
         else
         {
             services.AddSingleton<ILlmClient, NoopLlmClient>();

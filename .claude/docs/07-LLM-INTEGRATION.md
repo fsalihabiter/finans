@@ -60,13 +60,25 @@ toplam değer/getiri yüzdesi) gider. Anonimleştirme **servis katmanının** (T
 sorumluluğu; `ILlmClient` bunu varsayar (sözleşme yorumda yazılı).
 
 ### Yapılandırma
-- `Llm:Provider` (varsayılan `Anthropic`)
+- `Llm:Provider` — `"Anthropic"` (varsayılan, üretim hedefi) | `"OpenRouter"` (geliştirme — ücretsiz)
 - `Llm:ApiKey` — env (`Llm__ApiKey`) veya User Secrets; **repoda asla yok** (11 §6)
-- `Llm:Model` (varsayılan `claude-sonnet-4-6`)
-- `Llm:TimeoutSeconds` (20), `Llm:BaseUrl` (`https://api.anthropic.com/`)
+- `Llm:Model` — Anthropic için `claude-sonnet-4-6`; OpenRouter için
+  `meta-llama/llama-3.3-70b-instruct:free` veya `deepseek/deepseek-chat:free` gibi free varyantlar
+- `Llm:BaseUrl` — Anthropic `https://api.anthropic.com/`; OpenRouter `https://openrouter.ai/api/`
+- `Llm:TimeoutSeconds` (20)
+- (Yalnız OpenRouter) `Llm:OpenRouterAppUrl` + `Llm:OpenRouterAppName` — analytics meta header'ları
 
 API anahtarı boşsa DI `NoopLlmClient`'ı bağlar → her çağrı `Fail("llm_not_configured")` döner;
 üst katman (07 §5) cache veya düz metin fallback ile devam eder → **uygulama çökmez (NFR-5).**
+
+### Sağlayıcı dalları (kısaca)
+- **Anthropic** (`AnthropicLlmClient`) — `/v1/messages` + `tool_use` + `input_schema` ile JSON şema
+  modele dayatılır. Production hedefi (yüksek Türkçe kalitesi + güvenilir talimat takibi).
+- **OpenRouter** (`OpenRouterLlmClient`) — OpenAI-uyumlu `/v1/chat/completions`. Şema verilince
+  `response_format: json_object` + şema metni sistem promptuna eklenir (geniş model uyumu için
+  `json_schema` yerine `json_object`). Servisin **güvenli parse** katmanı (T3.4 — `CommentaryParseConstraints`)
+  modelin şemayı tam tutmadığı durumlarda zaten ikinci kez sınırı dayatır → "iyi olan kart kalır,
+  bozuk düşer" akışı her sağlayıcıda aynı.
 
 ---
 
