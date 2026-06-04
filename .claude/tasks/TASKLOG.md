@@ -20,6 +20,43 @@
 
 ---
 
+## 2026-06-05 · T3.2 — Portföy yorum sistem promptu + few-shot + JSON şema
+- **Görev(ler):** T3.2 (08-BACKLOG Faz 3). 07 §3 iskeletini somut, cache-friendly statik bir modüle
+  döktük; T3.3 bunu çağırıp anonim portföy özetiyle birleştirip `ILlmClient.CompleteAsync`'e gönderecek.
+- **Ne yapıldı (Application — statik prompt modülü):**
+  1. `Finans.Application.Llm.CommentaryPrompts` (yeni, statik) — yan etki yok, dışa bağımlılık yok.
+  2. `SystemPrompt` (eğitmen kişiliği + 7 KESİN KURAL):
+     (1) verilen sayıların dışında **rakam üretme/hesap yapma**,
+     (2) **yönlendirme/tahmin yapma** — "al/sat/yükselir/düşer" yasak,
+     (3) mevcut durumu açıkla; genel çerçeveler ver,
+     (4) Türkçe + sıfır bilgi varsayımı + terimleri ilk geçişte kısaca tanımla,
+     (5) çıktı yalnızca `structured_output` tool çağrısı — düz metin yok,
+     (6) kart sayısı 3-5, her kart bir tema, tema tekrarı yok,
+     (7) `body` 60-220 char (1-2 cümle, akademik dil yok).
+     + 2 doğru few-shot (yoğunlaşma + reel getiri kartları) ve 4 yasak örnek
+     ("Altından çıkıp hisseye geçmelisin" / "Bu seviyeden BES eklemek mantıklı" / "Önümüzdeki ay
+     USD/TRY yükselir" / "Toplam değerin aslında 650.000").
+  3. `CommentaryJsonSchema` (07 §4 kart şeması):
+     - `cards` array (`minItems:3`, `maxItems:5`) — maliyet/UX kapısı.
+     - kart: `emoji` + `title` (2-40 char) + `body` (60-220 char) zorunlu;
+       `meter` (value 0..1 + lowLabel + highLabel) ve `tags` (≤4) opsiyonel.
+     - Anthropic `tool_use.input_schema` ile modele dayatılacak (T3.3); ayrıca üst katmanda güvenli parse (T3.4).
+- **Ne yapıldı (test — regresyon kapısı):**
+  4. `Finans.Application.Tests.Llm.CommentaryPromptsTests` (+5): KESİN KURALLAR bayrak ifadeler
+     metinde geçiyor mu (eğitmen + danışman değil + YÖNLENDİRME/TAHMİN YAPMA + "yeni rakam üretme");
+     Türkçe + structured_output şartları; doğru/yanlış örnek bloğu mevcut; şema parse edilebilir +
+     zorunlu alanlar listede; minItems/maxItems + body uzunluk sınırları.
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Llm/CommentaryPrompts.cs` (yeni),
+  `backend/tests/Finans.Application.Tests/Llm/CommentaryPromptsTests.cs` (yeni),
+  `.claude/docs/08-BACKLOG.md`, `.claude/tasks/ACTIVE.md`, `.claude/tasks/TASKLOG.md`.
+- **Test:** **Application 107/107 yeşil** (+5 unit). Integration etkilenmedi (LLM hâlâ Noop varsayılan).
+- **Karar/Not:** Few-shot örnekleri sistem promptuna gömüldü (alternatif: ayrı user/assistant turn'leri).
+  Sebep: sistem promptu Anthropic prompt cache'ine alınacak (T3.6) — tek blok hâlinde tutarsa cache
+  isabeti yüksek; örnek değişimi nadir, cache invalidation sorun değil. Şema sınırları (3-5 kart, body
+  60-220) hem **maliyet** (NFR-9) hem **UX kalitesi** (ne çok az içerik ne tekrar bombardımanı) kapısı.
+- **Durum:** tamamlandı.
+- **Sıradaki:** **T3.3** — `LlmCommentaryService`: anonimleştirilmiş özet → `CompleteAsync` → kart listesi.
+
 ## 2026-06-04 · T3.1 — LLM sağlayıcı kararı + `ILlmClient` soyutlama + Anthropic istemci
 - **Görev(ler):** T3.1 (08-BACKLOG Faz 3). Faz 3'ün giriş kapısı: sağlayıcı seç, provider-neutral
   soyutlama kur, KVKK çerçevesini sözleşmeye yaz.

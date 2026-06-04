@@ -7,8 +7,16 @@
 **Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ **Faz 2 BİTTİ (işlev + altyapı + gözlem)** → **Faz 3 — LLM yorum katmanı**
 
 ## Sıradaki (öncelik sırası)
-1. **T3.2** — Sistem promptu + few-shot ("tavsiye değil" korkuluk; portföy yorumu)
-2. T3.3 — `LlmCommentaryService`: hazır sayı → JSON kart
+1. **T3.3** — `LlmCommentaryService`: anonim portföy özeti → `ILlmClient` → JSON kart listesi
+2. T3.4 — Güvenli parse + fallback + testleri (07 §5)
+
+> ✅ **T3.2 bitti (2026-06-05) — Sistem promptu + few-shot + JSON şema:**
+> `Finans.Application.Llm.CommentaryPrompts` (statik, cache-friendly). `SystemPrompt`: eğitmen kimliği
+> + 7 KESİN KURAL (yeni rakam yok / yönlendirme yok / tahmin yok / Türkçe sade / structured_output
+> only / 3-5 kart tema tekrarsız / body 60-220 char) + 2 doğru + 4 yasak few-shot örnek.
+> `CommentaryJsonSchema` (07 §4 kart şeması): cards array 3-5, kart `emoji`+`title`+`body` zorunlu,
+> `meter`+`tags` opsiyonel — Anthropic `tool_use.input_schema` ile dayatılacak (T3.3). **+5 unit
+> regresyon kapısı.** Application 107/107.
 
 > ✅ **T3.1 bitti (2026-06-04) — LLM sağlayıcı + soyutlama:** Karar **Anthropic Claude**
 > (`claude-sonnet-4-6` varsayılan; env ile haiku'ya geçilir). `Finans.Application.Llm.ILlmClient`

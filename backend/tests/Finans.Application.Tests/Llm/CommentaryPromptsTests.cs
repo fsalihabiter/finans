@@ -1,0 +1,79 @@
+using System.Text.Json;
+using Finans.Application.Llm;
+
+namespace Finans.Application.Tests.Llm;
+
+/// <summary>
+/// Statik portföy yorum sözleşmeleri (T3.2 — 07 §3,§4): KESİN KURALLAR kaybolmasın,
+/// JSON şeması parse edilebilir kalsın. Bunlar **regresyon kapısı** — sistem promptu
+/// gevşetilirse veya şema bozulursa testler kırılır.
+/// </summary>
+public class CommentaryPromptsTests
+{
+    [Fact]
+    public void SystemPrompt_includes_the_strict_rules_that_prevent_advice()
+    {
+        var p = CommentaryPrompts.SystemPrompt;
+
+        // "Tavsiye değil" çerçevesi: kimlik + 3 yasak (yönlendirme, tahmin, yeni rakam).
+        Assert.Contains("EĞİTMEN", p);
+        Assert.Contains("danışman DEĞİL", p);
+        Assert.Contains("YÖNLENDİRME YAPMA", p);
+        Assert.Contains("TAHMİN ETME", p);
+        Assert.Contains("Yeni yüzde/oran/tutar üretme", p);
+    }
+
+    [Fact]
+    public void SystemPrompt_demands_turkish_and_structured_only_output()
+    {
+        var p = CommentaryPrompts.SystemPrompt;
+
+        Assert.Contains("Türkçe", p);
+        Assert.Contains("structured_output", p); // tool çağrısı adı — şema ile aynı (T3.3'te kullanılır)
+    }
+
+    [Fact]
+    public void SystemPrompt_shows_at_least_one_correct_and_one_forbidden_example()
+    {
+        var p = CommentaryPrompts.SystemPrompt;
+
+        Assert.Contains("DOĞRU", p);
+        Assert.Contains("YANLIŞ", p);
+        // Yasaklı kalıplara somut örnek (savunma derinliği, 07 §7'nin prompt seviyesindeki ayağı).
+        Assert.Contains("YASAK", p);
+    }
+
+    [Fact]
+    public void CommentaryJsonSchema_is_valid_json_with_cards_array()
+    {
+        using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);
+        var root = doc.RootElement;
+
+        Assert.Equal(JsonValueKind.Object, root.ValueKind);
+        Assert.Equal("object", root.GetProperty("type").GetString());
+
+        var cards = root.GetProperty("properties").GetProperty("cards");
+        Assert.Equal("array", cards.GetProperty("type").GetString());
+
+        var item = cards.GetProperty("items");
+        var required = item.GetProperty("required").EnumerateArray().Select(e => e.GetString()).ToHashSet();
+        Assert.Contains("emoji", required);
+        Assert.Contains("title", required);
+        Assert.Contains("body", required);
+    }
+
+    [Fact]
+    public void CommentaryJsonSchema_bounds_body_length_and_card_count()
+    {
+        using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);
+        var cards = doc.RootElement.GetProperty("properties").GetProperty("cards");
+
+        // Maliyet + okunabilirlik kapısı: çok az/çok kart üretilmesin (NFR-9 + UX).
+        Assert.Equal(3, cards.GetProperty("minItems").GetInt32());
+        Assert.Equal(5, cards.GetProperty("maxItems").GetInt32());
+
+        var body = cards.GetProperty("items").GetProperty("properties").GetProperty("body");
+        Assert.InRange(body.GetProperty("minLength").GetInt32(), 1, 100);
+        Assert.InRange(body.GetProperty("maxLength").GetInt32(), 150, 400);
+    }
+}
