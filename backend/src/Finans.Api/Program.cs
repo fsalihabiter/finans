@@ -7,6 +7,7 @@ using Finans.Api.ErrorHandling;
 using Finans.Api.Observability;
 using Finans.Application.Common;
 using Finans.Infrastructure;
+using Finans.Infrastructure.Caching;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Seed;
@@ -15,7 +16,11 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.Seq;
 
 // Config okunmadan önceki başlatma hataları da loglanabilsin diye bootstrap logger.
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -24,14 +29,37 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    // Serilog: yapılandırılmış log (Console; Faz 2'de Seq eklenir). Redaksiyon
-    // politikası + CorrelationId (middleware'den LogContext) — 12 §3.
-    builder.Services.AddSerilog((services, configuration) => configuration
-        .ReadFrom.Configuration(builder.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .Destructure.With<SensitiveDataDestructuringPolicy>()
-        .WriteTo.Console());
+    // Serilog: yapılandırılmış log. Console her zaman; Seq opsiyonel (Serilog:Seq:ServerUrl verilmişse).
+    // Redaksiyon politikası + CorrelationId (middleware'den LogContext) — 12 §3.
+    var seqUrl = builder.Configuration["Serilog:Seq:ServerUrl"];
+    builder.Services.AddSerilog((services, configuration) =>
+    {
+        configuration
+            .ReadFrom.Configuration(builder.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .Destructure.With<SensitiveDataDestructuringPolicy>()
+            .WriteTo.Console();
+        if (!string.IsNullOrWhiteSpace(seqUrl))
+            configuration.WriteTo.Seq(seqUrl,
+                apiKey: builder.Configuration["Serilog:Seq:ApiKey"],
+                restrictedToMinimumLevel: LogEventLevel.Information);
+    });
+
+    // ── OpenTelemetry Metrik (T2.8 / 12 §4) ────────────────────────────────────
+    // RED (AspNetCore), bağımlılık (HttpClient), runtime (GC/CPU/Thread), + custom Meter
+    // (Finans.Cache hit/miss). Exporter: Prometheus `/metrics` (yığında Prometheus bunu scrape eder).
+    // Servis adı, dashboard'larda `service_name` etiketi olarak görünür.
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(r => r.AddService(
+            serviceName: "finans-api",
+            serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "dev"))
+        .WithMetrics(m => m
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter(CacheMetrics.MeterName)
+            .AddPrometheusExporter());
 
     // Enum'lar JSON'da string (allow-list adlarıyla, 04 §1: "Gold"/"TRY"). camelCase varsayılan.
     builder.Services.AddControllers()
@@ -67,7 +95,8 @@ try
         ?? throw new InvalidOperationException("ConnectionStrings:Postgres yapılandırılmamış.");
     builder.Services.AddInfrastructure(connectionString,
         pricing => builder.Configuration.GetSection(PricingOptions.SectionName).Bind(pricing),
-        builder.Configuration.GetConnectionString("Redis"));
+        builder.Configuration.GetConnectionString("Redis"),
+        builder.Configuration);
 
     // Health: /health (liveness) + /health/ready (DB erişilebilir mi) — 12 §8.
     builder.Services.AddHealthChecks()
@@ -204,6 +233,10 @@ try
         .DisableRateLimiting();
     app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
         .DisableRateLimiting();
+
+    // Prometheus scrape endpoint (T2.8). Rate limit dışında: kendi metriklerimizi kendi limitimizle
+    // kesemeyiz. Compose'da iç ağda kalır (Caddy `/metrics`'i dışarı vermez — admin-only, 11 §5).
+    app.MapPrometheusScrapingEndpoint().DisableRateLimiting();
 
     app.Run();
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using Finans.Api.ErrorHandling;
 using Finans.Application.Common;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Seed;

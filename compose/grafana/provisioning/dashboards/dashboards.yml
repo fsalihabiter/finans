@@ -1,0 +1,14 @@
+# Grafana dashboard provisioning (T2.8). Container içinde /var/lib/grafana/dashboards altındaki
+# JSON'ları yükler.
+apiVersion: 1
+
+providers:
+  - name: Finans
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -18,9 +18,11 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 2 altyapı: `T2.8` Gözlemlenebilirlik (Seq + Prometheus + Grafana; OTel metrik) · `T2.9` reverse proxy + rate limit**
+**Sıradaki adım → FAZ 3: LLM yorum katmanı** (artık altyapı kapısı tamam — Faz 2 bitti.)
 (Faz 0 ✅ · Faz 1 ✅ · **T2.1→T2.6 ✅** fiyat zinciri uçtan uca + Web · **T2.7 ✅** dağıtık cache (`IAppCache`,
-Redis-opsiyonel) + single-flight + hit/miss metrik). **Faz 2 işlevsel DoD karşılandı**; kalan T2.8-2.9 dağıtım/gözlem.
+Redis-opsiyonel) + single-flight + hit/miss metrik · **T2.8 ✅** Gözlemlenebilirlik (Seq + Prometheus + Grafana,
+OTel RED + HttpClient + Runtime + `Finans.Cache` Meter, "Genel Bakış" dashboard, 3 alarm) ·
+**T2.9 ✅** Caddy TLS reverse proxy + ASP.NET RateLimiter). **Faz 2 işlevsel + dağıtım/gözlem DoD karşılandı.**
 
 ---
 
@@ -96,7 +98,7 @@ testlerle doğru; çoklu pb baz pb'ye çevriliyor; BES devlet katkısı ayrı.
 | T2.5 | `NudgeRuleEngine` (kural tabanlı, örn. nakit oranı eşiği) + `GET /nudges` | Faz 1 | `04` §5 | [x] (saf `NudgeRuleEngine`: yoğunlaşma/tek-varlık/düşük-nakit eşikleri → eğitici not, **tavsiye değil**; `Nudge`/`NudgesResponse`; `INudgeService`→summary; `GET /api/portfolio/nudges` per-user; SC-09 6 unit+2 e2e) |
 | T2.6 | **Web:** yenile + son güncelleme/"yaklaşık" etiketi + Nudge kartı | T2.4 | `13` §4 | [x] (shared `PriceDto`/`PricesResponse`/`Nudge`/`NudgesResponse`+`getPrices`/`getNudges`; web `usePrices`/`useNudges`; `LivePrices` çipleri + "Yenile" + stale etiketi; `NudgesCard` (disclaimer); fiyat tazelenince summary/holdings invalidate; PortfolioInsights inline nudge kaldırıldı; 4 yeni test) |
 | T2.7 | **Redis cache katmanı:** fiyat/FX/summary cache Redis'e (dağıtık); stampede koruması; cache isabet metriği | T2.2 | `10` §3 | [x] (`IAppCache` `IDistributedCache` üstünde: Redis ya da in-memory (yerel dev Redis'siz çalışır); **single-flight** stampede koruması; **hit/miss `Meter`** (T2.8'e hazır); FX/enflasyon/fiyat decorator'ları taşındı; compose'a redis servisi; SC-19) |
-| T2.8 | **Gözlemlenebilirlik yığını:** Compose'a Seq + Prometheus + Grafana; OTel metrikleri (RED + bağımlılık + cache); ilk dashboard'lar + alarmlar | T0.11 | `12` §2,§4,§6 | [ ] |
+| T2.8 | **Gözlemlenebilirlik yığını:** Compose'a Seq + Prometheus + Grafana; OTel metrikleri (RED + bağımlılık + cache); ilk dashboard'lar + alarmlar | T0.11 | `12` §2,§4,§6 | [x] (2026-06-04: OTel AspNetCore/HttpClient/Runtime + `Finans.Cache` Meter → `/metrics`; Serilog `Seq` sink opsiyonel (boşken sink eklenmez, dev'i bozmaz); compose'a seq+prometheus+grafana (admin port'ları `127.0.0.1` bind, LAN'a açık değil); Grafana provisioning + "Finans · Genel Bakış" dashboard (RED + cache hit + bağımlılık p95 + .NET GC heap); Prometheus `rules.yml` 3 alarm (5xx>2%, p95>600ms, instance down). Manuel doğrulama: `docker compose up --build` → http://localhost:3001 (Grafana admin/admin) · :9090 (Prometheus) · :8081 (Seq). Application 99/99 yeşil.) |
 | T2.9 | **Reverse proxy + sınırlama:** Traefik/Caddy (TLS/Let's Encrypt) + rate limiting + güvenlik başlıkları; iç servisler dışarı kapalı | T0.13 | `11` §5, `10` §5 | [x] (2026-06-02: Caddy `tls internal` localhost; api/postgres/redis iç ağa kapandı; ASP.NET RateLimiter global Sliding 120/dk + "prices" 10/dk + "nudges" 30/dk; 429 ApiError zarfı + Retry-After; /health bypass; güvenlik başlıkları HSTS/XCTO/XFO/Referrer + `-Server`. +2 integration. Lansman'da: gerçek domain + Let's Encrypt) |
 
 **Faz 2 DoD:** Otomatik güncel değer + yenileme; ≥1 not doğru tetikleniyor; dış
@@ -123,6 +125,7 @@ rate limit + TLS proxy ayakta**.
 | T-BES.5 | **Fon dağılımı senaryosu (eğitici projeksiyon):** kullanıcı varsayımları (aylık katkı, süre, varsayılan yıllık getiri / fon karması) → biriken tutar + devlet katkısı + kâr/zarar **illüstrasyonu**. **Tahmin/tavsiye DEĞİL** — açık "varsayımsal senaryo" çerçevesi + kalıcı disclaimer (CLAUDE.md §2: senaryo/farkındalık serbest; gelecek tahmini/yönlendirme yasak). Hesap KODDA (deterministik bileşik getiri), girdiler kullanıcıdan. | [x] (2026-06-01: `BesProjectionCalculator` saf hesap + aylık iterasyon · `POST /bes/projection` · web modalı + chip önerili form + own/state kartları + yıllık seri tablosu + kalıcı disclaimer. Fon karması ileri faza; bu MVP tek `annualReturnRatio`. +10 unit + 4 integration) |
 | T-BES.6 | **Düzenli katkı:** tarih aralığından **aylık kayıt üretimi** (`POST /holdings/{id}/bes/contributions`; kapsanan aylar, idempotent, gelecek hariç, her ayın oranı) + **katkı işlem geçmişi** (`BesContribution` tablosu) + **"bu ay katkını gir" hatırlatması** (SC-22). Tek katkı da kayıt oluşturur. | [x] |
 | T-BES.6b | Katkı planı **kalıcılığı + otomatik devam** (`BesDetails.MonthlyAmount/ContributionDay/PlanActive`; katkı eklerken "bundan sonraki katkılar için kullan" checkbox → plan; görüntülemede **lazy catch-up** ile eksik aylar üretilir). Gerçek arka plan job (uygulama kapalıyken) → ileride. | [x] |
+| T-BES.6b.ileri | **Arka plan job (`BesPlanCatchUpHostedService`)**: aktif tüm BES planlarını periyodik (varsayılan 6h) ilerletir; lazy catch-up'a ek olarak kullanıcı sayfayı haftalarca açmasa bile plan akar. Saf çekirdek `BesPlanCatchUpRunner` (DbContext + holding alır, `ICurrentUser`'a bağlı değil) — hem `HoldingService` (per-user GET) hem hosted service (sistem) çağırır. Konfig `Bes:PlanCatchUp:{Enabled,IntervalHours,InitialDelaySeconds}`; testlerde `Enabled=false`. **+2 integration** (runner: katch-up + idempotent + plan kapalıyken no-op). Application 99/99 · Integration 79/79. | [x] (2026-06-04) |
 | T-BES.7 | **Maliyet = kendi katkı (cepten)** (own-only; devlet katkısı getiriye dahil) + **katkı düzenle/sil** (`PUT`/`DELETE .../contributions/{cid}`, kümülatif+maliyet yeniden) + geçmiş UX (dikey scroll, yatay scroll yok, otomatik sütun sığdırma, "Kaynak" yerine düzenle/sil ikonları). SC-23. | [x] |
 
 ---
@@ -131,7 +134,7 @@ rate limit + TLS proxy ayakta**.
 
 | ID | Görev | Bağımlılık | Doküman |
 |----|-------|-----------|---------|
-| T3.1 | LLM sağlayıcı seç + `ILlmClient` arayüz/impl | Faz 2 | `07` §2 |
+| T3.1 | LLM sağlayıcı seç + `ILlmClient` arayüz/impl | Faz 2 | `07` §2 | [x] (2026-06-04: **Anthropic Claude** kararı; `ILlmClient` arayüz + `LlmRequest`/`LlmResult` sözleşmesi `Finans.Application.Llm`; `Infrastructure.Llm.AnthropicLlmClient` (typed HttpClient, REST, SDK yok — `tool_use`+input_schema ile JSON şema zorlamaya hazır) + `NoopLlmClient` (API key yokken dev/test safety). `LlmOptions:{Provider,ApiKey,Model,TimeoutSeconds,BaseUrl}`; DI: anahtar varsa Anthropic, yoksa Noop. Sözleşme yorumlarına **KVKK kuralı** (UserId/PII gönderilmez, anonim özet) işlendi. **+3 unit kontrat + 4 stub HTTP test** (header'lar, text parse, tool_use JSON parse, 5xx→Fail). Application 102 · Integration 83.) |
 | T3.2 | Sistem promptu + few-shot ("tavsiye değil" korkuluk) | T3.1 | `07` §3 |
 | T3.3 | `LlmCommentaryService`: hazır sayı → JSON kart | T3.1, T1.7 | `07` §1,§4 |
 | T3.4 | Güvenli parse + fallback + **testleri** | T3.3 | `07` §5, `06` §4 |

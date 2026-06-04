@@ -4,14 +4,36 @@
 > başında hook bunu otomatik gösterir. Kaynak plan: [`../docs/08-BACKLOG.md`](../docs/08-BACKLOG.md).
 > Bir görev bitince buradan çıkar, backlog'da `[x]` işaretle, TASKLOG'a girdi ekle.
 
-**Aktif faz:** ✅ Faz 0 BİTTİ · ✅ **Faz 1 — Portföy Takip MVP BİTTİ** → **Faz 2 — Canlı fiyat + nudge**
-
-**Faz 2 işlevsel DoD ✅ KARŞILANDI** (otomatik güncel değer + yenileme; ≥1 not tetiklenir; dış API çökünce
-çökme yok). Kalan: dağıtım/gözlem altyapısı.
+**Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ **Faz 2 BİTTİ (işlev + altyapı + gözlem)** → **Faz 3 — LLM yorum katmanı**
 
 ## Sıradaki (öncelik sırası)
-1. **T2.8** — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana; OTel metrik → `Finans.Cache` + RED)
-2. T-BES.6b ileri (otomatik zamanlayıcı/plan kalıcılığı — uygulama kapalıyken arka plan job)
+1. **T3.2** — Sistem promptu + few-shot ("tavsiye değil" korkuluk; portföy yorumu)
+2. T3.3 — `LlmCommentaryService`: hazır sayı → JSON kart
+
+> ✅ **T3.1 bitti (2026-06-04) — LLM sağlayıcı + soyutlama:** Karar **Anthropic Claude**
+> (`claude-sonnet-4-6` varsayılan; env ile haiku'ya geçilir). `Finans.Application.Llm.ILlmClient`
+> provider-neutral arayüz; `Infrastructure.Llm.AnthropicLlmClient` typed HttpClient (REST, SDK YOK)
+> — `tool_use` + `input_schema` ile JSON şema zorlamaya hazır. `NoopLlmClient` API key yokken
+> dev/test güvenli varsayılan (çağrı `Fail("llm_not_configured")` → üst katman fallback → çökme yok).
+> **KVKK kuralı arayüz yorumunda**: UserId/PII gönderilmez; yalnız anonim özet. Hata akışı:
+> HTTP/network/timeout/parse → exception fırlatmaz, `Fail(reason)` döner.
+> **+3 unit kontrat + 4 stub HTTP test. Application 102/102 · Integration 83/83.**
+
+> ✅ **T-BES.6b ileri bitti (2026-06-04) — Arka plan job:** `BesPlanCatchUpHostedService` (BackgroundService)
+> aktif tüm BES planlarını periyodik (varsayılan 6h, başlangıç +60s) ilerletir; saf çekirdek
+> `BesPlanCatchUpRunner` (DbContext + holding alır, `ICurrentUser`'a bağlı değil) — hem `HoldingService`
+> (per-user GET) hem hosted service (sistem) ortak çağırır. Konfig `Bes:PlanCatchUp:{Enabled,IntervalHours,
+> InitialDelaySeconds}`; testlerde `Enabled=false`. Per-holding try/catch + log → bir hata diğer holding'leri
+> düşürmez. **+2 integration** (kuruluyor + idempotent + no-op). **Application 99/99 · Integration 79/79.**
+> Gelecek: dağıtık/daha sağlam cron için Hangfire/Quartz (12 §9).
+
+> ✅ **T2.8 bitti (2026-06-04) — Gözlemlenebilirlik yığını:** OTel
+> (`AspNetCore`+`HttpClient`+`Runtime`+`Finans.Cache` Meter) → `/metrics`; Serilog `Seq` sink opsiyonel
+> (boşken sink eklenmez → dev'i bozmaz). Compose'a `seq` (8081), `prometheus` (9090 + `rules.yml` 3 alarm),
+> `grafana` (3001, provisioned datasource + "Finans · Genel Bakış" dashboard: RED + cache hit oranı +
+> bağımlılık p95 + GC heap). **Tüm admin port'ları `127.0.0.1` bind** (LAN'a açık değil — 11 §5).
+> Application 99/99 yeşil. Manuel: `docker compose up --build` → :3001 Grafana (admin/admin), :9090
+> Prometheus (Targets → finans-api UP), :8081 Seq.
 
 > ✅ **T2.9 bitti (2026-06-02) — Caddy reverse proxy + TLS + RateLimiter:** `compose/caddy/Caddyfile`
 > (localhost `tls internal`, güvenlik başlıkları, /api+/health proxy); compose'da api/postgres/redis

@@ -1,12 +1,16 @@
 using Finans.Application.Common;
+using Finans.Application.Llm;
 using Finans.Application.Pricing;
 using Finans.Application.Portfolio;
 using Finans.Infrastructure.Caching;
+using Finans.Infrastructure.Llm;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Finans.Infrastructure;
 
@@ -17,7 +21,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         string connectionString,
         Action<PricingOptions>? configurePricing = null,
-        string? redisConnectionString = null)
+        string? redisConnectionString = null,
+        IConfiguration? configuration = null)
     {
         services.AddDbContext<FinansDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -41,9 +46,16 @@ public static class DependencyInjection
         services.AddSingleton<PortfolioCalculationService>();
 
         // Use-case servisleri (DbContext + ICurrentUser'a bağlı) → scoped.
+        services.AddScoped<BesPlanCatchUpRunner>();
         services.AddScoped<IHoldingService, HoldingService>();
         services.AddScoped<IPortfolioService, PortfolioService>();
         services.AddScoped<ISettingsService, SettingsService>();
+
+        // Arka plan job (T-BES.6b ileri): aktif BES planlarını periyodik ilerletir. Konfig
+        // `Bes:PlanCatchUp:Enabled` (varsayılan true; test fixture'ı false yapar).
+        if (configuration is not null)
+            services.Configure<BesPlanCatchUpOptions>(configuration.GetSection(BesPlanCatchUpOptions.SectionName));
+        services.AddHostedService<BesPlanCatchUpHostedService>();
 
         // Eğitici notlar (T2.5): saf kural motoru (singleton) + per-user servis (scoped).
         services.AddSingleton<NudgeRuleEngine>();
@@ -71,6 +83,25 @@ public static class DependencyInjection
 
         // Orkestrasyon (T2.2): sağlayıcıları yönlendir + cache + snapshot/fxrate/CurrentPrice yaz.
         services.AddScoped<IPriceFetchService, PriceFetchService>();
+
+        // LLM (T3.1, 07 §2): API anahtarı yapılandırılmışsa Anthropic; aksi halde Noop (dev/test
+        // güvenli varsayılan — uygulama çökmez, fallback metin döner). Anahtar 11 §6 (env/User Secrets).
+        var llm = new LlmOptions();
+        configuration?.GetSection(LlmOptions.SectionName).Bind(llm);
+        if (configuration is not null)
+            services.Configure<LlmOptions>(configuration.GetSection(LlmOptions.SectionName));
+        if (!string.IsNullOrWhiteSpace(llm.ApiKey) && llm.Provider.Equals("Anthropic", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddHttpClient<ILlmClient, AnthropicLlmClient>(c =>
+            {
+                c.BaseAddress = new Uri(llm.BaseUrl);
+                c.Timeout = TimeSpan.FromSeconds(Math.Max(1, llm.TimeoutSeconds));
+            });
+        }
+        else
+        {
+            services.AddSingleton<ILlmClient, NoopLlmClient>();
+        }
 
         return services;
     }

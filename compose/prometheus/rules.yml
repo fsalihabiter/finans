@@ -1,0 +1,43 @@
+# Prometheus alarm kuralları (T2.8 / 12 §6). Şimdilik Alertmanager olmadan: kurallar Prometheus
+# UI'da (`Alerts`) görünür, Grafana Alerting UI'dan da yönetilebilir. E-posta/Telegram dağıtımı
+# Faz 5'te Alertmanager ile (12 §9).
+
+groups:
+  - name: finans-api
+    interval: 30s
+    rules:
+      - alert: ApiHighErrorRate
+        # 5xx oranı 5 dk boyunca %2'yi aşarsa.
+        expr: |
+          (sum(rate(http_server_request_duration_seconds_count{job="finans-api",http_response_status_code=~"5.."}[5m])) or vector(0))
+            /
+          clamp_min(sum(rate(http_server_request_duration_seconds_count{job="finans-api"}[5m])), 1e-9)
+            > 0.02
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API 5xx oranı %2'yi aştı"
+          description: "Son 5 dakika 5xx oranı eşiği aşıyor (`> 2%`). Log/Seq'i kontrol et."
+
+      - alert: ApiHighLatencyP95
+        # 10 §2 performans bütçesi: p95 < 600ms (özet). Eşiği 600ms üstünde tutmak alarmı tetikler.
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket{job="finans-api"}[5m])))
+            > 0.6
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 gecikme bütçesini aştı"
+          description: "Son 5 dk p95 gecikme `> 600ms` (10 §2 bütçesi)."
+
+      - alert: ApiInstanceDown
+        expr: up{job="finans-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Finans API kapalı"
+          description: "Prometheus 2 dakikadır api:8080/metrics'i scrape edemiyor."

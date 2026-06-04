@@ -59,6 +59,8 @@ services:
       # Üretim için aşağıdaki TrustedProxies Caddy container IP'sini içermeli (gerçek client IP'sini
       # rate limit/log'da görmek için). Compose default bridge IP'leri 172.x.x.x — şimdilik açık.
       Security__ForwardedHeaders: "true"
+      # T2.8: yapılandırılmış log Seq'e (iç ağ, ingestion 5341). Boş bırakılırsa sink eklenmez.
+      Serilog__Seq__ServerUrl: "http://seq:5341"
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,6 +69,63 @@ services:
     # ⚠ Dışarı port AÇMA — Caddy'den geç (11 §5).
     expose:
       - "8080"
+
+  # ── Gözlemlenebilirlik yığını (T2.8 / 12) ────────────────────────────────────
+  # Üçü de iç ağda; **admin UI port'ları yalnız 127.0.0.1'e bağlanır** (LAN'a açılmaz, 11 §5).
+  # Production'da SSH tüneli + Caddy basic-auth + IP whitelist gerekir.
+
+  # Structured log toplayıcı (Serilog → Seq). UI 80, ingestion 5341. EULA: tek-kullanıcı dev için kabul.
+  seq:
+    image: datalust/seq:2024.3
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+    volumes:
+      - seq-data:/data
+    expose:
+      - "5341"
+    ports:
+      - "127.0.0.1:8081:80"   # http://localhost:8081 (admin)
+
+  # Metrik toplayıcı. api:8080/metrics'i scrape eder; rules.yml alarm kurallarını yükler.
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    volumes:
+      - ./compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./compose/prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - prometheus-data:/prometheus
+    expose:
+      - "9090"
+    ports:
+      - "127.0.0.1:9090:9090"  # http://localhost:9090 (admin)
+    depends_on:
+      api:
+        condition: service_started
+
+  # Dashboard. Provisioning: datasource (prometheus), dashboard provider, hazır JSON dashboard.
+  grafana:
+    image: grafana/grafana-oss:11.3.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      # ⚠ Dev varsayılanı; prod'da env ile değiştir + 127.0.0.1 bağ + SSH tüneli (11 §5).
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./compose/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./compose/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3001:3000"  # http://localhost:3001 (admin)
+    depends_on:
+      prometheus:
+        condition: service_started
 
   # Reverse proxy + TLS + güvenlik başlıkları (T2.9). 443: TLS (internal CA, localhost); 80: redirect.
   caddy:
@@ -92,3 +151,6 @@ volumes:
   postgres-data:
   caddy-data:
   caddy-config:
+  seq-data:
+  prometheus-data:
+  grafana-data:

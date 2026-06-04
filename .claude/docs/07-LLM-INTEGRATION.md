@@ -29,7 +29,7 @@
 
 ---
 
-## 2. Sağlayıcı Seçim Kriterleri (henüz seçilmedi — `CLAUDE.md` § 10)
+## 2. Sağlayıcı Seçim Kriterleri (✅ KARAR: **Anthropic Claude** — 2026-06-04)
 
 | Kriter | Ağırlık | Not |
 |--------|---------|-----|
@@ -39,9 +39,34 @@
 | Maliyet | Orta | Geliştirmede düşük (cache + tetikleme disiplini) |
 | Gecikme | Orta | Cache'lendiği için kritik değil |
 
-> Soyutlama: `ILlmClient` arayüzü (`Finans.Application`), implementasyonu
-> `Infrastructure`'da. Sağlayıcı değişse uygulama değişmez. Anthropic Claude
-> SDK kullanılırsa **prompt caching** + structured output (tool use) değerlendir.
+### Karar gerekçesi
+- **Türkçe kalitesi** yüksek; talimat takibi ("yeni rakam üretme, tavsiye verme") en
+  güvenilir sağlayıcılardan biri.
+- **Yapılandırılmış çıktı:** `tool_use` ile JSON şema **zorlanabilir** (Anthropic'in input_schema
+  alanı şemayı modele dayatır → T3.3 parse güvenli).
+- **Maliyet:** Faz 3 başlangıç modeli `claude-sonnet-4-6` (yorum kalitesi); cache + günde bir
+  üretim (NFR-9) ile aylık maliyet düşük. Sıkışırsa `claude-haiku-4-5` ile değiştirilebilir
+  (model env değişikliği yeter — `Llm:Model`).
+- **Prompt caching:** sistem promptu + few-shot tekrar tekrar gönderilir → cache token maliyetini
+  düşürür (T3.6 ile birlikte).
+- **Soyutlama:** `ILlmClient` (`Finans.Application.Llm`) provider-neutral; sağlayıcı değişirse
+  yalnızca `Infrastructure.Llm.AnthropicLlmClient` değişir. SDK YOK — küçük REST yüzeyi (tek
+  endpoint, az alan) doğrudan typed HttpClient'la kullanılıyor → bağımlılık minimum.
+
+### KVKK çerçevesi (**zorunlu — her LLM çağrısında**)
+LLM'e gönderilen her içerikte **kişisel veri yasak**: `UserId`, isim, e-posta, hesap numarası,
+açık metin pozisyon kimliği vb. **GİTMEZ**. Yalnız **anonim portföy özeti** (oranlar, kategoriler,
+toplam değer/getiri yüzdesi) gider. Anonimleştirme **servis katmanının** (T3.3 `LlmCommentaryService`)
+sorumluluğu; `ILlmClient` bunu varsayar (sözleşme yorumda yazılı).
+
+### Yapılandırma
+- `Llm:Provider` (varsayılan `Anthropic`)
+- `Llm:ApiKey` — env (`Llm__ApiKey`) veya User Secrets; **repoda asla yok** (11 §6)
+- `Llm:Model` (varsayılan `claude-sonnet-4-6`)
+- `Llm:TimeoutSeconds` (20), `Llm:BaseUrl` (`https://api.anthropic.com/`)
+
+API anahtarı boşsa DI `NoopLlmClient`'ı bağlar → her çağrı `Fail("llm_not_configured")` döner;
+üst katman (07 §5) cache veya düz metin fallback ile devam eder → **uygulama çökmez (NFR-5).**
 
 ---
 

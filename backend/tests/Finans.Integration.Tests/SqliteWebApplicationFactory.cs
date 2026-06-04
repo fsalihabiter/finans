@@ -32,6 +32,9 @@ public sealed class SqliteWebApplicationFactory : WebApplicationFactory<Program>
         // Sqlite'a uygulamaya çalışıp host'u çökertir.)
         builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
         builder.UseSetting("Database:Seed", "false");
+        // BES plan catch-up arka plan job'ı testlerde KAPALI: testler kendi durumlarını kurar;
+        // arka plan tiki testler sırasında DB'ye yazıp deterministik kurgu bozmasın (T-BES.6b ileri).
+        builder.UseSetting("Bes:PlanCatchUp:Enabled", "false");
 
         builder.ConfigureTestServices(services =>
         {

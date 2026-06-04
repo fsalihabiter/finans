@@ -16,7 +16,8 @@ public sealed class HoldingService(
     FinansDbContext db,
     ICurrentUser currentUser,
     PortfolioCalculationService calc,
-    IFxRateProvider fxRateProvider) : IHoldingService
+    IFxRateProvider fxRateProvider,
+    BesPlanCatchUpRunner planRunner) : IHoldingService
 {
     /// <summary>
     /// TR yerel "şimdi" (UTC+3 sabit; Türkiye 2016'dan beri DST uygulamıyor). BES tarih
@@ -491,6 +492,8 @@ public sealed class HoldingService(
     /// <summary>
     /// Aktif düzenli plan varsa eksik ayları (son katkıdan bugüne) otomatik üretir (T-BES.6b). Plan
     /// yoksa/BES değilse no-op. İdempotent (kayıtlı ay atlanır). "Tarih geldikçe ödenmiş sayılır."
+    /// Sistem genelinde aynı mantığı arka plan job (`BesPlanCatchUpHostedService`) da çağırır —
+    /// ortak çekirdek <see cref="BesPlanCatchUpRunner"/>.
     /// </summary>
     private async Task CatchUpBesPlanAsync(Guid holdingId, CancellationToken ct)
     {
@@ -499,68 +502,12 @@ public sealed class HoldingService(
             .Include(h => h.BesContributions)
             .FirstOrDefaultAsync(h => h.Id == holdingId && h.UserId == currentUser.UserId, ct);
 
-        if (holding?.BesDetails is not { PlanActive: true, MonthlyAmount: { } amount, ContributionDay: { } day })
+        if (holding is null)
             return;
 
-        // TR yerel "şimdi" — kullanıcı pencerede 1 Haz görüyorken UTC hâlâ 31 May olabilir; gün geçişinde
-        // catch-up tetiklensin (T-BES.9 fix; UTC+3 sabit, DST yok).
-        var now = TrNow();
-
-        // Plan-source dedup: manuel girişler düzenli planı engellemez (kullanıcı feedback). Yalnız
-        // "Plan" türevli satırlar lastPaid/covered için sayılır. lastPlanPaid yoksa "bu aydan" başla
-        // (geçmiş aylar için plan satırı geriye dönük üretilmez; backfill için "Düzenli katkı/geçmiş" formu).
-        var lastPlanPaid = holding.BesContributions
-            .Where(c => IsPlanSource(c.Source))
-            .Select(c => (DateTime?)c.PaidAtUtc)
-            .DefaultIfEmpty(null)
-            .Max();
-        var from = lastPlanPaid is { } lp
-            ? new DateTime(lp.Year, lp.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1)
-            : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        var dates = BesContributionPlanner.MonthlyDates(day, from, now);
-        if (dates.Count == 0)
-            return;
-
-        var coveredPlanMonths = holding.BesContributions
-            .Where(c => IsPlanSource(c.Source))
-            .Select(c => c.PaidAtUtc.Year * 100 + c.PaidAtUtc.Month)
-            .ToHashSet();
-        // T-BES.4: yıl bazlı state kümülatifi (tüm kaynaklar). Lazy-catchup sırasında üretilen her ay
-        // için cap uygulanır; aynı yıl içinde tavan dolduktan sonra otomatik kayıt 0 state ile devam eder.
-        var stateByYear = new Dictionary<int, decimal>();
-        foreach (var existing in holding.BesContributions)
-            stateByYear[existing.PaidAtUtc.Year] = stateByYear.GetValueOrDefault(existing.PaidAtUtc.Year, 0m) + existing.StateAmount;
-
-        var bes = holding.BesDetails;
-        var added = false;
-        foreach (var date in dates)
-        {
-            if (!coveredPlanMonths.Add(date.Year * 100 + date.Month))
-                continue; // bu ay zaten Plan satırı var — manuel olanlar engel değil
-            var rawState = BesCalculator.StateContributionFor(amount, date);
-            var alreadyInYear = stateByYear.GetValueOrDefault(date.Year, 0m);
-            var state = BesCalculator.ApplyAnnualStateCap(rawState, date.Year, alreadyInYear);
-            db.BesContributions.Add(new BesContribution
-            {
-                HoldingId = holding.Id,
-                OwnAmount = amount,
-                StateAmount = state,
-                PaidAtUtc = date,
-                Source = "Plan",
-                CreatedAtUtc = DateTime.UtcNow,
-            });
-            bes.OwnContribution += amount;
-            bes.StateContribution += state;
-            stateByYear[date.Year] = alreadyInYear + state;
-            added = true;
-        }
-
-        if (added)
-        {
-            ApplyBesTotals(holding, bes);
+        var added = planRunner.CatchUp(holding, TrNow());
+        if (added > 0)
             await db.SaveChangesAsync(ct);
-        }
     }
 
     /// <summary>BES holding'i (Asset+BesDetails+BesContributions) kullanıcıya kapsanmış yükler; BES değilse 400.</summary>

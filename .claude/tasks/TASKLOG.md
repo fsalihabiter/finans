@@ -20,6 +20,146 @@
 
 ---
 
+## 2026-06-04 · T3.1 — LLM sağlayıcı kararı + `ILlmClient` soyutlama + Anthropic istemci
+- **Görev(ler):** T3.1 (08-BACKLOG Faz 3). Faz 3'ün giriş kapısı: sağlayıcı seç, provider-neutral
+  soyutlama kur, KVKK çerçevesini sözleşmeye yaz.
+- **Karar — Anthropic Claude** (07 §2 güncellendi): Türkçe kalitesi + talimat takibi + `tool_use`
+  ile JSON şema zorlama + prompt caching. Faz 3 başlangıç modeli `claude-sonnet-4-6`; maliyet
+  sıkışırsa `claude-haiku-4-5` ile env değişikliği (Llm:Model).
+- **Ne yapıldı (Application — sözleşme):**
+  1. `Finans.Application.Llm.ILlmClient` — `Task<LlmResult> CompleteAsync(LlmRequest, ct)`.
+     `LlmRequest(SystemPrompt, UserPrompt, JsonSchema?, MaxOutputTokens=1024, Temperature=0.2m)`,
+     `LlmResult(Success, Text, InputTokens, OutputTokens, ErrorReason?)` + `Ok`/`Fail` factory.
+  2. **KVKK kuralı arayüz yorumunda** (CLAUDE.md §2, 11 §1): LLM'e gönderilen içerikte UserId/isim/
+     e-posta vb. **YASAK**; yalnız anonim özet. Anonimleştirme servis katmanı sorumluluğu (T3.3).
+- **Ne yapıldı (Infrastructure — istemci):**
+  3. `Finans.Infrastructure.Llm.AnthropicLlmClient` — typed `HttpClient`; resmi SDK YOK (küçük yüzey,
+     tek endpoint `/v1/messages`). Header: `x-api-key` + `anthropic-version=2023-06-01`. Body:
+     `model/max_tokens/temperature/system/messages/tools/tool_choice`. `JsonSchema` verilirse
+     `tools=[{name:"structured_output", input_schema:<şema>}]` + `tool_choice:tool` → yapılandırılmış
+     çıktıyı modele dayatır. Yanıtta `tool_use.input` JSON olarak döner; aksi halde `text` blokları
+     birleştirilir. `usage.input_tokens`/`output_tokens` `LlmResult`'a (T3.9 metriği için hazır).
+     Hata akışı: HTTP/`HttpRequestException`/`TaskCanceledException`/`JsonException` → exception
+     fırlatılmaz, `Fail(reason)` döner (07 §5 fallback'in alt katmanı).
+  4. `NoopLlmClient` — API anahtarı yokken dev/test güvenli varsayılan; her çağrı
+     `Fail("llm_not_configured")` → üst katman cache/fallback metnine düşer → uygulama çökmez (NFR-5).
+  5. `LlmOptions:{Provider,ApiKey,Model,TimeoutSeconds,BaseUrl,AnthropicVersion}`.
+  6. `DependencyInjection`: `Llm:ApiKey` doluysa typed HttpClient + `AnthropicLlmClient`; aksi halde
+     `NoopLlmClient` singleton.
+- **Ne yapıldı (test):**
+  7. `Finans.Application.Tests.Llm.LlmContractTests` (+3): `Ok`/`Fail` factory'leri, request default'ları.
+  8. `Finans.Integration.Tests.Llm.AnthropicLlmClientTests` (+4 stub): API key yokken Fail; header'lar
+     + endpoint + text yanıt parse; `tool_use` JSON parse; 5xx → `http_502` Fail (throw değil).
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Llm/ILlmClient.cs` (yeni),
+  `backend/src/Finans.Infrastructure/Llm/LlmOptions.cs` (yeni),
+  `backend/src/Finans.Infrastructure/Llm/NoopLlmClient.cs` (yeni),
+  `backend/src/Finans.Infrastructure/Llm/AnthropicLlmClient.cs` (yeni),
+  `backend/src/Finans.Infrastructure/DependencyInjection.cs`,
+  `backend/src/Finans.Api/appsettings.json` (boş ApiKey varsayılan),
+  `backend/tests/Finans.Application.Tests/Llm/LlmContractTests.cs` (yeni),
+  `backend/tests/Finans.Integration.Tests/Llm/AnthropicLlmClientTests.cs` (yeni),
+  `.claude/docs/07-LLM-INTEGRATION.md` (§2 karar gerekçesi + KVKK çerçevesi + yapılandırma).
+- **Test:** **Application 102/102 · Integration 83/83 yeşil** (+3 unit + 4 stub HTTP). Stub testler
+  ağa çıkmaz (`StubHttpMessageHandler`).
+- **Karar/Not:** SDK eklenmedi — Anthropic Messages API'sinin Faz 3'te kullanılan yüzeyi küçük
+  (system + messages + tools + tool_choice + usage). Bağımlılık minimum; lansman öncesi maliyet
+  takibi ve LLM-side rate limit metrikleri T3.9'da Prometheus'a yansıyacak.
+- **Durum:** tamamlandı.
+- **Sıradaki:** **T3.2 — Sistem promptu + few-shot** ("tavsiye değil" korkuluk; portföy yorumu için).
+
+## 2026-06-04 · T-BES.6b ileri — Arka plan job: BES plan otomatik devam
+- **Görev(ler):** T-BES.6b ileri (08-BACKLOG T-BES epik). Önceki lazy catch-up sayfa açılınca/GET'te
+  tetikleniyordu → kullanıcı uygulamayı haftalarca açmazsa plan kaydı oluşmuyordu. Bu turda gerçek
+  arka plan job: server süreci ayakta olduğu sürece (compose/VPS) plan periyodik akar.
+- **Ne yapıldı (saf çekirdek — runner):**
+  1. `Finans.Infrastructure.Services.BesPlanCatchUpRunner` (yeni) — `HoldingService.CatchUpBesPlanAsync`
+     core mantığı buraya taşındı. **`ICurrentUser`'a bağlı değil**; verili (önceden yüklenmiş, includes'lı)
+     `Holding` üzerinde çalışır → kullanıcı kapsamlı GET hattı *ve* sistem hattı (cron) ortak çekirdek.
+     EF v7 tracked koleksiyon tuzağı (memory): `db.BesContributions.Add(...)` korundu → caller `SaveChanges`.
+  2. `HoldingService.CatchUpBesPlanAsync` → runner'a delege (60→8 satır). `IsPlanSource` planlı katkı
+     katalogu için kullanılmaya devam ediyor.
+- **Ne yapıldı (hosted service):**
+  3. `BesPlanCatchUpHostedService` (`BackgroundService`) — host başlar başlamaz ilk tik (varsayılan +60s
+     gecikme: migrate/seed/healthcheck bitsin); sonra her N saatte bir (varsayılan 6h). Tik içinde
+     `Asset.Type=BES + PlanActive + MonthlyAmount + ContributionDay` filtresiyle aktif holding'leri
+     **per-holding try/catch + log** ile ilerletir (bir hata diğer holding'leri düşürmez — 11 §4).
+  4. `BesPlanCatchUpOptions` (`Bes:PlanCatchUp`): `Enabled` (true), `IntervalHours` (6),
+     `InitialDelaySeconds` (60). `appsettings.json`'a varsayılanlar; **integration test factory'sinde
+     `Enabled=false`** (testin deterministik kurgusunu arka plan tiki bozmasın).
+- **Ne yapıldı (DI):**
+  5. `DependencyInjection.AddInfrastructure(... IConfiguration? configuration = null)` — opsiyonel:
+     verilirse `Bes:PlanCatchUp` bind edilir; her hâlükârda runner scoped + hosted service kayıtlı.
+  6. `Program.cs` → `AddInfrastructure(..., builder.Configuration)`.
+  7. NuGet: `Microsoft.Extensions.Hosting.Abstractions 10.0.8` (Infrastructure: `BackgroundService`/
+     `IHostedService` için).
+- **Dokunulan dosyalar:** `backend/src/Finans.Infrastructure/Services/BesPlanCatchUpRunner.cs` (yeni),
+  `backend/src/Finans.Infrastructure/Services/BesPlanCatchUpHostedService.cs` (yeni),
+  `backend/src/Finans.Infrastructure/Services/HoldingService.cs` (catch-up delege),
+  `backend/src/Finans.Infrastructure/DependencyInjection.cs`,
+  `backend/src/Finans.Infrastructure/Finans.Infrastructure.csproj`,
+  `backend/src/Finans.Api/Program.cs`, `backend/src/Finans.Api/appsettings.json`,
+  `backend/tests/Finans.Integration.Tests/SqliteWebApplicationFactory.cs`
+  (`Bes:PlanCatchUp:Enabled=false`),
+  `backend/tests/Finans.Integration.Tests/BesPlanCatchUpRunnerTests.cs` (yeni, +2),
+  `backend/tests/Finans.Integration.Tests/RateLimitApiTests.cs` (T2.9'dan kalan eksik using fix —
+  `Finans.Api.ErrorHandling`).
+- **Test:** +2 integration (`Catches_up_missing_plan_months_when_active`,
+  `No_op_when_plan_inactive`). Runner doğrudan DI'dan çözülüp çağrılır — sistem hattını simüle eder.
+  **Application 99/99 · Integration 79/79 yeşil** (RateLimit testleri de bu kez koştu, VS kilidi yoktu).
+- **Karar/Not:** "Uygulama gerçekten kapalıyken bile" katı anlamda **sürecin dışında** zamanlanmış iş
+  ister (cron / Windows Task Scheduler / Hangfire ayrı süreç). Bu hâliyle: sunucu (compose/VPS) ayakta
+  olduğu sürece plan akar; kullanıcı tarayıcısı kapalıyken bile doğru. Daha sağlam dağıtık cron için
+  Hangfire/Quartz değerlendirilmesi gelecek faza ertelendi (12 §9). `RateLimitApiTests.cs` küçük
+  using eksiği bu turda fark edildi (T2.9'dan kalan); fixlendi.
+- **Durum:** tamamlandı.
+- **Sıradaki:** **Faz 3 — LLM yorum katmanı** (T3.1: sağlayıcı seçimi + KVKK çerçevesi).
+
+## 2026-06-04 · T2.8 — Gözlemlenebilirlik yığını (Seq + Prometheus + Grafana + OTel)
+- **Görev(ler):** T2.8 (08-BACKLOG Faz 2). 12 §4 (metrik) + §6 (dashboard/alarm). Faz 2'nin dağıtım/gözlem
+  kapısı — ürün canlıdaysa "RED + cache + bağımlılık + 5xx/p95 alarmı" baştan olmalı (`12` §1, §9).
+- **Ne yapıldı (API — OTel metrik):**
+  1. `Finans.Api.csproj` paketler: `OpenTelemetry.Extensions.Hosting 1.15.3`,
+     `.Instrumentation.AspNetCore 1.15.2`, `.Instrumentation.Http 1.15.1`,
+     `.Instrumentation.Runtime 1.15.1`, `.Exporter.Prometheus.AspNetCore 1.15.3-beta.1` (resmî beta).
+  2. `Program.cs` `AddOpenTelemetry().WithMetrics(...)` — `AddAspNetCoreInstrumentation` (RED:
+     `http_server_request_duration_seconds_*`), `AddHttpClientInstrumentation`
+     (`http_client_request_duration_seconds_*` — Frankfurter/Truncgil bağımlılık metriği),
+     `AddRuntimeInstrumentation` (GC/CPU/Thread), `AddMeter(CacheMetrics.MeterName)` (T2.7'de hazırdı:
+     `finans_cache_requests_total{result,cache}`). `Resource.AddService("finans-api", version)` → label.
+  3. `MapPrometheusScrapingEndpoint().DisableRateLimiting()` — `/metrics` 8080'de scrape için. Rate-limit
+     dışında (kendi metriklerimizi limitleyemeyiz). Caddy `/metrics`'i DIŞARI vermez (admin-only, 11 §5).
+- **Ne yapıldı (API — Serilog Seq sink, opsiyonel):**
+  4. `Serilog.Sinks.Seq 9.1.0`. `Program.cs`: `Serilog:Seq:ServerUrl` doluysa sink eklenir, boşken eklenmez
+     (yerel `dotnet run`'ı bozmaz). `appsettings.json`: `Serilog.Seq.ServerUrl: ""` varsayılan.
+- **Ne yapıldı (compose):**
+  5. `seq` (datalust/seq:2024.3, EULA=Y) — UI `127.0.0.1:8081→80`, ingestion iç ağ 5341.
+  6. `prometheus` (prom/prometheus:v2.55.1) — `compose/prometheus/prometheus.yml` (15s scrape api:8080/metrics,
+     rule_files), `rules.yml` (3 alarm: 5xx>2%, p95>600ms-10dk, instance down 2dk). 15g retention.
+     `127.0.0.1:9090:9090`. Volume `prometheus-data`.
+  7. `grafana` (grafana-oss:11.3.1) — provisioning: `datasources/datasource.yml` (Prometheus),
+     `dashboards/dashboards.yml` (file provider), `dashboards/finans-overview.json` ("Genel Bakış":
+     istek hızı/route, hata oranı 5xx+429, p95 gecikme/route, **cache hit oranı**, dış bağımlılık p95,
+     .NET GC heap). `127.0.0.1:3001:3000`. Volume `grafana-data`. Admin parola env (`GRAFANA_ADMIN_PASSWORD`,
+     dev varsayılan `admin`).
+  8. `api` env: `Serilog__Seq__ServerUrl=http://seq:5341` — compose'da otomatik Seq'e log.
+  9. **Tüm admin port'ları `127.0.0.1` bind** — LAN'a açık değil; production'da SSH tüneli + Caddy
+     basic-auth + IP whitelist (`11` §5).
+- **Dokunulan dosyalar:** `backend/src/Finans.Api/Finans.Api.csproj`, `backend/src/Finans.Api/Program.cs`,
+  `backend/src/Finans.Api/appsettings.json`, `docker-compose.yml`, `compose/prometheus/prometheus.yml`,
+  `compose/prometheus/rules.yml`, `compose/grafana/provisioning/datasources/datasource.yml`,
+  `compose/grafana/provisioning/dashboards/dashboards.yml`, `compose/grafana/dashboards/finans-overview.json`.
+- **Test:** yeni testi yok (altyapı/yapılandırma). **Application 99/99 yeşil** (regresyon yok). Integration
+  testleri VS Api kilidi bırakılınca koşulacak (her zamanki gibi). Build: 0 hata + mevcut 3 uyarı (T2.8 ile
+  alakasız: `KnownNetworks` deprecation + 2 EF nullability). Manuel doğrulama: `docker compose up --build`
+  → Grafana http://localhost:3001 (admin/admin), Prometheus :9090 (Status→Targets `finans-api` UP), Seq :8081.
+- **Karar/Not:** Prometheus exporter `1.15.3-beta.1` — OTel ekosistemi Prometheus için **hâlâ beta'da**
+  ama resmî paket; alternatif (OTLP→OTel Collector→Prometheus remote_write) Faz 5'te değerlendirilir.
+  Alertmanager bu turda yok — kurallar Prometheus UI'da görünür, Grafana Alerting de okuyabilir; e-posta/
+  Telegram dağıtımı Faz 5 (12 §9). Web tarafı bu turda değişmedi.
+- **Durum:** tamamlandı. **Faz 2 (altyapı dahil) BİTTİ.**
+- **Sıradaki:** **Faz 3 — LLM yorum katmanı** (T3.1: sağlayıcı seçimi + KVKK çerçevesi) **VEYA** T-BES.6b
+  ileri (arka plan zamanlayıcı). Sıra kullanıcıyla netleşecek.
+
 ## 2026-06-02 · T2.9 — Caddy reverse proxy + TLS + ASP.NET RateLimiter
 - **Görev(ler):** T2.9 (08-BACKLOG Faz 2). Lansman öncesi güvenlik kapısı: TLS, dış servisleri iç ağa
   kapatma, rate limit (Caddy ağ-katı + ASP.NET endpoint-katı), güvenlik başlıkları.
