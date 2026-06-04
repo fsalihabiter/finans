@@ -32,7 +32,7 @@ export function AnalysisPage() {
         </span>
         <button
           type="button"
-          className="btn btn-secondary"
+          className="btn-ghost"
           onClick={() => void refetch()}
           disabled={isFetching}
           aria-busy={isFetching}
@@ -55,7 +55,7 @@ export function AnalysisPage() {
         <div className="card empty-state" role="alert">
           <h3>Yorum yüklenemedi</h3>
           <p>Bağlantı ya da sunucu kaynaklı geçici bir sorun olabilir. Tekrar dene.</p>
-          <button type="button" className="btn" onClick={() => void refetch()}>Tekrar dene</button>
+          <button type="button" className="btn-primary" onClick={() => void refetch()}>Tekrar dene</button>
         </div>
       ) : (
         <CommentaryCardList cards={data?.cards ?? []} source={data?.source ?? "fallback"} />
