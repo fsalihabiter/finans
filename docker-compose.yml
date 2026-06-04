@@ -61,6 +61,14 @@ services:
       Security__ForwardedHeaders: "true"
       # T2.8: yapılandırılmış log Seq'e (iç ağ, ingestion 5341). Boş bırakılırsa sink eklenmez.
       Serilog__Seq__ServerUrl: "http://seq:5341"
+      # T3.1: LLM sağlayıcı. ApiKey REPODA YOK — `.env` (LLM_API_KEY=...) ile geçilir; `.env` .gitignore'da.
+      # Yerel dev'de (dotnet run) User Secrets okunur; container User Secrets göremez → env var.
+      Llm__Provider: ${LLM_PROVIDER:-OpenRouter}
+      Llm__ApiKey: ${LLM_API_KEY:-}
+      Llm__Model: ${LLM_MODEL:-meta-llama/llama-3.3-70b-instruct:free}
+      Llm__BaseUrl: ${LLM_BASE_URL:-https://openrouter.ai/api/}
+      Llm__OpenRouterAppUrl: "https://localhost"
+      Llm__OpenRouterAppName: "Finans"
     depends_on:
       postgres:
         condition: service_healthy
