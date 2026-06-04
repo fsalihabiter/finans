@@ -7,8 +7,19 @@
 **Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ **Faz 2 BİTTİ (işlev + altyapı + gözlem)** → **Faz 3 — LLM yorum katmanı**
 
 ## Sıradaki (öncelik sırası)
-1. **T3.3** — `LlmCommentaryService`: anonim portföy özeti → `ILlmClient` → JSON kart listesi
-2. T3.4 — Güvenli parse + fallback + testleri (07 §5)
+1. **T3.4** — Güvenli parse + fallback testleri (07 §5: bozuk JSON / eksik alan / boş yanıt;
+   son başarılı cache'i de fallback olarak değerlendirme T3.6 ile)
+2. T3.5 — Çıktı güvenlik filtresi (yasaklı yönlendirme kalıbı taraması)
+3. T3.6 — Cache (portföy hash / günde bir)
+
+> ✅ **T3.3 bitti (2026-06-05) — LlmCommentaryService + anonimleştirme:**
+> `PortfolioAnonymizer` saf — PII'siz özet: kullanıcı varlık adı sızmaz; tür-bazlı dilim grupla; oran
+> 3 basamak; total tam sayı; `concentrationTop2` türetilir. `ILlmCommentaryService` orkestrasyon:
+> anonim özet → deterministik user prompt JSON → `ILlmClient` (`SystemPrompt`+`JsonSchema` dayatılır)
+> → cards parse → `CommentaryResponse{Cards,Source,GeneratedAtUtc}`. Fallback (07 §5 ilk hat): LLM
+> Fail / geçersiz JSON / 0 kart → tek "Yorum şu an üretilemedi" kartı (`Source="fallback"`). Per-kart
+> zorunlu alan kontrolü (kısmi başarı: kötü kart düşer iyiler kalır). DI: scoped. **+11 unit**
+> (5 anonymizer + 6 servis). Application 118/118 · Integration 83/83.
 
 > ✅ **T3.2 bitti (2026-06-05) — Sistem promptu + few-shot + JSON şema:**
 > `Finans.Application.Llm.CommentaryPrompts` (statik, cache-friendly). `SystemPrompt`: eğitmen kimliği

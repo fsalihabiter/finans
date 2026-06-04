@@ -103,6 +103,10 @@ public static class DependencyInjection
             services.AddSingleton<ILlmClient, NoopLlmClient>();
         }
 
+        // T3.3: portföy yorum orkestrasyonu (Application'da, ILlmClient soyutlamasının üstünde).
+        // LLM yapılandırılmamışsa NoopLlmClient → her çağrı fallback metin kartı döner (07 §5).
+        services.AddScoped<ILlmCommentaryService, LlmCommentaryService>();
+
         return services;
     }
 }

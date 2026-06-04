@@ -20,6 +20,55 @@
 
 ---
 
+## 2026-06-05 · T3.3 — LlmCommentaryService + Portföy anonimleştirme
+- **Görev(ler):** T3.3 (08-BACKLOG Faz 3). T3.1 soyutlaması + T3.2 statik promptu birleştirip somut
+  bir orkestrasyon servisi: hazır sayı (`PortfolioSummaryDto`) → anonimleştir → LLM → kart listesi.
+- **Ne yapıldı (Application — anonimleştirme):**
+  1. `Finans.Application.Llm.AnonymizedPortfolioSummary` (yeni) + `AnonymizedAllocationSlice` —
+     PII'siz tip: `baseCurrency` (string), `totalValue` (tam sayı), `returnRatio`/`realReturnRatio`
+     (3 basamak), `allocation` (sadece tür+ağırlık), `concentrationTop2` (top-2 toplamı).
+  2. `PortfolioAnonymizer.Anonymize(PortfolioSummaryDto)` saf statik. Tür-bazlı `GroupBy` (aynı türde
+     iki holding tek dilim), `OrderByDescending(weight)`. **Kullanıcı varlık adları sızmaz** (07 §2
+     KVKK).
+- **Ne yapıldı (Application — orkestrasyon):**
+  3. `ILlmCommentaryService` + `LlmCommentaryService` (yeni). Bağımlılık: `ILlmClient`, `ILogger`,
+     `TimeProvider`. Zincir: anonimleştir → deterministik JSON user prompt (alan adları sabit, cache
+     friendly — T3.6) → `CompleteAsync(CommentaryPrompts.SystemPrompt, user, JsonSchema)` → güvenli
+     parse → `CommentaryResponse(cards, Source, GeneratedAtUtc)`.
+  4. **Fallback** (07 §5 ilk hat): LLM `Fail` veya JSON parse fail veya 0 kart → tek düz metin kartı
+     ("Yorum şu an üretilemedi"), `Source="fallback"`. T3.4 fallback'i sıkılaştıracak (eksik alan
+     tipi, çıktı güvenlik filtresi T3.5).
+  5. Parse: per-kart zorunlu alanlar (emoji+title+body) kontrolü; eksikse o kart düşer ama diğerleri
+     kalır (kısmi başarı). Opsiyonel `meter` (value+lowLabel+highLabel) ve `tags` toplanır.
+  6. `CommentaryDtos.cs`: `CommentaryResponse`, `CommentaryCard`, `CommentaryMeter` — Web (T3.8)
+     bunu render edecek.
+- **Ne yapıldı (DI):**
+  7. `services.AddScoped<ILlmCommentaryService, LlmCommentaryService>()` — `ILlmClient` zaten kayıtlı
+     (Anthropic veya Noop).
+- **Ne yapıldı (test — Application):**
+  8. `PortfolioAnonymizerTests` (+5): isim sızmaz; aynı tür birleşir; oranlar yuvarlanır; top-2 yoğunlaşma;
+     null oranlar korunur.
+  9. `LlmCommentaryServiceTests` (+6): stub `ILlmClient` ile mutlu yol (2 kart parse + meter + tags);
+     sistem promptu+şema dayatılır + user prompt anonim; LLM Fail → fallback; geçersiz JSON → fallback;
+     sıfır kart → fallback; eksik alanlı kart düşer ama geçerli kalır.
+- **Dokunulan dosyalar:** `backend/src/Finans.Application/Llm/AnonymizedPortfolioSummary.cs` (yeni),
+  `backend/src/Finans.Application/Llm/CommentaryDtos.cs` (yeni),
+  `backend/src/Finans.Application/Llm/ILlmCommentaryService.cs` (yeni),
+  `backend/src/Finans.Application/Llm/LlmCommentaryService.cs` (yeni),
+  `backend/src/Finans.Application/Finans.Application.csproj` (`Microsoft.Extensions.Logging.Abstractions`),
+  `backend/src/Finans.Infrastructure/DependencyInjection.cs` (servis kaydı),
+  `backend/tests/Finans.Application.Tests/Llm/PortfolioAnonymizerTests.cs` (yeni),
+  `backend/tests/Finans.Application.Tests/Llm/LlmCommentaryServiceTests.cs` (yeni).
+- **Test:** **Application 118/118 yeşil** (+11) · **Integration 83/83 yeşil** (regresyon yok).
+- **Karar/Not:** `LlmCommentaryService` Application'da kaldı — bağımlılığı yalnız `ILlmClient`
+  soyutlaması + DTO'lar. Test ile validation arasındaki "şema disiplini" iki seviyede: (a) Anthropic
+  tarafında `tool_use.input_schema` (T3.2'deki şema) modelin çıktısını dayatır, (b) servis tarafında
+  güvenli parse + per-kart zorunlu alan kontrolü kötü çıktıyı eleminer. T3.4 bunu ek olarak: type
+  coercion (örn. tag stringify), uzunluk doğrulama, çok uzun body kırpma ile sertleştirecek.
+- **Durum:** tamamlandı.
+- **Sıradaki:** **T3.4 — Güvenli parse + fallback testleri** (07 §5 → bozuk JSON / eksik alan /
+  boş yanıt + LLM cache'den son başarılıyı dönmek).
+
 ## 2026-06-05 · T3.2 — Portföy yorum sistem promptu + few-shot + JSON şema
 - **Görev(ler):** T3.2 (08-BACKLOG Faz 3). 07 §3 iskeletini somut, cache-friendly statik bir modüle
   döktük; T3.3 bunu çağırıp anonim portföy özetiyle birleştirip `ILlmClient.CompleteAsync`'e gönderecek.
