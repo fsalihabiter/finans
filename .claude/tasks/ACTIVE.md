@@ -7,10 +7,21 @@
 **Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ **Faz 2 BİTTİ (işlev + altyapı + gözlem)** → **Faz 3 — LLM yorum katmanı**
 
 ## Sıradaki (öncelik sırası)
-1. **T3.4** — Güvenli parse + fallback testleri (07 §5: bozuk JSON / eksik alan / boş yanıt;
-   son başarılı cache'i de fallback olarak değerlendirme T3.6 ile)
-2. T3.5 — Çıktı güvenlik filtresi (yasaklı yönlendirme kalıbı taraması)
-3. T3.6 — Cache (portföy hash / günde bir)
+1. **T3.5** — Çıktı güvenlik filtresi (yasaklı yönlendirme kalıbı taraması — kuşak-2 koruma)
+2. T3.6 — Cache (portföy hash / günde bir; son başarılı fallback'i)
+3. T3.9 — LLM maliyet/çağrı metriği + bütçe alarmı (Prometheus)
+
+> ✅ **T3.4 + T3.7 + T3.8 bitti (2026-06-05) — LLM yorum hattı uçtan uca görünür:**
+> - T3.4 parse hardening: cards ≤5, body/title min-max (kısa→düş, uzun→kırp), meter [0,1] clamp,
+>   tags filtrele/≤4, boş etiketli meter null. +9 edge test.
+> - T3.7 endpoint: `GET /api/portfolio/commentary` + `"commentary"` rate limit (10/dk). +2 integration.
+> - T3.8 Web: `@finans/shared` tipler + `useCommentary` + `AnalysisPage` (ComingSoon → gerçek sayfa),
+>   `CommentaryCardList` komponent, **Disclaimer her durumda** (loading dahil — CLAUDE.md §2),
+>   "↻ Yenile" / skeleton / hata-retry / source rozeti.
+> - **Application 127/127 · Integration 85/85 · Web 54/54 + build temiz.**
+> - API anahtarı yokken backend `NoopLlmClient` → fallback kartı → UI'da "Yorum şu an üretilemedi —
+>   sayıların etkilenmedi" bilgilendirmesi (uygulama çökmez — NFR-5).
+> - Görmek için: `pnpm dev` → http://localhost:5173/analiz (rota App.tsx menüsünden gelir).
 
 > ✅ **T3.3 bitti (2026-06-05) — LlmCommentaryService + anonimleştirme:**
 > `PortfolioAnonymizer` saf — PII'siz özet: kullanıcı varlık adı sızmaz; tür-bazlı dilim grupla; oran

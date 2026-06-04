@@ -7,6 +7,7 @@ import type {
   ApiErrorEnvelope,
   BesProjection,
   BesProjectionInput,
+  CommentaryResponse,
   CreateBesInput,
   CreateHoldingInput,
   CurrencyCode,
@@ -123,6 +124,9 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     /** GET /api/portfolio/nudges — kural tabanlı eğitici notlar (tavsiye değil). */
     getNudges: (baseCurrency?: CurrencyCode) =>
       get<NudgesResponse>(withBaseCurrency("/api/portfolio/nudges", baseCurrency)),
+    /** GET /api/portfolio/commentary — LLM eğitici yorum kartları (tavsiye DEĞİL — CLAUDE.md §2). */
+    getCommentary: (baseCurrency?: CurrencyCode) =>
+      get<CommentaryResponse>(withBaseCurrency("/api/portfolio/commentary", baseCurrency)),
 
     // ── Ayarlar (04 §4) ──
     getSettings: () => get<Settings>("/api/settings"),

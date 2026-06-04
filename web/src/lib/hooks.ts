@@ -30,6 +30,7 @@ export const queryKeys = {
   settings: ["settings"] as const,
   prices: ["prices"] as const,
   nudges: ["nudges"] as const,
+  commentary: ["commentary"] as const,
 };
 
 export function usePortfolioSummary(baseCurrency?: CurrencyCode) {
@@ -85,6 +86,22 @@ export function useNudges() {
     staleTime: 120_000,
     refetchInterval: LIVE_REFETCH_MS,
     refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * LLM yorum kartları (T3.8 — 07). Pahalı dış çağrı: uzun staleTime + sadece elle tazele.
+ * Otomatik refetch yok; kullanıcı butonla yeniler. Disclaimer UI tarafından sabitlenir.
+ */
+export function useCommentary() {
+  return useQuery({
+    queryKey: queryKeys.commentary,
+    queryFn: () => api.getCommentary(),
+    staleTime: 60 * 60_000, // 1 saat — günde 1-2 üretim hedefi (NFR-9)
+    gcTime: 24 * 60 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
   });
 }
 

@@ -1,3 +1,4 @@
+using Finans.Application.Llm;
 using Finans.Application.Portfolio;
 using Finans.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,10 @@ namespace Finans.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class PortfolioController(IPortfolioService portfolio, INudgeService nudges) : ControllerBase
+public sealed class PortfolioController(
+    IPortfolioService portfolio,
+    INudgeService nudges,
+    ILlmCommentaryService commentary) : ControllerBase
 {
     /// <summary>GET /api/portfolio/summary — toplam değer/maliyet/getiri/dağılım.</summary>
     [HttpGet("summary")]
@@ -29,4 +33,20 @@ public sealed class PortfolioController(IPortfolioService portfolio, INudgeServi
     public async Task<ActionResult<NudgesResponse>> GetNudges(
         [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
         Ok(new NudgesResponse(await nudges.GetNudgesAsync(baseCurrency, ct)));
+
+    /// <summary>
+    /// GET /api/portfolio/commentary (T3.7) — KODUN hesapladığı portföy özetini LLM ile eğitici
+    /// dille yorumla; PII gönderilmez (07 §2 KVKK — anonim özet). LLM erişilemezse / şema bozulursa
+    /// 200 + <see cref="CommentaryResponse"/> ile fallback kart döner — UI çökmez (NFR-5).
+    /// **Yatırım tavsiyesi DEĞİL** (CLAUDE.md §2). Rate limit: pahalı dış çağrı, dakikada 10/kullanıcı.
+    /// </summary>
+    [HttpGet("commentary")]
+    [EnableRateLimiting("commentary")]
+    public async Task<ActionResult<CommentaryResponse>> GetCommentary(
+        [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct)
+    {
+        var summary = await portfolio.GetSummaryAsync(baseCurrency, ct);
+        var resp = await commentary.GetCommentaryAsync(summary, ct);
+        return Ok(resp);
+    }
 }

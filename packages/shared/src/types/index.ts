@@ -192,6 +192,29 @@ export interface NudgesResponse {
   nudges: Nudge[];
 }
 
+/** LLM yorum kart göstergesi (opsiyonel; 0..1). */
+export interface CommentaryMeter {
+  value: number;
+  lowLabel: string;
+  highLabel: string;
+}
+
+/** LLM yorum kartı (GET /api/portfolio/commentary). Tavsiye DEĞİL — eğitici çerçeve. */
+export interface CommentaryCard {
+  emoji: string;
+  title: string;
+  body: string;
+  meter?: CommentaryMeter | null;
+  tags?: string[] | null;
+}
+
+/** GET /api/portfolio/commentary yanıtı. `source`: "llm" | "fallback" | "cache". */
+export interface CommentaryResponse {
+  cards: CommentaryCard[];
+  source: string;
+  generatedAtUtc: string;
+}
+
 /** Bir pozisyona alış/satış (POST .../transactions, POST /holdings içinde). */
 export interface TransactionInput {
   type: TransactionType;

@@ -82,9 +82,18 @@ public sealed class LlmCommentaryService(
         GeneratedAtUtc: time.GetUtcNow().UtcDateTime);
 
     /// <summary>
-    /// Minimum güvenli parse: tam JSON parse → cards array → her kart normalize. Parse / şema hatası
-    /// yutar (fallback'e düşülmesi için). T3.4 bu mantığı zenginleştirecek (eksik alan, fazla alan,
-    /// type coercion, çıktı güvenlik filtresi T3.5).
+    /// Güvenli parse (T3.4): tam JSON parse → cards → her kart normalize+sınırla. Şema sınırlarını
+    /// (07 §4) modeli "tutamadığında" bile dayatır:
+    /// <list type="bullet">
+    ///   <item>Cards üst sınırı <see cref="CommentaryParseConstraints.MaxCards"/> — fazlası kırpılır.</item>
+    ///   <item>Title <see cref="CommentaryParseConstraints.MaxTitle"/>'i aşarsa kırpılır; çok kısaysa kart düşer.</item>
+    ///   <item>Body min/max — kısaysa kart düşer (anlamlı yorum değil), uzunsa kırpılır.</item>
+    ///   <item>Meter value [0,1]'e clamp; eksik alanlı meter null.</item>
+    ///   <item>Tags non-string elemanlar atılır; ilk <see cref="CommentaryParseConstraints.MaxTags"/> alınır.</item>
+    ///   <item>Bilinmeyen alanlar yutulur (forward compat).</item>
+    /// </list>
+    /// Bütün JSON parse hatası yutulur → fallback'e düşülür (T3.4 birim testleriyle korunur; T3.5
+    /// çıktı güvenlik filtresi (yasaklı yönlendirme kalıbı) bunun üstüne gelecek.)
     /// </summary>
     private static bool TryParseCards(string json, out IReadOnlyList<CommentaryCard> cards)
     {
@@ -96,33 +105,56 @@ public sealed class LlmCommentaryService(
                 cardsEl.ValueKind != JsonValueKind.Array)
                 return false;
 
-            var list = new List<CommentaryCard>();
+            var list = new List<CommentaryCard>(CommentaryParseConstraints.MaxCards);
             foreach (var c in cardsEl.EnumerateArray())
             {
+                if (list.Count >= CommentaryParseConstraints.MaxCards) break; // kırpma
                 if (c.ValueKind != JsonValueKind.Object) continue;
-                var emoji = ReadString(c, "emoji");
-                var title = ReadString(c, "title");
-                var body = ReadString(c, "body");
-                if (string.IsNullOrWhiteSpace(emoji) || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(body))
-                    continue;
+
+                var emoji = ReadString(c, "emoji")?.Trim();
+                var title = ReadString(c, "title")?.Trim();
+                var body = ReadString(c, "body")?.Trim();
+
+                // Zorunlu alan eksik / çok kısa → kart düşer (kısmi başarı).
+                if (string.IsNullOrWhiteSpace(emoji)) continue;
+                if (string.IsNullOrWhiteSpace(title) || title!.Length < CommentaryParseConstraints.MinTitle) continue;
+                if (string.IsNullOrWhiteSpace(body) || body!.Length < CommentaryParseConstraints.MinBody) continue;
+
+                // Üst sınırı aşarsa kırp (kartı koru; LLM'in çok az çok kıldığı sınırı bizim için sertleştir).
+                if (title.Length > CommentaryParseConstraints.MaxTitle) title = title[..CommentaryParseConstraints.MaxTitle];
+                if (body.Length > CommentaryParseConstraints.MaxBody) body = body[..CommentaryParseConstraints.MaxBody];
 
                 CommentaryMeter? meter = null;
                 if (c.TryGetProperty("meter", out var m) && m.ValueKind == JsonValueKind.Object &&
                     m.TryGetProperty("value", out var mv) && mv.TryGetDecimal(out var mvDec))
                 {
-                    meter = new CommentaryMeter(
-                        Value: mvDec,
-                        LowLabel: ReadString(m, "lowLabel") ?? string.Empty,
-                        HighLabel: ReadString(m, "highLabel") ?? string.Empty);
+                    var clamped = Math.Clamp(mvDec, 0m, 1m);
+                    var low = (ReadString(m, "lowLabel") ?? string.Empty).Trim();
+                    var high = (ReadString(m, "highLabel") ?? string.Empty).Trim();
+                    // Etiketler tamamen boşsa meter'ı bırakma — UI'da anlamsız çubuk olmasın.
+                    if (!string.IsNullOrEmpty(low) || !string.IsNullOrEmpty(high))
+                    {
+                        if (low.Length > CommentaryParseConstraints.MaxMeterLabel) low = low[..CommentaryParseConstraints.MaxMeterLabel];
+                        if (high.Length > CommentaryParseConstraints.MaxMeterLabel) high = high[..CommentaryParseConstraints.MaxMeterLabel];
+                        meter = new CommentaryMeter(clamped, low, high);
+                    }
                 }
 
                 IReadOnlyList<string>? tags = null;
                 if (c.TryGetProperty("tags", out var t) && t.ValueKind == JsonValueKind.Array)
-                    tags = t.EnumerateArray()
-                        .Where(x => x.ValueKind == JsonValueKind.String)
-                        .Select(x => x.GetString()!)
-                        .Where(s => !string.IsNullOrWhiteSpace(s))
-                        .ToList();
+                {
+                    var tagList = new List<string>(CommentaryParseConstraints.MaxTags);
+                    foreach (var x in t.EnumerateArray())
+                    {
+                        if (tagList.Count >= CommentaryParseConstraints.MaxTags) break;
+                        if (x.ValueKind != JsonValueKind.String) continue;
+                        var s = x.GetString()?.Trim();
+                        if (string.IsNullOrEmpty(s)) continue;
+                        if (s.Length > CommentaryParseConstraints.MaxTagLength) s = s[..CommentaryParseConstraints.MaxTagLength];
+                        tagList.Add(s);
+                    }
+                    if (tagList.Count > 0) tags = tagList;
+                }
 
                 list.Add(new CommentaryCard(emoji!, title!, body!, meter, tags));
             }
@@ -138,4 +170,20 @@ public sealed class LlmCommentaryService(
         static string? ReadString(JsonElement el, string name) =>
             el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     }
+}
+
+/// <summary>
+/// <see cref="LlmCommentaryService"/> parse aşamasının sınırları (07 §4 ile aynı). LLM şemayı tam
+/// tutmadığında istemci tarafında dayatılır.
+/// </summary>
+internal static class CommentaryParseConstraints
+{
+    public const int MaxCards = 5;
+    public const int MinTitle = 2;
+    public const int MaxTitle = 40;
+    public const int MinBody = 60;
+    public const int MaxBody = 220;
+    public const int MaxTags = 4;
+    public const int MaxTagLength = 24;
+    public const int MaxMeterLabel = 24;
 }

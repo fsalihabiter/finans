@@ -178,6 +178,17 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+
+        // "commentary" (T3.7): LLM çağrısı pahalı (token maliyeti + gecikme). T3.6 cache disiplini
+        // şart; rate limit kötü aktöre/yanlış UI döngüsüne karşı son katman.
+        options.AddPolicy("commentary", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(ResolvePartitionKey(httpContext),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
     });
 
     var app = builder.Build();

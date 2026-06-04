@@ -2140,3 +2140,113 @@ body.drawer-lock {
     display: flex;
   }
 }
+
+/* ───── Analiz (T3.8) — LLM yorum kartları ─────────────────────────────────── */
+.analysis-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+.analysis-toolbar .mini {
+  color: var(--muted, #8a8a8a);
+  font-size: 13px;
+}
+.commentary-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.commentary-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e8e6e0);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.commentary-card.is-fallback {
+  border-style: dashed;
+  background: var(--surface-muted, #faf8f3);
+}
+.commentary-card.is-skeleton {
+  pointer-events: none;
+}
+.commentary-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.commentary-card-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.commentary-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+.commentary-body {
+  margin: 0;
+  color: var(--text, #2a2a2a);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.commentary-meter {
+  margin-top: 4px;
+}
+.commentary-meter-fill {
+  height: 6px;
+  background: var(--gold, #e0b255);
+  border-radius: 999px;
+  max-width: 100%;
+  transition: width 200ms ease;
+}
+.commentary-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted, #8a8a8a);
+  margin-top: 4px;
+}
+.commentary-tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.commentary-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted, #f3eedf);
+  color: var(--muted, #8a8a8a);
+}
+.commentary-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.sk-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #eee 0%, #f6f4ee 50%, #eee 100%);
+  background-size: 200% 100%;
+  animation: sk-pulse 1.6s ease-in-out infinite;
+  margin: 8px 0;
+}
+.sk-line-title {
+  width: 60%;
+  height: 16px;
+}
+.sk-line-short {
+  width: 40%;
+}
+@keyframes sk-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

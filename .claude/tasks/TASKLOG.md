@@ -20,6 +20,53 @@
 
 ---
 
+## 2026-06-05 · T3.4 + T3.7 + T3.8 — LLM yorum: parse hardening + endpoint + Web Analiz sayfası
+- **Görev(ler):** T3.4 + T3.7 + T3.8 (08-BACKLOG Faz 3). Hedef: "kullanıcı Web'de Analiz sekmesini
+  açıp LLM kartlarını (yoksa fallback'i) gerçekten görsün". Üç dilim:
+- **T3.4 — Parse hardening:** `LlmCommentaryService.TryParseCards` artık şema sınırlarını **istemci
+  tarafında da dayatıyor** (07 §4 ile aynı): cards üst sınır 5 (fazla → kırp); title min 2 / max 40
+  (kısa → düş, uzun → kırp); body min 60 / max 220 (kısa → düş, uzun → kırp); meter value [0,1] clamp,
+  boş etiketli meter null; tags non-string filtre + ≤4 + ≤24 char; bilinmeyen alanlar yutulur (forward
+  compat). `CommentaryParseConstraints` sabit. **+9 unit edge test.**
+- **T3.7 — Endpoint:** `PortfolioController.GetCommentary` (`GET /api/portfolio/commentary`),
+  per-user özet → `ILlmCommentaryService` → 200 + `CommentaryResponse`. Yeni rate limit politikası
+  **"commentary"** (Fixed 10/dk; LLM pahalı). +2 integration: NoopLlmClient ile 200+fallback (NFR-5),
+  başka kullanıcı kapsamı (per-user izolasyon, IDOR yok).
+- **T3.8 — Web Analiz sayfası:** `@finans/shared` tipleri (`CommentaryResponse`/`CommentaryCard`/
+  `CommentaryMeter`) + `getCommentary`; web `useCommentary` hook'u — **manuel tazele**, otomatik
+  refetch yok, staleTime 1h (NFR-9 cache disiplini). `AnalysisPage` "ComingSoon"dan gerçek sayfaya:
+  başlık + lead + **Disclaimer her durumda** (loading dahil — CLAUDE.md §2 / NFR-2), source rozeti
+  ("LLM tarafından üretildi" / "Yorum şu an üretilemedi — sayıların etkilenmedi" / "Önbellekten"),
+  "↻ Yenile" butonu, skeleton (3 kart), hata+retry, kart listesi. `CommentaryCardList` komponenti
+  (emoji + title + body + opsiyonel meter çubuğu + opsiyonel etiketler). CSS: `.commentary-list/
+  .commentary-card/.commentary-meter/.sk-line` + skeleton animasyon.
+- **Dokunulan dosyalar:**
+  - `backend/src/Finans.Application/Llm/LlmCommentaryService.cs` (hardening + `CommentaryParseConstraints`),
+  - `backend/src/Finans.Api/Controllers/PortfolioController.cs` (commentary endpoint),
+  - `backend/src/Finans.Api/Program.cs` ("commentary" rate limit policy),
+  - `backend/tests/Finans.Application.Tests/Llm/LlmCommentaryHardeningTests.cs` (yeni, +9),
+  - `backend/tests/Finans.Integration.Tests/CommentaryApiTests.cs` (yeni, +2),
+  - `packages/shared/src/types/index.ts` (`CommentaryResponse/Card/Meter` tipleri),
+  - `packages/shared/src/api/index.ts` (`getCommentary`),
+  - `web/src/lib/hooks.ts` (`useCommentary`, `queryKeys.commentary`),
+  - `web/src/components/CommentaryCardList.tsx` (yeni),
+  - `web/src/routes/AnalysisPage.tsx` (ComingSoon → gerçek sayfa),
+  - `web/src/routes/AnalysisPage.test.tsx` (3 test: disclaimer her durumda + LLM çıktı + fallback),
+  - `web/src/App.css` (analiz/commentary stilleri + skeleton).
+- **Test yeşil kapı:** **Application 127/127 · Integration 85/85 · Web 54/54 + build temiz.**
+  Hardening regresyon kapısı: yeni LLM şema gevşemesi/UI parse zayıflığı testte yakalanır.
+- **Karar/Not:**
+  - "Auth zorunlu" testi atıldı: `HttpCurrentUser` X-User-Id veya `Auth:DevUserId` config'ine
+    düşüyor; ikisi yoksa exception → 500 (özel 401 yok). Endpoint güvenliği per-user data isolation
+    ile test ediliyor (zaten kapsanmış). Faz 5 JWT geldiğinde özel 401 testi gelecek.
+  - `useCommentary` otomatik refetch yapmaz (NFR-9 maliyet): kullanıcı "↻ Yenile" ile elle tetikler.
+    T3.6'da cache anahtarı portföy hash'ine bağlanacak; aynı portföy → aynı kart, çağrı bile gitmez.
+  - API anahtarı yokken (varsayılan dev): backend `NoopLlmClient` → fallback → UI'da bilgilendirme
+    kartı görünür; "Bu nasıl çalışır" deneyimi tarayıcıda çalışır.
+- **Durum:** tamamlandı. **LLM yorum hattı uçtan uca görünür hâle geldi.**
+- **Sıradaki:** **T3.5** (çıktı güvenlik filtresi — yasaklı yönlendirme kalıbı taraması) +
+  **T3.6** (cache: portföy hash / günde bir). Sonra T3.9 (LLM maliyet metriği — Prometheus).
+
 ## 2026-06-05 · T3.3 — LlmCommentaryService + Portföy anonimleştirme
 - **Görev(ler):** T3.3 (08-BACKLOG Faz 3). T3.1 soyutlaması + T3.2 statik promptu birleştirip somut
   bir orkestrasyon servisi: hazır sayı (`PortfolioSummaryDto`) → anonimleştir → LLM → kart listesi.
