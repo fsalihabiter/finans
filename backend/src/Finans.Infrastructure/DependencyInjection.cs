@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Finans.Infrastructure;
 
@@ -117,7 +118,14 @@ public static class DependencyInjection
 
         // T3.3: portföy yorum orkestrasyonu (Application'da, ILlmClient soyutlamasının üstünde).
         // LLM yapılandırılmamışsa NoopLlmClient → her çağrı fallback metin kartı döner (07 §5).
-        services.AddScoped<ILlmCommentaryService, LlmCommentaryService>();
+        // T3.6: cache + "son başarılı" fallback dekoratörü (FX/enflasyon/fiyat decorator deseni, T2.7):
+        // iç servis üretir, dış servis IAppCache ile portföy-hash'i bazlı cache'ler + son başarılıyı saklar.
+        services.AddScoped<LlmCommentaryService>();
+        services.AddScoped<ILlmCommentaryService>(sp => new CachedLlmCommentaryService(
+            sp.GetRequiredService<LlmCommentaryService>(),
+            sp.GetRequiredService<IAppCache>(),
+            sp.GetRequiredService<ICurrentUser>(),
+            sp.GetRequiredService<ILogger<CachedLlmCommentaryService>>()));
 
         return services;
     }

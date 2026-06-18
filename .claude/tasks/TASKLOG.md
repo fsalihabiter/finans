@@ -20,6 +20,30 @@
 
 ---
 
+## 2026-06-18 · T3.6 — LLM yorum cache + "son başarılı" fallback
+- **Görev(ler):** T3.6 (07 §6, 10 §3-4).
+- **Ne yapıldı:**
+  1. `CachedLlmCommentaryService` dekoratörü (mevcut FX/enflasyon/fiyat decorator deseni, T2.7).
+     Cache anahtarı `commentary:{UserId:N}:{anonim özet SHA-256}` — portföy değişince anahtar değişir
+     (otomatik tazeleme), değişmezse 24s TTL boyunca cache'ten döner (her ekran açılışında LLM çağrısı
+     yok — NFR-9).
+  2. **Son başarılı fallback (07 §5-a):** LLM başarısızsa (inner `Source="fallback"`) son başarılı
+     yorum `Source="cache"` ile gösterilir (`commentary-last:{UserId}`, 30g). O da yoksa düz fallback
+     kartı (07 §5-b). Yalnız başarılı yorum cache'lenir (geçici hata 24s dondurulmaz).
+  3. **Per-user izolasyon (CLAUDE.md §13):** cache anahtarı UserId içerir; single-flight stampede koruması.
+  4. DI: iç servis `LlmCommentaryService` concrete + dış `CachedLlmCommentaryService` dekoratör.
+- **Dokunulan dosyalar:**
+  - `backend/src/Finans.Application/Llm/CachedLlmCommentaryService.cs` (yeni)
+  - `backend/src/Finans.Infrastructure/DependencyInjection.cs` (decorator kaydı + Logging using)
+  - `backend/tests/Finans.Application.Tests/Llm/CachedLlmCommentaryServiceTests.cs` (yeni)
+- **Test:** **+5 unit** (cache-hit / portföy değişince yeni çağrı / son-başarılı fallback / düz fallback /
+  CommentaryResponse JSON round-trip) + commentary integration **2/2** (yeni DI ile host kurulumu doğrulandı).
+  Application **145→150 yeşil**.
+- **Karar/Not:** "Günde bir" hem 24s TTL hem hash-anahtarı ile karşılanır (değişmeyen portföy → cache;
+  değişen → yeni anahtar). Ayrı tarih damgası gerekmedi.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T3.9 (LLM maliyet/çağrı metriği + bütçe alarmı).
+
 ## 2026-06-18 · T3.5 — Çıktı güvenlik filtresi (kuşak-2 koruma)
 - **Görev(ler):** T3.5 (07 §7, CLAUDE.md §2).
 - **Ne yapıldı:**
