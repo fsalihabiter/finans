@@ -4,12 +4,21 @@
 > başında hook bunu otomatik gösterir. Kaynak plan: [`../docs/08-BACKLOG.md`](../docs/08-BACKLOG.md).
 > Bir görev bitince buradan çıkar, backlog'da `[x]` işaretle, TASKLOG'a girdi ekle.
 
-**Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ **Faz 2 BİTTİ (işlev + altyapı + gözlem)** → **Faz 3 — LLM yorum katmanı**
+**Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ Faz 2 · ✅ **Faz 3 BİTTİ (LLM yorum katmanı — T3.1→T3.9)** → **Faz 4 — Hisse Temel Analiz**
 
 ## Sıradaki (öncelik sırası)
-1. **T3.5** — Çıktı güvenlik filtresi (yasaklı yönlendirme kalıbı taraması — kuşak-2 koruma)
-2. T3.6 — Cache (portföy hash / günde bir; son başarılı fallback'i)
-3. T3.9 — LLM maliyet/çağrı metriği + bütçe alarmı (Prometheus)
+1. **T4.1** — Hisse veri kaynağı kararı (önce ABD; BIST maliyet değerlendirmesi)
+2. T4.2 — `StockDataService` + `GET /api/stocks/{symbol}/metrics`
+3. T4.3 — `LlmStockExplainService` + `GET /.../explain` (tavsiye YOK)
+4. T4.4 — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
+
+> ✅ **2026-06-18 — Faz 3 kapanışı + analiz turu temizliği:** T3.5 (çıktı güvenlik filtresi —
+> `CommentaryOutputGuard`, bağlam odaklı yasaklı kalıp taraması), T3.6 (cache + son başarılı fallback,
+> `CachedLlmCommentaryService`), T3.9 (LLM çağrı/token/served metriği + 3 Prometheus bütçe alarmı)
+> tamamlandı. Ayrıca: 2026-06-08 OpenRouter yaması commit edildi (gizli test dispose hatası düzeltildi,
+> `tmp_diag/` silindi), derleme uyarıları temizlendi (KnownIPNetworks + 4× CS8604), pnpm-workspace
+> `mobile` referansı kapatıldı. **Backend: Application 156/156 · Integration 90/90 · Web build temiz.**
+> Detay: TASKLOG 2026-06-18 (5 girdi).
 
 > ✅ **2026-06-08 — OpenRouter free reasoning yaması + dev HTTPS redirect kapatma:**
 > Belirti: "Genel Bakış yüklenemedi" + Analiz sayfasında hep fallback. Kök neden 1: dev'de

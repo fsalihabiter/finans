@@ -20,6 +20,24 @@
 
 ---
 
+## 2026-06-18 · Temizlik — derleme uyarıları + pnpm-workspace mobile referansı
+- **Görev(ler):** ad-hoc (analiz turu önerisi #6).
+- **Ne yapıldı:**
+  1. `Program.cs`: `ForwardedHeadersOptions.KnownNetworks` → `KnownIPNetworks` (ASPDEPR005 deprecation).
+  2. `PortfolioApiTests.cs` (345/366/384/401): `create.Transactions!`/`goldHolding!.Transactions!` ile
+     4× CS8604 (olası null başvuru) uyarısı kapatıldı (test bağlamında değer garantili).
+  3. `pnpm-workspace.yaml`: var olmayan `mobile` paketi yorum satırına alındı (Faz M'de açılacak) —
+     pnpm "missing package" uyarısını önler.
+- **Dokunulan dosyalar:** `backend/src/Finans.Api/Program.cs`,
+  `backend/tests/Finans.Integration.Tests/PortfolioApiTests.cs`, `pnpm-workspace.yaml`
+- **Test:** Tam backend takımı yeşil — **Application 156/156 · Integration 90/90** · web build temiz.
+  Derleme: önceki 5 uyarıdan (deprecation + 4×CS8604) arındı; geriye **2 önceden var olan CS8620**
+  (`FinansDbContext` IPAddress converter nullability) kaldı — bu işin kapsamı dışı, ayrı bir kayıtta ele alınmalı.
+- **Karar/Not:** CS8620 (IP audit kolonu converter'ı) bilerek dokunulmadı — okumadığım persistence/güvenlik
+  koduna kapsam dışı değişiklik yapmaktan kaçınıldı.
+- **Durum:** tamamlandı.
+- **Sıradaki:** Faz 4 — T4.1 (hisse veri kaynağı kararı).
+
 ## 2026-06-18 · T3.9 — LLM maliyet/çağrı metriği + bütçe alarmı
 - **Görev(ler):** T3.9 (12 §4, 10 §7). **Faz 3'ün son görevi.**
 - **Ne yapıldı:**

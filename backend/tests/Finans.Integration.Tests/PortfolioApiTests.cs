@@ -342,7 +342,7 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         create.AvgCost.Should().Be(15m);
 
         // İlk işlemi (Buy 100 @ 10) → Buy 100 @ 30 olarak güncelle. Beklenen ort.: (100×30 + 100×20)/200 = 25
-        var firstTx = create.Transactions.Single(t => t.UnitPrice == 10m);
+        var firstTx = create.Transactions!.Single(t => t.UnitPrice == 10m);
         var resp = await client.PutAsJsonAsync(
             $"/api/holdings/{create.Id}/transactions/{firstTx.Id}",
             new TransactionRequest(TransactionType.Buy, 100m, 30m), Json);
@@ -363,7 +363,7 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
             new TransactionRequest(TransactionType.Buy, 100m, 20m));
 
         // İkinci işlemi sil → tek alış kalır (100 @ 10).
-        var secondTx = create.Transactions.Single(t => t.UnitPrice == 20m);
+        var secondTx = create.Transactions!.Single(t => t.UnitPrice == 20m);
         var resp = await client.DeleteAsync(
             $"/api/holdings/{create.Id}/transactions/{secondTx.Id}");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -381,7 +381,7 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
 
         var create = await CreateFundWithTransactionsAsync(client, name: "TX Son",
             new TransactionRequest(TransactionType.Buy, 50m, 10m));
-        var onlyTx = create.Transactions.Single();
+        var onlyTx = create.Transactions!.Single();
 
         var resp = await client.DeleteAsync(
             $"/api/holdings/{create.Id}/transactions/{onlyTx.Id}");
@@ -398,7 +398,7 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         var investorClient = ClientAs(Investor);
         var goldHolding = await investorClient.GetFromJsonAsync<HoldingDto>(
             $"/api/holdings/{GoldHolding}", Json);
-        var realTxId = goldHolding!.Transactions.First().Id;
+        var realTxId = goldHolding!.Transactions!.First().Id;
 
         var putResp = await admin.PutAsJsonAsync(
             $"/api/holdings/{GoldHolding}/transactions/{realTxId}",

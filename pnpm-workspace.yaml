@@ -1,6 +1,6 @@
 packages:
   - "packages/*"
   - "web"
-  - "mobile"
+  # - "mobile"   # Faz M'de açılacak — dizin henüz yok; pnpm "missing package" uyarısını önlemek için kapalı.
 allowBuilds:
   esbuild: true

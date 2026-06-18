@@ -115,7 +115,7 @@ try
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownNetworks.Clear();
+        options.KnownIPNetworks.Clear(); // ASPDEPR005: KnownNetworks yerine KnownIPNetworks
         options.KnownProxies.Clear();
     });
 
