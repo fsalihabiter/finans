@@ -20,6 +20,31 @@
 
 ---
 
+## 2026-06-18 · T3.5 — Çıktı güvenlik filtresi (kuşak-2 koruma)
+- **Görev(ler):** T3.5 (07 §7, CLAUDE.md §2).
+- **Ne yapıldı:**
+  1. `CommentaryOutputGuard` (saf, public static) — kart metnini ASCII'ye katlayıp (ç→c, ş→s, ı/İ→i…
+     diyakritiksiz LLM çıktısına dayanıklı) yasaklı **yönlendirme** (-malı/-meli ekli al/sat/geç/gir/
+     çık/ekle/tut/yatır, "tavsiye ederim", "mantıklı olur" çerçevesi, "hemen/şimdi al", "fırsatı
+     kaçırma") ve **gelecek tahmini** (yükselecek/düşecek/kazandıracak…) kalıplarını tarar; ayrıca
+     "zaman imi (önümüzdeki ay…) + kesin yön (yükselir)" kombinasyonu.
+  2. **Bağlam odaklı (07 §7 ilkesi):** meşru eğitim metni kesilmez — "satın alma gücü", "enflasyon
+     yükselirse", "değer kaybedebilir" TEMİZ kalır (koşul/olasılık ≠ tahmin).
+  3. `LlmCommentaryService.TryParseCards`: her kart eklenmeden önce filtreye sokulur; takılan kart
+     düşürülür (`guardBlocked` sayılır), hepsi düşerse fallback'e iner. Düşen kart sayısı `LogWarning`
+     ile görünür kılınır.
+- **Dokunulan dosyalar:**
+  - `backend/src/Finans.Application/Llm/CommentaryOutputGuard.cs` (yeni)
+  - `backend/src/Finans.Application/Llm/LlmCommentaryService.cs` (parse'a filtre + log)
+  - `backend/tests/Finans.Application.Tests/Llm/CommentaryOutputGuardTests.cs` (yeni)
+  - `backend/tests/Finans.Application.Tests/Llm/LlmCommentaryServiceTests.cs` (+2 servis testi)
+- **Test:** **+18 unit** (6 temiz/yanlış-pozitif yok + 9 yasak kalıp + 1 başlık/etiket tarama + 2 servis).
+  Application **127→145 yeşil**.
+- **Karar/Not:** "Yeni rakam uydurma" kalıp taramasıyla güvenilir saptanamadığı için (kartlar girdideki
+  yüzdeleri meşru anar) bilinçli kapsam dışı bırakıldı — kuşak-1 prompt + parse katmanına bırakıldı.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T3.6 (cache + son başarılı fallback).
+
 ## 2026-06-18 · OpenRouter yamasını commit'e hazırlama — gizli test hatası + repo temizliği
 - **Görev(ler):** ad-hoc (2026-06-08 yamasının kapanışı) — analiz turunda iki integration testinin
   kararlı kırmızı olduğu ve `tmp_diag/` takipsiz dump'ının repoya girebileceği tespit edildi.

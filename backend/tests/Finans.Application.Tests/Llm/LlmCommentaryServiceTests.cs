@@ -139,4 +139,45 @@ public class LlmCommentaryServiceTests
         Assert.Single(resp.Cards);
         Assert.Equal("Geçerli", resp.Cards[0].Title);
     }
+
+    [Fact]
+    public async Task Drops_card_with_forbidden_directive_but_keeps_clean_one()
+    {
+        // T3.5: ikinci kart "geçmelisin" (yönlendirme) → çıktı güvenlik filtresiyle düşer; temiz kart kalır.
+        var stub = new StubLlmClient(_ => LlmResult.Ok("""
+            {
+              "cards": [
+                { "emoji": "🧭", "title": "Yoğunlaşma",
+                  "body": "Portföyünün büyük kısmı iki varlıkta toplanmış; bu yoğunlaşmayı bilmek faydalı bir farkındalıktır." },
+                { "emoji": "🚀", "title": "Aksiyon",
+                  "body": "Bence bu noktada altından çıkıp hisseye geçmelisin, fırsat kaçmadan harekete geçmelisin artık." }
+              ]
+            }
+            """, 100, 40));
+
+        var resp = await BuildService(stub).GetCommentaryAsync(SimpleSummary());
+
+        Assert.Equal("llm", resp.Source);
+        Assert.Single(resp.Cards);
+        Assert.Equal("Yoğunlaşma", resp.Cards[0].Title);
+    }
+
+    [Fact]
+    public async Task Falls_back_when_every_card_is_blocked_by_output_guard()
+    {
+        // T3.5: tek kart hem öneri ("almalısın") hem tahmin ("yükselecek") içeriyor → düşer → fallback.
+        var stub = new StubLlmClient(_ => LlmResult.Ok("""
+            {
+              "cards": [
+                { "emoji": "🚀", "title": "Al",
+                  "body": "Bence şimdi altın almalısın çünkü kısa sürede ciddi biçimde yükselecek, kaçırma sakın." }
+              ]
+            }
+            """, 60, 20));
+
+        var resp = await BuildService(stub).GetCommentaryAsync(SimpleSummary());
+
+        Assert.Equal("fallback", resp.Source);
+        Assert.Equal("Yorum şu an üretilemedi", resp.Cards[0].Title);
+    }
 }

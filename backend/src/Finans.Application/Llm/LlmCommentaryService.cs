@@ -61,11 +61,18 @@ public sealed class LlmCommentaryService(
             return Fallback();
         }
 
-        if (TryParseCards(result.Text, out var cards) && cards.Count > 0)
+        var parsed = TryParseCards(result.Text, out var cards, out var guardBlocked);
+        if (guardBlocked > 0)
+            // Kuşak-2 koruma devreye girdi (T3.5 / 07 §7): prompt korkuluğunun kaçırdığı yönlendirme/
+            // tahmin kalıbı çıktıda yakalandı. Görünür kıl ki model kalitesi sapması fark edilsin.
+            logger.LogWarning(
+                "LLM yorumunda {Count} kart çıktı güvenlik filtresine (T3.5) takıldı ve düşürüldü.", guardBlocked);
+
+        if (parsed && cards.Count > 0)
             return new CommentaryResponse(cards, Source: "llm", GeneratedAtUtc: time.GetUtcNow().UtcDateTime);
 
         // Tanılama: ham yanıt anonim portföy yorumu (PII içermez). Hangi şema kuralında düştüğünü
-        // (JSON parse / cards yok / per-kart filtre) görmek için ilk 400 char'ı logluyoruz.
+        // (JSON parse / cards yok / per-kart filtre / güvenlik filtresi) görmek için ilk 400 char'ı logluyoruz.
         var preview = result.Text.Length > 400 ? result.Text[..400] + "…" : result.Text;
         logger.LogWarning("LLM yanıtı şemayı tutmadı; fallback kartı dönülüyor. Ham yanıt önizleme: {Preview}", preview);
         return Fallback();
@@ -99,12 +106,15 @@ public sealed class LlmCommentaryService(
     ///   <item>Tags non-string elemanlar atılır; ilk <see cref="CommentaryParseConstraints.MaxTags"/> alınır.</item>
     ///   <item>Bilinmeyen alanlar yutulur (forward compat).</item>
     /// </list>
-    /// Bütün JSON parse hatası yutulur → fallback'e düşülür (T3.4 birim testleriyle korunur; T3.5
-    /// çıktı güvenlik filtresi (yasaklı yönlendirme kalıbı) bunun üstüne gelecek.)
+    /// Bütün JSON parse hatası yutulur → fallback'e düşülür (T3.4 birim testleriyle korunur). Üstüne
+    /// T3.5 çıktı güvenlik filtresi (<see cref="CommentaryOutputGuard"/>) gelir: yasaklı yönlendirme/
+    /// tahmin kalıbı içeren kart düşürülür (07 §7). <paramref name="guardBlocked"/> kaç kartın bu
+    /// filtreyle düştüğünü döndürür (log/metrik için).
     /// </summary>
-    private static bool TryParseCards(string json, out IReadOnlyList<CommentaryCard> cards)
+    private static bool TryParseCards(string json, out IReadOnlyList<CommentaryCard> cards, out int guardBlocked)
     {
         cards = Array.Empty<CommentaryCard>();
+        guardBlocked = 0;
         try
         {
             using var doc = JsonDocument.Parse(json);
@@ -161,6 +171,14 @@ public sealed class LlmCommentaryService(
                         tagList.Add(s);
                     }
                     if (tagList.Count > 0) tags = tagList;
+                }
+
+                // T3.5 çıktı güvenlik filtresi (07 §7): yönlendirme/tahmin kalıbı içeren kartı düşür.
+                // Kuşak-1 prompt korkuluğunun kaçırdığı çıktıyı kullanıcıya ulaşmadan eler (CLAUDE.md §2).
+                if (CommentaryOutputGuard.IsForbidden(title!, body!, tags, out _))
+                {
+                    guardBlocked++;
+                    continue;
                 }
 
                 list.Add(new CommentaryCard(emoji!, title!, body!, meter, tags));
