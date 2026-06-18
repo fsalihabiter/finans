@@ -11,6 +11,15 @@
 2. T3.6 — Cache (portföy hash / günde bir; son başarılı fallback'i)
 3. T3.9 — LLM maliyet/çağrı metriği + bütçe alarmı (Prometheus)
 
+> ✅ **2026-06-08 — OpenRouter free reasoning yaması + dev HTTPS redirect kapatma:**
+> Belirti: "Genel Bakış yüklenemedi" + Analiz sayfasında hep fallback. Kök neden 1: dev'de
+> `Security:UseHttpsRedirection=true` → Vite proxy 307 zincirinde kesiliyordu (Development'ta false
+> yapıldı, prod compose Caddy TLS sonlandırıyor — etkilenmedi). Kök neden 2: free Llama 70B sürekli
+> upstream 429 (Venice), az kalabalık modeller (Laguna/Nemotron) ise gizli reasoning tokens harcayıp
+> content'i yarım bırakıyor. Yama: OpenRouter request'e `reasoning.exclude=true, enabled=false` +
+> `MaxOutputTokens` 1024→2048 + model `poolside/laguna-m.1:free` + parse fail durumunda ham yanıt
+> önizleme logu. **+1 regresyon testi. Application 127/127.** Detay: TASKLOG 2026-06-08.
+
 > ✅ **T3.1 ek (2026-06-05) — OpenRouter sağlayıcı eklendi:** Geliştirme aşamasında ücretsiz LLM
 > seçeneği. `OpenRouterLlmClient` (OpenAI-uyumlu `/v1/chat/completions`); JSON şema verilince
 > sistem promptuna şemayı ekler + `response_format=json_object`. `Llm:Provider="OpenRouter"` +

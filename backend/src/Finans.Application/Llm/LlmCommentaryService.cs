@@ -47,7 +47,11 @@ public sealed class LlmCommentaryService(
             SystemPrompt: CommentaryPrompts.SystemPrompt,
             UserPrompt: userPrompt,
             JsonSchema: CommentaryPrompts.CommentaryJsonSchema,
-            MaxOutputTokens: 1024,
+            // 2048 — OpenRouter free reasoning modelleri (Laguna/Nemotron) 1024'ün büyük kısmını
+            // gizli düşünmede tüketip content'i yarım bırakıyordu. 2048 + OpenRouterLlmClient'taki
+            // reasoning.exclude/enabled=false ikilisi content'in tamamlanmasını garantiler. Anthropic
+            // için fazlalık değil — 5 kart × ~150 char ≈ 750 token; rahat marj.
+            MaxOutputTokens: 2048,
             Temperature: 0.2m);
 
         var result = await llm.CompleteAsync(req, ct);
@@ -60,7 +64,10 @@ public sealed class LlmCommentaryService(
         if (TryParseCards(result.Text, out var cards) && cards.Count > 0)
             return new CommentaryResponse(cards, Source: "llm", GeneratedAtUtc: time.GetUtcNow().UtcDateTime);
 
-        logger.LogWarning("LLM yanıtı şemayı tutmadı; fallback kartı dönülüyor.");
+        // Tanılama: ham yanıt anonim portföy yorumu (PII içermez). Hangi şema kuralında düştüğünü
+        // (JSON parse / cards yok / per-kart filtre) görmek için ilk 400 char'ı logluyoruz.
+        var preview = result.Text.Length > 400 ? result.Text[..400] + "…" : result.Text;
+        logger.LogWarning("LLM yanıtı şemayı tutmadı; fallback kartı dönülüyor. Ham yanıt önizleme: {Preview}", preview);
         return Fallback();
     }
 

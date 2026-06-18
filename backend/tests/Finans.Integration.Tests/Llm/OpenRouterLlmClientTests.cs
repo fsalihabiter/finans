@@ -79,10 +79,12 @@ public class OpenRouterLlmClientTests
     [Fact]
     public async Task Forces_json_object_response_format_and_embeds_schema_into_system_prompt()
     {
-        HttpRequestMessage? captured = null;
+        // İçeriği responder İÇİNDE oku: çağrı dönünce OpenRouterLlmClient `using var http` ile
+        // request'i (ve Content'ini) dispose eder → sonradan okumak ObjectDisposedException verir.
+        string? bodyJson = null;
         var client = Create(req =>
         {
-            captured = req;
+            bodyJson = req.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
             return StubHttpMessageHandler.Json("""
                 {
                   "choices": [{ "message": { "content": "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"OK\",\"body\":\"x\"}]}" } }],
@@ -94,8 +96,7 @@ public class OpenRouterLlmClientTests
 
         await client.CompleteAsync(new LlmRequest("sys-only", "user", JsonSchema: schema));
 
-        var bodyJson = await captured!.Content!.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(bodyJson);
+        using var doc = JsonDocument.Parse(bodyJson!);
         var root = doc.RootElement;
 
         // response_format: json_object dayatıldı.
@@ -116,5 +117,32 @@ public class OpenRouterLlmClientTests
 
         r.Success.Should().BeFalse();
         r.ErrorReason.Should().Be("http_503");
+    }
+
+    /// <summary>
+    /// Regresyon kapısı: OpenRouter free "reasoning" modelleri (Laguna, Nemotron Super, DeepSeek-R…)
+    /// gizli düşünme tokens'ı harcayıp content'i yarım bırakıyordu — biz çağrıda <c>reasoning.exclude=true</c>
+    /// ve <c>enabled=false</c> ikilisini gönderiyoruz, böylece destekleyen modellerde reasoning kapanır,
+    /// desteklemeyenler alanı yutar (geniş uyum). Bu test alanın gerçekten body'ye yazıldığını korur.
+    /// </summary>
+    [Fact]
+    public async Task Sends_reasoning_exclude_and_disabled_to_neutralize_reasoning_models()
+    {
+        // İçeriği responder İÇİNDE oku (yukarıdaki testle aynı dispose nedeni).
+        string? bodyJson = null;
+        var client = Create(req =>
+        {
+            bodyJson = req.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return StubHttpMessageHandler.Json("""
+                { "choices": [{ "message": { "content": "ok" } }] }
+                """);
+        });
+
+        await client.CompleteAsync(new LlmRequest("sys", "user"));
+
+        using var doc = JsonDocument.Parse(bodyJson!);
+        var reasoning = doc.RootElement.GetProperty("reasoning");
+        reasoning.GetProperty("exclude").GetBoolean().Should().BeTrue();
+        reasoning.GetProperty("enabled").GetBoolean().Should().BeFalse();
     }
 }

@@ -57,6 +57,12 @@ public sealed class OpenRouterLlmClient(
               "objesi olsun. Şemanın dışında alan üretme, başka metin yazma.\n\nJSON şeması:\n" + schema
             : request.SystemPrompt;
 
+        // OpenRouter'daki bazı free modeller (Laguna, Nemotron Super, DeepSeek-R…) gizli "reasoning"
+        // tokens harcıyor → max_tokens'ın büyük kısmı sessiz düşünmede tüketiliyor, gerçek `content`
+        // yarım kalıp `finish_reason="length"` ile bitiyor → bizde "şemayı tutmadı" → fallback.
+        // `reasoning.exclude=true` reasoning'i yanıttan çıkarır, `enabled=false` destekleyen modellerde
+        // tamamen kapatır; ikisi birden geniş uyum sağlar. Bilinmeyen alanlar diğer modellerde sessizce
+        // yutulur.
         var body = new ChatCompletionsRequest(
             Model: opts.Model,
             MaxTokens: request.MaxOutputTokens,
@@ -68,7 +74,8 @@ public sealed class OpenRouterLlmClient(
             ],
             ResponseFormat: request.JsonSchema is not null
                 ? new ResponseFormatDto("json_object")
-                : null);
+                : null,
+            Reasoning: new ReasoningDto(Exclude: true, Enabled: false));
 
         try
         {
@@ -151,7 +158,8 @@ public sealed class OpenRouterLlmClient(
         [property: JsonPropertyName("max_tokens")] int MaxTokens,
         [property: JsonPropertyName("temperature")] double Temperature,
         [property: JsonPropertyName("messages")] IReadOnlyList<MessageDto> Messages,
-        [property: JsonPropertyName("response_format")] ResponseFormatDto? ResponseFormat);
+        [property: JsonPropertyName("response_format")] ResponseFormatDto? ResponseFormat,
+        [property: JsonPropertyName("reasoning")] ReasoningDto? Reasoning);
 
     private sealed record MessageDto(
         [property: JsonPropertyName("role")] string Role,
@@ -159,4 +167,11 @@ public sealed class OpenRouterLlmClient(
 
     private sealed record ResponseFormatDto(
         [property: JsonPropertyName("type")] string Type);
+
+    /// <summary>OpenRouter reasoning kontrol bloğu (07 §6). <c>exclude=true</c> reasoning'i yanıtın
+    /// content alanından çıkarır; <c>enabled=false</c> destekleyen modellerde reasoning'i tamamen
+    /// kapatır. Desteklemeyen modellerde her ikisi de sessizce yutulur — geniş uyumlu.</summary>
+    private sealed record ReasoningDto(
+        [property: JsonPropertyName("exclude")] bool Exclude,
+        [property: JsonPropertyName("enabled")] bool Enabled);
 }

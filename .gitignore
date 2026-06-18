@@ -16,6 +16,8 @@ artifacts/
 *.coverage
 *.coverlet.json
 coverage/
+# Geçici tanılama dump'ları (ör. LLM ham yanıt önizlemesi) — repoya girmez.
+tmp_diag/
 
 # ───────────── Node / JS / TS (web, mobile, packages) ─────────────
 node_modules/

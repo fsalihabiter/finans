@@ -20,6 +20,63 @@
 
 ---
 
+## 2026-06-18 · OpenRouter yamasını commit'e hazırlama — gizli test hatası + repo temizliği
+- **Görev(ler):** ad-hoc (2026-06-08 yamasının kapanışı) — analiz turunda iki integration testinin
+  kararlı kırmızı olduğu ve `tmp_diag/` takipsiz dump'ının repoya girebileceği tespit edildi.
+- **Ne yapıldı:**
+  1. `OpenRouterLlmClientTests` — `Forces_json_object_…` (:97) ve `Sends_reasoning_exclude_…` (:141)
+     testleri `captured.Content`'i çağrı bittikten SONRA okuyordu; `OpenRouterLlmClient` `using var http`
+     ile request'i (ve Content'ini) dispose ettiği için `ObjectDisposedException` fırlıyordu (gizliydi,
+     çünkü integration testleri önceki turlarda koşulmamıştı). Düzeltme: istek gövdesi responder lambda'sı
+     **içinde** okunup tampona alınır.
+  2. `backend/src/Finans.Api/tmp_diag/laguna.json` (geçici LLM ham yanıt dump'ı) silindi; `.gitignore`'a
+     `tmp_diag/` eklendi (gelecekte istemeden commit'i önler).
+- **Dokunulan dosyalar:**
+  - `backend/tests/Finans.Integration.Tests/Llm/OpenRouterLlmClientTests.cs`
+  - `.gitignore` (+`tmp_diag/`)
+  - silindi: `backend/src/Finans.Api/tmp_diag/`
+- **Test:** OpenRouter testleri **5/5 yeşil** (önceki 3/5). Yeşil-kapı (§12) geri kazanıldı; reasoning
+  yaması regresyon koruması artık gerçekten çalışıyor.
+- **Karar/Not:** —
+- **Durum:** tamamlandı.
+- **Sıradaki:** T3.5 (çıktı güvenlik filtresi).
+
+## 2026-06-08 · T3.1/T3.3 düzeltme — OpenRouter free reasoning modelleri + max_tokens
+- **Görev(ler):** ad-hoc (T3.1 + T3.3 kapsama). Belirti: kullanıcı Analiz sayfasında hep
+  "Yorum şu an üretilemedi" fallback'i görüyordu. Endpoint `200 OK` ama `source="fallback"`.
+- **Kök neden (canlı OpenRouter ile doğrulandı):**
+  1. Mevcut `meta-llama/llama-3.3-70b-instruct:free` (Venice provider) **sürekli upstream 429**
+     (paylaşımlı kota). `Llama→Kimi→Qwen→Gemma` hepsi aynı upstream 429'a düşüyor.
+  2. Az kalabalık modeller (Laguna M.1, Nemotron Super 120B) yanıt veriyor **ama** gizli "reasoning"
+     tokens harcıyor — `max_tokens=1024`'ün ~700'ünü düşünmede tüketip JSON content'i yarım
+     bırakıyor (`finish_reason="length"`). Üst katmandaki `TryParseCards` bozuk JSON'da fail → fallback.
+- **Düzeltme (iki dilim):**
+  1. `OpenRouterLlmClient`: chat completions request body'sine `"reasoning":{"exclude":true,"enabled":false}`
+     ekle. Destekleyen modeller reasoning'i kapatır, desteklemeyenler alanı sessizce yutar — geniş uyum.
+  2. `LlmCommentaryService.MaxOutputTokens`: 1024 → 2048. Reasoning bütçesini emen
+     modellerde content'in tamamlanmasını garantiler; Anthropic için fazlalık değil (5 kart ≈ 750 token).
+  3. User secrets: `Llm:Model = poolside/laguna-m.1:free` (az kalabalık, reasoning artık devre dışı).
+- **Yan düzeltme (`appsettings.Development.json`):** `Security:UseHttpsRedirection=false` (dev'de
+  Vite proxy düz HTTP'ye konuşurken 307 redirect tüm `/api/*` çağrılarını kesiyordu — "Genel Bakış
+  yüklenemedi" sorununun kaynağı buydu). Prod compose'da Caddy TLS sonlandırıyor, dokunulmadı.
+- **Tanılama logu (`LlmCommentaryService`):** Parse fail durumunda ham yanıtın ilk 400 char'ı
+  `LogWarning` ile basılır artık — gelecekteki LLM kalite sapmalarını sessiz fallback yerine görünür kılar.
+- **Dokunulan dosyalar:**
+  - `backend/src/Finans.Infrastructure/Llm/OpenRouterLlmClient.cs` (reasoning DTO + alan)
+  - `backend/src/Finans.Application/Llm/LlmCommentaryService.cs` (MaxOutputTokens 2048 + tanılama log)
+  - `backend/src/Finans.Api/appsettings.Development.json` (HTTPS redirect dev'de kapalı)
+  - `backend/tests/Finans.Integration.Tests/Llm/OpenRouterLlmClientTests.cs` (+1 regresyon testi:
+    reasoning.exclude/enabled gönderiliyor mu)
+- **Test:** Application **127/127 yeşil**. OpenRouter integration testi (+1, toplam 5) VS Api kilidi
+  bırakılınca koşulacak (mevcut akış). Build temiz.
+- **Karar/Not:** OpenRouter free tier kalıcı çözüm değil — kullanıcıya net sunuldu: (a) bu yama
+  (ücretsiz, kırılgan, dev için yeterli), (b) OpenRouter'a $5 kredi → paylaşımlı kotadan çık,
+  (c) Anthropic key + Provider'ı geri çevir (CLAUDE.md varsayılan tasarımı). Kullanıcı (a)'yı seçti.
+  Eğer Laguna da Venice rate-limit'e takılırsa Nemotron 30B/120B (Nvidia provider, daha sakin) dene.
+- **Durum:** tamamlandı (yama). Backend restart sonrası kullanıcı tarafından canlı doğrulanacak.
+- **Sıradaki:** T3.5 (çıktı güvenlik filtresi — yasaklı yönlendirme kalıbı). Bu yamanın faydası:
+  modelin gerçekten yorum üretebildiği durumlarda T3.5 filtresi anlamlı bir şey üzerinde çalışacak.
+
 ## 2026-06-05 · T3.1 ek — OpenRouter sağlayıcı (ücretsiz dev katmanı)
 - **Görev(ler):** T3.1'in genişletilmesi. Geliştirme aşamasında Anthropic kredi maliyetinden kaçınmak
   için **ücretsiz** bir sağlayıcı (`Llm:Provider="OpenRouter"`). Soyutlama (`ILlmClient`) zaten
