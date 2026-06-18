@@ -18,8 +18,12 @@ namespace Finans.Application.Llm;
 public sealed class LlmCommentaryService(
     ILlmClient llm,
     ILogger<LlmCommentaryService> logger,
-    TimeProvider time) : ILlmCommentaryService
+    TimeProvider time,
+    // T3.9 metrik portu opsiyonel: yapılandırılmamışsa (testler/dev) no-op — servis çalışmaya devam eder.
+    ILlmMetrics? metrics = null) : ILlmCommentaryService
 {
+    private readonly ILlmMetrics _metrics = metrics ?? NoopLlmMetrics.Instance;
+
     /// <summary>Anonim özet → user-prompt JSON. Alan adları/sıralamaları deterministik (cache friendly).</summary>
     private static readonly JsonSerializerOptions PromptJsonOpts = new(JsonSerializerDefaults.Web)
     {
@@ -57,11 +61,13 @@ public sealed class LlmCommentaryService(
         var result = await llm.CompleteAsync(req, ct);
         if (!result.Success)
         {
+            _metrics.RecordCall(success: false, inputTokens: 0, outputTokens: 0, guardBlocked: 0);
             logger.LogInformation("LLM yorumu üretilemedi ({Reason}); fallback kartı dönülüyor.", result.ErrorReason);
             return Fallback();
         }
 
         var parsed = TryParseCards(result.Text, out var cards, out var guardBlocked);
+        _metrics.RecordCall(success: true, result.InputTokens, result.OutputTokens, guardBlocked);
         if (guardBlocked > 0)
             // Kuşak-2 koruma devreye girdi (T3.5 / 07 §7): prompt korkuluğunun kaçırdığı yönlendirme/
             // tahmin kalıbı çıktıda yakalandı. Görünür kıl ki model kalitesi sapması fark edilsin.

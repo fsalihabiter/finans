@@ -32,6 +32,7 @@ public sealed class CachedLlmCommentaryService(
     LlmCommentaryService inner,
     IAppCache cache,
     ICurrentUser currentUser,
+    ILlmMetrics metrics,
     ILogger<CachedLlmCommentaryService> logger) : ILlmCommentaryService
 {
     /// <summary>Aynı portföy için taze yorum TTL'i — "günde bir" (NFR-9).</summary>
@@ -60,14 +61,20 @@ public sealed class CachedLlmCommentaryService(
         // 1) Aynı portföy + 24s içinde → cache'ten (LLM çağrısı yok).
         var cached = await cache.GetAsync<CommentaryResponse>(key, ct);
         if (cached is not null)
+        {
+            metrics.RecordServed("cache");
             return cached;
+        }
 
         // 2) Cache miss → tek-uçuş üret (eşzamanlı isteklerde tek LLM çağrısı; stampede koruması).
         return await cache.SingleFlightAsync(key, async innerCt =>
         {
             var again = await cache.GetAsync<CommentaryResponse>(key, innerCt);
             if (again is not null)
+            {
+                metrics.RecordServed("cache");
                 return again;
+            }
 
             var resp = await inner.GetCommentaryAsync(summary, innerCt);
 
@@ -76,6 +83,7 @@ public sealed class CachedLlmCommentaryService(
                 // Başarılı: hem taze anahtara (24s) hem "son başarılı"ya (30g) yaz.
                 await cache.SetAsync(key, resp, FreshTtl, innerCt);
                 await cache.SetAsync(lastKey, resp, LastSuccessTtl, innerCt);
+                metrics.RecordServed("llm");
                 return resp;
             }
 
@@ -83,11 +91,13 @@ public sealed class CachedLlmCommentaryService(
             var last = await cache.GetAsync<CommentaryResponse>(lastKey, innerCt);
             if (last is not null)
             {
+                metrics.RecordServed("cache_last");
                 logger.LogInformation("LLM yorumu üretilemedi; son başarılı yorum (cache) gösteriliyor.");
                 return last with { Source = "cache" };
             }
 
             // Son başarılı da yok → düz fallback kartı (07 §5-b).
+            metrics.RecordServed("fallback");
             return resp;
         }, ct);
     }

@@ -59,6 +59,7 @@ try
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
             .AddMeter(CacheMetrics.MeterName)
+            .AddMeter(Finans.Infrastructure.Llm.LlmMetrics.MeterName) // T3.9: LLM çağrı/maliyet metriği
             .AddPrometheusExporter());
 
     // Enum'lar JSON'da string (allow-list adlarıyla, 04 §1: "Gold"/"TRY"). camelCase varsayılan.

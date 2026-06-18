@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-06-18 · T3.9 — LLM maliyet/çağrı metriği + bütçe alarmı
+- **Görev(ler):** T3.9 (12 §4, 10 §7). **Faz 3'ün son görevi.**
+- **Ne yapıldı:**
+  1. `ILlmMetrics` portu (Application) + `NoopLlmMetrics` (test/dev no-op) + `LlmMetrics`
+     (Infrastructure, Meter `Finans.Llm`). Sayaçlar: `finans_llm_calls_total{result}`,
+     `finans_llm_tokens_total{direction}` (maliyet proxy'si), `finans_llm_guard_blocked_total` (T3.5),
+     `finans_llm_served_total{source}` (llm/cache/cache_last/fallback — cache ne kadar işe yarıyor).
+  2. İç servis (`LlmCommentaryService`) her LLM çağrısında çağrı+token+guard sayar; dekoratör
+     (`CachedLlmCommentaryService`) istek başına sunulan kaynağı sayar.
+  3. Program.cs OTel'e `AddMeter(LlmMetrics.MeterName)` → mevcut Prometheus `/metrics` exporter'ı toplar.
+  4. `compose/prometheus/rules.yml`: `finans-llm` grubu + 3 alarm — LlmCallBudgetBurn (>60 çağrı/1s),
+     LlmTokenBudgetBurn (>200k token/1s), LlmFallbackRateHigh (>%50 fallback/15dk). Eşikler **dev**
+     katmanı; ölçek/lansmanla güncellenecek.
+- **Dokunulan dosyalar:**
+  - `backend/src/Finans.Application/Llm/ILlmMetrics.cs` (yeni)
+  - `backend/src/Finans.Infrastructure/Llm/LlmMetrics.cs` (yeni)
+  - `backend/src/Finans.Application/Llm/LlmCommentaryService.cs` (opsiyonel metrik + RecordCall)
+  - `backend/src/Finans.Application/Llm/CachedLlmCommentaryService.cs` (RecordServed)
+  - `backend/src/Finans.Infrastructure/DependencyInjection.cs` (ILlmMetrics singleton + decorator'a geç)
+  - `backend/src/Finans.Api/Program.cs` (AddMeter)
+  - `compose/prometheus/rules.yml` (3 bütçe alarmı)
+  - `backend/tests/Finans.Application.Tests/Llm/LlmMetricsTests.cs` (yeni)
+- **Test:** **+6 unit** (iç: başarı+token / guard sayımı / başarısız; dekoratör: llm→cache / cache_last /
+  fallback) + commentary integration **2/2** (host OTel meter kaydı doğrulandı). Application **150→156 yeşil**.
+- **Karar/Not:** Metrik kaydı katmana göre bölündü — token/çağrı maliyeti iç serviste (LlmResult orada),
+  kaynak dağılımı dekoratörde (cache kararı orada). Bütçe eşikleri dev için kaba; Grafana'da panel +
+  Alertmanager dağıtımı Faz 5'e (12 §9).
+- **Durum:** tamamlandı. **🎉 Faz 3 DoD karşılandı** (kartlar LLM'den; asla al/sat/yükselir [T3.5];
+  hata çökertmiyor [fallback]; cache çalışıyor [T3.6]; maliyet görünür [T3.9]).
+- **Sıradaki:** küçük temizlik (derleme uyarıları + pnpm-workspace mobile referansı), sonra Faz 4.
+
 ## 2026-06-18 · T3.6 — LLM yorum cache + "son başarılı" fallback
 - **Görev(ler):** T3.6 (07 §6, 10 §3-4).
 - **Ne yapıldı:**

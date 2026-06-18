@@ -77,7 +77,7 @@ public class CachedLlmCommentaryServiceTests
         var inner = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
         var svc = new CachedLlmCommentaryService(
             inner, new FakeAppCache(), new FixedCurrentUser(Guid.NewGuid()),
-            NullLogger<CachedLlmCommentaryService>.Instance);
+            NoopLlmMetrics.Instance, NullLogger<CachedLlmCommentaryService>.Instance);
         return (svc, client);
     }
 

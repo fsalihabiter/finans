@@ -116,6 +116,9 @@ public static class DependencyInjection
             services.AddSingleton<ILlmClient, NoopLlmClient>();
         }
 
+        // T3.9: LLM kullanım/maliyet metriği (Meter "Finans.Llm" → OTel/Prometheus). Singleton.
+        services.AddSingleton<ILlmMetrics, LlmMetrics>();
+
         // T3.3: portföy yorum orkestrasyonu (Application'da, ILlmClient soyutlamasının üstünde).
         // LLM yapılandırılmamışsa NoopLlmClient → her çağrı fallback metin kartı döner (07 §5).
         // T3.6: cache + "son başarılı" fallback dekoratörü (FX/enflasyon/fiyat decorator deseni, T2.7):
@@ -125,6 +128,7 @@ public static class DependencyInjection
             sp.GetRequiredService<LlmCommentaryService>(),
             sp.GetRequiredService<IAppCache>(),
             sp.GetRequiredService<ICurrentUser>(),
+            sp.GetRequiredService<ILlmMetrics>(),
             sp.GetRequiredService<ILogger<CachedLlmCommentaryService>>()));
 
         return services;

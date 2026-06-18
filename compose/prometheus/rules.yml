@@ -41,3 +41,44 @@ groups:
         annotations:
           summary: "Finans API kapalı"
           description: "Prometheus 2 dakikadır api:8080/metrics'i scrape edemiyor."
+
+  # ── LLM bütçe/maliyet alarmları (T3.9 — 12 §4, 10 §7) ──────────────────────────
+  # Eşikler GELİŞTİRME katmanına göredir (ücretsiz/düşük kullanım; cache "günde bir" tetikler).
+  # Sürekli yüksek çağrı/token = cache çalışmıyor, döngü ya da kötüye kullanım → maliyet riski.
+  # Lansman/ölçek değiştikçe eşikleri güncelle.
+  - name: finans-llm
+    interval: 30s
+    rules:
+      - alert: LlmCallBudgetBurn
+        # Son 1 saatte 60'tan fazla LLM çağrısı (cache ile beklenen çok daha düşük).
+        expr: sum(increase(finans_llm_calls_total[1h])) > 60
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM çağrı bütçesi aşıldı"
+          description: "Son 1 saatte 60+ LLM çağrısı. Cache (T3.6) çalışıyor mu / döngü/kötüye kullanım var mı bak."
+
+      - alert: LlmTokenBudgetBurn
+        # Son 1 saatte 200k token (maliyet proxy'si).
+        expr: sum(increase(finans_llm_tokens_total[1h])) > 200000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM token bütçesi aşıldı"
+          description: "Son 1 saatte 200k+ token. Maliyet beklenenin üstünde — model/prompt boyutu/çağrı sıklığını gözden geçir."
+
+      - alert: LlmFallbackRateHigh
+        # Sunulan yorumların %50'den fazlası fallback/cache_last ise LLM sağlığı bozuk demektir.
+        expr: |
+          (sum(rate(finans_llm_served_total{source=~"fallback|cache_last"}[15m])) or vector(0))
+            /
+          clamp_min(sum(rate(finans_llm_served_total[15m])), 1e-9)
+            > 0.5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM yorumları çoğunlukla fallback"
+          description: "Son 15 dk yorumların yarıdan fazlası fallback/son-başarılı. LLM sağlayıcı erişimi/anahtar/şema sorunu olabilir."
