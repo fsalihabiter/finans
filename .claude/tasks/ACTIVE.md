@@ -7,10 +7,15 @@
 **Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ Faz 2 · ✅ **Faz 3 BİTTİ (LLM yorum katmanı — T3.1→T3.9)** → **Faz 4 — Hisse Temel Analiz**
 
 ## Sıradaki (öncelik sırası)
-1. **T4.1** — Hisse veri kaynağı kararı (önce ABD; BIST maliyet değerlendirmesi)
-2. T4.2 — `StockDataService` + `GET /api/stocks/{symbol}/metrics`
-3. T4.3 — `LlmStockExplainService` + `GET /.../explain` (tavsiye YOK)
-4. T4.4 — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
+1. **T4.2** — `IStockDataProvider`/`StockDataService` + `GET /api/stocks/{symbol}/metrics` (Finnhub)
+2. T4.3 — `LlmStockExplainService` + `GET /.../explain` (tavsiye YOK)
+3. T4.4 — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
+
+> ✅ **T4.1 bitti (2026-06-20) — Veri kaynağı kararı: Finnhub (ABD).** Ücretsiz katman 60 çağrı/dk;
+> `GET /stock/metric?metric=all` 4 metriğimizi verir (F/K=peTTM, PD/DD=pb, temettü=dividendYield…, kâr
+> büyümesi=epsGrowth…); fiyat/ad için `/quote`+`/stock/profile2`. Anahtar env/User Secrets'te (§13).
+> Sektör bağlamı MVP'de kaba eşiklerle KODDA. Desen = Faz 2 `IPriceProvider` (typed HttpClient+DI+stub
+> test+cache). BIST ertelendi. Kesin alan adları T4.2'de canlı doğrulanacak. Detay: 08-BACKLOG Faz 4 notu.
 
 > ✅ **2026-06-18 — Faz 3 kapanışı + analiz turu temizliği:** T3.5 (çıktı güvenlik filtresi —
 > `CommentaryOutputGuard`, bağlam odaklı yasaklı kalıp taraması), T3.6 (cache + son başarılı fallback,

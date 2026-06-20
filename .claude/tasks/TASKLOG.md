@@ -20,6 +20,25 @@
 
 ---
 
+## 2026-06-20 · T4.1 — Hisse veri kaynağı kararı: Finnhub (ABD)
+- **Görev(ler):** T4.1 (Faz 4 başlangıcı — veri kaynağı kararı).
+- **Ne yapıldı:**
+  1. Faz 4 için hisse fundamentals sağlayıcısı **Finnhub** seçildi (ücretsiz katman, ABD hisseleri).
+     Doğrulama (web): ücretsiz katman **60 çağrı/dk**, temel fundamentals dahil, `/stock/metric`
+     erişilebilir (yalnız "Financials As Reported" premium — ihtiyacımız değil).
+  2. 4 metriğimizin eşlemesi belirlendi: F/K=`peTTM`, PD/DD=`pb`, temettü verimi=`dividendYieldIndicatedAnnual`,
+     kâr büyümesi=`epsGrowthTTMYoy` — tek `GET /stock/metric?metric=all` çağrısı. Fiyat/ad/borsa için
+     `/quote` + `/stock/profile2`. Sektör bağlamı (above/high/low/positive) MVP'de **kaba eşiklerle KODDA**.
+  3. Uygulama deseni: Faz 2 `IPriceProvider` ile aynı — `IStockDataProvider` + typed HttpClient + DI +
+     stub HTTP testler + sembol/snapshot bazlı cache (07 §6). BIST **ertelendi** (ücretli/zor, CLAUDE.md §3.3).
+- **Dokunulan dosyalar:** `.claude/docs/08-BACKLOG.md` (T4.1 [x] + karar notu + üst durum göstergesi),
+  `.claude/tasks/ACTIVE.md`, `.claude/tasks/TASKLOG.md`
+- **Test:** yok (karar görevi — kod değişmedi). Kesin alan adları T4.2'de canlı yanıtla doğrulanacak;
+  null/boş alan → "veri yok" fallback (07 §5).
+- **Karar/Not:** Anahtar koda gömülmez → env/User Secrets (§13). Ücretsiz katman ToS dev kullanımı için yeterli.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — `StockDataService` + `GET /api/stocks/{symbol}/metrics` (Finnhub, stub testli).
+
 ## 2026-06-18 · Temizlik — derleme uyarıları + pnpm-workspace mobile referansı
 - **Görev(ler):** ad-hoc (analiz turu önerisi #6).
 - **Ne yapıldı:**

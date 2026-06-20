@@ -18,11 +18,12 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 3: LLM yorum katmanı** (artık altyapı kapısı tamam — Faz 2 bitti.)
-(Faz 0 ✅ · Faz 1 ✅ · **T2.1→T2.6 ✅** fiyat zinciri uçtan uca + Web · **T2.7 ✅** dağıtık cache (`IAppCache`,
-Redis-opsiyonel) + single-flight + hit/miss metrik · **T2.8 ✅** Gözlemlenebilirlik (Seq + Prometheus + Grafana,
-OTel RED + HttpClient + Runtime + `Finans.Cache` Meter, "Genel Bakış" dashboard, 3 alarm) ·
-**T2.9 ✅** Caddy TLS reverse proxy + ASP.NET RateLimiter). **Faz 2 işlevsel + dağıtım/gözlem DoD karşılandı.**
+**Sıradaki adım → FAZ 4: Hisse Temel Analiz.** Faz 0 ✅ · Faz 1 ✅ · Faz 2 ✅ ·
+**Faz 3 ✅** (LLM yorum katmanı T3.1→T3.9 — sağlayıcı/anonimleştirme/prompt+şema/
+güvenli parse/çıktı güvenlik filtresi/cache+fallback/maliyet metriği). **T4.1 ✅
+karar: veri kaynağı Finnhub (ABD)** — bkz. Faz 4 tablosu altındaki karar notu.
+**Sıradaki somut görev: T4.2** (`IStockDataProvider`/`StockDataService` +
+`GET /api/stocks/{symbol}/metrics`).
 
 ---
 
@@ -153,13 +154,27 @@ rate limit + TLS proxy ayakta**.
 
 | ID | Görev | Bağımlılık | Doküman |
 |----|-------|-----------|---------|
-| T4.1 | Hisse veri kaynağı kararı (önce ABD; BIST maliyet değerlendirmesi) | Faz 3 | `CLAUDE.md` §3.3, `ROADMAP` Faz4 |
+| T4.1 | Hisse veri kaynağı kararı → **Finnhub** (ABD; BIST ertelendi) | Faz 3 | `CLAUDE.md` §3.3, `04` §7 | [x] (2026-06-20) |
 | T4.2 | `StockDataService` + `GET /api/stocks/{symbol}/metrics` | T4.1 | `04` §7 |
 | T4.3 | `LlmStockExplainService` + `GET /.../explain` (tavsiye yok) | T4.2, T3.1 | `07` §8 |
 | T4.4 | **Web:** sembol arama + `MetricGrid` + açıklama kartları + disclaimer | T4.2,T4.3 | `13` §4 |
 
 **Faz 4 DoD:** Metrik çekiliyor + LLM çerçeve sunarak açıklıyor; veri yoksa
 anlamlı hata.
+
+> ✅ **T4.1 kararı (2026-06-20) — Veri kaynağı: Finnhub (ABD).** Ücretsiz katman
+> **60 çağrı/dk**, anahtar gerekir (env/User Secrets — koda gömülmez, §13). Tek
+> `GET /stock/metric?symbol={S}&metric=all` çağrısı 4 metriğimizi de verir:
+> F/K = `metric.peTTM` (veya `peNormalizedAnnual`), PD/DD = `metric.pb`, temettü
+> verimi = `metric.dividendYieldIndicatedAnnual` (veya `currentDividendYieldTTM`),
+> kâr büyümesi = `metric.epsGrowthTTMYoy` (veya `epsGrowth5Y`). Fiyat/ad/borsa
+> için `GET /quote` + `GET /stock/profile2`. **Kesin alan adları T4.2'de canlı
+> yanıtla doğrulanacak** (boş/null gelen alan → "veri yok", §07 §5 fallback).
+> Sektör bağlamı (`above/high/low/positive`) MVP'de **kaba eşiklerle KODDA**
+> türetilir (ücretsiz katmanda sektör ortalaması yok); ileride zenginleştirilir.
+> Desen Faz 2 `IPriceProvider` ile aynı: `IStockDataProvider` + typed HttpClient +
+> DI + stub HTTP testler + cache (07 §6: sembol+snapshot bazlı, NFR-9). **BIST
+> ertelendi** (güvenilir veri ücretli/zor — CLAUDE.md §3.3); Faz 4+ değerlendirme.
 
 ---
 
