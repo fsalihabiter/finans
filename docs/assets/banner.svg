@@ -1,0 +1,92 @@
+<svg width="1280" height="320" viewBox="0 0 1280 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nirengi — portfolio tracking and investment education">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1280" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14110D"/>
+      <stop offset="0.55" stop-color="#1A1610"/>
+      <stop offset="1" stop-color="#221C13"/>
+    </linearGradient>
+    <linearGradient id="goldline" x1="0" y1="0" x2="1280" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0B255" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#E0B255"/>
+      <stop offset="1" stop-color="#E0B255" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.78" cy="0.4" r="0.55">
+      <stop offset="0" stop-color="#E0B255" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#E0B255" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="320" rx="16" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="16" fill="url(#glow)"/>
+  <rect x="0.5" y="0.5" width="1279" height="319" rx="15.5" stroke="#322B22"/>
+
+  <!-- triangulation motif (nirengi = survey triangulation point) -->
+  <g opacity="0.9">
+    <!-- network lines -->
+    <g stroke="#322B22" stroke-width="1.5">
+      <line x1="880" y1="236" x2="1010" y2="96"/>
+      <line x1="1010" y1="96" x2="1148" y2="210"/>
+      <line x1="1148" y1="210" x2="880" y2="236"/>
+      <line x1="1010" y1="96" x2="1105" y2="52"/>
+      <line x1="1148" y1="210" x2="1105" y2="52"/>
+      <line x1="880" y1="236" x2="962" y2="286"/>
+      <line x1="1148" y1="210" x2="962" y2="286"/>
+    </g>
+    <g stroke="#CAA05A" stroke-width="1.5" opacity="0.65">
+      <line x1="880" y1="236" x2="1010" y2="96"/>
+      <line x1="1010" y1="96" x2="1148" y2="210"/>
+    </g>
+    <!-- sparkline through the network -->
+    <polyline points="856,258 918,214 968,232 1030,150 1082,176 1160,88" stroke="#E0B255" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- nodes -->
+    <g fill="#14110D" stroke="#E0B255" stroke-width="2.5">
+      <circle cx="880" cy="236" r="7"/>
+      <circle cx="1010" cy="96" r="7"/>
+      <circle cx="1148" cy="210" r="7"/>
+    </g>
+    <g fill="#5FC9A0">
+      <circle cx="1105" cy="52" r="4.5"/>
+      <circle cx="962" cy="286" r="4.5"/>
+    </g>
+    <circle cx="1160" cy="88" r="5.5" fill="#E0B255"/>
+    <!-- triangulation station symbol: triangle with center dot -->
+    <g transform="translate(1010,96)">
+      <path d="M0 -22 L20 12 L-20 12 Z" fill="none" stroke="#E0B255" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle r="3.5" fill="#E0B255"/>
+    </g>
+  </g>
+
+  <!-- wordmark -->
+  <g font-family="Georgia, 'Times New Roman', serif">
+    <text x="84" y="150" font-size="84" font-weight="600" letter-spacing="-2" fill="#F3EDE2">Nirengi</text>
+  </g>
+  <rect x="88" y="176" width="150" height="3" rx="1.5" fill="url(#goldline)"/>
+  <g font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+    <text x="86" y="216" font-size="21" font-weight="500" fill="#A89C89">Portfolio tracking &amp; investment education</text>
+    <text x="86" y="248" font-size="15" fill="#8B8070">Deterministic math in code · LLM for explanation only · Never investment advice</text>
+  </g>
+
+  <!-- bottom asset-class ticks -->
+  <g font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600">
+    <g>
+      <circle cx="92" cy="288" r="4" fill="#E0B255"/>
+      <text x="104" y="292" fill="#A89C89">Gold</text>
+    </g>
+    <g>
+      <circle cx="164" cy="288" r="4" fill="#7FB7D6"/>
+      <text x="176" y="292" fill="#A89C89">FX</text>
+    </g>
+    <g>
+      <circle cx="220" cy="288" r="4" fill="#B98AD9"/>
+      <text x="232" y="292" fill="#A89C89">Pension (BES)</text>
+    </g>
+    <g>
+      <circle cx="342" cy="288" r="4" fill="#5FC9A0"/>
+      <text x="354" y="292" fill="#A89C89">Stocks</text>
+    </g>
+    <g>
+      <circle cx="416" cy="288" r="4" fill="#9CA7A0"/>
+      <text x="428" y="292" fill="#A89C89">Cash</text>
+    </g>
+  </g>
+</svg>

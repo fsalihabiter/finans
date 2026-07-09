@@ -2,7 +2,7 @@
   "name": "finans-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Finans / Portföy uygulaması — monorepo (web öncelikli, mobil sonra, paylaşılan @finans/shared)",
+  "description": "Nirengi — portfolio tracking & investment education app. Monorepo: .NET 10 API + React web (primary) + shared @finans/shared package (mobile later).",
   "packageManager": "pnpm@11.5.0",
   "engines": {
     "node": ">=20"
