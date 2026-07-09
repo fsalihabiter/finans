@@ -1,272 +1,283 @@
-# ROADMAP.md — Detaylı Faz Planı
+# ROADMAP.md — Detailed Phase Plan
 
-> Bu dosya `CLAUDE.md` § 4'teki özet yol haritasının ayrıntılı halidir. Her faz
-> için: amaç, görevler (backend / mobil / diğer), kullanılacak araçlar,
-> teslimat ve **tamamlanma kriteri** (Definition of Done) yer alır.
-> İlke: **her fazın sonunda çalışan bir şey olmalı.**
+> This file is the detailed version of the summary roadmap in `CLAUDE.md` § 4.
+> For each phase: goal, tasks (backend / mobile / other), tools to use,
+> deliverable and **Definition of Done**.
+> Principle: **every phase must end with something that works.**
 
-> 🔄 **GÜNCELLEME — Frontend sırası: WEB ÖNCELİKLİ.** Proje artık monorepo'dur
-> (`web/`, `mobile/`, `backend/`, `packages/shared/`). Birincil yüzey **ReactJS
-> + Vite web uygulamasıdır** (`.claude/docs/13-WEB-FRONTEND.md`). Aşağıdaki her
-> fazdaki **"Mobil görevleri"** bölümlerini artık **"Frontend görevleri — önce
-> WEB"** olarak oku; aynı ekran/akış önce web'de yapılır. **Mobil (React Native)**
-> aynı API ve `@finans/shared` paketi üzerine **ayrı bir kol** olarak, web
-> parası oturduktan sonra (bkz. "FAZ M") eklenir. Güncel uygulanabilir görev
-> listesi: `.claude/docs/08-BACKLOG.md`.
-
----
-
-## Genel Bakış
-
-| Faz | Ad | Tahmini Süre | Sonuç |
-|-----|----|--------------|-------|
-| 0 | Hazırlık & İskelet | ~1 hafta | Boş ama çalışan iki proje + şema |
-| 1 | Portföy Takip MVP | ~2-4 hafta | Elle veri ile çalışan portföy (tek başına ürün) |
-| 2 | Canlı Fiyat & Bilgilendirme | ~2-3 hafta | Otomatik güncel değer + eğitici notlar |
-| 3 | LLM Yorum Katmanı | ~2-3 hafta | Portföyü eğitici dille yorumlayan analiz |
-| 4 | Hisse Temel Analiz | Veri kaynağına bağlı | Metrik çek + LLM açıklasın |
-| 5 | Ötesi & Ürünleşme | — | Yeni varlıklar, simülasyon, gelir modeli |
-
-**Bağımlılık zinciri:** 0 → 1 → 2 → 3 → 4 → 5. Faz 3, Faz 1'in hesap çıktısına
-muhtaç (LLM o sayıları yorumlar). Faz 4 bağımsız ilerleyebilir ama veri kaynağı
-kararı beklemeli.
-
-> ⚠️ **Tavsiye değil kuralı:** Faz 3 ve 4'e geçmeden `CLAUDE.md` § 2'yi tekrar
-> oku. Bu fazların çıktısı asla "al/sat/yükselir" dememeli.
+> 🔄 **UPDATE — Frontend order: WEB FIRST.** The project is now a monorepo
+> (`web/`, `mobile/`, `backend/`, `packages/shared/`). The primary surface is the
+> **ReactJS + Vite web app** (`.claude/docs/13-WEB-FRONTEND.md`). Read every
+> **"Mobile tasks"** section below as **"Frontend tasks — WEB first"**; each
+> screen/flow is built on the web first. **Mobile (React Native)** is added later
+> as a **separate branch of work** on top of the same API and the
+> `@finans/shared` package (see "PHASE M"), once the web side has settled.
+> The current actionable task list lives in `.claude/docs/08-BACKLOG.md`.
 
 ---
 
-## FAZ 0 — Hazırlık & İskelet (~1 hafta)
+## Overview
 
-**Amaç:** İki projeyi de ayağa kaldırmak, veritabanı şemasını kesinleştirmek ve
-React Native'e ısınmak. Kod yazmaktan çok "boru hattını" kurmak.
+| Phase | Name | Estimated Duration | Outcome | Status |
+|-------|------|--------------------|---------|:------:|
+| 0 | Preparation & Skeleton | ~1 week | Two empty-but-running projects + schema | ✅ done |
+| 1 | Portfolio Tracking MVP | ~2–4 weeks | Working portfolio with manual data (a standalone product) | ✅ done |
+| 2 | Live Prices & Notes | ~2–3 weeks | Auto-updated values + educational notes | ✅ done |
+| 3 | LLM Commentary Layer | ~2–3 weeks | Analysis that explains the portfolio in educational language | ✅ done |
+| 4 | Stock Fundamentals | Depends on data source | Fetch metrics + let the LLM explain them | 🚧 in progress |
+| 5 | Beyond & Productization | — | New asset classes, simulation, revenue model | 🔜 |
 
-### Backend görevleri
-- .NET Web API projesi oluştur (boş iskelet).
-- Katman yapısını kur: `API` (controller) / `Application` (servis-iş mantığı) /
-  `Domain` (entity) / `Infrastructure` (veritabanı erişimi).
-- ORM seç ve kur (Entity Framework Core önerilir).
-- **Veritabanı şemasını tasarla ve migration oluştur** (aşağıdaki taslak).
-- Tek bir test endpoint'i: `GET /api/health` → `{ "status": "ok" }`.
+**Dependency chain:** 0 → 1 → 2 → 3 → 4 → 5. Phase 3 depends on Phase 1's
+calculation output (the LLM comments on those numbers). Phase 4 can proceed
+independently but had to wait for the data-source decision (made: Finnhub, US
+stocks; BIST deferred).
 
-### Mobil görevleri (öğrenme ağırlıklı)
-- React Native ortamını kur (Expo ile başlamak yeni başlayan için en kolayı).
-- Mini deneme uygulaması yap:
-  1. İki-üç ekran arası geçiş (navigation).
-  2. `.NET`'teki `/api/health` endpoint'inden veri çekip ekranda gösterme.
-  3. Bir liste render etme (FlatList).
-- `DESIGN.md` § 6'daki tema token dosyasını (`theme/colors.ts`) oluştur.
+> ⚠️ **The "not advice" rule:** before starting Phases 3 and 4, re-read
+> `CLAUDE.md` § 2. The output of these phases must never say "buy / sell /
+> it will go up."
 
-### Diğer
-- Git deposu + `.gitignore` (build çıktıları, secret'lar hariç).
-- API anahtarları için secret yönetimi planı (henüz anahtar yok ama yeri hazır).
+---
 
-### Veritabanı şeması taslağı (kesinleştir)
+## PHASE 0 — Preparation & Skeleton (~1 week) ✅
+
+**Goal:** Get both projects standing, finalize the database schema, and warm up
+to the frontend stack. Less about writing code, more about laying the pipeline.
+
+### Backend tasks
+- Create the .NET Web API project (empty skeleton).
+- Set up the layering: `API` (controllers) / `Application` (services/business
+  logic) / `Domain` (entities) / `Infrastructure` (data access).
+- Choose and wire an ORM (Entity Framework Core recommended).
+- **Design the database schema and create the migration** (draft below).
+- A single test endpoint: `GET /api/health` → `{ "status": "ok" }`.
+
+### Mobile tasks (learning-heavy)
+- Set up the React Native environment (Expo is the easiest start for a beginner).
+- Build a mini playground app:
+  1. Navigation between two-three screens.
+  2. Fetching data from the .NET `/api/health` endpoint and showing it.
+  3. Rendering a list (FlatList).
+- Create the theme token file from `DESIGN.md` § 6 (`theme/colors.ts`).
+
+### Other
+- Git repository + `.gitignore` (build outputs, secrets excluded).
+- A secret-management plan for API keys (no keys yet, but the slot is ready).
+
+### Database schema draft (finalize)
 ```
 Users(Id, Email, BaseCurrency, CreatedAt)
-Assets(Id, Type, Name, Symbol, Currency)        -- Altın, USD, Hisse...
-Holdings(Id, UserId, AssetId, Quantity, AvgCost) -- veya Transactions'tan türet
-Transactions(Id, HoldingId, Type, Quantity, UnitPrice, Date) -- Alış/Satış
-PriceSnapshots(Id, AssetId, Price, Date)         -- reel getiri & senaryo için
+Assets(Id, Type, Name, Symbol, Currency)         -- Gold, USD, Stock...
+Holdings(Id, UserId, AssetId, Quantity, AvgCost)  -- or derive from Transactions
+Transactions(Id, HoldingId, Type, Quantity, UnitPrice, Date) -- Buy/Sell
+PriceSnapshots(Id, AssetId, Price, Date)          -- for real returns & scenarios
 BesDetails(Id, HoldingId, OwnContribution, StateContribution, JoinedAt, VestingState)
 ```
-> **Karar verilecek:** Ortalama maliyet `Holdings.AvgCost`'ta mı tutulacak,
-> yoksa `Transactions`'tan mı hesaplanacak? (Transactions'tan türetmek daha
-> doğru ama biraz daha iş.) Para alanları **`decimal`**.
+> **Decision to make:** should average cost live in `Holdings.AvgCost`, or be
+> computed from `Transactions`? (Deriving from transactions is more correct but
+> slightly more work.) Money fields are **`decimal`**.
+> *(Resolved: positions are derived from transactions at read time.)*
 
-### Teslimat
-Çalışan (boş) .NET API + mobil deneme uygulaması + onaylı şema/migration.
+### Deliverable
+A running (empty) .NET API + a mobile playground app + an approved schema/migration.
 
-### ✅ Tamamlanma Kriteri
-- Mobil uygulama `/api/health`'ten veriyi çekip ekranda gösteriyor.
-- `dotnet ef migrations` ile veritabanı oluşuyor.
-- Tema token dosyası hazır, bir ekranda kullanılıyor.
+### ✅ Definition of Done
+- The frontend fetches `/api/health` and displays the result.
+- The database is created via `dotnet ef migrations`.
+- The theme token file exists and is used on at least one screen.
 
 ---
 
-## FAZ 1 — Portföy Takip MVP (~2-4 hafta)
+## PHASE 1 — Portfolio Tracking MVP (~2–4 weeks) ✅
 
-**Amaç:** Kullanıcının elle girdiği varlıklarla, **tüm sayısal hesapların doğru
-yapıldığı** çalışan bir portföy. Bu faz tek başına kullanılabilir bir üründür.
+**Goal:** A working portfolio from manually entered assets, with **every numeric
+calculation done correctly**. This phase is a usable product on its own.
 
-### Backend görevleri
-- **Hesaplama servisi** (`PortfolioCalculationService`) — `CLAUDE.md` § 6'daki
-  formüller: kalem getirisi, net kâr, ağırlıklı ort. maliyet, dağılım %,
-  reel getiri, çoklu para birimi → baz para birimine çevirme.
-- CRUD endpoint'leri:
+### Backend tasks
+- **Calculation service** (`PortfolioCalculationService`) — the formulas from
+  `CLAUDE.md` § 6: per-holding return, net profit, weighted average cost,
+  allocation %, real return, multi-currency → base-currency conversion.
+- CRUD endpoints:
   ```
-  POST   /api/holdings           varlık ekle
-  GET    /api/holdings           kullanıcının varlıkları
-  PUT    /api/holdings/{id}      güncelle
-  DELETE /api/holdings/{id}      sil
-  GET    /api/portfolio/summary  toplam değer, maliyet, kâr, getiri, dağılım
+  POST   /api/holdings           add an asset
+  GET    /api/holdings           the user's assets
+  PUT    /api/holdings/{id}      update
+  DELETE /api/holdings/{id}      delete
+  GET    /api/portfolio/summary  total value, cost, profit, return, allocation
   ```
-- BES'i özel ele al: kendi katkısı ve devlet katkısı **ayrı satır/alan**.
-- **Birim testleri** — hesaplama fonksiyonları için (yanlış rakam kabul edilemez).
-  Senin tablondaki sayıları (422.970 maliyet, 641.403 değer) test verisi yap.
+- Treat BES (Turkish private pension) specially: own contribution and state
+  contribution as **separate lines/fields**.
+- **Unit tests** — for the calculation functions (a wrong number is
+  unacceptable). Use the numbers from the original spreadsheet
+  (cost 422,970; value 641,403) as test data.
 
-### Mobil görevleri
-- Portföy özet ekranı: hero kart (değer/kâr/getiri) — taslaktaki gibi.
-- Dağılım grafiği: `react-native-svg` veya `react-native-gifted-charts`
-  (DESIGN.md § 6 — `conic-gradient` RN'de yok).
-- Varlık listesi (FlatList) + dokununca **varlık detay** ekranı.
-- **Varlık ekle** formu (tür, para birimi, miktar, maliyet, tarih) → POST.
-- Baz para birimi seçimi (ayarlar veya ilk açılış).
+### Mobile tasks
+- Portfolio summary screen: hero card (value/profit/return) — as in the mockup.
+- Allocation chart: `react-native-svg` or `react-native-gifted-charts`
+  (`DESIGN.md` § 6 — there is no `conic-gradient` in RN).
+- Asset list (FlatList) + tap-through to an **asset detail** screen.
+- **Add asset** form (type, currency, quantity, cost, date) → POST.
+- Base-currency selection (settings or first launch).
 
-### Diğer
-- Bu fazda **fiyatlar elle girilir** (canlı fiyat Faz 2'de). Yani "güncel fiyat"
-  alanını kullanıcı kendi günceller.
+### Other
+- In this phase **prices are entered manually** (live prices arrive in Phase 2),
+  i.e. the user maintains the "current price" field themselves.
 
-### Teslimat
-Elle veri girilen, doğru hesaplayan, mobilde gösteren tam akışlı portföy.
+### Deliverable
+A full-flow portfolio: manual data in, correct math, visible on screen.
 
-### ✅ Tamamlanma Kriteri
-- Kullanıcı varlık ekleyip/silip portföyünü görebiliyor.
-- Toplam değer, kâr, getiri %, dağılım % **doğru hesaplanıyor** (testlerle
-  kanıtlı).
-- Çoklu para birimi baz para birimine doğru çevriliyor.
-- BES'in devlet katkısı ayrı görünüyor.
-
----
-
-## FAZ 2 — Canlı Fiyat & Bilgilendirme (~2-3 hafta)
-
-**Amaç:** "Güncel fiyat"ı elle girmek yerine otomatik çekmek + portföy ekranına
-bağlama duyarlı küçük eğitici notlar koymak.
-
-### Backend görevleri
-- Fiyat sağlayıcı entegrasyonu (altın, döviz için ücretsiz katmanlı API).
-- `PriceFetchService` — dış API'den fiyat çek, `PriceSnapshots`'a yaz.
-- Önbellekleme (cache) — her istekte dış API'yi yormamak için (örn. 5-15 dk).
-- Endpoint: `GET /api/prices?symbols=XAU,USD` veya özet içine gömülü.
-- **Bilgilendirme (nudge) motoru — basit kurallarla:** Örneğin
-  `nakit oranı > %X` → "nakit enflasyonda erir" notu. Bu faz için **kural
-  tabanlı yeterli**; LLM Faz 3'te devreye girer.
-
-### Mobil görevleri
-- Özet ekranındaki değerler artık canlı fiyattan geliyor (pull-to-refresh).
-- Taslaktaki "nudge" kartını bağlama göre göster (gelen kurala göre).
-- Son güncelleme zamanı / fiyat kaynağı bilgisi.
-
-### Riskler
-- Ücretsiz API'lerin istek limiti olabilir → cache şart.
-- Fiyat verisi gecikmeli/eksik gelebilir → "yaklaşık" etiketi göster.
-
-### ✅ Tamamlanma Kriteri
-- Güncel değer dış kaynaktan otomatik geliyor, yenilenebiliyor.
-- En az bir bağlama duyarlı eğitici not doğru tetikleniyor.
-- Dış API çökerse uygulama çökmüyor (fallback: son bilinen fiyat).
+### ✅ Definition of Done
+- The user can add/delete assets and see their portfolio.
+- Total value, profit, return %, allocation % are **calculated correctly**
+  (proven by tests).
+- Multiple currencies convert correctly into the base currency.
+- The BES state contribution is displayed separately.
 
 ---
 
-## FAZ 3 — LLM Yorum Katmanı (~2-3 hafta)
+## PHASE 2 — Live Prices & Educational Notes (~2–3 weeks) ✅
 
-**Amaç:** .NET'in hesapladığı sayıları LLM'e verip portföyü **eğitici dille
-yorumlatmak.** Projenin "anlamlandırma" katmanı.
+**Goal:** Fetch the "current price" automatically instead of typing it in +
+put small context-aware educational notes on the portfolio screen.
 
-> ⚠️ Hesap KODDA, yorum LLM'de. LLM'e ham sayı verip "hesapla" denmez.
+### Backend tasks
+- Price provider integration (free-tier APIs for gold and FX).
+- `PriceFetchService` — pull prices from external APIs, write to `PriceSnapshots`.
+- Caching — don't hammer the external API on every request (e.g. 5–15 min).
+- Endpoint: `GET /api/prices?symbols=XAU,USD` or embedded in the summary.
+- **Nudge engine — simple rules:** e.g. `cash ratio > X%` → "cash erodes under
+  inflation" note. **Rule-based is enough** for this phase; the LLM joins in
+  Phase 3.
 
-### Backend görevleri
-- LLM sağlayıcı seç (Türkçe kalitesi + yapılandırılmış çıktı + maliyet kriteri).
+### Mobile tasks
+- Summary-screen values now come from live prices (pull-to-refresh).
+- Show the mockup's "nudge" card contextually (based on the triggered rule).
+- Last-updated time / price source info.
+
+### Risks
+- Free APIs may have request limits → caching is mandatory.
+- Price data may be delayed/missing → show an "approximate" label.
+
+### ✅ Definition of Done
+- Current values arrive automatically from an external source and can refresh.
+- At least one context-aware educational note triggers correctly.
+- If the external API goes down the app doesn't break (fallback: last known price).
+
+---
+
+## PHASE 3 — LLM Commentary Layer (~2–3 weeks) ✅
+
+**Goal:** Hand the numbers computed by .NET to an LLM and have it **explain the
+portfolio in educational language.** This is the project's "sense-making" layer.
+
+> ⚠️ Math in CODE, commentary in the LLM. Never give the LLM raw numbers and
+> say "calculate".
+
+### Backend tasks
+- Choose an LLM provider (criteria: Turkish quality + structured output + cost).
 - `LlmCommentaryService`:
-  - Girdi: .NET'in hesapladığı **hazır sayılar** (dağılım, getiri, reel getiri,
-    yoğunlaşma oranları).
-  - Sistem promptu: "Sen bir finans **eğitmenisin**, danışman değil. Tavsiye
-    verme, açıkla ve farkındalık yarat. Çıktıyı şu JSON şemasında ver: ..."
-  - Çıktı: **yapılandırılmış JSON** (kart kart: başlık, açıklama, etiketler).
-- Güvenli parse + fallback (JSON bozuksa düz metin/önceki yorum).
+  - Input: the **ready-made numbers** computed by .NET (allocation, returns,
+    real return, concentration ratios).
+  - System prompt: "You are a finance **educator**, not an advisor. Do not give
+    advice; explain and build awareness. Return output in this JSON schema: ..."
+  - Output: **structured JSON** (card by card: title, body, tags).
+- Safe parsing + fallback (broken JSON → plain text / previous commentary).
 - Endpoint: `GET /api/portfolio/commentary`.
-- Maliyet kontrolü: yorum sık sık değil, portföy değiştiğinde veya günde bir kez
-  üretilip cache'lensin.
+- Cost control: don't generate on every view — regenerate when the portfolio
+  changes or once a day, and cache it.
 
-### Mobil görevleri
-- Analiz sekmesi (taslaktaki gibi): genel sağlık, yoğunlaşma, reel getiri,
-  senaryo kartları — artık LLM'den geliyor.
-- Her ekranda **"yatırım tavsiyesi değildir"** çerçevesi (disc).
-- Yükleniyor durumu (LLM yanıtı birkaç saniye sürebilir).
+### Mobile tasks
+- The Analysis tab (as in the mockup): overall health, concentration, real
+  return, scenario cards — now coming from the LLM.
+- A **"not investment advice"** disclaimer on every screen.
+- Loading state (the LLM response can take a few seconds).
 
-### Püf noktası
-- Prompt mühendisliği işin kalbi. "Tavsiye değil, açıklama" sınırını promptta
-  net çiz ve birkaç örnek (few-shot) ver.
-- LLM'in uydurmaması için **sadece kendisine verilen sayıları** kullanmasını,
-  yeni rakam üretmemesini iste.
+### Key insight
+- Prompt engineering is the heart of this. Draw the "explanation, not advice"
+  boundary sharply in the prompt and provide a few examples (few-shot).
+- To prevent hallucination, require the LLM to use **only the numbers it was
+  given** and never invent new figures.
 
-### ✅ Tamamlanma Kriteri
-- Analiz kartları gerçek portföy verisiyle LLM'den üretiliyor.
-- Çıktı asla "al/sat/yükselir" demiyor; açıklayıcı/eğitici kalıyor.
-- LLM hatası/JSON bozulması uygulamayı çökertmiyor.
-- Yorum cache'leniyor (her açılışta yeni istek atılmıyor).
+### ✅ Definition of Done
+- Analysis cards are generated by the LLM from real portfolio data.
+- The output never says "buy/sell/will rise"; it stays explanatory/educational.
+- An LLM failure or broken JSON does not crash the app.
+- Commentary is cached (no fresh request on every open).
 
 ---
 
-## FAZ 4 — Hisse Temel Analiz Modülü (süre veri kaynağına bağlı)
+## PHASE 4 — Stock Fundamentals Module (duration depends on data source) 🚧
 
-**Amaç:** Kullanıcının merak ettiği hissenin **mevcut metriklerini** çekip
-LLM ile **ne anlama geldiğini** açıklamak. Eğitimi olmayan kişi için hisseyi
-"okumak." **Tahmin/öneri yok.**
+**Goal:** Fetch the **current metrics** of a stock the user is curious about and
+have the LLM explain **what they mean**. "Reading" a stock for someone without
+a finance background. **No predictions, no recommendations.**
 
-> ⚠️ "Geleceği tahmin" değil, "bugünkü tabloyu açıklama." Bkz. `CLAUDE.md` § 2.
+> ⚠️ Not "predicting the future" — "explaining today's picture." See `CLAUDE.md` § 2.
 
-### Ön karar
-- **Veri kaynağı:** ABD hisseleri için ücretsiz/uygun API'ler var. BIST
-  güvenilir veri çoğunlukla ücretli → maliyet/kapsam burada netleşmeli.
+### Pre-decision
+- **Data source:** free/affordable APIs exist for US stocks. Reliable BIST
+  (Istanbul exchange) data is mostly paid → cost/scope must be settled here.
+  *(Decided 2026-06-20: **Finnhub** free tier for US stocks; BIST deferred.)*
 
-### Backend görevleri
-- `StockDataService` — sembolle metrik çek: fiyat, F/K, PD/DD, temettü verimi,
-  kâr büyümesi, sektör ortalaması (varsa).
+### Backend tasks
+- `StockDataService` — fetch metrics by symbol: price, P/E, P/B, dividend
+  yield, earnings growth, sector average (if available).
 - Endpoint: `GET /api/stocks/{symbol}/metrics`.
-- `LlmStockExplainService` — metrikleri alıp "bu rakamlar ne anlatıyor" diye
-  sade dille açıklatma (yine JSON, yine "tavsiye değil").
+- `LlmStockExplainService` — take the metrics and have them explained in plain
+  language ("what do these numbers say") — again JSON, again "not advice".
 
-### Mobil görevleri
-- Hisse arama + sembol seçme.
-- Metrik kartları (taslaktaki 2x2 grid) + sektöre göre etiket.
-- "Bu rakamlar ne anlatıyor?" LLM açıklama kartları + disclaimer.
+### Mobile tasks
+- Stock search + symbol selection.
+- Metric cards (the mockup's 2×2 grid) + sector-relative labels.
+- "What do these numbers say?" LLM explanation cards + disclaimer.
 
-### Riskler
-- Metrik tanımları kaynaktan kaynağa değişebilir (F/K hesabı vs.) → kaynağı
-  belge ve tutarlı kullan.
-- BIST verisi pahalıysa: önce sadece ABD ile çıkıp BIST'i sonra ekle.
+### Risks
+- Metric definitions vary between sources (how P/E is computed etc.) →
+  document the source and use it consistently.
+- If BIST data is expensive: launch with US only, add BIST later.
 
-### ✅ Tamamlanma Kriteri
-- Bir sembol için metrikler çekilip gösteriliyor.
-- LLM metrikleri açıklıyor, "iyi/kötü/al" demeden çerçeve sunuyor.
-- Veri bulunamayan sembolde anlamlı hata mesajı.
-
----
-
-## FAZ 5 — Ötesi & Ürünleşme
-
-**Amaç:** Ürünü genişletmek ve gelir modeline hazırlamak. Sırası ihtiyaca göre.
-
-### Olası işler
-- **Yeni varlık türleri:** Fon, gayrimenkul (değerleme yaklaşımı netleştirilecek),
-  kripto (istenirse).
-- **Senaryo simülasyonu (derin):** "Dağılımım şöyle olsaydı geçmiş 12 ayda ne
-  olurdu?" — `PriceSnapshots` geçmişiyle, geriye dönük gösterim (tahmin değil).
-- **Eğitim içeriği genişletme:** Seviyeli dersler, mini testler, ilerleme takibi.
-- **Bildirimler:** Fiyat/oran eşiği uyarıları (yine tavsiye değil, bilgi).
-- **Gelir modeli:** Abonelik (ücretsiz takip + ücretli analiz/eğitim?) — model
-  belirle.
-- **Hesap/kimlik:** Gerçek kullanıcı hesapları, güvenli giriş.
-
-### Yapılması gerekenler (lansman öncesi)
-- **Hukuki doğrulama:** SPK (yatırım tavsiyesi sınırı) + KVKK (veri) için
-  uzman/avukat görüşü. **Şart.**
-- Performans, güvenlik gözden geçirmesi.
-- App Store / Play Store yayın süreci.
-
-### ✅ Tamamlanma Kriteri
-Bu faz açık uçlu; her özellik kendi "tamam" tanımıyla ilerler. Ürünleşme adımı
-hukuki onay olmadan başlamaz.
+### ✅ Definition of Done
+- Metrics are fetched and displayed for a symbol.
+- The LLM explains the metrics and offers a framework without saying
+  "good/bad/buy".
+- A meaningful error message for symbols with no data.
 
 ---
 
-## Genel Notlar
+## PHASE 5 — Beyond & Productization 🔜
 
-- **Süre tahminleri** tek kişilik, haftada ~48 saatlik çalışmaya ve React
-  Native öğrenme eğrisine göre. Tam vizyon ~4-6 ay; ilk kullanılabilir ürün
-  (Faz 1) 1-2 ay.
-- Her fazı bitince küçük bir "ne öğrendim / ne değişti" notu `docs/` altına yaz —
-  ileride çok işe yarar.
-- Bir faz takılırsa: kapsamı küçült, fazı böl. "Çalışan küçük" > "yarım büyük".
+**Goal:** Broaden the product and prepare the revenue model. Order as needed.
+
+### Possible work
+- **New asset classes:** funds, real estate (valuation approach TBD),
+  crypto (if wanted).
+- **Scenario simulation (deep):** "If my allocation had been X, what would the
+  last 12 months have looked like?" — backward-looking display using the
+  `PriceSnapshots` history (not prediction).
+- **Expanded education content:** leveled lessons, mini quizzes, progress tracking.
+- **Notifications:** price/ratio threshold alerts (again: information, not advice).
+- **Revenue model:** subscription (free tracking + paid analysis/education?) —
+  decide the model.
+- **Accounts/identity:** real user accounts, secure sign-in.
+
+### Must-dos (before launch)
+- **Legal validation:** expert/lawyer opinion on SPK (the investment-advice
+  boundary) + KVKK (data protection). **Mandatory.**
+- Performance and security review.
+- App Store / Play Store publishing process.
+
+### ✅ Definition of Done
+This phase is open-ended; each feature carries its own "done" definition.
+Productization does not start without legal sign-off.
+
+---
+
+## General Notes
+
+- **Duration estimates** assume a single developer at ~48 hours/week and a
+  React Native learning curve. Full vision ~4–6 months; first usable product
+  (Phase 1) 1–2 months.
+- After finishing each phase, write a short "what I learned / what changed"
+  note — it pays off later. *(In practice this lives in
+  `.claude/tasks/TASKLOG.md`.)*
+- If a phase stalls: shrink the scope, split the phase.
+  **"Small and working" beats "big and half-done."**

@@ -7,9 +7,17 @@
 **Aktif faz:** ✅ Faz 0 · ✅ Faz 1 · ✅ Faz 2 · ✅ **Faz 3 BİTTİ (LLM yorum katmanı — T3.1→T3.9)** → **Faz 4 — Hisse Temel Analiz**
 
 ## Sıradaki (öncelik sırası)
-1. **T4.2** — `IStockDataProvider`/`StockDataService` + `GET /api/stocks/{symbol}/metrics` (Finnhub)
-2. T4.3 — `LlmStockExplainService` + `GET /.../explain` (tavsiye YOK)
-3. T4.4 — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
+1. **OSS hazırlığı kalan** — Analiz sayfası ekran görüntüsü (OpenRouter free kotası 429; kota
+   açılınca veya Anthropic anahtarıyla) + OSS turu commit'i
+2. **T4.2** — `IStockDataProvider`/`StockDataService` + `GET /api/stocks/{symbol}/metrics` (Finnhub)
+3. T4.3 — `LlmStockExplainService` + `GET /.../explain` (tavsiye YOK)
+4. T4.4 — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
+
+> ✅ **2026-07-09 — OSS hazırlığı 1. tur (repo artık public):** İngilizce `README.md` (Nirengi
+> konumlandırması, mimari, özellik tablosu, kurulum, disclaimer) + `LICENSE` (MIT © 2026) eklendi;
+> kök `package.json` description İngilizceleştirildi. **Sır doğrulaması temiz:** `.env` git
+> geçmişinde hiç izlenmemiş; appsettings/örnek dosyalar yalnız placeholder. Kalan: ekran
+> görüntüleri, (ileride) yeniden kullanılabilir katmanı paket olarak yayınlama. Detay: TASKLOG 2026-07-09.
 
 > ✅ **T4.1 bitti (2026-06-20) — Veri kaynağı kararı: Finnhub (ABD).** Ücretsiz katman 60 çağrı/dk;
 > `GET /stock/metric?metric=all` 4 metriğimizi verir (F/K=peTTM, PD/DD=pb, temettü=dividendYield…, kâr

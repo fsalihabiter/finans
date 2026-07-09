@@ -20,6 +20,89 @@
 
 ---
 
+## 2026-07-10 · ad-hoc — ROADMAP.md İngilizceye çevrildi (+ faz durumları)
+- **Görev(ler):** ad-hoc (OSS hazırlığı 4. tur — kullanıcı isteği).
+- **Ne yapıldı:**
+  1. `ROADMAP.md` tamamen İngilizce yeniden yazıldı (aynı dosya adı, aynı yapı/bölümler).
+  2. Güncelleme: genel bakış tablosuna **Status** kolonu (Faz 0-3 ✅ · Faz 4 🚧 · Faz 5 🔜) ve
+     faz başlıklarına durum işaretleri eklendi; T4.1 Finnhub kararı ve "ort. maliyet
+     işlemlerden türetilir" kararı ilgili yerlere italik not düşüldü.
+  3. Ayrıca dün: GitHub **secret scanning + push protection** repo ayarı API'den açıldı
+     (kullanıcı UI'da bulamadı — yeni yeri Settings → Security → Advanced Security);
+     public repo tam geçmiş sır denetimi TEMİZ çıktı (bilinen anahtar formatları, gömülü
+     parola, yüksek-entropi, silinen dosyalar dahil — yalnız belgelenmiş dev varsayılanları var).
+- **Dokunulan dosyalar:** `ROADMAP.md`, `.claude/tasks/TASKLOG.md`
+- **Test:** yok (doküman).
+- **Karar/Not:** Kök dokümanlardan İngilizce göçü tamamlananlar: README, SETUP, ROADMAP.
+  Türkçe kalanlar: CLAUDE.md, DESIGN.md, `.claude/docs/*` (proje-içi mühendislik dokümanları —
+  göç "planlandı" durumunda).
+- **Durum:** tamamlandı (OSS turu commit'i hâlâ kullanıcı onayı bekliyor).
+- **Sıradaki:** OSS turu commit+push → Analiz ekran görüntüsü (LLM kotası) → T4.2.
+
+## 2026-07-09 (3) · ad-hoc — KURULUM.md → SETUP.md (İngilizce + güncel)
+- **Görev(ler):** ad-hoc (OSS hazırlığı 3. tur — kullanıcı isteği).
+- **Ne yapıldı:**
+  1. **`SETUP.md` (İngilizce)** yazıldı — KURULUM.md'nin çevirisi + güncelleme:
+     backend portu netleşti (`5xxx` → **5298**), health yanıtları canlı doğrulandı
+     (`/api/health` → `{"status":"ok"}`, Caddy `/health` → `Healthy`), test sayısı
+     99 → **246** (156 unit + 90 integration), gerçek repo URL'si, PostgreSQL "17+".
+  2. **Yeni §8 "Optional: LLM commentary"** — Anthropic/OpenRouter User Secrets ve compose
+     `.env` kurulumu, Noop/fallback davranışı, free-tier 429 notu. Sorun giderme bölümüne
+     "Analysis page only shows a fallback card" maddesi eklendi. Yol A'ya gözlem yığını
+     URL'leri (Seq 8081 / Prometheus 9090 / Grafana 3001, 127.0.0.1) eklendi.
+  3. **`KURULUM.md` silindi** (git rm — Türkçe orijinal git geçmişinde duruyor);
+     README bağlantısı SETUP.md'ye çevrildi. Repo genelinde başka KURULUM referansı yok.
+- **Dokunulan dosyalar:** `SETUP.md` (yeni), `KURULUM.md` (silindi), `README.md`,
+  `.claude/tasks/TASKLOG.md`
+- **Test:** yok (doküman — kod değişmedi). Health/URL iddiaları canlı sistemde doğrulandı.
+- **Karar/Not:** Kurulum rehberinin kanonik adı artık **SETUP.md** (İngilizce, OSS konvansiyonu).
+  Türkçe sürüm istenirse `KURULUM.md` git geçmişinden geri alınabilir.
+- **Durum:** tamamlandı (commit kullanıcı onayı bekliyor).
+- **Sıradaki:** OSS turu commit'i → Analiz ekran görüntüsü (LLM kotası) → T4.2.
+
+## 2026-07-09 (2) · ad-hoc — README görsel yükseltme: banner + canlı ekran görüntüleri
+- **Görev(ler):** ad-hoc (OSS hazırlığı 2. tur — kullanıcı isteği: "daha görsel README").
+- **Ne yapıldı:**
+  1. **`docs/assets/banner.svg`** — DESIGN.md paletiyle (kömür/altın/nane) el yapımı marka banner'ı:
+     Nirengi serif wordmark + nirengi üçgeni motifi + sparkline + varlık sınıfı lejantı.
+  2. **Canlı ekran görüntüleri** (backend `dotnet run` + `pnpm dev:web` + Playwright/sistem Chrome,
+     1440×860 @2x PNG): `dashboard`, `dashboard-notes` (eğitici notlar + varlık tablosu),
+     `performance`, `bes-detail` → `docs/assets/`. İşlemler/Eğitim/Senaryo "yakında" ekranı olduğu
+     için elendi. **Analiz sayfası alınamadı:** OpenRouter free havuzu 429 + `laguna-m.1:free`
+     boş content dönüyor → LLM yorum ekranı sadece fallback gösterdi (görüntü sonra eklenebilir).
+  3. **README yeniden kuruldu (görsel ağırlıklı):** ortalanmış banner + logolu rozetler,
+     "A look around" galerisi (tam genişlik 2 görsel + 2'li tablo), Mermaid mimari diyagramı
+     (ASCII yerine), GitHub `[!IMPORTANT]` tavsiye-değil bloğu, emoji bölüm başlıkları.
+  4. Not: Vite dev sunucusu sandbox içinde 5298'e bağlanamıyordu (proxy ECONNREFUSED) —
+     servisler sandbox'sız yeniden başlatıldı; ekran görüntüleri gerçek canlı veriyle alındı.
+- **Dokunulan dosyalar:** `README.md`, `docs/assets/banner.svg` (yeni), `docs/assets/*.png` (4 yeni),
+  `.claude/tasks/TASKLOG.md`, `.claude/tasks/ACTIVE.md`
+- **Test:** yok (doküman/görsel — kod değişmedi).
+- **Karar/Not:** README görselleri `docs/assets/` altında yaşar (~2,3 MB). LLM yorum ekranının
+  görüntüsü için ya OpenRouter kotası beklenecek ya da geçerli bir Anthropic anahtarıyla alınacak.
+- **Durum:** tamamlandı (commit kullanıcı onayı bekliyor).
+- **Sıradaki:** Analiz sayfası görüntüsü (LLM kota açılınca) → T4.2.
+
+## 2026-07-09 · ad-hoc — OSS hazırlığı: İngilizce README + MIT LICENSE + sır doğrulaması
+- **Görev(ler):** ad-hoc (Claude for OSS başvuru hazırlığı — repo 2026-07-08 civarı public yapıldı; paylaşılan claude.ai sohbetindeki eksik listesi).
+- **Ne yapıldı:**
+  1. **`README.md` (İngilizce)** yazıldı: Nirengi markası, "not investment advice" ilkesi,
+     mimari şema, özellik tablosu (✅/🚧/🔜), monorepo yapısı, Docker/lokal kurulum, test ve
+     gözlemlenebilirlik özeti, roadmap linki, MIT + disclaimer.
+  2. **`LICENSE` (MIT, © 2026 Fatıma Saliha Biter)** eklendi — lisanssız repo teknik olarak açık kaynak sayılmıyordu.
+  3. **Sır taraması:** `.env` git'te hiç izlenmemiş (geçmiş dahil doğrulandı); `appsettings*.json`,
+     `.env.example`, `.claude/settings.json` temiz — yalnızca placeholder/doküman metni. Public kalabilir.
+  4. Kök `package.json` description İngilizceleştirildi (Nirengi konumlandırması).
+- **Dokunulan dosyalar:** `README.md` (yeni), `LICENSE` (yeni), `package.json`,
+  `.claude/tasks/TASKLOG.md`, `.claude/tasks/ACTIVE.md`
+- **Test:** yok (doküman/lisans — kod değişmedi).
+- **Karar/Not:** Lisans **MIT** (sohbetteki öneri doğrultusunda). README'de Türkçe mühendislik
+  dokümanları not edildi, İngilizce göçü "planlandı" olarak işaretlendi. OSS başvurusu için kalan
+  eksikler: README'ye gerçek ekran görüntüleri, (ileride) yeniden kullanılabilir katmanın paket
+  olarak yayınlanması, yıldız/katkıcı biriktirme.
+- **Durum:** tamamlandı (commit kullanıcı onayı bekliyor).
+- **Sıradaki:** README'ye ekran görüntüsü eklemek (uygulamayı çalıştırıp yakala) → sonra T4.2.
+
 ## 2026-06-20 · T4.1 — Hisse veri kaynağı kararı: Finnhub (ABD)
 - **Görev(ler):** T4.1 (Faz 4 başlangıcı — veri kaynağı kararı).
 - **Ne yapıldı:**
