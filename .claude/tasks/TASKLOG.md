@@ -20,6 +20,136 @@
 
 ---
 
+## 2026-07-10 (5) · ad-hoc — Motion katmanı 2: kart giriş/çıkış + toast/modal keyframe'leri
+- **Görev(ler):** ad-hoc (kullanıcı isteği: "her kart için giriş/çıkış efekti + notification keyframe + daha hareketli site").
+- **Ne yapıldı:**
+  1. **Rota çıkış/giriş animasyonu — View Transitions API:** tüm `NavLink`'lere `viewTransition`
+     prop'u (8 adet); CSS `::view-transition-old/new(root)` → eski sayfa yukarı süzülüp çıkar
+     (220ms), yenisi alttan yükselir (300ms). Desteklemeyen tarayıcıda zarif düşüş (yalnız giriş
+     stagger'ı). reduced-motion için ayrı kapatma (global `*` bloğu pseudo'ları kapsamıyordu).
+  2. **`lib/viewTransition.ts`:** `withViewTransition(update)` yardımcı — destek varsa
+     `document.startViewTransition`, yoksa (eski tarayıcı + jsdom) SENKRON çağrı. Bu sayede
+     Modal/Toast testlerinin senkron `onClose` beklentileri kırılmadı.
+  3. **Modal giriş/çıkış:** giriş `overlay-in` (perde) + `modal-pop` (yay easing, %60'ta
+     hafif taşma) keyframe'leri; kapanış (X/overlay/Escape/Vazgeç) Modal.tsx +
+     AddHoldingDialog.tsx'te `withViewTransition`'a sarıldı → tarayıcıda yumuşak çıkış.
+  4. **Toast yaşam döngüsü keyframe'leri:** `toast-in` (sağdan yaylanarak, 340ms) +
+     `toast-out` (sağa süzülerek, 260ms). Otomatik kapanışta timer sürümlü `leaving` durumu
+     (EXIT_MS önce sınıf, sonra silme — jsdom animasyon olayı üretmediği için davranış
+     animasyona bağlanmadı); manuel kapatma View Transition'lı.
+  5. **Kart canlılığı:** `.card:hover` translateY(-3px) kalkış + `.kpi:hover`; hero kart
+     glow'una `glow-breathe` (5.5s nefes) eklendi.
+  6. **(Revizyon — kullanıcı isteği) SLIDE düzeni:** rota geçişi dikey süzülme yerine yatay
+     kayma (eski sayfa sola -56px çıkar, yeni sağdan +64px girer); kart stagger girişi de
+     sağdan kayma (+28px) — toast'ların sağdan giriş/çıkışıyla tutarlı tek yön dili.
+  7. **(Revizyon 2 — kullanıcı isteği) Daha yavaş + smooth:** modal pop → alttan slide
+     (`modal-slide-up` 560ms, %70'te -4px taşma; perde 340ms), toast-in 340→580ms /
+     toast-out 260→440ms (Toast.tsx `EXIT_MS=440` eşitlendi), rota slide 340/480ms +
+     mesafeler -72/+88px, kart stagger 540/560ms. Easing sabit: cubic-bezier(0.16,1,0.3,1).
+  8. **(Revizyon 3 — kullanıcı kararı) TAM GENİŞLİK gövde:** `.app-content` 1320px sütun
+     ortalaması kaldırıldı → `--gutter: clamp(22px, 2.5vw, 44px)` sabit kenar boşluğu;
+     `.detail` 1100px sınırı kaldırıldı. 1920px'te canlı doğrulandı (dashboard + BES detay).
+  9. **(Revizyon 4 — kullanıcı geri bildirimi) Sakin accent:** parlak indigo #6E7CFF göz
+     yoruyordu → desatüre **#8A94DC** (accentSoft #A6AEE8; koyu gradyan uçları #555EB0/#6069BD).
+     Kontrast yükseldi (4.9→6.0:1). Sweep: token+test+App.css rgba'ları+index.css (seçim,
+     ambient blob)+favicon+banner+DESIGN.md. shared 16 + web 54 ✓, build temiz, canlı doğrulandı.
+  10. **README görselleri final tasarımla tazelendi** (kullanıcı isteği): banner.svg zaten
+     v2+sakin accent'teydi (görsel doğrulandı); 4 PNG (dashboard, dashboard-notes,
+     performance, bes-detail) sakin indigo + tam genişlik düzeniyle yeniden çekildi.
+- **Dokunulan dosyalar:** `web/src/lib/viewTransition.ts` (yeni), `web/src/components/{Toast,Modal,AddHoldingDialog}.tsx`,
+  `web/src/{App.tsx,App.css}`, `.claude/tasks/TASKLOG.md`
+- **Test:** web 54/54 ✓ · build temiz ✓ · canlı doğrulama (kayıt turu: sayfa geçişleri + modal aç/kapa).
+- **Karar/Not:** Çıkış animasyonları React unmount'una bağlanmadı (test senkronluğu bozulurdu);
+  bunun yerine tarayıcı-native View Transitions kullanıldı — Chromium'da tam efekt, diğerlerinde
+  animasyonsuz ama davranış aynı. Ek bağımlılık yine yok.
+- **Durum:** tamamlandı (commit onayı bekliyor — 2/3/4/5 turları birlikte).
+- **Sıradaki:** commit → T4.2.
+
+## 2026-07-10 (4) · ad-hoc — TEMA v2 "Gece": gece mavisi + indigo + motion katmanı
+- **Görev(ler):** ad-hoc (kullanıcı isteği: "animasyonlu/motionlı, mevcut paletten farklı yeni tasarım").
+- **Ne yapıldı:** (ui-ux-pro-max `--design-system --motion 7` → "Modern Dark (Cinema)" stili;
+  öneriler marka bağlamına uyarlanıp WCAG kontrastları node script'iyle doğrulandı)
+  1. **Palet v1→v2** (`packages/shared/src/theme`): kömür+altın → **gece mavisi (#0B0F1E,
+     saf siyah değil) + indigo vurgu (#6E7CFF)**. `gold/goldSoft` vurgu token'ları →
+     `accent/accentSoft`; `gold` artık yalnız kategorik Altın varlığı rengi. Tüm kategorikler
+     soğuk zemine uyarlandı (usd/eur/fx/stock/fund/bes/cash). Metin/accent/muted çiftleri
+     doğrulandı (accent 4.9:1, kategorikler ≥6.5:1).
+  2. **Tipografi:** Fraunces/Hanken → **Space Grotesk (display) + Inter (gövde)**
+     (@fontsource-variable, self-hosted, latin-ext). tabular-nums korunur.
+  3. **App.css tam sweep:** 50× var(--gold)→var(--accent), 20× altın rgba→indigo rgba,
+     15+ sıcak hex→gece eşdeğeri, mint/coral rgba güncellendi, gradyan uçları (#9c6f2e/
+     #a9762f→indigo), skeleton shimmer, modal scrim, topbar camı, takvim ikonu filtresi.
+  4. **Motion katmanı (yalnız transform/opacity, reduced-motion güvenli):** sayfa içeriği
+     45ms stagger'lı rise-in girişi, KPI mikro-stagger, donut scale+rotate açılışı,
+     kart hover yüzey/gölge geçişleri, ambient ışık lekeleri (`body::before`, 26s salınım,
+     indigo+turkuaz+mor), nav geçişleri. Easing: cubic-bezier(0.16,1,0.3,1).
+  5. **Marka yüzeyleri:** BrandMark glyph + favicon.svg + theme-color meta + manifest +
+     README banner.svg v2 paletine geçti. README ekran görüntüleri yeniden çekildi.
+  6. `DESIGN.md` §1-3 v2 olarak yeniden yazıldı (felsefe/palet/tipografi + motion ilkeleri).
+- **Dokunulan dosyalar:** `packages/shared/src/theme/{index.ts,theme.test.ts}`,
+  `web/src/{App.css,index.css,main.tsx}`, `web/src/lib/applyTheme.test.ts`,
+  `web/src/components/BrandMark.tsx`, `web/{index.html,public/favicon.svg,public/manifest.webmanifest,package.json}`,
+  `DESIGN.md`, `docs/assets/{banner.svg,*.png}`
+- **Test:** shared 16/16 ✓ · web 54/54 ✓ (applyTheme assert'i v2'ye güncellendi) · build temiz ✓
+  · dashboard + modal canlı görsel doğrulama (indigo CTA, görünür form kenarlıkları, ambient glow).
+- **Karar/Not:** v1 sıcak tema git geçmişinde (geri dönüş = bu commit'i revert). GSAP gibi
+  ek bağımlılık alınmadı — motion tamamen CSS. Emoji→SVG ikon dönüşümü hâlâ ayrı iş.
+- **Durum:** tamamlandı (commit kullanıcı onayı bekliyor — 2/3/4 turları birlikte).
+- **Sıradaki:** commit → T4.2.
+
+## 2026-07-10 (3) · ad-hoc — ui-ux-pro-max skill kurulumu + etkileşim turu
+- **Görev(ler):** ad-hoc (kullanıcı açık talimatı: "bu skill'i kesin kur").
+- **Ne yapıldı:**
+  1. **Skill kuruldu:** `npm i -g ui-ux-pro-max-cli` + `uipro init --ai claude` →
+     `.claude/skills/` altına 7 klasör geldi (ui-ux-pro-max 2 MB + banner-design/brand/
+     design/design-system/slides/ui-styling ~1 MB). Python 3.14.5 mevcut, arama motoru çalışıyor.
+  2. **`.gitignore`:** 7 üçüncü-taraf skill klasörü ignore edildi (yerel dev aracı — public
+     repoya vendored içerik koymuyoruz; isteyen `uipro init` ile kurar).
+  3. **Skill sorguları:** `--design-system` (jenerik slate+Fira önerdi → marka kimliği korundu,
+     REDDEDİLDİ); `--domain color "luxury gold dark"` bizim kömür+altın ailesini doğruladı;
+     `--domain ux` etkileşim kuralları uygulandı:
+  4. **index.css etkileşim temel kuralları:** `button` için global `cursor: pointer`
+     (22 dağınık kural yerine temel kural), 120-160ms transition token'ları ve
+     `:active` basılı geri bildirimi (`scale(0.98)` + brightness — transform, layout kaydırmaz).
+- **Dokunulan dosyalar:** `web/src/index.css`, `.gitignore`, `.claude/skills/*` (ignore),
+  `.claude/tasks/TASKLOG.md`
+- **Test:** web 54/54 ✓ · build temiz ✓.
+- **Karar/Not:** Skill'in jenerik palet önerileri marka için geçersiz; değeri kural/checklist
+  motorunda. Sonraki UI işlerinde `python .claude/skills/ui-ux-pro-max/scripts/search.py`
+  ile domain sorgusu yapılacak. Emoji→SVG ikon dönüşümü hâlâ bilinçli ertelenmiş durumda.
+- **Durum:** tamamlandı (commit onayı bekliyor — (2) turuyla birlikte).
+- **Sıradaki:** commit → T4.2.
+
+## 2026-07-10 (2) · ad-hoc — UI/UX renk düzenleme turu (ui-ux-pro-max metodolojisi)
+- **Görev(ler):** ad-hoc (kullanıcı isteği: "tasarımı güzelleştir, renkleri düzenle").
+- **Ne yapıldı:** (skill kurulamadı — otomatik mod npm global kurulumu engelledi; metodoloji
+  GitHub'daki SKILL.md'den okunarak uygulandı: 4.5:1/3:1 kontrast, token tek-kaynak,
+  kategorik grafik renkleri ayırt edilebilirlik, placeholder/border görünürlüğü)
+  1. **Token paleti genişletildi** (`packages/shared/src/theme`): `lineStrong #55493A`
+     (form kenarlığı), `textSoft #E0D6C4` (kart paragrafı), `muted2 #6F6557→#82786B`
+     (placeholder 3.1→4.1:1), kategorik `fx/stock/fund/eur` eklendi (assetMeta'daki
+     kaçak hex'ler token'a taşındı). DESIGN.md §2 senkron + kontrast kuralı bölümü.
+  2. **assetMeta artık token tüketiyor** (bileşende ham hex kalmadı). `CURRENCY_COLOR`
+     düzeltmeleri: EUR artık BES moruyla AYNI DEĞİL (yeni `--eur #94A7E8`), USD token
+     mavisine (#7FB7D6) oturdu. `shade()` + `sliceColors()` yardımcıları eklendi.
+  3. **Donut ayırt edilebilirlik:** aynı türden tekrar eden dilimler (iki Fx: Euro+USD)
+     deterministik ton varyantı alıyor — lejant ve dilim aynı diziden beslenir.
+  4. **App.css:** form kenarlıkları `--line-strong`; `.quickinfo`/`.nudge-tx` tek
+     kullanımlık renkleri `--text-soft`'a; `.proj-vesting` palet dışı yeşili (#6AA84F)
+     mint'e. **index.css:** `::placeholder` (muted-2), marka uyumlu `::selection`,
+     ince sıcak scrollbar (`scrollbar-color`).
+  5. **README ekran görüntüleri yeni tasarımla tazelendi** (docs/assets 4 PNG).
+- **Dokunulan dosyalar:** `packages/shared/src/theme/{index.ts,theme.test.ts}`,
+  `web/src/lib/assetMeta.ts`, `web/src/components/AllocationDonut.tsx`,
+  `web/src/{App.css,index.css}`, `DESIGN.md`, `docs/assets/*.png`
+- **Test:** shared 16/16 ✓ (yeni token assert'leri) · web 54/54 ✓ · `vite build` temiz ✓
+  · canlı görsel doğrulama (dashboard + Varlık Ekle modalı ekran görüntüsü).
+- **Karar/Not:** Kontrast ölçümleri node script'iyle yapıldı; mevcut palet zaten sağlamdı
+  (çoğu ≥6:1), zayıf noktalar kapatıldı. Emoji-ikon anti-pattern'i (SVG ikon seti) bilinçli
+  ertelendi — ayrı, daha büyük bir tur.
+- **Durum:** tamamlandı (commit kullanıcı onayı bekliyor).
+- **Sıradaki:** commit → T4.2.
+
 ## 2026-07-10 · ad-hoc — ROADMAP.md İngilizceye çevrildi (+ faz durumları)
 - **Görev(ler):** ad-hoc (OSS hazırlığı 4. tur — kullanıcı isteği).
 - **Ne yapıldı:**
