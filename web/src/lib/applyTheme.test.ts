@@ -10,7 +10,7 @@ describe("applyTheme", () => {
     applyTheme();
     const style = document.getElementById("finans-theme-vars");
     expect(style).not.toBeNull();
-    expect(style!.textContent).toContain("--gold: #E0B255;");
+    expect(style!.textContent).toContain("--accent: #8A94DC;");
     expect(style!.textContent).toContain("--font-display:");
   });
 });

@@ -6,12 +6,19 @@
 
 ---
 
-## 1. Tasarım Felsefesi
+## 1. Tasarım Felsefesi (v2 — "Gece")
 
-- **Ton:** Sıcak, güven veren, editöryel-zarif. Soğuk/kurumsal "Wall Street"
-  değil; öğrenmek isteyen birine yakın duran, premium ama davetkâr.
-- **Tema:** Koyu (dark), sıcak kömür/koyu kahve zemin + altın vurgu.
-  Altın hem temaya (portföydeki altın varlığı) hem yatırım çağrışımına uyar.
+> 🔄 **v2 (2026-07-10):** Tema, ui-ux-pro-max tasarım sistemi turuyla
+> **"Modern Dark (Cinema)"** ailesine geçti — gece mavisi zemin + indigo vurgu +
+> ambient glow + motion katmanı. v1 (sıcak kömür + altın) git geçmişinde.
+
+- **Ton:** Modern, odaklı, premium fintech. Karanlık sinematik atmosfer;
+  öğrenmek isteyen birine yakın duran, teknik ama davetkâr.
+- **Tema:** Koyu (dark), gece mavisi zemin + indigo vurgu + yavaş salınan
+  ambient ışık lekeleri. **Saf siyah yok** (#000 OLED smear + sertlik).
+- **Motion:** Hareket anlam taşır (giriş hiyerarşisi, basılı geri bildirim);
+  süsleme değil. 150-300ms mikro, ≤640ms giriş; `Bezier(0.16,1,0.3,1)` easing;
+  yalnız transform/opacity; `prefers-reduced-motion` her animasyonu durdurur.
 - **Yaklaşım:** Rafine minimalizm. Bolca nefes alanı, net hiyerarşi, abartısız
   ama özenli mikro-detaylar. "AI slop" jenerik görünümden kaçın.
 
@@ -20,55 +27,69 @@
 ## 2. Renk Paleti (CSS değişkenleri)
 
 ```css
---bg:        #14110D;   /* ana zemin (sıcak kömür)           */
---panel:     #1C1813;   /* kart yüzeyi                        */
---panel-2:   #241F18;   /* hover / ikincil yüzey              */
---line:      #322B22;   /* kenarlık / ayraç                   */
+--bg:          #0B0F1E;   /* ana zemin (gece mavisi — saf siyah DEĞİL) */
+--panel:       #131A30;   /* kart yüzeyi                          */
+--panel-2:     #1A2240;   /* hover / ikincil yüzey                */
+--line:        #26304F;   /* hairline kenarlık / ayraç (dekoratif)*/
+--line-strong: #42507E;   /* form kontrolü kenarlığı (görünür)    */
 
---gold:      #E0B255;   /* birincil vurgu (altın)             */
---gold-soft: #CAA05A;   /* yumuşak altın                      */
+--accent:      #8A94DC;   /* birincil vurgu (sakin indigo) — CTA/nav/link */
+--accent-soft: #A6AEE8;   /* yumuşak indigo (hover / ikincil)     */
 
---mint:      #5FC9A0;   /* pozitif / kâr (yeşil)              */
---coral:     #E58E6E;   /* negatif / zarar (mercan)           */
+--mint:        #45D5A2;   /* pozitif / kâr (yeşil)                */
+--coral:       #F97F7F;   /* negatif / zarar (mercan)             */
 
---text:      #F3EDE2;   /* birincil metin (sıcak beyaz)       */
---muted:     #A89C89;   /* ikincil metin                      */
---muted-2:   #6F6557;   /* en soluk metin / placeholder       */
+--text:        #EEF2FF;   /* birincil metin (soğuk beyaz)         */
+--text-soft:   #CBD5F0;   /* yumuşak gövde metni (kart paragrafı) */
+--muted:       #97A3C9;   /* ikincil metin                        */
+--muted-2:     #6B7699;   /* en soluk metin / placeholder (≥3.8:1)*/
 
-/* Varlık sınıfı renkleri (grafik & rozetler) */
---usd:       #7FB7D6;   /* dolar / döviz (mavi)               */
---bes:       #B98AD9;   /* BES (mor)                          */
---cash:      #9CA7A0;   /* nakit (gri-yeşil)                  */
-/* altın için --gold kullanılır */
+/* Kategorik varlık/para birimi renkleri (grafik & rozetler & ikon kutuları).
+   TEK KAYNAK: packages/shared/src/theme (assetMeta bunlardan beslenir). */
+--gold:        #E4C06A;   /* Altın varlığı (kategorik — vurgu DEĞİL) */
+--usd:         #66C7EA;   /* USD (camgöbeği)                      */
+--eur:         #9BAAF3;   /* EUR (periwinkle)                     */
+--fx:          #A3CE6E;   /* döviz varlık sınıfı (dolar yeşili)   */
+--stock:       #4FA3F7;   /* hisse (gök mavisi)                   */
+--fund:        #38CFC4;   /* fon (turkuaz)                        */
+--bes:         #C08AE8;   /* BES (mor)                            */
+--cash:        #94A0B8;   /* nakit (soğuk gri)                    */
 ```
 
 **Kullanım kuralı:** Pozitif sayılar `--mint`, negatif `--coral`, vurgular
-`--gold`. Renk yoğunluğunu az tut; baskın koyu zemin + keskin altın aksanlar.
+`--accent`. Renk yoğunluğunu az tut; baskın gece zemini + keskin indigo
+aksanlar + ambient glow (indigo/turkuaz radyal lekeler, `body::before`).
+
+**Kontrast kuralı (WCAG):** metin panel üstünde ≥4.5:1 (`--muted` 6.9:1,
+`--accent` metin olarak 6.0:1); grafik/veri renkleri ≥3:1 (kategoriklerin tümü
+≥6.5:1). Aynı türden birden çok grafik dilimi ton varyantıyla ayrışır
+(`assetMeta.sliceColors`). Kâr/zarar asla yalnız renkle verilmez — her zaman
++/− işareti ve yüzdeyle birlikte (renk körlüğü).
 
 ---
 
 ## 3. Tipografi
 
-İki font, Google Fonts (ikisi de Türkçe karakter destekler):
+İki font, self-hosted @fontsource-variable (ikisi de latin-ext / Türkçe destekler):
 
 ```
-Display / başlıklar : 'Fraunces'        (serif, karakterli, opsz 9..144)
-Gövde / sayılar      : 'Hanken Grotesk'  (grotesk, temiz, tabular nums)
+Display / başlıklar : 'Space Grotesk'  (geometrik grotesk, teknik karakter)
+Gövde / sayılar      : 'Inter'          (nötr grotesk, mükemmel okunurluk, tabular nums)
 ```
 
-- Büyük değerler ve başlıklar **Fraunces 600**, hafif negatif letter-spacing.
-- Tüm metin gövdesi **Hanken Grotesk**.
+- Büyük değerler ve başlıklar **Space Grotesk 600**, hafif negatif letter-spacing.
+- Tüm metin gövdesi **Inter**.
 - **Sayılar her yerde `font-variant-numeric: tabular-nums`** — finansal
   rakamların hizalı durması için şart.
 
 Ölçek (taslaktaki kullanım):
-| Eleman              | Font     | Boyut/Ağırlık       |
-|---------------------|----------|---------------------|
-| Hero değer          | Fraunces | 38px / 600          |
-| Ekran başlığı (h3)  | Fraunces | 18px / 600          |
-| Kart başlığı        | Hanken   | 14px / 700          |
-| Gövde metni         | Hanken   | 13px / 400-500      |
-| Etiket / muted      | Hanken   | 11-12px / 600       |
+| Eleman              | Font          | Boyut/Ağırlık       |
+|---------------------|---------------|---------------------|
+| Hero değer          | Space Grotesk | 38px / 600          |
+| Ekran başlığı (h3)  | Space Grotesk | 18px / 600          |
+| Kart başlığı        | Inter         | 14px / 700          |
+| Gövde metni         | Inter         | 13px / 400-500      |
+| Etiket / muted      | Inter         | 11-12px / 600       |
 
 ---
 

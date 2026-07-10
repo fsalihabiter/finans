@@ -91,29 +91,29 @@ export default function App() {
 
             <div className="nav-label">Portföy</div>
             <nav className="app-nav" onClick={closeDrawer}>
-              <NavLink to="/" end>
+              <NavLink viewTransition to="/" end>
                 <NavIcon d={ICONS.home} /> Genel Bakış
               </NavLink>
-              <NavLink to="/islemler">
+              <NavLink viewTransition to="/islemler">
                 <NavIcon d={ICONS.tx} /> İşlemler
               </NavLink>
-              <NavLink to="/performans">
+              <NavLink viewTransition to="/performans">
                 <NavIcon d={ICONS.perf} /> Performans
               </NavLink>
             </nav>
 
             <div className="nav-label">Akıl &amp; Öğren</div>
             <nav className="app-nav" onClick={closeDrawer}>
-              <NavLink to="/analiz">
+              <NavLink viewTransition to="/analiz">
                 <NavIcon d={ICONS.chart} /> Analiz
               </NavLink>
-              <NavLink to="/senaryo">
+              <NavLink viewTransition to="/senaryo">
                 <NavIcon d={ICONS.scenario} /> Senaryo
               </NavLink>
-              <NavLink to="/hisse">
+              <NavLink viewTransition to="/hisse">
                 <NavIcon d={ICONS.stock} /> Hisse Analizi
               </NavLink>
-              <NavLink to="/egitim">
+              <NavLink viewTransition to="/egitim">
                 <NavIcon d={ICONS.edu} /> Eğitim
               </NavLink>
             </nav>
@@ -121,7 +121,7 @@ export default function App() {
             <div className="sidebar-spacer" />
 
             <nav className="app-nav" onClick={closeDrawer}>
-              <NavLink to="/ayarlar">
+              <NavLink viewTransition to="/ayarlar">
                 <NavIcon d={ICONS.gear} /> Ayarlar
               </NavLink>
             </nav>

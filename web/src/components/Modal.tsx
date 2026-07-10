@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { withViewTransition } from "../lib/viewTransition";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -27,6 +28,9 @@ export function Modal({
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+  // Kapanışı View Transition'a sar: destekleyen tarayıcıda modal yumuşak çıkar,
+  // desteklemeyende (ve jsdom testlerinde) senkron kapanır.
+  const requestClose = () => withViewTransition(() => onCloseRef.current());
 
   useEffect(() => {
     restore.current = document.activeElement as HTMLElement | null;
@@ -40,7 +44,7 @@ export function Modal({
     });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onCloseRef.current();
+        withViewTransition(() => onCloseRef.current());
         return;
       }
       if (e.key !== "Tab" || !ref.current) return;
@@ -68,7 +72,7 @@ export function Modal({
   }, []); // yalnız mount/unmount — onClose ref ile okunur (yukarıdaki açıklama)
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={requestClose}>
       <div
         ref={ref}
         className="modal"
@@ -79,7 +83,7 @@ export function Modal({
       >
         <div className="modal-top">
           <h2>{title}</h2>
-          <button type="button" className="modal-close" aria-label="Kapat" onClick={onClose}>
+          <button type="button" className="modal-close" aria-label="Kapat" onClick={requestClose}>
             ✕
           </button>
         </div>

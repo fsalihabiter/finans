@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 // Self-hosted variable fontlar (DESIGN.md §3) — CDN yok (CSP/gizlilik dostu).
-import "@fontsource-variable/fraunces";
-import "@fontsource-variable/hanken-grotesk";
+import "@fontsource-variable/space-grotesk";
+import "@fontsource-variable/inter";
 import App from "./App.tsx";
 import { PortfolioPage } from "./routes/PortfolioPage.tsx";
 import { HoldingDetailPage } from "./routes/HoldingDetailPage.tsx";

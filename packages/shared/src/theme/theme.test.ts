@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { tokens, cssVariables } from "./index";
 
-describe("design tokens (DESIGN.md)", () => {
+describe("design tokens (DESIGN.md — v2 Gece)", () => {
   it("DESIGN.md renk değerlerini taşır", () => {
-    expect(tokens.color.gold).toBe("#E0B255");
-    expect(tokens.color.mint).toBe("#5FC9A0");
-    expect(tokens.color.bg).toBe("#14110D");
+    expect(tokens.color.accent).toBe("#8A94DC");
+    expect(tokens.color.mint).toBe("#45D5A2");
+    expect(tokens.color.bg).toBe("#0B0F1E");
   });
 });
 
@@ -14,14 +14,23 @@ describe("cssVariables()", () => {
 
   it(":root bloğu ve çekirdek değişkenleri üretir", () => {
     expect(css).toContain(":root {");
-    expect(css).toContain("--bg: #14110D;");
-    expect(css).toContain("--gold: #E0B255;");
+    expect(css).toContain("--bg: #0B0F1E;");
+    expect(css).toContain("--accent: #8A94DC;");
   });
 
   it("camelCase/sayı sınırlarını doğru kebab'lar", () => {
-    expect(css).toContain("--panel-2: #241F18;");
-    expect(css).toContain("--gold-soft: #CAA05A;");
-    expect(css).toContain("--muted-2: #6F6557;");
+    expect(css).toContain("--panel-2: #1A2240;");
+    expect(css).toContain("--accent-soft: #A6AEE8;");
+    expect(css).toContain("--muted-2: #6B7699;");
+    expect(css).toContain("--line-strong: #42507E;");
+  });
+
+  it("kategorik varlık renklerini üretir (donut/rozet tek kaynağı)", () => {
+    expect(css).toContain("--gold: #E4C06A;");
+    expect(css).toContain("--fx: #A3CE6E;");
+    expect(css).toContain("--stock: #4FA3F7;");
+    expect(css).toContain("--fund: #38CFC4;");
+    expect(css).toContain("--eur: #9BAAF3;");
   });
 
   it("grup öneklerini uygular (font/radius/space/shadow)", () => {

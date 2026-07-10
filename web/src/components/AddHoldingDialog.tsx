@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AssetType, CreateBesInput, CreateHoldingInput, CurrencyCode } from "@finans/shared";
 import { useCreateBes, useCreateHolding } from "../lib/hooks";
 import { useToast } from "./Toast";
+import { withViewTransition } from "../lib/viewTransition";
 import { ASSET_META } from "../lib/assetMeta";
 import { DateField } from "./DateField";
 
@@ -81,7 +82,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        withViewTransition(onClose);
         return;
       }
       if (e.key !== "Tab" || !dialogRef.current) return;
@@ -145,7 +146,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
 
   const dirty = JSON.stringify(form) !== JSON.stringify(INITIAL);
   const onOverlayClick = () => {
-    if (!dirty) onClose();
+    if (!dirty) withViewTransition(onClose);
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -201,7 +202,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
       >
         <div className="modal-top">
           <h2 id="add-holding-title">Varlık Ekle</h2>
-          <button type="button" className="modal-close" aria-label="Kapat" onClick={onClose}>✕</button>
+          <button type="button" className="modal-close" aria-label="Kapat" onClick={() => withViewTransition(onClose)}>✕</button>
         </div>
         <form onSubmit={onSubmit} className="add-form">
           <div className="field-group">
@@ -331,7 +332,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
           )}
 
           <div className="add-actions">
-            <button type="button" className="btn-ghost" onClick={onClose}>
+            <button type="button" className="btn-ghost" onClick={() => withViewTransition(onClose)}>
               Vazgeç
             </button>
             <button type="submit" disabled={!valid || pending}>
