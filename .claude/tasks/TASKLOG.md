@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-07-10 (6) · ad-hoc — Analiz sayfası ÇALIŞIR duruma getirildi (LLM yorum canlı)
+- **Görev(ler):** ad-hoc (kullanıcı isteği: "Analiz sayfası çalışsın, ne gerekiyorsa yap").
+- **Kök neden zinciri (üç katman):**
+  1. Yapılandırılmış model `poolside/laguna-m.1:free` 200 dönüp **boş içerik** bırakıyor
+     (reasoning token tuzağı); popüler ücretsiz modeller (qwen/gemma) anlık 429.
+  2. Metriklerden teşhis (`finans_llm_tokens_total output=5`): nemotron-NANO reasoning
+     kapalıyken sadece `{"cards":[]}` üretiyor → parse 0 kart → fallback.
+  3. **Asıl sürpriz:** Vite proxy'nin gittiği yer yerel backend değil — yanıttaki
+     `via: 1.1 Caddy` başlığı, 16 saattir ayakta olan **Docker compose yığınını** açığa
+     çıkardı. Tarayıcıdaki uygulama compose API'sine (ayrı Postgres + .env LLM configi)
+     konuşuyor; oradaki model `llama-3.3-70b:free` (Haziran'dan beri kalıcı 429) →
+     kullanıcı hep fallback görüyordu. (Pozisyon sayısı tutarsızlıklarının da açıklaması:
+     iki ayrı veritabanı.)
+- **Çözüm:**
+  1. Aday ücretsiz modeller gerçek bayraklarla (reasoning exclude+disabled, json_object)
+     canlı test edildi → **`nvidia/nemotron-3-super-120b-a12b:free`** tam JSON + 5 kart üretti.
+  2. Yerel dev: User Secrets `Llm:Model` güncellendi. **Compose: `.env` LLM_MODEL güncellendi**
+     + yinelenen placeholder `LLM_API_KEY` satırı silindi; `docker compose up -d api` ile
+     container yeniden oluşturuldu (DB volume korunur). KOD DEĞİŞMEDİ.
+  3. Doğrulama: proxy üzerinden `source: llm | 5 kart`; sayfada "LLM tarafından üretildi"
+     rozeti + yoğunlaşma metre'li kartlar; sayılar birebir doğru (842.276 TL, %65,6, %41,8/%2,7).
+- **Dokunulan dosyalar:** `.env` (repo dışı), User Secrets (repo dışı), `SETUP.md` (örnek model),
+  `README.md` + `docs/assets/analysis.png` (yeni görsel), `.claude/tasks/TASKLOG.md`
+- **Test:** yok (kod değişmedi — yapılandırma). Canlı uçtan uca doğrulama yapıldı.
+- **Karar/Not:** Ücretsiz katman modelleri kırılgan (429/boş içerik) — kalıcı çözüm için
+  Anthropic anahtarı veya OpenRouter kredisi düşünülebilir. Prometheus LLM metrikleri
+  (T3.9) teşhiste birebir işe yaradı. Vite hedefi hangi ortama bakıyorsa tarayıcı ORAYI
+  kullanır — iki backend aynı anda ayaktayken karışıklığa dikkat.
+- **Durum:** tamamlandı.
+- **Sıradaki:** README analiz görseli commit → T4.2.
+
 ## 2026-07-10 (5) · ad-hoc — Motion katmanı 2: kart giriş/çıkış + toast/modal keyframe'leri
 - **Görev(ler):** ad-hoc (kullanıcı isteği: "her kart için giriş/çıkış efekti + notification keyframe + daha hareketli site").
 - **Ne yapıldı:**

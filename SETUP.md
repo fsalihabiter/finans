@@ -293,7 +293,7 @@ dotnet user-secrets set "Llm:ApiKey"   "sk-ant-..."
 # Option 2 — OpenRouter (free-tier models available):
 dotnet user-secrets set "Llm:Provider" "OpenRouter"
 dotnet user-secrets set "Llm:BaseUrl"  "https://openrouter.ai/api/"
-dotnet user-secrets set "Llm:Model"    "qwen/qwen3-next-80b-a3b-instruct:free"
+dotnet user-secrets set "Llm:Model"    "nvidia/nemotron-3-super-120b-a12b:free"
 dotnet user-secrets set "Llm:ApiKey"   "sk-or-v1-..."
 ```
 
