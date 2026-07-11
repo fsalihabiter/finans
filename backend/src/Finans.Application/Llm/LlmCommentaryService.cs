@@ -63,6 +63,7 @@ public sealed class LlmCommentaryService(
         // göstermek yerine BİR kez yeniden üret; denemelerin en iyisi (en çok kart) kullanılır.
         // Sağlayıcı hatasında (429/timeout) tekrar denenmez — kotayı kötüleştirmeyelim.
         IReadOnlyList<CommentaryCard> best = Array.Empty<CommentaryCard>();
+        var bestScore = -1;
         const int maxAttempts = 2;
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -83,12 +84,21 @@ public sealed class LlmCommentaryService(
                     "LLM yorumunda {Count} kart çıktı filtrelerine takıldı ve düşürüldü (deneme {Attempt}).",
                     guardBlocked, attempt);
 
-            if (parsed && cards.Count > best.Count) best = cards;
+            // En iyi tur: önce kart sayısı, sonra kavram (detail) kapsaması (T3.13).
+            var detailCount = cards.Count(c => c.Detail is not null);
+            var score = cards.Count * 100 + detailCount;
+            if (parsed && score > bestScore)
+            {
+                best = cards;
+                bestScore = score;
+            }
 
-            // Tam tur (parse tamam + filtre devreye girmedi + şemanın istediği TAM 6 kart) →
-            // yeniden üretim gereksiz. Eksik kart da yeniden üretim sebebidir (kullanıcı
-            // beklentisi: kart sayısı üretimden üretime değişmesin).
-            if (parsed && guardBlocked == 0 && cards.Count >= CommentaryParseConstraints.MaxCards) break;
+            // Tam tur = parse tamam + filtre devreye girmedi + TAM 6 kart + HER kartta kavram
+            // bloğu. Eksik kart VEYA eksik kavram yeniden üretim sebebidir (kullanıcı beklentisi:
+            // görünüm üretimden üretime değişmesin).
+            if (parsed && guardBlocked == 0
+                && cards.Count >= CommentaryParseConstraints.MaxCards
+                && detailCount == cards.Count) break;
 
             if (attempt < maxAttempts)
                 logger.LogInformation(

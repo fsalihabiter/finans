@@ -36,11 +36,15 @@ public class LlmCommentaryHardeningTests
     // T3.10: MinBody 120 — geçerli fixture gövdesi 150 char.
     private static string ValidBody() => new('a', 150);
 
+    // T3.13: "tam tur" artık her kartta kavram (detail) ister — fixture rakamsız detail taşır.
+    private const string ValidDetail =
+        "Kavramı günlük hayattan bir benzetmeyle anlatan, yeterince uzun ve rakamsız eğitici bir paragraf metni.";
+
     private static string ValidCardJson(int count) =>
         "{\"cards\":[" +
         string.Join(",", Enumerable.Range(1, count).Select(i =>
             $"{{\"emoji\":\"✅\",\"title\":\"Kart {i}\",\"body\":\"" +
-            ValidBody() + $"\"}}")) +
+            ValidBody() + $"\",\"detail\":\"{ValidDetail}\"}}")) +
         "]}";
 
     [Fact]
@@ -335,6 +339,25 @@ public class LlmCommentaryHardeningTests
 
         Assert.Equal(2, client.Calls);
         Assert.Equal(6, resp.Cards.Count);
+    }
+
+    [Fact]
+    public async Task Retries_when_some_cards_lack_detail_and_prefers_fuller_coverage()
+    {
+        // T3.13: kavram bloğu her kartta beklenir — 6 kart ama detail'siz → retry;
+        // ikinci turda tam kapsama → o kullanılır.
+        var withoutDetail = "{\"cards\":[" +
+            string.Join(",", Enumerable.Range(1, 6).Select(i =>
+                $"{{\"emoji\":\"✅\",\"title\":\"Kart {i}\",\"body\":\"" + ValidBody() + "\"}}")) +
+            "]}";
+        var client = new SequenceLlmClient(withoutDetail, ValidCardJson(6));
+        var svc = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Equal(2, client.Calls);
+        Assert.Equal(6, resp.Cards.Count);
+        Assert.All(resp.Cards, c => Assert.NotNull(c.Detail)); // tam kavram kapsaması seçildi
     }
 
     [Fact]

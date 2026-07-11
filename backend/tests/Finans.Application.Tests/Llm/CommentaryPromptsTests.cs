@@ -104,7 +104,7 @@ public class CommentaryPromptsTests
     }
 
     [Fact]
-    public void CommentaryJsonSchema_has_optional_detail_with_bounds()
+    public void CommentaryJsonSchema_requires_detail_with_bounds()
     {
         using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);
         var item = doc.RootElement.GetProperty("properties").GetProperty("cards").GetProperty("items");
@@ -113,8 +113,9 @@ public class CommentaryPromptsTests
         Assert.Equal("string", detail.GetProperty("type").GetString());
         Assert.True(detail.GetProperty("maxLength").GetInt32() <= 600);
 
-        // detail zorunlu DEĞİL — kart body ile tek başına geçerli.
+        // T3.13 (kullanıcı beklentisi): kavram bloğu HER kartta — şemada zorunlu.
+        // (Parse yine detail'siz kartı düşürmez; eksik kavram retry sebebi olur.)
         var required = item.GetProperty("required").EnumerateArray().Select(e => e.GetString()).ToHashSet();
-        Assert.DoesNotContain("detail", required);
+        Assert.Contains("detail", required);
     }
 }

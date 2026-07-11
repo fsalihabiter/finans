@@ -140,8 +140,9 @@ public static class CommentaryPrompts
                   },
                   "detail": {
                     "type": "string",
+                    "minLength": 40,
                     "maxLength": 500,
-                    "description": "Opsiyonel: kavramı hiç bilmeyene benzetmeyle anlatan ek paragraf. Rakam ve tavsiye İÇERMEZ."
+                    "description": "ZORUNLU: kavramı hiç bilmeyene günlük hayattan benzetmeyle anlatan ek paragraf. Yüzde/tutar/portföy rakamı ve tavsiye İÇERMEZ."
                   },
                   "meter": {
                     "type": "object",
@@ -160,7 +161,7 @@ public static class CommentaryPrompts
                     "maxItems": 4
                   }
                 },
-                "required": ["emoji", "title", "body"]
+                "required": ["emoji", "title", "body", "detail"]
               }
             }
           },

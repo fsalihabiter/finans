@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-07-11 (10) · T3.13 — Yorum kartları ferah yerleşim + kavram tam-kapsama hedefi
+- **Görev(ler):** T3.13 (kullanıcı: "bitişik sıkışık görüntü hoş değil + birkaç kartta kavram
+  yok; skill yükleyip ihtiyaca göre kullanan yaklaşımla yap").
+- **Yapılanlar:**
+  1. **Yerleşim (ui-ux-pro-max skill rehberliğinde** — spacious density + 65-75 karakter satır
+     genişliği + 1.6+ satır aralığı kuralları): grid min sütun 280→380px (geniş ekranda en çok
+     3 sütun), gap 16→24px, kart padding 18/20→26/28px, radius 20px, gövde line-height 1.7 +
+     yumuşak renk (text-soft), başlık 17.5px/1.35, kavram bloğu 13px/1.65 + geniş dolgu,
+     etiketler `margin-top:auto` ile kartın altına sabit (satırdaki kartlar hizalı biter),
+     karta hover geçişi. Tarayıcıda doğrulandı: ferah, taranabilir 3 sütun.
+  2. **Kavram tam-kapsama:** şemada `detail` artık ZORUNLU (minLength 40); "tam tur" koşulu
+     = 6 kart + HER kartta kavram; en-iyi-tur seçimi kart sayısı → kavram kapsaması skoruyla.
+     Parse detail'siz kartı yine düşürmez (zarif bozulma).
+- **Canlı gerçeklik (dürüst not):** retry'a rağmen ücretsiz model HER denemede 1-2 kusurlu
+  kart üretiyor (loglar: deneme1 1 düştü, deneme2 2 düştü) → 5 kart/2 kavramla en iyi tur
+  seçilebiliyor. **Boru hattı doğru; darboğaz model.** Kullanıcının Claude Console'da kredisi
+  göründü ($4.96) → Anthropic'e geçiş önerildi (.env: LLM_PROVIDER=Anthropic + anahtar +
+  LLM_BASE_URL=https://api.anthropic.com/; anahtar kullanıcı tarafından girilecek).
+- **Dokunulan dosyalar:** `web/src/App.css` (commentary yerleşim), `CommentaryPrompts.cs`
+  (şema detail zorunlu), `LlmCommentaryService.cs` (skorlu best-pick + tam-tur koşulu),
+  testler (Prompts/Hardening/Cached/Metrics fixture'ları), TASKLOG
+- **Test:** Application **190/190** · web build temiz (imaj derlendi).
+- **Durum:** tamamlandı (boru hattı); model kalitesi Anthropic anahtarını bekliyor.
+- **Sıradaki:** Kullanıcı Anthropic anahtarını .env'e girerse `docker compose up -d api` → tam
+  6 kart + 6 kavram beklenir; sonra T4.2.
+
 ## 2026-07-11 (9) · T3.12 — Bekçi yan etkileri giderildi: yeniden üretim + yumuşak detail kuralı
 - **Görev(ler):** T3.12 (kullanıcı geri bildirimi: "şimdi de bir kart eksik ve kavram
   açıklamaları kayboldu — bir yeri yaparken diğerlerini bozma").

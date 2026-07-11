@@ -64,9 +64,10 @@ public class LlmMetricsTests
         new(Inner(client, metrics), new FakeAppCache(), new FixedCurrentUser(Guid.NewGuid()),
             metrics, NullLogger<CachedLlmCommentaryService>.Instance);
 
-    // Temiz + TAM tur (6 kart — T3.12 retry tetiklenmesin).
+    // Temiz + TAM tur (6 kart + her kartta detail — T3.12/T3.13 retry tetiklenmesin).
     private static string CleanSixCards =>
-        "{\"cards\":[" + string.Join(",", Enumerable.Range(1, 6).Select(_ => CleanCard)) + "]}";
+        "{\"cards\":[" + string.Join(",", Enumerable.Range(1, 6).Select(_ =>
+            CleanCard.TrimEnd('}') + ",\"detail\":\"Kavramı benzetmeyle anlatan yeterince uzun rakamsız eğitici paragraf metni.\"}")) + "]}";
 
     [Fact]
     public async Task Inner_records_successful_call_with_token_counts()

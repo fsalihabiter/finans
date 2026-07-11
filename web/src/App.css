@@ -2155,20 +2155,33 @@ body.drawer-lock {
   color: var(--muted, #97a3c9);
   font-size: 13px;
 }
+/* Ferah kart ızgarası (T3.13, ui-ux-pro-max: spacious density + 65-75 karakter satır
+   genişliği): min 380px sütun → geniş ekranda en fazla 3 sütun, 24px nefes payı.
+   Kart yüksekliği satır içinde eşitlenir (stretch) — "bitişik/sıkışık" görüntü biter. */
 .commentary-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 24px;
 }
 .commentary-card {
   background: var(--panel, #131a30);
   border: 1px solid var(--line, #26304f);
-  border-radius: 18px;
-  padding: 18px 20px;
+  border-radius: 20px;
+  padding: 26px 28px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   color: var(--text, #eef2ff);
+  transition: border-color 200ms ease-out, box-shadow 240ms ease-out;
+}
+.commentary-card:hover {
+  border-color: var(--line-strong, #42507e);
+  box-shadow: 0 14px 34px -22px rgba(3, 5, 12, 0.9);
+}
+/* Etiketler kartın en altına yaslanır → satırdaki kartlar hizalı biter. */
+.commentary-card .commentary-tags {
+  margin-top: auto;
+  padding-top: 4px;
 }
 .commentary-card.is-fallback {
   border-style: dashed;
@@ -2185,8 +2198,9 @@ body.drawer-lock {
 .commentary-card-head h3 {
   margin: 0;
   font-family: var(--font-display, Georgia, serif);
-  font-size: 17px;
+  font-size: 17.5px;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--text, #eef2ff);
 }
 .commentary-emoji {
@@ -2195,20 +2209,20 @@ body.drawer-lock {
 }
 .commentary-body {
   margin: 0;
-  color: var(--text, #eef2ff);
+  color: var(--text-soft, #cbd5f0);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 /* Kavram eğitimi paragrafı (T3.10): gövdeden ayrık, hafif vurgulu eğitici blok. */
 .commentary-detail {
   margin: 0;
-  padding: 10px 13px;
-  font-size: 12.5px;
-  line-height: 1.6;
+  padding: 13px 16px;
+  font-size: 13px;
+  line-height: 1.65;
   color: var(--text-soft, #cbd5f0);
   background: rgba(138, 148, 220, 0.07);
   border-left: 3px solid var(--accent, #8a94dc);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 .commentary-detail-label {
   font-weight: 700;

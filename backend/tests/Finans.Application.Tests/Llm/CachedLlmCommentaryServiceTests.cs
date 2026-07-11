@@ -24,10 +24,11 @@ public class CachedLlmCommentaryServiceTests
         Allocation: [new AllocationDto(AssetType.Gold, "G", totalValue, 1m)],
         AsOf: new DateTime(2026, 6, 18, 0, 0, 0, DateTimeKind.Utc));
 
-    // Temiz + TAM tur (6 kart — T3.12 retry tetiklenmesin; gövde ≥120 char, T3.10 MinBody).
+    // Temiz + TAM tur (6 kart + her kartta detail — T3.12/T3.13 retry tetiklenmesin).
     private static LlmResult OkCards() => LlmResult.Ok(
         "{\"cards\":[" + string.Join(",", Enumerable.Range(1, 6).Select(i =>
-            "{\"emoji\":\"✅\",\"title\":\"Kart " + i + "\",\"body\":\"" + new string('a', 150) + "\"}")) + "]}", 100, 40);
+            "{\"emoji\":\"✅\",\"title\":\"Kart " + i + "\",\"body\":\"" + new string('a', 150) +
+            "\",\"detail\":\"Kavramı benzetmeyle anlatan yeterince uzun rakamsız eğitici paragraf metni.\"}")) + "]}", 100, 40);
 
     private static LlmResult Failed() => LlmResult.Fail("http_503");
 
