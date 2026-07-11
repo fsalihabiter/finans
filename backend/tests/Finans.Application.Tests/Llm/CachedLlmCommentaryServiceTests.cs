@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Finans.Application.Common;
 using Finans.Application.Llm;
 using Finans.Application.Portfolio;
@@ -49,6 +49,12 @@ public class CachedLlmCommentaryServiceTests
     {
         private readonly Dictionary<string, object> _store = new();
 
+        /// <summary>TTL simülasyonu: koşula uyan anahtarları düşür (örn. tazelik anahtarları).</summary>
+        public void Evict(Func<string, bool> predicate)
+        {
+            foreach (var k in _store.Keys.Where(predicate).ToList()) _store.Remove(k);
+        }
+
         public Task<T?> GetAsync<T>(string key, CancellationToken ct = default) where T : class
             => Task.FromResult(_store.TryGetValue(key, out var v) ? (T?)v : null);
 
@@ -73,20 +79,22 @@ public class CachedLlmCommentaryServiceTests
             => factory(ct);
     }
 
-    private static (CachedLlmCommentaryService svc, CountingLlmClient client) Build(Func<int, LlmResult> responder)
+    private static (CachedLlmCommentaryService svc, CountingLlmClient client, FakeAppCache cache) Build(
+        Func<int, LlmResult> responder)
     {
         var client = new CountingLlmClient(responder);
         var inner = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
+        var cache = new FakeAppCache();
         var svc = new CachedLlmCommentaryService(
-            inner, new FakeAppCache(), new FixedCurrentUser(Guid.NewGuid()),
+            inner, cache, new FixedCurrentUser(Guid.NewGuid()),
             NoopLlmMetrics.Instance, NullLogger<CachedLlmCommentaryService>.Instance);
-        return (svc, client);
+        return (svc, client, cache);
     }
 
     [Fact]
     public async Task Second_identical_request_is_served_from_cache_without_calling_llm()
     {
-        var (svc, client) = Build(_ => OkCards());
+        var (svc, client, _) = Build(_ => OkCards());
         var summary = Summary(641_403m);
 
         var r1 = await svc.GetCommentaryAsync(summary);
@@ -100,7 +108,7 @@ public class CachedLlmCommentaryServiceTests
     [Fact]
     public async Task Changed_portfolio_produces_a_new_key_and_calls_llm_again()
     {
-        var (svc, client) = Build(_ => OkCards());
+        var (svc, client, _) = Build(_ => OkCards());
 
         await svc.GetCommentaryAsync(Summary(641_403m));
         await svc.GetCommentaryAsync(Summary(700_000m)); // farklı hash → cache miss
@@ -112,7 +120,7 @@ public class CachedLlmCommentaryServiceTests
     public async Task Falls_back_to_last_successful_commentary_when_llm_fails()
     {
         // 1. çağrı başarılı (son başarılıyı saklar), 2. çağrı (farklı portföy) başarısız.
-        var (svc, client) = Build(i => i == 0 ? OkCards() : Failed());
+        var (svc, client, _) = Build(i => i == 0 ? OkCards() : Failed());
 
         var r1 = await svc.GetCommentaryAsync(Summary(641_403m));
         var r2 = await svc.GetCommentaryAsync(Summary(700_000m));
@@ -126,12 +134,47 @@ public class CachedLlmCommentaryServiceTests
     [Fact]
     public async Task Plain_fallback_when_llm_fails_and_no_prior_success()
     {
-        var (svc, _) = Build(_ => Failed());
+        var (svc, _, _) = Build(_ => Failed());
 
         var resp = await svc.GetCommentaryAsync(Summary(641_403m));
 
         Assert.Equal("fallback", resp.Source);
         Assert.Equal("Yorum şu an üretilemedi", resp.Cards[0].Title);
+    }
+
+    // ── T3.15: maliyet koruması — kaba hash + sabitleme ──
+
+    [Fact]
+    public async Task Small_price_wiggle_hits_the_same_cache_key_no_new_llm_call()
+    {
+        // Canlı fiyat kıpırdadı: 714.985 → 714.990 (%0,0007). Kaba hash (3 anlamlı basamak)
+        // aynı anahtara düşer → yeni LLM üretimi TETİKLENMEZ.
+        var (svc, client, _) = Build(_ => OkCards());
+
+        await svc.GetCommentaryAsync(Summary(714_985m));
+        var r2 = await svc.GetCommentaryAsync(Summary(714_990m));
+
+        Assert.Equal(1, client.Calls);
+        Assert.Equal("llm", r2.Source); // taze cache'ten aynı yanıt
+    }
+
+    [Fact]
+    public async Task Unchanged_portfolio_is_pinned_after_freshness_expiry_no_new_llm_call()
+    {
+        // Tazelik anahtarı süresi doldu (TTL simülasyonu: evict) ama portföy DEĞİŞMEDİ →
+        // son başarılı yorum sabitlenir, LLM'e gidilmez (kullanıcı maliyet koruması, T3.15).
+        var (svc, client, cache) = Build(_ => OkCards());
+        var summary = Summary(641_403m);
+
+        var r1 = await svc.GetCommentaryAsync(summary);
+        // Yalnız tazelik anahtarlarını düşür ("commentary:{user}:{hash}"); last/lasthash kalır.
+        cache.Evict(k => k.StartsWith("commentary:", StringComparison.Ordinal));
+        var r2 = await svc.GetCommentaryAsync(summary);
+
+        Assert.Equal(1, client.Calls);          // ikinci üretim YOK
+        Assert.Equal("llm", r1.Source);
+        Assert.Equal("cache", r2.Source);       // sabitlenmiş yorum
+        Assert.Equal(r1.Cards[0].Title, r2.Cards[0].Title);
     }
 
     [Fact]

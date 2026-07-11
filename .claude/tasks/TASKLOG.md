@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-07-11 (12) · T3.15 — LLM maliyet koruması: kaba hash + yorum sabitleme
+- **Görev(ler):** T3.15 (kullanıcı: "varlıklarda değişim yoksa yorumlar sabitlensin, boşuna
+  API'ye gidilip maliyet yükselmesin").
+- **Denetim:** Sayfa yenileme zaten cache'ten dönüyordu (24s TTL) AMA iki maliyet deliği vardı:
+  (1) canlı fiyat küçük oynayınca özet hash'i değişiyor → yeni üretim; (2) 24s TTL dolunca
+  portföy değişmese bile yeniden üretim.
+- **Yapılanlar (`CachedLlmCommentaryService`):**
+  1. **Kaba çözünürlüklü hash:** cache anahtarı artık LLM yükünden daha kaba yuvarlanır —
+     oranlar 2 basamak (1 puanlık adım), parasal toplamlar 3 anlamlı basamak. Gün içi fiyat
+     kıpırtıları aynı anahtara düşer → üretim tetiklenmez. LLM'e giden metin tam çözünürlükte
+     kalır (yorum hassasiyeti düşmez).
+  2. **Sabitleme (pinning):** tazelik süresi dolduğunda son başarılı yorumun hash'i saklanır
+     (`commentary-lasthash`); hash aynıysa son yorum LLM'e GİDİLMEDEN yeniden sunulur ve
+     tazelik anahtarı yenilenir. LLM maliyeti yalnız ANLAMLI değişimde doğar: yeni işlem/katkı,
+     kompozisyon değişikliği, ~1 puanlık oran kayması.
+- **Canlı doğrulama:** 1. çağrı 98sn (hash şeması değiştiği için bir kerelik yeniden üretim),
+  2. çağrı (yenileme) **0,2sn** — sıfır LLM çağrısı.
+- **Dokunulan dosyalar:** `CachedLlmCommentaryService.cs`, `CachedLlmCommentaryServiceTests.cs`
+  (+2: fiyat kıpırtısı aynı anahtar, TTL sonrası sabitleme; FakeAppCache.Evict), TASKLOG
+- **Test:** Application **193/193**.
+- **Karar/Not:** Kaba hash eşikleri (1pp / 3 anlamlı basamak) maliyet-tazelik dengesi;
+  kartlardaki sayılar pano ile ~1pp'e kadar farklılaşabilir (kabul edilen ödünleşim,
+  disclaimer zaten var). Kullanıcı "Yenile" butonu da değişiklik yoksa LLM tetiklemez.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — Finnhub hisse metrikleri.
+
 ## 2026-07-11 (11) · T3.14 — Analiz başlık kataloğu: sabit 6 kart → uygulanabilir 6-12 başlık
 - **Görev(ler):** T3.14 (kullanıcı kararı: "6 kart olarak değil, ne kadar çok değerlendirilecek
   başlık olursa o kadar iyi; finansal analiz başlıklarını değerlendirmeliyiz").

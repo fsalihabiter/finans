@@ -59,6 +59,7 @@ public sealed class CachedLlmCommentaryService(
         var hash = HashOf(summary, holdings);
         var key = $"commentary:{userId:N}:{hash}";
         var lastKey = $"commentary-last:{userId:N}";
+        var lastHashKey = $"commentary-lasthash:{userId:N}";
 
         // 1) Aynı portföy + 24s içinde → cache'ten (LLM çağrısı yok).
         var cached = await cache.GetAsync<CommentaryResponse>(key, ct);
@@ -78,13 +79,33 @@ public sealed class CachedLlmCommentaryService(
                 return again;
             }
 
+            // 2a) SABİTLEME (T3.15 — maliyet koruması): tazelik süresi dolmuş olsa bile portföy
+            // (kaba çözünürlükte) DEĞİŞMEDİYSE son başarılı yorum LLM'e gidilmeden yeniden
+            // sunulur ve tazelik anahtarı yenilenir. "Varlıklarda değişim yoksa yorum sabittir";
+            // API maliyeti yalnız anlamlı değişimde doğar.
+            var lastHash = await cache.GetAsync<string>(lastHashKey, innerCt);
+            if (lastHash == hash)
+            {
+                var pinned = await cache.GetAsync<CommentaryResponse>(lastKey, innerCt);
+                if (pinned is not null)
+                {
+                    var served = pinned with { Source = "cache" };
+                    await cache.SetAsync(key, served, FreshTtl, innerCt);
+                    metrics.RecordServed("cache");
+                    logger.LogInformation(
+                        "Portföy değişmedi — yorum sabitlendi, LLM çağrısı yapılmadı (maliyet koruması).");
+                    return served;
+                }
+            }
+
             var resp = await inner.GetCommentaryAsync(summary, holdings, innerCt);
 
             if (resp.Source == "llm")
             {
-                // Başarılı: hem taze anahtara (24s) hem "son başarılı"ya (30g) yaz.
+                // Başarılı: taze anahtara (24s) + "son başarılı"ya ve hash'ine (30g) yaz.
                 await cache.SetAsync(key, resp, FreshTtl, innerCt);
                 await cache.SetAsync(lastKey, resp, LastSuccessTtl, innerCt);
+                await cache.SetAsync(lastHashKey, hash, LastSuccessTtl, innerCt);
                 metrics.RecordServed("llm");
                 return resp;
             }
@@ -105,16 +126,52 @@ public sealed class CachedLlmCommentaryService(
     }
 
     /// <summary>
-    /// Anonim portföy özetinin kararlı hash'i (cache anahtarı). Anonimleştirme yuvarlaması (3 basamak)
-    /// sayesinde küçük portföy dalgalanmaları aynı anahtara düşer → gereksiz LLM çağrısı olmaz.
-    /// T3.10: holdings'ten türeyen alanlar (tür getirisi, BES payı) da hash'e girer — LLM'e giden
-    /// yük değişirse cache otomatik tazelenir.
+    /// Anonim portföy özetinin <b>kaba çözünürlüklü</b> kararlı hash'i (cache anahtarı).
+    /// <para>
+    /// T3.15 (maliyet koruması): hash girdisi LLM'e giden yükten DAHA kaba yuvarlanır —
+    /// oranlar 2 basamak (1 puanlık adım), parasal toplamlar 3 anlamlı basamak (~%0,1-1 adım).
+    /// Canlı fiyatların gün içi küçük oynamaları aynı hash'e düşer → yeni LLM üretimi
+    /// TETİKLENMEZ. Yalnız anlamlı değişim (işlem/katkı eklemek, ~1 puanlık oran kayması,
+    /// kompozisyon değişikliği) yeni anahtar üretir. LLM'e giden metin yükü ise tam
+    /// çözünürlükte kalır (yorum hassasiyeti düşmez).
+    /// </para>
     /// </summary>
     private static string HashOf(PortfolioSummaryDto summary, IReadOnlyList<HoldingDto>? holdings)
     {
         var anon = PortfolioAnonymizer.Anonymize(summary, holdings);
-        var json = JsonSerializer.Serialize(anon, HashJson);
+        var coarse = new
+        {
+            anon.BaseCurrency,
+            TotalValue = RoundSignificant(anon.TotalValue, 3),
+            TotalCost = RoundSignificant(anon.TotalCost, 3),
+            NetProfit = RoundSignificant(anon.NetProfit, 2),
+            ReturnRatio = Round2(anon.ReturnRatio),
+            RealReturnRatio = Round2(anon.RealReturnRatio),
+            ConcentrationTop2 = Round2(anon.ConcentrationTop2) ?? 0m,
+            CashWeight = Round2(anon.CashWeight) ?? 0m,
+            anon.HoldingCount,
+            Allocation = anon.Allocation
+                .Select(a => new { a.Type, Weight = Round2(a.Weight) ?? 0m, ReturnRatio = Round2(a.ReturnRatio), a.ItemCount })
+                .ToList(),
+            Bes = anon.Bes is null
+                ? null
+                : new { OwnShare = Round2(anon.Bes.OwnShare) ?? 0m, StateShare = Round2(anon.Bes.StateShare) ?? 0m },
+        };
+        var json = JsonSerializer.Serialize(coarse, HashJson);
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(json));
         return Convert.ToHexString(bytes, 0, 8); // 16 hex karakter — çakışma için fazlasıyla yeterli
+
+        static decimal? Round2(decimal? v) =>
+            v is null ? null : Math.Round(v.Value, 2, MidpointRounding.AwayFromZero);
+
+        // 3 anlamlı basamağa yuvarlama: 714.985 → 715.000; 68.350 → 68.000 (2 basamakta).
+        static decimal RoundSignificant(decimal v, int digits)
+        {
+            if (v == 0m) return 0m;
+            var exponent = (int)Math.Floor(Math.Log10((double)Math.Abs(v))) + 1 - digits;
+            if (exponent <= 0) return Math.Round(v, Math.Min(-exponent, 10), MidpointRounding.AwayFromZero);
+            var factor = (decimal)Math.Pow(10, exponent);
+            return Math.Round(v / factor, 0, MidpointRounding.AwayFromZero) * factor;
+        }
     }
 }
