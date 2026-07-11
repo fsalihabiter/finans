@@ -18,6 +18,8 @@ import type {
   PortfolioSummary,
   PricesResponse,
   Settings,
+  StockHistory,
+  StockHistoryRange,
   StockMetrics,
   TransactionInput,
   UpdateBesContributionInput,
@@ -136,6 +138,9 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     /** GET /api/stocks/{symbol}/explain — metriklerin eğitici açıklaması (tavsiye DEĞİL). */
     getStockExplain: (symbol: string) =>
       get<CommentaryResponse>(`/api/stocks/${encodeURIComponent(symbol)}/explain`),
+    /** GET /api/stocks/{symbol}/history — halka arzdan bugüne dönem dilimli kapanış serisi. */
+    getStockHistory: (symbol: string, range: StockHistoryRange) =>
+      get<StockHistory>(`/api/stocks/${encodeURIComponent(symbol)}/history?range=${range}`),
 
     // ── Ayarlar (04 §4) ──
     getSettings: () => get<Settings>("/api/settings"),

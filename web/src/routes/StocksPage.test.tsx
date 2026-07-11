@@ -30,6 +30,19 @@ const explainBody = {
   generatedAtUtc: "2026-07-12T00:00:00Z",
 };
 
+const historyBody = {
+  symbol: "AAPL",
+  range: "1y",
+  points: [
+    { date: "2025-07-12", close: 250 },
+    { date: "2026-01-12", close: 290 },
+    { date: "2026-07-12", close: 315.32 },
+  ],
+  changeRatio: 0.2613,
+  firstTradeDate: "1980-12-12",
+  source: "stooq",
+};
+
 function mockApi(metricsStatus = 200) {
   vi.stubGlobal(
     "fetch",
@@ -47,6 +60,8 @@ function mockApi(metricsStatus = 200) {
       }
       if (url.includes("/explain"))
         return Promise.resolve({ ok: true, status: 200, json: async () => explainBody } as Response);
+      if (url.includes("/history"))
+        return Promise.resolve({ ok: true, status: 200, json: async () => historyBody } as Response);
       return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
     }),
   );
@@ -78,11 +93,16 @@ describe("StocksPage (T4.4)", () => {
     expect(screen.getAllByText("yüksek bant").length).toBeGreaterThan(0);
     expect(screen.getByText("%0,34")).toBeInTheDocument(); // temettü verimi işaretsiz
 
-    // Açıklama kartı (metrikler başarılı olunca tetiklenir).
+    // Açıklama kartı (metrikler başarılı olunca tetiklenir) — sekmeli gezginde ilk kart açık.
     expect(
       await screen.findByRole("heading", { name: /Fiyat\/Kazanç Oranı Ne Anlatıyor/i }),
     ).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText(/LLM tarafından üretildi/i)).toBeInTheDocument());
+
+    // T4.5: fiyat geçmişi — dönem sekmeleri + dönem değişimi + tahmin-değil notu.
+    expect(await screen.findByRole("button", { name: "TÜMÜ" })).toBeInTheDocument();
+    expect(screen.getByText("+%26,1")).toBeInTheDocument();
+    expect(screen.getByText(/gelecek performansın göstergesi değildir/i)).toBeInTheDocument();
   });
 
   it("bilinmeyen sembolde sözleşmeli 404 mesajı gösterilir, çökme yok", async () => {

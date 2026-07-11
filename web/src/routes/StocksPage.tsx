@@ -1,13 +1,24 @@
 import { useState } from "react";
 import { ApiError, formatCurrency, formatNumber, formatPercent } from "@finans/shared";
-import type { CurrencyCode, StockMetrics } from "@finans/shared";
-import { CommentaryCardList } from "../components/CommentaryCardList";
+import type { CurrencyCode, StockHistoryRange, StockMetrics } from "@finans/shared";
+import { CommentaryTabs } from "../components/CommentaryTabs";
 import { Disclaimer } from "../components/Disclaimer";
 import { InfoTip } from "../components/InfoTip";
-import { useStockExplain, useStockMetrics } from "../lib/hooks";
+import { PriceChart } from "../components/PriceChart";
+import { useStockExplain, useStockHistory, useStockMetrics } from "../lib/hooks";
 
 /** Hızlı deneme çipleri — tanıdık ABD sembolleri (BIST ileri fazda, T4.1 kararı). */
 const POPULAR = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "TSLA"] as const;
+
+/** Fiyat geçmişi dönem sekmeleri (T4.5 — TradingView/Investing alışkanlığı). */
+const RANGES: { key: StockHistoryRange; label: string }[] = [
+  { key: "1w", label: "1H" },
+  { key: "1m", label: "1A" },
+  { key: "3m", label: "3A" },
+  { key: "1y", label: "1Y" },
+  { key: "5y", label: "5Y" },
+  { key: "max", label: "TÜMÜ" },
+];
 
 /** Kaba bant etiketi → Türkçe gösterim (etiketler tavsiye değil; bandın adı). */
 const BAND_TR: Record<string, string> = {
@@ -101,9 +112,11 @@ function MetricGrid({ stock }: { stock: StockMetrics }) {
 export function StocksPage() {
   const [input, setInput] = useState("");
   const [symbol, setSymbol] = useState("");
+  const [range, setRange] = useState<StockHistoryRange>("1y");
 
   const metrics = useStockMetrics(symbol);
   const explain = useStockExplain(symbol, metrics.isSuccess);
+  const history = useStockHistory(symbol, range, metrics.isSuccess);
 
   const search = (s: string) => {
     const normalized = s.trim().toUpperCase();
@@ -223,6 +236,57 @@ export function StocksPage() {
 
           <div className="card">
             <div className="card-head">
+              <h3>Fiyat Geçmişi</h3>
+              <div className="periods" role="group" aria-label="Dönem seç">
+                {RANGES.map((r) => (
+                  <button
+                    key={r.key}
+                    type="button"
+                    className={range === r.key ? "on" : ""}
+                    onClick={() => setRange(r.key)}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {history.isLoading ? (
+              <div className="chart-frame">
+                <div className="cf-empty"><p>Fiyat geçmişi yükleniyor…</p></div>
+              </div>
+            ) : history.isError ? (
+              <div className="chart-frame">
+                <div className="cf-empty" role="alert">
+                  <p>Fiyat geçmişi alınamadı. Metrikler yukarıda güncel.</p>
+                </div>
+              </div>
+            ) : history.data ? (
+              <>
+                <div className="chart-meta">
+                  <span className={`tnum ${((history.data.changeRatio ?? 0) >= 0) ? "up" : "down"}`}>
+                    {history.data.changeRatio == null ? "—" : formatPercent(history.data.changeRatio)}
+                    <span className="muted"> · seçili dönem değişimi</span>
+                  </span>
+                  <span className="mini muted tnum">
+                    piyasaya giriş verisi: {new Date(history.data.firstTradeDate).getFullYear()}
+                    {" · kaynak: "}{history.data.source}
+                  </span>
+                </div>
+                <PriceChart
+                  key={`${history.data.symbol}-${history.data.range}`}
+                  points={history.data.points}
+                  currency={metrics.data.currency}
+                  positive={(history.data.changeRatio ?? 0) >= 0}
+                />
+                <p className="note-muted">
+                  Grafik geçmişi gösterir; gelecek performansın göstergesi değildir.
+                </p>
+              </>
+            ) : null}
+          </div>
+
+          <div className="card">
+            <div className="card-head">
               <h3>Bu rakamlar ne anlatıyor?</h3>
               <span className="mini">
                 {explain.isFetching && "Açıklama hazırlanıyor…"}
@@ -250,7 +314,7 @@ export function StocksPage() {
                 </button>
               </div>
             ) : (
-              <CommentaryCardList
+              <CommentaryTabs
                 cards={explain.data?.cards ?? []}
                 source={explain.data?.source ?? "fallback"}
               />

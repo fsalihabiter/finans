@@ -2390,6 +2390,112 @@ body.drawer-lock {
 .band-warm { color: #e8b34c; border-color: rgba(232, 179, 76, 0.35); background: rgba(232, 179, 76, 0.08); }
 .band-mute { color: var(--muted, #97a3c9); background: rgba(255, 255, 255, 0.03); }
 
+/* ───── Sekmeli yorum gezgini (T4.5) ───── */
+.ctab-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+}
+.ctab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 100px;
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+  color: var(--muted, #97a3c9);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.16s;
+  flex-shrink: 0;
+}
+.ctab:hover {
+  color: var(--text, #eef2ff);
+}
+.ctab.on {
+  background: rgba(138, 148, 220, 0.13);
+  border-color: var(--accent, #8a94dc);
+  color: var(--accent, #8a94dc);
+}
+.ctab-title {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis; /* sekmede kısaltma normal; tam başlık paneldeki kartta */
+}
+.ctab-panel {
+  margin-top: 8px;
+}
+/* Panel kartı: tek kart geniş okuma alanı — satır uzunluğu sınırlı (65-75 karakter). */
+.ctab-panel .commentary-card {
+  max-width: 860px;
+}
+.ctab-panel .commentary-body,
+.ctab-panel .commentary-detail {
+  max-width: 72ch;
+}
+.ctab-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+.ctab-count {
+  font-size: 12px;
+  color: var(--muted, #97a3c9);
+}
+
+/* ───── Fiyat geçmişi grafiği (T4.5) ───── */
+.chart-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.price-chart {
+  position: relative;
+  margin: 0;
+}
+.price-chart svg {
+  display: block;
+  width: 100%;
+  height: 240px;
+  border-radius: 12px;
+  background:
+    linear-gradient(var(--line, #26304f) 1px, transparent 1px) 0 0 / 100% 60px,
+    var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+}
+.price-chart-scale {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 11px;
+  color: var(--muted, #97a3c9);
+  pointer-events: none;
+}
+.price-chart-dates {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted-2, #6f6557);
+  margin-top: 6px;
+}
+
 /* ───── Motion katmanı (v2 — ui-ux-pro-max "Modern Dark", motion 7/10) ─────
    Sadece transform/opacity anime edilir (layout shift yok, CLS=0). Animasyonlar
    her sayfa açılışında/yenilemesinde oynar (kullanıcı kararı 2026-07-11). */

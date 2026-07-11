@@ -1,4 +1,4 @@
-namespace Finans.Application.Llm;
+﻿namespace Finans.Application.Llm;
 
 /// <summary>
 /// Portföy yorum kartları için sistem promptu + few-shot örnekler + JSON çıktı şeması
@@ -144,7 +144,7 @@ public static class CommentaryPrompts
                   "title": {
                     "type": "string",
                     "minLength": 2,
-                    "maxLength": 48,
+                    "maxLength": 64,
                     "description": "Kısa, somut başlık (Türkçe)."
                   },
                   "body": {

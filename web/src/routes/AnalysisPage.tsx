@@ -1,4 +1,4 @@
-import { CommentaryCardList } from "../components/CommentaryCardList";
+import { CommentaryTabs } from "../components/CommentaryTabs";
 import { Disclaimer } from "../components/Disclaimer";
 import { useCommentary } from "../lib/hooks";
 
@@ -58,7 +58,8 @@ export function AnalysisPage() {
           <button type="button" className="btn-primary" onClick={() => void refetch()}>Tekrar dene</button>
         </div>
       ) : (
-        <CommentaryCardList cards={data?.cards ?? []} source={data?.source ?? "fallback"} />
+        // T4.5: ızgara yerine sekmeli gezgin — başlıklar üstte, tek kart geniş okuma alanında.
+        <CommentaryTabs cards={data?.cards ?? []} source={data?.source ?? "fallback"} />
       )}
     </section>
   );

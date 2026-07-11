@@ -15,7 +15,8 @@ namespace Finans.Api.Controllers;
 [Route("api/[controller]")]
 public sealed class StocksController(
     IStockDataService stocks,
-    ILlmStockExplainService explain) : ControllerBase
+    ILlmStockExplainService explain,
+    IStockHistoryService history) : ControllerBase
 {
     /// <summary>
     /// GET /api/stocks/{symbol}/metrics — fiyat + F/K + PD/DD + temettü verimi + kâr
@@ -40,4 +41,15 @@ public sealed class StocksController(
         var metrics = await stocks.GetMetricsAsync(symbol, ct);
         return Ok(await explain.ExplainAsync(metrics, ct));
     }
+
+    /// <summary>
+    /// GET /api/stocks/{symbol}/history?range=1w|1m|3m|1y|5y|max (T4.5) — halka arzdan
+    /// bugüne günlük kapanış serisi, dönem dilimli + dönem değişim oranı. Geçmiş gösterimi;
+    /// gelecek tahmini DEĞİL (CLAUDE.md §2). Kaynak anahtarsız (Stooq), seri 24s cache'li.
+    /// </summary>
+    [HttpGet("{symbol}/history")]
+    [EnableRateLimiting("stocks")]
+    public async Task<ActionResult<StockHistory>> GetHistory(
+        string symbol, [FromQuery] string? range, CancellationToken ct) =>
+        Ok(await history.GetHistoryAsync(symbol, range, ct));
 }

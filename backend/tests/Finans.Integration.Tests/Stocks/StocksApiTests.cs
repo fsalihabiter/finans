@@ -134,4 +134,50 @@ public sealed class StocksApiTests : IClassFixture<SqliteWebApplicationFactory>,
 
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    // ── T4.5: /history (SC-30) ──
+
+    private HttpClient ClientWithHistory(Func<string, IReadOnlyList<StockPricePoint>?> responder)
+    {
+        var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IStockHistoryProvider>();
+            services.AddSingleton<IStockHistoryProvider>(new StubHistoryProvider(responder));
+        })).CreateClient();
+        client.DefaultRequestHeaders.Add("X-User-Id", Investor.ToString());
+        return client;
+    }
+
+    private sealed class StubHistoryProvider(Func<string, IReadOnlyList<StockPricePoint>?> responder) : IStockHistoryProvider
+    {
+        public string Source => "stub";
+        public Task<IReadOnlyList<StockPricePoint>?> GetDailyHistoryAsync(string symbol, CancellationToken ct = default) =>
+            Task.FromResult(responder(symbol));
+    }
+
+    [Fact]
+    public async Task History_returns_range_sliced_series_with_change_ratio()
+    {
+        var points = Enumerable.Range(0, 40)
+            .Select(i => new StockPricePoint(
+                DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(i - 39), 100m + i))
+            .ToList();
+        var resp = await ClientWithHistory(_ => points).GetAsync("/api/stocks/AAPL/history?range=1w");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        var root = doc.RootElement;
+        root.GetProperty("range").GetString().Should().Be("1w");
+        root.GetProperty("points").GetArrayLength().Should().BeInRange(7, 9);
+        root.GetProperty("changeRatio").GetDecimal().Should().BeGreaterThan(0);
+        root.GetProperty("source").GetString().Should().Be("stub");
+    }
+
+    [Fact]
+    public async Task History_invalid_range_returns_400()
+    {
+        var resp = await ClientWithHistory(_ => null).GetAsync("/api/stocks/AAPL/history?range=2saat");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

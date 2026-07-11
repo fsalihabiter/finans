@@ -15,4 +15,10 @@ public sealed class StockOptions
 
     /// <summary>Tek dış çağrı bütçesi (10 §2).</summary>
     public int TimeoutSeconds { get; set; } = 10;
+
+    /// <summary>Fiyat geçmişi kaynağı (T4.5 — Yahoo chart API, anahtarsız; halka arzdan bugüne günlük seri).</summary>
+    public string HistoryBaseUrl { get; set; } = "https://query1.finance.yahoo.com/";
+
+    /// <summary>Geçmiş CSV'si uzun olabilir (30+ yıl) → metrikten daha geniş bütçe.</summary>
+    public int HistoryTimeoutSeconds { get; set; } = 20;
 }

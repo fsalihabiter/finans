@@ -1,4 +1,4 @@
-namespace Finans.Application.Stocks;
+﻿namespace Finans.Application.Stocks;
 
 /// <summary>
 /// Hisse metrik açıklama promptları (T4.3 — 07 §8). Portföy yorumuyla (T3.2) aynı korkuluklar:
@@ -67,7 +67,7 @@ public static class StockExplainPrompts
                 "type": "object",
                 "properties": {
                   "emoji": { "type": "string" },
-                  "title": { "type": "string", "minLength": 2, "maxLength": 48 },
+                  "title": { "type": "string", "minLength": 2, "maxLength": 64 },
                   "body": {
                     "type": "string", "minLength": 120, "maxLength": 600,
                     "description": "3-6 cümle: tanım + bu hissede ne görünüyor + iki yönlü çerçeve (tavsiye YOK)."

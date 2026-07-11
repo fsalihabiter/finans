@@ -14,6 +14,7 @@ import type {
   CreateHoldingInput,
   CurrencyCode,
   GenerateBesContributionsInput,
+  StockHistoryRange,
   TransactionInput,
   UpdateBesContributionInput,
   UpdateBesInput,
@@ -33,6 +34,7 @@ export const queryKeys = {
   commentary: ["commentary"] as const,
   stockMetrics: (symbol: string) => ["stock-metrics", symbol] as const,
   stockExplain: (symbol: string) => ["stock-explain", symbol] as const,
+  stockHistory: (symbol: string, range: string) => ["stock-history", symbol, range] as const,
 };
 
 export function usePortfolioSummary(baseCurrency?: CurrencyCode) {
@@ -138,6 +140,21 @@ export function useStockExplain(symbol: string, enabled: boolean) {
     gcTime: 24 * 60 * 60_000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    retry: 1,
+  });
+}
+
+/**
+ * Hisse fiyat geçmişi (T4.5). Kaynak anahtarsız (Stooq) + backend tüm seriyi 24s cache'ler;
+ * dönem değişimi yalnız dilimleme (ucuz). Geçmiş gösterimi — tahmin değil.
+ */
+export function useStockHistory(symbol: string, range: StockHistoryRange, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.stockHistory(symbol, range),
+    queryFn: () => api.getStockHistory(symbol, range),
+    enabled: enabled && symbol.length > 0,
+    staleTime: 60 * 60_000,
+    refetchOnWindowFocus: false,
     retry: 1,
   });
 }

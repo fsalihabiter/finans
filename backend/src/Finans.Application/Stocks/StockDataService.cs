@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Finans.Application.Common;
 using Microsoft.Extensions.Logging;
 
@@ -11,19 +10,16 @@ namespace Finans.Application.Stocks;
 /// <para>Cache: piyasa verisi ortak (UserId'siz anahtar) + 1 saat TTL — temel metrikler
 /// gün içi nadiren değişir; Finnhub ücretsiz kota (60 çağrı/dk) da korunur (NFR-9).</para>
 /// </summary>
-public sealed partial class StockDataService(
+public sealed class StockDataService(
     IStockDataProvider provider,
     IAppCache cache,
     ILogger<StockDataService> logger) : IStockDataService
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(1);
 
-    [GeneratedRegex("^[A-Z0-9.\\-]{1,12}$")]
-    private static partial Regex SymbolPattern();
-
     public async Task<StockMetricsDto> GetMetricsAsync(string symbol, CancellationToken ct = default)
     {
-        var normalized = Normalize(symbol);
+        var normalized = StockSymbols.Normalize(symbol);
         var key = $"stock:metrics:{normalized}";
 
         var cached = await cache.GetAsync<StockMetricsDto>(key, ct);
@@ -55,15 +51,5 @@ public sealed partial class StockDataService(
             await cache.SetAsync(key, dto, CacheTtl, innerCt);
             return dto;
         }, ct);
-    }
-
-    /// <summary>Sembol normalizasyonu: kırp + BÜYÜT; yalnız A-Z, 0-9, nokta, tire (≤12).</summary>
-    private static string Normalize(string symbol)
-    {
-        var s = (symbol ?? string.Empty).Trim().ToUpperInvariant();
-        if (!SymbolPattern().IsMatch(s))
-            throw new ValidationException("symbol", "invalid",
-                "Geçersiz sembol. Yalnız harf/rakam/nokta/tire, en çok 12 karakter (örn. AAPL, BRK.B).");
-        return s;
     }
 }

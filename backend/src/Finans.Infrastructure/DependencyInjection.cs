@@ -141,6 +141,17 @@ public static class DependencyInjection
         // + son-başarılı fallback servisin içinde (IAppCache). LLM yoksa Noop → fallback kartı.
         services.AddScoped<ILlmStockExplainService, LlmStockExplainService>();
 
+        // T4.5: fiyat geçmişi — Yahoo chart API (ANAHTARSIZ; halka arzdan bugüne günlük seri).
+        // User-Agent şart (botsuz istemci reddedilir); uzun seri (40+ yıl ≈ 1-2 MB JSON) için
+        // geniş zaman aşımı; seri 24s cache'lenir.
+        services.AddHttpClient<IStockHistoryProvider, YahooStockHistoryProvider>(c =>
+        {
+            c.BaseAddress = new Uri(stocks.HistoryBaseUrl);
+            c.Timeout = TimeSpan.FromSeconds(Math.Max(1, stocks.HistoryTimeoutSeconds));
+            c.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; Nirengi/1.0)");
+        });
+        services.AddScoped<IStockHistoryService, StockHistoryService>();
+
         // T3.9: LLM kullanım/maliyet metriği (Meter "Finans.Llm" → OTel/Prometheus). Singleton.
         services.AddSingleton<ILlmMetrics, LlmMetrics>();
 

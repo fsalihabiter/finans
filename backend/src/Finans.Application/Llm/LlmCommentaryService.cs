@@ -304,7 +304,9 @@ internal static class CommentaryParseConstraints
     public const int MinCards = 6;
     public const int MaxCards = 12;
     public const int MinTitle = 2;
-    public const int MaxTitle = 48;
+    // 64 (T4.5): 48 canlıda başlıkları "…" ile kırpıyordu; prompt kısa başlık ister,
+    // bu sınır yalnız emniyet kemeri.
+    public const int MaxTitle = 64;
     public const int MinBody = 120;
     public const int MaxBody = 600;
     public const int MinDetail = 40;

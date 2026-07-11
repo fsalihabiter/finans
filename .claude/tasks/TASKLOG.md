@@ -20,6 +20,42 @@
 
 ---
 
+## 2026-07-12 (3) · T4.5 — Fiyat geçmişi grafiği + sekmeli yorum gezgini + başlık düzeltmesi
+- **Görev(ler):** T4.5 (kullanıcı geri bildirimi: başlıklar "…" ile kırpılıyor; kart ızgarası
+  hoş değil — slide/tab gezinme; yorumlara grafik; halka arzdan beri fiyat + TradingView-tarzı
+  dönemler).
+- **Ne yapıldı:**
+  1. **Başlık kırpılması:** MaxTitle 48→64 (şemalar + parse); SmartTruncate zaten kelime
+     sınırında — canlıdaki "…Varlıkl" biçimi bitti.
+  2. **Fiyat geçmişi (backend):** `GET /api/stocks/{symbol}/history?range=1w|1m|3m|1y|5y|max` —
+     `StockHistoryService` (dilimleme + değişim oranı uçlardan + ≤500 nokta seyrekleştirme
+     uçlar korunarak + yeni-halka-arz düşüşü + tam seri 24s ortak cache). **Kaynak: Yahoo
+     chart API** (anahtarsız, halka arzdan bugüne TAM günlük seri — canlı: AAPL 1980-12-12'den
+     11.485 nokta). Denenen alternatifler kayda geçti: Stooq bot doğrulaması (JS proof-of-work)
+     istiyor — sunucudan kullanılamaz; Finnhub candle ücretli. `StockSymbols.Normalize` ortak
+     yardımcıya çıkarıldı.
+  3. **Web grafik:** `PriceChart` (SVG çizgi + gradyan alan + çizim animasyonu; min/max fiyat +
+     ilk/son tarih etiketleri; yön rengi mint/coral) + dönem sekmeleri (1H 1A 3A 1Y 5Y TÜMÜ) +
+     dönem değişim % + "piyasaya giriş verisi: YYYY" + **"geçmiş, tahmin değil" notu** (CLAUDE.md §2).
+  4. **Sekmeli yorum gezgini:** `CommentaryTabs` (tablist/tab/tabpanel + klavye okları; sekme
+     şeridi emoji+başlık; TEK kart geniş okuma alanında 72ch satır sınırı; Önceki/Sonraki + sayaç).
+     Analiz VE Hisse sayfaları ızgaradan sekmeye geçti; kart görünümü `CommentaryCardItem`
+     olarak ayrıştırıldı (liste bileşeni korunuyor).
+- **Canlı doğrulama (tarayıcı):** AAPL → 1Y grafik +%48,4; TÜMÜ → 1980→2026, $0,06→$315,32
+  (+%245.667); açıklama 5 sekme, tam başlıklar panelde, 1/5 gezinme. Yahoo canlı teyit.
+- **Dokunulan dosyalar:** backend (StockHistory* 2 yeni, YahooStockHistoryProvider yeni,
+  StockSymbols yeni, StockDataService sadeleşti, StockOptions, DI, StocksController,
+  LlmCommentaryService MaxTitle, prompt şemaları ×2), testler (StockHistoryServiceTests 7 yeni,
+  YahooStockHistoryProviderTests 4 yeni, StocksApiTests +2, hardening title 64), shared
+  (StockHistory tipleri + getStockHistory), web (PriceChart yeni, CommentaryTabs yeni + test 4,
+  CommentaryCardList ayrışım, hooks, StocksPage, AnalysisPage, App.css), 08/09 dokümanları
+- **Test:** SC-30 — Application **239/239** (+7) · Integration **106/106** (+6) · Web **71/71**
+  (+4) · tsc temiz.
+- **Karar/Not:** Yahoo chart API resmî olmayan uç — kırılırsa `IStockHistoryProvider` soyutlaması
+  sayesinde kaynak tek dosyada değişir. Grafik verisi gösterim amaçlı (portföy hesaplarına girmez).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5.1 — `PortfolioValueHistoryService` (Dalga 1 / Faz 5).
+
 ## 2026-07-12 (2) · T4.4 — Hisse Analizi web sayfası — FAZ 4 KAPANDI
 - **Görev(ler):** T4.4 (Faz 4 son görevi).
 - **Ne yapıldı:**

@@ -235,6 +235,27 @@ export interface StockSectorContext {
   earningsGrowth?: string | null;
 }
 
+/** Fiyat geçmişi dönem anahtarları (T4.5). */
+export type StockHistoryRange = "1w" | "1m" | "3m" | "1y" | "5y" | "max";
+
+/** Tek günlük kapanış noktası (tarih ISO "yyyy-MM-dd"). */
+export interface StockPricePoint {
+  date: string;
+  close: number;
+}
+
+/** GET /api/stocks/{symbol}/history yanıtı (T4.5) — geçmiş gösterimi, tahmin DEĞİL. */
+export interface StockHistory {
+  symbol: string;
+  range: string;
+  points: StockPricePoint[];
+  /** Dönem başı → sonu değişim oranı (0,12 = %12). */
+  changeRatio?: number | null;
+  /** Serinin ilk kaydı — "piyasaya girişten beri" bağlamı. */
+  firstTradeDate: string;
+  source: string;
+}
+
 /** GET /api/stocks/{symbol}/metrics yanıtı (T4.2). */
 export interface StockMetrics {
   symbol: string;

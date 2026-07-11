@@ -165,9 +165,11 @@ rate limit + TLS proxy ayakta**.
 | T4.3 | `LlmStockExplainService` + `GET /.../explain` (tavsiye yok) | T4.2, T3.1 | `07` §8 | [x] (2026-07-12: `StockExplainPrompts` (iki yönlü çerçeve + uydurma-bilgi yasağı + TR dil kuralı; şema 3-6 kart, detail zorunlu) + paylaşılan güvenli parse/bekçi hattı (`LlmCommentaryService.TryParseCards` internal) + sembol bazlı 24s ortak cache + son-başarılı fallback + retry; başlıklara SmartTruncate. SC-29: unit 6 + integration 2; canlı AAPL 5 kart) |
 | T4.4 | **Web:** sembol arama + `MetricGrid` + açıklama kartları + disclaimer | T4.2,T4.3 | `13` §4 | [x] (2026-07-12: `/hisse` — sembol arama + popüler çipler; `MetricGrid` (değer + Türkçe bant rozeti + InfoTip); fiyat/borsa başlığı; açıklama kartları (`CommentaryCardList` yeniden kullanım) metrikler başarılı olunca tetiklenir; disclaimer her durumda; 404/502 dostu hatalar; shared tipler+istemci+hook'lar. Web 67/67; tarayıcıda canlı doğrulandı) |
 
+| T4.5 | **Fiyat geçmişi + UI iyileştirme (kullanıcı geri bildirimi):** `GET /api/stocks/{symbol}/history?range=1w\|1m\|3m\|1y\|5y\|max` — Yahoo chart API (anahtarsız; halka arzdan bugüne; Stooq bot-korumalı çıktı, Finnhub candle ücretli); dilimleme/değişim/seyrekleştirme KODDA + 24s cache; web `PriceChart` (SVG çizgi+gradyan, min/max+tarih etiketleri, TradingView-tarzı dönem sekmeleri, "tahmin değil" notu); **`CommentaryTabs`** — Analiz + Hisse yorumları sekmeli gezgine geçti (tek kart geniş okuma, ok/klavye gezinme); kart başlığı 48→64 (kelime kırpılması bitti) | T4.4 | `04` §7, `13` §4 | [x] (2026-07-12; SC-30) |
+
 **Faz 4 DoD:** ✅ **KARŞILANDI (2026-07-12)** — Metrik çekiliyor (Finnhub, canlı teyitli) +
 LLM çerçeve sunarak açıklıyor (iki yönlü, tavsiyesiz) + veri yoksa anlamlı hata (400/404/502)
-+ web sayfası (`/hisse`) uçtan uca çalışıyor.
++ web sayfası (`/hisse`) uçtan uca çalışıyor + fiyat geçmişi grafiği (T4.5, halka arzdan bugüne).
 
 > ✅ **T4.1 kararı (2026-06-20) — Veri kaynağı: Finnhub (ABD).** Ücretsiz katman
 > **60 çağrı/dk**, anahtar gerekir (env/User Secrets — koda gömülmez, §13). Tek

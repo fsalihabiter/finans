@@ -114,7 +114,7 @@ public class LlmCommentaryHardeningTests
         var resp = await svc.GetCommentaryAsync(Summary());
 
         Assert.Single(resp.Cards);
-        Assert.Equal(48, resp.Cards[0].Title.Length);
+        Assert.Equal(64, resp.Cards[0].Title.Length); // T4.5: 48 canlıda kırpıyordu → 64
     }
 
     [Fact]
