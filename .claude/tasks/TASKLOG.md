@@ -50,7 +50,13 @@
 - **Karar/Not:** Finnhub yüzde-ölçek varsayımı (dividendYield/epsGrowth/dp ÷100) stub'la
   test edildi; **gerçek anahtar gelince canlı yanıtla teyit edilecek** (T4.1 notu gereği).
   Kullanıcı ücretsiz anahtar almalı: https://finnhub.io/register → `.env` `FINNHUB_API_KEY=...`.
-- **Durum:** tamamlandı (200 yolu canlı teyidi anahtar bekliyor).
+- **Ek — 200 yolu CANLI TEYİT (2026-07-12):** Kullanıcı Finnhub anahtarını .env'e girdi;
+  api yeniden başlatıldı. **AAPL:** 315,32 USD · F/K 37,78 "above" · PD/DD 43,49 "high" ·
+  temettü %0,34 "low" · büyüme %29 "positive". **MSFT:** F/K 22,85 "moderate" (bant ayrımı
+  çalışıyor). Bilinmeyen sembol → 404; küçük harf sembol normalize edildi (msft→MSFT).
+  **Yüzde-ölçek varsayımları gerçek yanıtla doğrulandı** (dividendYield/epsGrowth/dp ÷100
+  doğru — T4.1 notu kapandı). Faz 4 backend hattı tamam.
+- **Durum:** tamamlandı.
 - **Sıradaki:** T4.3 — `LlmStockExplainService` + `GET /.../explain`.
 
 ## 2026-07-11 (12) · T3.15 — LLM maliyet koruması: kaba hash + yorum sabitleme
