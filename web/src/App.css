@@ -2086,6 +2086,13 @@ body.drawer-lock {
 /* BES detayda "Bekleyen" tutar renkleri: kendi katkı (gri) + devlet (sarı). */
 .pend-own { color: var(--muted, #97a3c9); }
 .pend-state { color: var(--accent, #8a94dc); }
+/* Devlet katkısının etkin oranı — tutarın yanında küçük, soluk rozet metni. */
+.hist-rate {
+  margin-left: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted, #97a3c9);
+}
 
 .row-actions {
   display: inline-flex;

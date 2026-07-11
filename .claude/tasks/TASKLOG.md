@@ -20,6 +20,30 @@
 
 ---
 
+## 2026-07-11 (3) · ad-hoc — "BES aylık katkılar kayboldu" teşhisi + geçmişe etkin oran rozeti
+- **Görev(ler):** ad-hoc (kullanıcı: "aylık ödemeler önceden vardı şimdi yok; geçmişte
+  devlet katkısı miktarı ve ORANI da görünmeliydi").
+- **Kök neden (veri kaybı DEĞİL):** Vite dev sunucusu dünkü Analiz çalışmasından beri
+  `VITE_API_TARGET` ile **compose yığınına** (Caddy, ayrı Postgres) gidiyordu; o DB'de
+  yalnız "Açılış" kaydı var. **Yerel dev DB'de her şey yerinde:** 48 katkı, aktif plan
+  (7.500 ₺/ay, gün=1), Temmuz katkısı ödeme gününe göre otomatik eklenmiş (StatePending)
+  — otomatik ekleme çalışıyor. (Tuzak TASKLOG 2026-07-10 (6)'da öngörülmüştü.)
+- **Çözüm:** Compose'a bakan Vite süreci durduruldu, `VITE_API_TARGET`siz yeniden
+  başlatıldı (varsayılan http://localhost:5298); yerel API `dotnet run` ile ayağa
+  kaldırıldı. Doğrulama: 5173 üzerinden Via başlığı yok + 48 katkı dönüyor; tarayıcıda
+  aylık satırlar + durum şeritleri görünür.
+- **Yeni özellik (oran):** `BesContributionHistory` devlet sütununa **etkin oran rozeti**
+  (`stateAmount/ownAmount`, `%20`/`%30`) satır + ödenmiş toplam için eklendi (`.hist-rate`).
+  Oran değişikliği (2026-01: %30→%20) geçmişte satır satır okunuyor — eğitici değer.
+- **Dokunulan dosyalar:** `web/src/components/BesContributionHistory.tsx` (+test),
+  `web/src/App.css`, `.claude/tasks/TASKLOG.md`
+- **Test:** BesContributionHistory 5/5 yeşil (yeni: satır + toplam oran rozeti).
+- **Karar/Not:** İki ortam (yerel dev + compose) aynı anda ayaktayken tarayıcının hangi
+  DB'ye baktığı Vite hedefine bağlı — kalıcı çözüm için tek ortam kararı/veri taşıma
+  ayrı görev olarak önerildi.
+- **Durum:** tamamlandı.
+- **Sıradaki:** Kullanıcı strateji dokümanındaki Dalga 1 önceliklendirmesini bildirecek.
+
 ## 2026-07-11 (2) · ad-hoc — Ürün stratejisi dokümanı: finansal okuryazarlık vizyonu
 - **Görev(ler):** ad-hoc (kullanıcı isteği: "uzman olarak incele; neler eklenirse piyasada
   öne çıkar; ulusal düzeyde yön verici, bilinçlendiren, finans okuryazarlığı kazandıran

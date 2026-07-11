@@ -53,4 +53,13 @@ describe("BesContributionHistory", () => {
     render(<BesContributionHistory contributions={[]} />);
     expect(screen.getByText("Henüz katkı kaydı yok.")).toBeInTheDocument();
   });
+
+  it("devlet katkısının etkin oranını satırda ve ödenmiş toplamda gösterir", () => {
+    render(<BesContributionHistory contributions={rows} />);
+    // c1: 200/1000 → %20; c2: 300/1000 → %30.
+    expect(screen.getByText("%20")).toBeInTheDocument();
+    // %30 hem c2 satırında hem değil — toplam 500/2000 → %25 toplam satırında.
+    expect(screen.getByText("%30")).toBeInTheDocument();
+    expect(screen.getByText("%25")).toBeInTheDocument();
+  });
 });

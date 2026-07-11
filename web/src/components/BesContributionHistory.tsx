@@ -1,6 +1,12 @@
 import { useMemo } from "react";
-import { formatCurrency, formatDate } from "@finans/shared";
+import { formatCurrency, formatDate, formatPercent } from "@finans/shared";
 import type { BesContribution, BesContributionStatus } from "@finans/shared";
+
+/** Devlet katkısının katkı payına etkin oranı ("%30" gibi); katkı payı 0 ise gösterilmez. */
+function stateRate(own: number, state: number): string | null {
+  if (own <= 0 || state <= 0) return null;
+  return formatPercent(state / own, 0, true, false);
+}
 
 const STATUS_CLS: Record<BesContributionStatus, string> = {
   Deposited: "hist-deposited",
@@ -66,11 +72,15 @@ export function BesContributionHistory({
           <tbody>
             {contributions.map((c) => {
               const opening = c.source === "Opening";
+              const rate = stateRate(c.ownAmount, c.stateAmount);
               return (
                 <tr key={c.id} className={`hist-row ${STATUS_CLS[c.status]}${opening ? " hist-opening" : ""}`}>
                   <td>{opening ? "Açılış" : formatDate(c.paidAtUtc)}</td>
                   <td className="num">{formatCurrency(c.ownAmount, "TRY")}</td>
-                  <td className="num up">{formatCurrency(c.stateAmount, "TRY")}</td>
+                  <td className="num up">
+                    {formatCurrency(c.stateAmount, "TRY")}
+                    {rate && <span className="hist-rate tnum">{rate}</span>}
+                  </td>
                   <td className="num">
                     <span className="row-actions">
                       <button type="button" className="icon-btn" aria-label="Düzenle" title="Düzenle" onClick={() => onEdit?.(c)}>✎</button>
@@ -85,7 +95,12 @@ export function BesContributionHistory({
             <tr className="hist-total hist-total--paid">
               <th scope="row">Ödenmiş toplam</th>
               <td className="num">{formatCurrency(totals.paidOwn, "TRY")}</td>
-              <td className="num up">{formatCurrency(totals.paidState, "TRY")}</td>
+              <td className="num up">
+                {formatCurrency(totals.paidState, "TRY")}
+                {stateRate(totals.paidOwn, totals.paidState) && (
+                  <span className="hist-rate tnum">{stateRate(totals.paidOwn, totals.paidState)}</span>
+                )}
+              </td>
               <td></td>
             </tr>
             {(totals.futureOwn > 0 || totals.futureState > 0) && (
