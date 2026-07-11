@@ -85,8 +85,10 @@ public sealed class LlmCommentaryService(
 
             if (parsed && cards.Count > best.Count) best = cards;
 
-            // Temiz tur (filtre hiç devreye girmedi + parse tamam) → yeniden üretim gereksiz.
-            if (parsed && cards.Count > 0 && guardBlocked == 0) break;
+            // Tam tur (parse tamam + filtre devreye girmedi + şemanın istediği TAM 6 kart) →
+            // yeniden üretim gereksiz. Eksik kart da yeniden üretim sebebidir (kullanıcı
+            // beklentisi: kart sayısı üretimden üretime değişmesin).
+            if (parsed && guardBlocked == 0 && cards.Count >= CommentaryParseConstraints.MaxCards) break;
 
             if (attempt < maxAttempts)
                 logger.LogInformation(

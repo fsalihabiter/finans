@@ -40,6 +40,11 @@
   `CommentaryPrompts.cs` (kural 8), `LlmCommentaryHardeningTests.cs` (+4: retry ×3, masum
   sayı), `LlmMetricsTests.cs` (retry'a uyum), TASKLOG
 - **Test:** Application **188/188**.
+- **Ek (aynı gün, "1 kart daha vardı"):** Kart sayısı üretimden üretime değişmesin diye
+  **TAM 6 kart** sabitlendi: şema minItems/maxItems 6/6; prompt kural 6 "HER ZAMAN TAM 6 KART"
+  + altı temanın açık listesi; retry koşuluna "temiz ama <6 kart" eklendi (eksik kart da
+  yeniden üretim sebebi; tam+temiz turda tek çağrı). Test fixture'ları 6-kart tam tura uyarlandı.
+  Canlı: 6 kart, 18sn, source=llm. Application **189/189**.
 - **Durum:** tamamlandı.
 - **Sıradaki:** T4.2 — ya da kullanıcı yorum kalitesini tekrar değerlendirir.
 

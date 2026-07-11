@@ -64,11 +64,15 @@ public class LlmMetricsTests
         new(Inner(client, metrics), new FakeAppCache(), new FixedCurrentUser(Guid.NewGuid()),
             metrics, NullLogger<CachedLlmCommentaryService>.Instance);
 
+    // Temiz + TAM tur (6 kart — T3.12 retry tetiklenmesin).
+    private static string CleanSixCards =>
+        "{\"cards\":[" + string.Join(",", Enumerable.Range(1, 6).Select(_ => CleanCard)) + "]}";
+
     [Fact]
     public async Task Inner_records_successful_call_with_token_counts()
     {
         var metrics = new RecordingMetrics();
-        var svc = Inner(new StubLlmClient(_ => LlmResult.Ok("{\"cards\":[" + CleanCard + "]}", 120, 45)), metrics);
+        var svc = Inner(new StubLlmClient(_ => LlmResult.Ok(CleanSixCards, 120, 45)), metrics);
 
         await svc.GetCommentaryAsync(Summary(641_403m));
 

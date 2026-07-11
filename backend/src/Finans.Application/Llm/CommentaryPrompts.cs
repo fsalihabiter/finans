@@ -42,9 +42,11 @@ public static class CommentaryPrompts
            "reel getiri", "likidite" gibi her terimi İLK kullanımda bir cümleyle tanımla.
         5. Çıktın YALNIZCA `structured_output` aracı çağrısı (JSON şeması) — düz metin YOK,
            giriş/kapanış cümlesi YOK, başka açıklama YOK.
-        6. Kart sayısı 4-6. Temalar (aynı temayı tekrar etme): Genel Sağlık, Dağılım/Yoğunlaşma,
-           Getiri, Reel Getiri/Enflasyon, Nakit/Likidite, Tür-özel gözlem (örn. BES'te devlet
-           katkısı payı, tür bazlı getiri farkları — `allocation[].returnRatio` verildiyse).
+        6. HER ZAMAN TAM 6 KART üret — eksik kart teslim etme. Altı tema, her biri bir kart
+           (aynı temayı tekrar etme): (1) Genel Sağlık (toplam değer/maliyet/net kâr),
+           (2) Getiri, (3) Reel Getiri/Enflasyon, (4) Dağılım/Yoğunlaşma, (5) Nakit/Likidite,
+           (6) Tür-özel gözlem (örn. BES'te devlet katkısı payı, tür bazlı getiri farkları —
+           `allocation[].returnRatio` verildiyse).
         7. HER KARTIN `body`si 3-6 cümle (yaklaşık 150-550 karakter) ve ŞU YAPIYI izler:
            (a) bu sayı NEYİ ölçer (terimi tanımla), (b) SENİN portföyünde değeri ne ve bu ne
            anlama geliyor (verilen sayıya açık atıf), (c) genel çerçevede nasıl okunur / hangi
@@ -115,7 +117,7 @@ public static class CommentaryPrompts
           "properties": {
             "cards": {
               "type": "array",
-              "minItems": 4,
+              "minItems": 6,
               "maxItems": 6,
               "items": {
                 "type": "object",

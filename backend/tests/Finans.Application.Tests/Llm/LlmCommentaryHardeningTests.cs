@@ -313,15 +313,28 @@ public class LlmCommentaryHardeningTests
     }
 
     [Fact]
-    public async Task Does_not_retry_when_first_attempt_is_clean()
+    public async Task Does_not_retry_when_first_attempt_is_clean_and_full()
     {
-        var client = new SequenceLlmClient(ValidCardJson(4));
+        var client = new SequenceLlmClient(ValidCardJson(6));
         var svc = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
 
         var resp = await svc.GetCommentaryAsync(Summary());
 
-        Assert.Equal(1, client.Calls);          // temiz turda ikinci çağrı YOK (maliyet disiplini)
-        Assert.Equal(4, resp.Cards.Count);
+        Assert.Equal(1, client.Calls);          // tam+temiz turda ikinci çağrı YOK (maliyet disiplini)
+        Assert.Equal(6, resp.Cards.Count);
+    }
+
+    [Fact]
+    public async Task Retries_when_clean_but_fewer_than_six_cards()
+    {
+        // Model "TAM 6 KART" talimatına rağmen 5 verirse → bir şans daha; en iyi tur kullanılır.
+        var client = new SequenceLlmClient(ValidCardJson(5), ValidCardJson(6));
+        var svc = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Equal(2, client.Calls);
+        Assert.Equal(6, resp.Cards.Count);
     }
 
     [Fact]

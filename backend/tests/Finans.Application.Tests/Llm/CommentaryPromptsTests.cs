@@ -68,8 +68,8 @@ public class CommentaryPromptsTests
         using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);
         var cards = doc.RootElement.GetProperty("properties").GetProperty("cards");
 
-        // Maliyet + okunabilirlik kapısı: çok az/çok kart üretilmesin (NFR-9 + UX).
-        Assert.Equal(4, cards.GetProperty("minItems").GetInt32());
+        // T3.12 ek (kullanıcı beklentisi): kart sayısı üretimden üretime değişmesin — TAM 6.
+        Assert.Equal(6, cards.GetProperty("minItems").GetInt32());
         Assert.Equal(6, cards.GetProperty("maxItems").GetInt32());
 
         // T3.10 derinlik kapısı: gövde tek cümlelik yüzeyselliğe İZİN VERMEZ (min ≥100),
