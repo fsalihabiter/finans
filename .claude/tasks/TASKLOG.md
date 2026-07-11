@@ -20,6 +20,38 @@
 
 ---
 
+## 2026-07-11 (8) · T3.11 — Dil saflığı bekçisi: yabancı dil sızıntısı + alan adı + rakamlı detail
+- **Görev(ler):** T3.11 (ad-hoc, kullanıcı ekran görüntüsüyle: "yorumlarda başka dillerde
+  kelimeler var; Türkçe anlamsal olarak daha anlaşılır kelimeler seçilsin").
+- **Gözlemlenen sızıntılar (canlı):** İngilizce ("invested olduğunda", "%5 faiz means 100 TL
+  becomes 105 TL"), Japonca ("yediğini意味します", "%10上がれば"), Felemenkçe ("bahçe waarvan"),
+  JSON alan adları metinde ("yüksek ownShare... yüksek stateShare"), detail'de girdiyle
+  tutarsız uydurma yüzdeler (%67/%33).
+- **Yapılanlar (iki kuşaklı savunma):**
+  1. **Kuşak-1 (prompt):** KESİN KURAL 9 — tamamen Türkçe; yabancı kelime/Latin dışı karakter
+     yasak; alan adlarını aynen geçirme (Türkçe karşılık örnekleriyle); akıcı/doğal Türkçe.
+  2. **Kuşak-2 (deterministik, `CommentaryLanguageGuard`):**
+     - Latin dışı alfabe taraması (CJK/Hiragana/Katakana/Hangul/Kiril/Arap/İbrani/Tay/
+       Devanagari/tam-genişlik) → kart düşer. Emoji/semboller serbest.
+     - İngilizce kelime blocklist'i (kelime sınırlı; Türkçe eşsesliler — "on/at/an/but/is" —
+       BİLEREK dışarıda) → kart düşer.
+     - Alan adı sızıntısı çevrilir (ownShare→"kendi katkı payı" vb., 12 alan) — kart KURTARILIR.
+     - Rakam içeren `detail` atılır (kural 8 deterministik: detail rakamsız kavram eğitimi) —
+       kart gövdeyle yaşar.
+  3. **Model araştırması:** OpenRouter güncel 23 ücretsiz model tarandı; `google/gemma-4-31b-it:free`
+     Türkçede açık ara en akıcı (test yanıtı kusursuz) ama free kotası çok dar (art arda 429) →
+     geçilmedi; nemotron + deterministik bekçiler korundu. Kalıcı kalite çözümü: Anthropic (T3.1).
+- **Canlı doğrulama:** temiz üretim — 4 kart, akıcı Türkçe, sıfır sızıntı, detail rakamsız.
+- **Dokunulan dosyalar:** `CommentaryLanguageGuard.cs` (yeni, +test 13 vaka),
+  `LlmCommentaryService.cs`, `CommentaryPrompts.cs` (+prompt regresyon testi),
+  `LlmCommentaryHardeningTests.cs` (+3), `08-BACKLOG.md` (T3.11), TASKLOG
+- **Test:** Application **184/184** (+18 T3.11) · diğerleri değişmedi.
+- **Karar/Not:** Blocklist yanlış-pozitif disiplini: yalnız Türkçe'de bulunmayan İngilizce
+  kelimeler, kelime sınırıyla. Model gramer pürüzleri ("tasarruflundan" gibi) bekçiyle
+  yakalanamaz — kabul edilen kalıntı; Anthropic'e geçişte kaybolur.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — ya da kullanıcı yorum kalitesini tekrar değerlendirir.
+
 ## 2026-07-11 (7) · T3.10 — LLM yorum katmanı derinleştirildi (açıklayıcı + detaylı yorum)
 - **Görev(ler):** T3.10 (ad-hoc, kullanıcı: "Faz 3 üzerinde daha çok durmalıyız; yorum daha
   açıklayıcı ve daha fazla detay vermeli").

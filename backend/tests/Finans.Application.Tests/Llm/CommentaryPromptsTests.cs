@@ -92,6 +92,18 @@ public class CommentaryPromptsTests
     }
 
     [Fact]
+    public void SystemPrompt_forbids_foreign_language_and_field_name_leaks()
+    {
+        var p = CommentaryPrompts.SystemPrompt;
+
+        // T3.11 regresyon kapısı: dil saflığı kuralı prompttan silinmesin (kuşak-1;
+        // kuşak-2 deterministik bekçi CommentaryLanguageGuard'da).
+        Assert.Contains("TAMAMEN TÜRKÇE", p);
+        Assert.Contains("ownShare", p); // alan adlarını geçirme talimatı örnekleriyle
+        Assert.Contains("AYNEN GEÇİRME", p);
+    }
+
+    [Fact]
     public void CommentaryJsonSchema_has_optional_detail_with_bounds()
     {
         using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);

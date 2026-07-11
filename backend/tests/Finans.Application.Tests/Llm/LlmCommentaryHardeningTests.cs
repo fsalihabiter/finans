@@ -129,6 +129,21 @@ public class LlmCommentaryHardeningTests
     }
 
     [Fact]
+    public async Task Nulls_detail_when_it_contains_digits()
+    {
+        // Kural 8: detail rakamsız kavram eğitimi. Canlı gözlem: model detail'de girdiyle
+        // tutarsız örnek yüzdeler uydurdu (%67/%33) → deterministik süzgeç detail'i atar.
+        var json = "{\"cards\":[{\"emoji\":\"🏦\",\"title\":\"BES\",\"body\":\"" + ValidBody() + "\"," +
+            "\"detail\":\"Bir bahçenin yarısını sen suluyorsan toplam ürünün payı senin emeğin %67, komşu katkısı %33 olur; benzer çalışır.\"}]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.Null(resp.Cards[0].Detail);
+    }
+
+    [Fact]
     public async Task Nulls_detail_when_too_short_but_keeps_card()
     {
         // Gürültü seviyesinde kısa detail → null; kart body ile yaşamaya devam eder.
@@ -140,6 +155,37 @@ public class LlmCommentaryHardeningTests
 
         Assert.Single(resp.Cards);
         Assert.Null(resp.Cards[0].Detail);
+    }
+
+    [Fact]
+    public async Task Drops_card_with_foreign_language_leak_but_keeps_clean_one()
+    {
+        // T3.11: canlı gözlem — ücretsiz model Türkçe'ye İngilizce/Japonca karıştırabiliyor.
+        var json = "{\"cards\":[" +
+            "{\"emoji\":\"❌\",\"title\":\"Sızıntı\",\"body\":\"Senin portföyünde bu oran yüzde on — yani her yüz lira invested olduğunda yaklaşık on lira nominal kazanç elde etmiş olursun; bu oran pozitif olduğu için portföy nominal olarak büyümüş.\"}," +
+            "{\"emoji\":\"✅\",\"title\":\"Temiz\",\"body\":\"" + ValidBody() + "\"}" +
+            "]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.Equal("Temiz", resp.Cards[0].Title);
+    }
+
+    [Fact]
+    public async Task Translates_leaked_field_names_instead_of_dropping_card()
+    {
+        // T3.11: alan adı sızıntısı düzeltilebilir bir kusur — kart düşürülmez, Türkçeleştirilir.
+        var body = "Senin BES hesabında kendi payın yüksek; yüksek ownShare uzun vadeli tasarruf disiplinini, yüksek stateShare ise dış destek oranını yansıtır. Bu yapı uzun vadeli birikimi teşvik etmek için tasarlanmıştır.";
+        var json = "{\"cards\":[{\"emoji\":\"🏦\",\"title\":\"BES Katkı Dağılımı\",\"body\":\"" + body + "\"}]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.DoesNotContain("ownShare", resp.Cards[0].Body);
+        Assert.Contains("kendi katkı payı", resp.Cards[0].Body);
     }
 
     [Fact]

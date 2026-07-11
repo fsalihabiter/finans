@@ -154,8 +154,25 @@ public sealed class LlmCommentaryService(
                 var detail = ReadString(c, "detail")?.Trim();
                 if (string.IsNullOrWhiteSpace(detail) || detail!.Length < CommentaryParseConstraints.MinDetail)
                     detail = null;
+                else if (detail.Any(char.IsDigit))
+                    // Kural 8: detail RAKAMSIZ kavram eğitimidir. Rakam varsa model ya girdi
+                    // dışı sayı uydurdu ya da örnek hesap yaptı (canlı gözlem: tutarsız %67/%33)
+                    // → detail atılır, kart gövdeyle yaşar (deterministik halüsinasyon süzgeci).
+                    detail = null;
                 else
                     detail = SmartTruncate(detail, CommentaryParseConstraints.MaxDetail);
+
+                // T3.11 dil bekçisi: (1) sızan JSON alan adlarını Türkçe karşılığıyla kurtar,
+                // (2) Latin dışı alfabe / bariz İngilizce sızıntı → kart düşer (yarım çeviri
+                // gösterilmez — kullanıcı güveni). Ücretsiz model kalitesine karşı deterministik savunma.
+                title = CommentaryLanguageGuard.TranslateFieldNames(title);
+                body = CommentaryLanguageGuard.TranslateFieldNames(body!);
+                if (detail is not null) detail = CommentaryLanguageGuard.TranslateFieldNames(detail);
+                if (CommentaryLanguageGuard.IsForeign(title, body, detail, out _))
+                {
+                    guardBlocked++;
+                    continue;
+                }
 
                 CommentaryMeter? meter = null;
                 if (c.TryGetProperty("meter", out var m) && m.ValueKind == JsonValueKind.Object &&
@@ -191,14 +208,14 @@ public sealed class LlmCommentaryService(
 
                 // T3.5 çıktı güvenlik filtresi (07 §7): yönlendirme/tahmin kalıbı içeren kartı düşür.
                 // detail de taranır (T3.10) — hangi alanda olursa olsun yasaklı kalıp kartı düşürür.
-                var scanBody = detail is null ? body! : body! + "\n" + detail;
+                var scanBody = detail is null ? body : body + "\n" + detail;
                 if (CommentaryOutputGuard.IsForbidden(title!, scanBody, tags, out _))
                 {
                     guardBlocked++;
                     continue;
                 }
 
-                list.Add(new CommentaryCard(emoji!, title!, body!, meter, tags, detail));
+                list.Add(new CommentaryCard(emoji!, title!, body, meter, tags, detail));
             }
 
             cards = list;

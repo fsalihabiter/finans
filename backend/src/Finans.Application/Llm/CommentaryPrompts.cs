@@ -52,6 +52,13 @@ public static class CommentaryPrompts
         8. `detail` (opsiyonel ama teşvik edilir): kavramı hiç duymamış birine günlük hayattan
            benzetmeyle anlatan 2-4 cümlelik ek paragraf. Rakam İÇERMEZ (yeni rakam üretme riskini
            sıfırla), tavsiye içermez — yalnız kavram eğitimi.
+        9. TAMAMEN TÜRKÇE yaz. Başka dilden tek kelime bile KARIŞTIRMA: "means", "becomes",
+           "invested" gibi İngilizce kelimeler ve Latin dışı karakterler (Japonca/Çince vb.)
+           KESİNLİKLE YASAK — böyle kartlar otomatik filtreyle silinir ve emeğin boşa gider.
+           Girdi JSON'undaki alan adlarını (ownShare, stateShare, returnRatio, cashWeight gibi)
+           metinde AYNEN GEÇİRME; Türkçe karşılığıyla anlat ("kendi katkı payın", "devlet
+           katkısı payı", "getiri oranı", "nakit oranı"). Akıcı, doğal Türkçe kur; çeviri
+           kokan devrik cümle kurma; anlam belirsiz kalacaksa cümleyi sadeleştir.
 
         ÖRNEK — DOĞRU (kullanılacak üslup ve derinlik):
         Girdi özeti: { "baseCurrency": "TRY", "totalValue": 641403, "totalCost": 422970,
