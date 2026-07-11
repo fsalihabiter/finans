@@ -111,4 +111,27 @@ public sealed class StocksApiTests : IClassFixture<SqliteWebApplicationFactory>,
         error.GetProperty("code").GetString().Should().Be("UPSTREAM_ERROR");
         error.GetProperty("message").GetString().Should().Contain("yapılandırılmamış");
     }
+
+    // ── T4.3: /explain (SC-29) ──
+
+    [Fact]
+    public async Task Explain_returns_200_with_fallback_card_when_llm_not_configured()
+    {
+        // Metrik sağlayıcı stub + LLM anahtarı yok (NoopLlmClient) → 200 + fallback kartı
+        // (uygulama çökmez, sayılar etkilenmez — NFR-5; 07 §5).
+        var resp = await ClientWith(_ => Aapl()).GetAsync("/api/stocks/AAPL/explain");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        doc.RootElement.GetProperty("source").GetString().Should().Be("fallback");
+        doc.RootElement.GetProperty("cards").GetArrayLength().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Explain_propagates_404_for_unknown_symbol()
+    {
+        var resp = await ClientWith(_ => null).GetAsync("/api/stocks/YOKBU/explain");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 }

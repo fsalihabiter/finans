@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-07-12 · T4.3 — Hisse metrik açıklama ucu (`GET /api/stocks/{symbol}/explain`)
+- **Görev(ler):** T4.3 (Faz 4 — 07 §8).
+- **Ne yapıldı:**
+  1. **`StockExplainPrompts`:** portföy yorumu korkuluklarının hisse uyarlaması + iki EK kural:
+     **iki yönlü çerçeve zorunlu** (her bandın olumlu okunuşu + riski — tek yönlü övgü/yergi yasak)
+     ve **uydurma bilgi yasağı** (verilerde olmayan şirket bilgisi/haber üretme). Kart planı:
+     Genel Bakış + verisi olan her metrik için ayrı kart (3-6); detail zorunlu; TR dil kuralı.
+  2. **`LlmStockExplainService`:** sembol bazlı 24s ORTAK cache (piyasa verisi — UserId'siz) +
+     tek-uçuş + son-başarılı fallback + kalite retry (T3.12 deseni). Parse/bekçi hattı
+     PAYLAŞILDI: `LlmCommentaryService.TryParseCards` internal yapıldı (davranış aynı; T3.4
+     sınırlar + T3.5 tavsiye bekçisi + T3.11 dil bekçisi tek yerden iki servise).
+  3. **Endpoint:** `StocksController.GetExplain` — metrics→explain zinciri; "commentary" rate
+     limit (LLM pahalı). LLM yoksa 200+fallback kartı (NFR-5).
+  4. **Canlı gözlemden düzeltme:** 48 karakteri aşan başlıklar kelime ortasından kesiliyordu
+     ("…Varlıkl") → başlığa da SmartTruncate.
+- **Canlı doğrulama (Finnhub+Anthropic):** AAPL → **5 kart** (Genel Bakış + F/K + PD/DD +
+  temettü + büyüme), hepsi kavramlı, iki yönlü denge kurulmuş ("madalyonun iki yüzü"),
+  18sn üretim → 24s cache.
+- **Dokunulan dosyalar:** Application/Stocks (Prompts+ILlm+Llm servis 3 yeni),
+  LlmCommentaryService (internal parse + başlık SmartTruncate), DependencyInjection,
+  StocksController, testler (LlmStockExplainServiceTests yeni 6 + StocksApiTests +2),
+  08-BACKLOG, 09 SC-29, ACTIVE
+- **Test:** SC-29 — Application **232/232** (+6) · Integration **100/100** (+2).
+- **Durum:** tamamlandı. **Faz 4 backend hattı tamam** — kalan: T4.4 web UI.
+- **Sıradaki:** T4.4 — Hisse Analizi sayfası (sembol arama + MetricGrid + açıklama kartları).
+
 ## 2026-07-11 (13) · T4.2 — Hisse metrikleri: Finnhub sağlayıcı + servis + endpoint
 - **Görev(ler):** T4.2 (Faz 4; karar T4.1: Finnhub, ABD).
 - **Ne yapıldı:**

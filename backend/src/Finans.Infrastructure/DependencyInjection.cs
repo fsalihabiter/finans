@@ -137,6 +137,9 @@ public static class DependencyInjection
             services.AddSingleton<IStockDataProvider, NotConfiguredStockDataProvider>();
         }
         services.AddScoped<IStockDataService, StockDataService>();
+        // T4.3: metrik açıklama — ILlmClient soyutlaması üstünde; sembol bazlı 24s cache
+        // + son-başarılı fallback servisin içinde (IAppCache). LLM yoksa Noop → fallback kartı.
+        services.AddScoped<ILlmStockExplainService, LlmStockExplainService>();
 
         // T3.9: LLM kullanım/maliyet metriği (Meter "Finans.Llm" → OTel/Prometheus). Singleton.
         services.AddSingleton<ILlmMetrics, LlmMetrics>();

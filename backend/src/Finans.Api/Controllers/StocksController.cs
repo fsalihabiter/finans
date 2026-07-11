@@ -1,3 +1,4 @@
+using Finans.Application.Llm;
 using Finans.Application.Stocks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -12,7 +13,9 @@ namespace Finans.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class StocksController(IStockDataService stocks) : ControllerBase
+public sealed class StocksController(
+    IStockDataService stocks,
+    ILlmStockExplainService explain) : ControllerBase
 {
     /// <summary>
     /// GET /api/stocks/{symbol}/metrics — fiyat + F/K + PD/DD + temettü verimi + kâr
@@ -23,4 +26,18 @@ public sealed class StocksController(IStockDataService stocks) : ControllerBase
     [EnableRateLimiting("stocks")]
     public async Task<ActionResult<StockMetricsDto>> GetMetrics(string symbol, CancellationToken ct) =>
         Ok(await stocks.GetMetricsAsync(symbol, ct));
+
+    /// <summary>
+    /// GET /api/stocks/{symbol}/explain (T4.3 — 07 §8) — metriklerin NE ANLAMA geldiğini
+    /// eğitici dille açıklar (commentary kart şeması). Tavsiye/tahmin YOK (CLAUDE.md §2);
+    /// LLM erişilemezse fallback kartı (200, çökme yok — NFR-5). Rate limit: LLM pahalı →
+    /// "commentary" politikası (10/dk); sembol başına 24 saat cache.
+    /// </summary>
+    [HttpGet("{symbol}/explain")]
+    [EnableRateLimiting("commentary")]
+    public async Task<ActionResult<CommentaryResponse>> GetExplain(string symbol, CancellationToken ct)
+    {
+        var metrics = await stocks.GetMetricsAsync(symbol, ct);
+        return Ok(await explain.ExplainAsync(metrics, ct));
+    }
 }

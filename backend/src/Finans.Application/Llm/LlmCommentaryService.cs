@@ -151,7 +151,8 @@ public sealed class LlmCommentaryService(
     /// tahmin kalıbı içeren kart düşürülür (07 §7). <paramref name="guardBlocked"/> kaç kartın bu
     /// filtreyle düştüğünü döndürür (log/metrik için).
     /// </summary>
-    private static bool TryParseCards(string json, out IReadOnlyList<CommentaryCard> cards, out int guardBlocked)
+    // internal: T4.3 hisse açıklama servisi aynı güvenli parse + bekçi hattını paylaşır.
+    internal static bool TryParseCards(string json, out IReadOnlyList<CommentaryCard> cards, out int guardBlocked)
     {
         cards = Array.Empty<CommentaryCard>();
         guardBlocked = 0;
@@ -178,8 +179,9 @@ public sealed class LlmCommentaryService(
                 if (string.IsNullOrWhiteSpace(body) || body!.Length < CommentaryParseConstraints.MinBody) continue;
 
                 // Üst sınırı aşarsa kırp (kartı koru; LLM'in çok az çok kıldığı sınırı bizim için
-                // sertleştir). Gövde/detail cümle sınırından kesilir — kelime ortasında bitmesin.
-                if (title.Length > CommentaryParseConstraints.MaxTitle) title = title[..CommentaryParseConstraints.MaxTitle];
+                // sertleştir). Başlık/gövde/detail kelime-cümle sınırından kesilir —
+                // kelime ortasında bitmesin (canlı gözlem: "…Varlıkl").
+                title = SmartTruncate(title, CommentaryParseConstraints.MaxTitle);
                 body = SmartTruncate(body!, CommentaryParseConstraints.MaxBody);
 
                 // Opsiyonel detail (T3.10): kavram eğitimi paragrafı. Çok kısaysa gürültü → null;

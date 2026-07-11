@@ -162,7 +162,7 @@ rate limit + TLS proxy ayakta**.
 |----|-------|-----------|---------|
 | T4.1 | Hisse veri kaynağı kararı → **Finnhub** (ABD; BIST ertelendi) | Faz 3 | `CLAUDE.md` §3.3, `04` §7 | [x] (2026-06-20) |
 | T4.2 | `StockDataService` + `GET /api/stocks/{symbol}/metrics` | T4.1 | `04` §7 | [x] (2026-07-11: `IStockDataProvider`+`FinnhubStockDataProvider` (3 uç, token başlıkta) + `NotConfigured` güvenli varsayılan → anlamlı 502; `StockMetricContext` kaba bant eşikleri KODDA; servis: sembol doğrulama+1s ortak cache+tek-uçuş; `UpstreamException`→502 eşleme; "stocks" rate limit 20/dk; compose `FINNHUB_API_KEY`. SC-28: unit 31 + integration 8) |
-| T4.3 | `LlmStockExplainService` + `GET /.../explain` (tavsiye yok) | T4.2, T3.1 | `07` §8 |
+| T4.3 | `LlmStockExplainService` + `GET /.../explain` (tavsiye yok) | T4.2, T3.1 | `07` §8 | [x] (2026-07-12: `StockExplainPrompts` (iki yönlü çerçeve + uydurma-bilgi yasağı + TR dil kuralı; şema 3-6 kart, detail zorunlu) + paylaşılan güvenli parse/bekçi hattı (`LlmCommentaryService.TryParseCards` internal) + sembol bazlı 24s ortak cache + son-başarılı fallback + retry; başlıklara SmartTruncate. SC-29: unit 6 + integration 2; canlı AAPL 5 kart) |
 | T4.4 | **Web:** sembol arama + `MetricGrid` + açıklama kartları + disclaimer | T4.2,T4.3 | `13` §4 |
 
 **Faz 4 DoD:** Metrik çekiliyor + LLM çerçeve sunarak açıklıyor; veri yoksa

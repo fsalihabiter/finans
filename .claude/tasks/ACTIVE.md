@@ -12,16 +12,15 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T4.3** — `LlmStockExplainService` + `GET /api/stocks/{symbol}/explain` (tavsiye YOK;
-   commentary kart şeması + aynı korkuluklar/dil bekçileri)
-2. **T4.4** — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
-3. **Faz 5 başlangıcı: T5.1** — `PortfolioValueHistoryService` (günlük değer serisi + birim test)
-4. OSS kalanı — README Analiz ekran görüntüsü tazeleme (artık Anthropic ile kaliteli)
+1. **T4.4** — Web: Hisse Analizi sayfası — sembol arama + `MetricGrid` + açıklama
+   kartları + disclaimer (backend hattı hazır: /metrics + /explain canlı)
+2. **Faz 5 başlangıcı: T5.1** — `PortfolioValueHistoryService` (günlük değer serisi + birim test)
+3. OSS kalanı — README Analiz ekran görüntüsü tazeleme (artık Anthropic ile kaliteli)
 
-> ✅ **T4.2 bitti (2026-07-11):** Finnhub sağlayıcı (3 uç, token başlıkta) + kaba bant
-> eşikleri KODDA + 1s ortak cache + tek-uçuş + anlamlı 400/404/502. Canlıda 502/400 yolları
-> doğrulandı. **Finnhub anahtarı henüz yok** — kullanıcı https://finnhub.io/register'dan
-> ücretsiz anahtar alıp `.env`'e `FINNHUB_API_KEY=...` yazınca 200 yolu canlı test edilecek.
+> ✅ **T4.2 + T4.3 bitti (2026-07-11/12):** Finnhub sağlayıcı (3 uç, token başlıkta, kaba bant
+> eşikleri KODDA, 1s cache) canlı teyitli (AAPL/MSFT gerçek veriyle; anahtar .env'de). /explain:
+> StockExplainPrompts (iki yönlü çerçeve, uydurma yasağı) + paylaşılan parse/bekçi hattı +
+> sembol bazlı 24s cache; canlıda Anthropic ile 5 eğitici kart. Faz 4 backend TAMAM — kalan tek iş web UI (T4.4).
 
 ## Ortam notu (2026-07-11)
 - **Birincil ortam: Docker compose** → `docker compose up -d --build` → **https://localhost**
