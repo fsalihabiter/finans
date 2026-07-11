@@ -24,9 +24,9 @@ public class CachedLlmCommentaryServiceTests
         Allocation: [new AllocationDto(AssetType.Gold, "G", totalValue, 1m)],
         AsOf: new DateTime(2026, 6, 18, 0, 0, 0, DateTimeKind.Utc));
 
-    // Temiz (filtreden geçen) tek kart.
+    // Temiz (filtreden geçen) tek kart. Gövde ≥120 char (T3.10 MinBody).
     private static LlmResult OkCards() => LlmResult.Ok(
-        "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Kart\",\"body\":\"" + new string('a', 80) + "\"}]}", 100, 40);
+        "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Kart\",\"body\":\"" + new string('a', 150) + "\"}]}", 100, 40);
 
     private static LlmResult Failed() => LlmResult.Fail("http_503");
 

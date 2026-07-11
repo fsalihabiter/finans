@@ -15,7 +15,8 @@ namespace Finans.Api.Controllers;
 public sealed class PortfolioController(
     IPortfolioService portfolio,
     INudgeService nudges,
-    ILlmCommentaryService commentary) : ControllerBase
+    ILlmCommentaryService commentary,
+    IHoldingService holdings) : ControllerBase
 {
     /// <summary>GET /api/portfolio/summary — toplam değer/maliyet/getiri/dağılım.</summary>
     [HttpGet("summary")]
@@ -46,7 +47,10 @@ public sealed class PortfolioController(
         [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct)
     {
         var summary = await portfolio.GetSummaryAsync(baseCurrency, ct);
-        var resp = await commentary.GetCommentaryAsync(summary, ct);
+        // T3.10: pozisyon listesi anonim yükü derinleştirir (tür-bazlı getiri + BES payı);
+        // ad/id gibi PII yine anonimleştiricide elenir (07 §2 KVKK).
+        var positions = await holdings.GetAllAsync(baseCurrency, ct);
+        var resp = await commentary.GetCommentaryAsync(summary, positions, ct);
         return Ok(resp);
     }
 }

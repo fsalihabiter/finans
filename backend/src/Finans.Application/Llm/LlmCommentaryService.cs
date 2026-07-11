@@ -40,22 +40,23 @@ public sealed class LlmCommentaryService(
     };
 
     public async Task<CommentaryResponse> GetCommentaryAsync(
-        PortfolioSummaryDto summary, CancellationToken ct = default)
+        PortfolioSummaryDto summary,
+        IReadOnlyList<HoldingDto>? holdings = null,
+        CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(summary);
 
-        var anon = PortfolioAnonymizer.Anonymize(summary);
+        var anon = PortfolioAnonymizer.Anonymize(summary, holdings);
         var userPrompt = JsonSerializer.Serialize(anon, PromptJsonOpts);
 
         var req = new LlmRequest(
             SystemPrompt: CommentaryPrompts.SystemPrompt,
             UserPrompt: userPrompt,
             JsonSchema: CommentaryPrompts.CommentaryJsonSchema,
-            // 2048 — OpenRouter free reasoning modelleri (Laguna/Nemotron) 1024'ün büyük kısmını
-            // gizli düşünmede tüketip content'i yarım bırakıyordu. 2048 + OpenRouterLlmClient'taki
-            // reasoning.exclude/enabled=false ikilisi content'in tamamlanmasını garantiler. Anthropic
-            // için fazlalık değil — 5 kart × ~150 char ≈ 750 token; rahat marj.
-            MaxOutputTokens: 2048,
+            // 6144 (T3.10) — derin yorum: 6 kart × (body ≤600 + detail ≤500 char) ≈ 4-5k token
+            // + JSON overhead. OpenRouter free reasoning modellerinin gizli düşünme payı da
+            // (reasoning.exclude/enabled=false'a rağmen bazı modellerde sızıyor) bu marja sığar.
+            MaxOutputTokens: 6144,
             Temperature: 0.2m);
 
         var result = await llm.CompleteAsync(req, ct);
@@ -143,9 +144,18 @@ public sealed class LlmCommentaryService(
                 if (string.IsNullOrWhiteSpace(title) || title!.Length < CommentaryParseConstraints.MinTitle) continue;
                 if (string.IsNullOrWhiteSpace(body) || body!.Length < CommentaryParseConstraints.MinBody) continue;
 
-                // Üst sınırı aşarsa kırp (kartı koru; LLM'in çok az çok kıldığı sınırı bizim için sertleştir).
+                // Üst sınırı aşarsa kırp (kartı koru; LLM'in çok az çok kıldığı sınırı bizim için
+                // sertleştir). Gövde/detail cümle sınırından kesilir — kelime ortasında bitmesin.
                 if (title.Length > CommentaryParseConstraints.MaxTitle) title = title[..CommentaryParseConstraints.MaxTitle];
-                if (body.Length > CommentaryParseConstraints.MaxBody) body = body[..CommentaryParseConstraints.MaxBody];
+                body = SmartTruncate(body!, CommentaryParseConstraints.MaxBody);
+
+                // Opsiyonel detail (T3.10): kavram eğitimi paragrafı. Çok kısaysa gürültü → null;
+                // uzunsa kırp. Kart detail'siz de geçerli (zorunlu alan değil).
+                var detail = ReadString(c, "detail")?.Trim();
+                if (string.IsNullOrWhiteSpace(detail) || detail!.Length < CommentaryParseConstraints.MinDetail)
+                    detail = null;
+                else
+                    detail = SmartTruncate(detail, CommentaryParseConstraints.MaxDetail);
 
                 CommentaryMeter? meter = null;
                 if (c.TryGetProperty("meter", out var m) && m.ValueKind == JsonValueKind.Object &&
@@ -180,14 +190,15 @@ public sealed class LlmCommentaryService(
                 }
 
                 // T3.5 çıktı güvenlik filtresi (07 §7): yönlendirme/tahmin kalıbı içeren kartı düşür.
-                // Kuşak-1 prompt korkuluğunun kaçırdığı çıktıyı kullanıcıya ulaşmadan eler (CLAUDE.md §2).
-                if (CommentaryOutputGuard.IsForbidden(title!, body!, tags, out _))
+                // detail de taranır (T3.10) — hangi alanda olursa olsun yasaklı kalıp kartı düşürür.
+                var scanBody = detail is null ? body! : body! + "\n" + detail;
+                if (CommentaryOutputGuard.IsForbidden(title!, scanBody, tags, out _))
                 {
                     guardBlocked++;
                     continue;
                 }
 
-                list.Add(new CommentaryCard(emoji!, title!, body!, meter, tags));
+                list.Add(new CommentaryCard(emoji!, title!, body!, meter, tags, detail));
             }
 
             cards = list;
@@ -201,6 +212,21 @@ public sealed class LlmCommentaryService(
         static string? ReadString(JsonElement el, string name) =>
             el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     }
+
+    /// <summary>
+    /// Üst sınırı aşan metni cümle sınırından (yoksa kelime sınırından) kırpar — kelime ortasında
+    /// biten kart gövdesi okuyucuya "bozuk" görünür (T3.10 canlı gözlem). Cümle sonu limitin ilk
+    /// yarısından önceyse cümle feda edilmez, kelime sınırı + "…" kullanılır; hiç boşluk yoksa düz kesim.
+    /// </summary>
+    private static string SmartTruncate(string text, int max)
+    {
+        if (text.Length <= max) return text;
+        var cut = text[..max];
+        var lastSentence = cut.LastIndexOfAny(['.', '!', '?']);
+        if (lastSentence >= max / 2) return cut[..(lastSentence + 1)];
+        var lastSpace = cut.LastIndexOf(' ');
+        return lastSpace > 0 ? cut[..lastSpace] + "…" : cut;
+    }
 }
 
 /// <summary>
@@ -209,11 +235,14 @@ public sealed class LlmCommentaryService(
 /// </summary>
 internal static class CommentaryParseConstraints
 {
-    public const int MaxCards = 5;
+    // T3.10 derinleştirme: kart sayısı 6'ya, gövde 120-600'e çıktı; opsiyonel detail eklendi.
+    public const int MaxCards = 6;
     public const int MinTitle = 2;
-    public const int MaxTitle = 40;
-    public const int MinBody = 60;
-    public const int MaxBody = 220;
+    public const int MaxTitle = 48;
+    public const int MinBody = 120;
+    public const int MaxBody = 600;
+    public const int MinDetail = 40;
+    public const int MaxDetail = 500;
     public const int MaxTags = 4;
     public const int MaxTagLength = 24;
     public const int MaxMeterLabel = 24;

@@ -10,13 +10,18 @@ public sealed record CommentaryResponse(
     string Source,
     DateTime GeneratedAtUtc);
 
-/// <summary>Tek bir yorum kartı. Şema 07 §4 ile uyumlu; servis çıktıyı bu tipe normalize eder.</summary>
+/// <summary>
+/// Tek bir yorum kartı. Şema 07 §4 ile uyumlu; servis çıktıyı bu tipe normalize eder.
+/// <see cref="Detail"/> (T3.10): kavramı sıfırdan öğreten opsiyonel ek paragraf — rakamsız,
+/// tavsiyesi̇z; UI'da gövdenin altında ayrık gösterilir.
+/// </summary>
 public sealed record CommentaryCard(
     string Emoji,
     string Title,
     string Body,
     CommentaryMeter? Meter = null,
-    IReadOnlyList<string>? Tags = null);
+    IReadOnlyList<string>? Tags = null,
+    string? Detail = null);
 
 /// <summary>Opsiyonel gösterge (0..1) — örn. yoğunlaşma seviyesi.</summary>
 public sealed record CommentaryMeter(decimal Value, string LowLabel, string HighLabel);

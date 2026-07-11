@@ -49,12 +49,14 @@ public sealed class CachedLlmCommentaryService(
     };
 
     public async Task<CommentaryResponse> GetCommentaryAsync(
-        PortfolioSummaryDto summary, CancellationToken ct = default)
+        PortfolioSummaryDto summary,
+        IReadOnlyList<HoldingDto>? holdings = null,
+        CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(summary);
 
         var userId = currentUser.UserId;
-        var hash = HashOf(summary);
+        var hash = HashOf(summary, holdings);
         var key = $"commentary:{userId:N}:{hash}";
         var lastKey = $"commentary-last:{userId:N}";
 
@@ -76,7 +78,7 @@ public sealed class CachedLlmCommentaryService(
                 return again;
             }
 
-            var resp = await inner.GetCommentaryAsync(summary, innerCt);
+            var resp = await inner.GetCommentaryAsync(summary, holdings, innerCt);
 
             if (resp.Source == "llm")
             {
@@ -105,10 +107,12 @@ public sealed class CachedLlmCommentaryService(
     /// <summary>
     /// Anonim portföy özetinin kararlı hash'i (cache anahtarı). Anonimleştirme yuvarlaması (3 basamak)
     /// sayesinde küçük portföy dalgalanmaları aynı anahtara düşer → gereksiz LLM çağrısı olmaz.
+    /// T3.10: holdings'ten türeyen alanlar (tür getirisi, BES payı) da hash'e girer — LLM'e giden
+    /// yük değişirse cache otomatik tazelenir.
     /// </summary>
-    private static string HashOf(PortfolioSummaryDto summary)
+    private static string HashOf(PortfolioSummaryDto summary, IReadOnlyList<HoldingDto>? holdings)
     {
-        var anon = PortfolioAnonymizer.Anonymize(summary);
+        var anon = PortfolioAnonymizer.Anonymize(summary, holdings);
         var json = JsonSerializer.Serialize(anon, HashJson);
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(json));
         return Convert.ToHexString(bytes, 0, 8); // 16 hex karakter — çakışma için fazlasıyla yeterli

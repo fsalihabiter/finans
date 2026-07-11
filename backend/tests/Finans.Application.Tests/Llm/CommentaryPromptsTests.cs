@@ -69,11 +69,40 @@ public class CommentaryPromptsTests
         var cards = doc.RootElement.GetProperty("properties").GetProperty("cards");
 
         // Maliyet + okunabilirlik kapısı: çok az/çok kart üretilmesin (NFR-9 + UX).
-        Assert.Equal(3, cards.GetProperty("minItems").GetInt32());
-        Assert.Equal(5, cards.GetProperty("maxItems").GetInt32());
+        Assert.Equal(4, cards.GetProperty("minItems").GetInt32());
+        Assert.Equal(6, cards.GetProperty("maxItems").GetInt32());
 
+        // T3.10 derinlik kapısı: gövde tek cümlelik yüzeyselliğe İZİN VERMEZ (min ≥100),
+        // makale boyuna da kaçamaz (max ≤800).
         var body = cards.GetProperty("items").GetProperty("properties").GetProperty("body");
-        Assert.InRange(body.GetProperty("minLength").GetInt32(), 1, 100);
-        Assert.InRange(body.GetProperty("maxLength").GetInt32(), 150, 400);
+        Assert.InRange(body.GetProperty("minLength").GetInt32(), 100, 200);
+        Assert.InRange(body.GetProperty("maxLength").GetInt32(), 400, 800);
+    }
+
+    [Fact]
+    public void SystemPrompt_demands_depth_structure_and_term_definitions()
+    {
+        var p = CommentaryPrompts.SystemPrompt;
+
+        // T3.10 regresyon kapısı: derinlik yapısı (tanım + senin portföyünde + çerçeve) ve
+        // terimlerin ilk kullanımda tanımlanması prompttan silinmesin.
+        Assert.Contains("3-6 cümle", p);
+        Assert.Contains("İLK kullanımda", p);
+        Assert.Contains("detail", p);
+    }
+
+    [Fact]
+    public void CommentaryJsonSchema_has_optional_detail_with_bounds()
+    {
+        using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);
+        var item = doc.RootElement.GetProperty("properties").GetProperty("cards").GetProperty("items");
+
+        var detail = item.GetProperty("properties").GetProperty("detail");
+        Assert.Equal("string", detail.GetProperty("type").GetString());
+        Assert.True(detail.GetProperty("maxLength").GetInt32() <= 600);
+
+        // detail zorunlu DEĞİL — kart body ile tek başına geçerli.
+        var required = item.GetProperty("required").EnumerateArray().Select(e => e.GetString()).ToHashSet();
+        Assert.DoesNotContain("detail", required);
     }
 }

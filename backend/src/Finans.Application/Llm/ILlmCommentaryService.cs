@@ -12,6 +12,13 @@ namespace Finans.Application.Llm;
 /// </summary>
 public interface ILlmCommentaryService
 {
+    /// <param name="summary">KODUN hesapladığı per-user portföy özeti.</param>
+    /// <param name="holdings">
+    /// Opsiyonel pozisyon listesi (T3.10): verilirse anonim yüke tür-bazlı getiri + BES
+    /// kendi/devlet payı eklenir → daha derin, kişiye-özel-görünümlü ama yine anonim yorum.
+    /// </param>
     Task<CommentaryResponse> GetCommentaryAsync(
-        PortfolioSummaryDto summary, CancellationToken ct = default);
+        PortfolioSummaryDto summary,
+        IReadOnlyList<HoldingDto>? holdings = null,
+        CancellationToken ct = default);
 }

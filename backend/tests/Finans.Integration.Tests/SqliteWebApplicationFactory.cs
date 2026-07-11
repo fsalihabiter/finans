@@ -35,6 +35,11 @@ public sealed class SqliteWebApplicationFactory : WebApplicationFactory<Program>
         // BES plan catch-up arka plan job'ı testlerde KAPALI: testler kendi durumlarını kurar;
         // arka plan tiki testler sırasında DB'ye yazıp deterministik kurgu bozmasın (T-BES.6b ileri).
         builder.UseSetting("Bes:PlanCatchUp:Enabled", "false");
+        // LLM anahtarı testlerde ZORLA boş → NoopLlmClient. Development ortamı User Secrets'ı
+        // yüklediği için geliştiricinin makinesinde gerçek anahtar sızıyordu → commentary
+        // testleri CANLI OpenRouter'a çıkıp yaşayan sonuca göre kırılıyordu (2026-07-11 tespiti).
+        // Testler ağsız ve deterministik olmalı (09 §2).
+        builder.UseSetting("Llm:ApiKey", "");
 
         builder.ConfigureTestServices(services =>
         {

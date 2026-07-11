@@ -128,7 +128,7 @@ public class LlmCommentaryServiceTests
               "cards": [
                 { "title": "Eksik emoji", "body": "yeterli uzunlukta gövde olmayabilir bile" },
                 { "emoji": "✅", "title": "Geçerli",
-                  "body": "Bu kart tüm zorunlu alanlara sahip ve gövdesi de en az asgari uzunluğu doldurabilecek kadar uzun yazılmış." }
+                  "body": "Bu kart tüm zorunlu alanlara sahip ve gövdesi de asgari uzunluğu (T3.10 ile 120 karakter) rahatça doldurabilecek kadar uzun, açıklayıcı ve eğitici bir üslupla yazılmış durumda." }
               ]
             }
             """, 80, 30));
@@ -148,9 +148,9 @@ public class LlmCommentaryServiceTests
             {
               "cards": [
                 { "emoji": "🧭", "title": "Yoğunlaşma",
-                  "body": "Portföyünün büyük kısmı iki varlıkta toplanmış; bu yoğunlaşmayı bilmek faydalı bir farkındalıktır." },
+                  "body": "Portföyünün büyük kısmı iki varlıkta toplanmış görünüyor; yoğunlaşma denen bu durumu bilmek faydalı bir farkındalıktır çünkü iki varlık aynı anda değer kaybederse portföyün büyük kısmı birlikte etkilenir." },
                 { "emoji": "🚀", "title": "Aksiyon",
-                  "body": "Bence bu noktada altından çıkıp hisseye geçmelisin, fırsat kaçmadan harekete geçmelisin artık." }
+                  "body": "Bence bu noktada vakit kaybetmeden altından çıkıp hisseye geçmelisin, piyasada güzel bir rüzgar var ve bu fırsat kaçmadan bir an önce harekete geçmelisin artık, sonra pişman olursun." }
               ]
             }
             """, 100, 40));
@@ -170,7 +170,7 @@ public class LlmCommentaryServiceTests
             {
               "cards": [
                 { "emoji": "🚀", "title": "Al",
-                  "body": "Bence şimdi altın almalısın çünkü kısa sürede ciddi biçimde yükselecek, kaçırma sakın." }
+                  "body": "Bence şimdi hiç düşünmeden altın almalısın çünkü kısa sürede ciddi biçimde yükselecek; bu tarihi fırsatı sakın kaçırma, piyasa herkese böyle bir şans ikinci kez vermez." }
               ]
             }
             """, 60, 20));

@@ -24,6 +24,12 @@ export function CommentaryCardList({
             <h3>{c.title}</h3>
           </header>
           <p className="commentary-body">{c.body}</p>
+          {c.detail ? (
+            <p className="commentary-detail">
+              <span className="commentary-detail-label">Kavram: </span>
+              {c.detail}
+            </p>
+          ) : null}
           {c.meter ? (
             <div className="commentary-meter" aria-label={`${c.meter.lowLabel} ↔ ${c.meter.highLabel}`}>
               <div

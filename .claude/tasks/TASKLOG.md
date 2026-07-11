@@ -20,6 +20,46 @@
 
 ---
 
+## 2026-07-11 (7) · T3.10 — LLM yorum katmanı derinleştirildi (açıklayıcı + detaylı yorum)
+- **Görev(ler):** T3.10 (ad-hoc, kullanıcı: "Faz 3 üzerinde daha çok durmalıyız; yorum daha
+  açıklayıcı ve daha fazla detay vermeli").
+- **Denetim bulgusu:** Canlı yorum gerçekten yüzeyseldi — 4 jenerik kart, 89-130 karakter
+  (şemadaki 60-220 sınırı derinliği kesiyordu); LLM'e giden anonim yük de fakirdi (yalnız
+  toplam değer + tür ağırlıkları + yoğunlaşma).
+- **Yapılanlar:**
+  1. **Anonim yük zenginleştirildi** (`PortfolioAnonymizer`, hepsi KODDA — CLAUDE.md §3.1):
+     totalCost/netProfit, tür-bazlı getiri ((Σdeğer−Σmaliyet)/Σmaliyet) + kalem sayısı,
+     cashWeight, holdingCount, BES kendi/devlet payı (tutarsız oran — KVKK). `ILlmCommentaryService`
+     imzasına opsiyonel `holdings` eklendi; controller pozisyonları geçirir; cache hash'i yeni yükü kapsar.
+  2. **Şema + prompt derinleştirildi:** 4-6 kart; body 120-600 (3-6 cümle, ZORUNLU yapı:
+     tanım → senin portföyünde → genel çerçeve); yeni opsiyonel `detail` alanı (≤500, kavramı
+     benzetmeyle sıfırdan anlatan paragraf — rakamsız/tavsiyesiz); few-shot örnekler derin
+     versiyonlarla değişti; "tek cümlelik yüzeysel kart" YANLIŞ örneklere eklendi.
+  3. **Parse/koruma:** `CommentaryParseConstraints` güncellendi; `detail` parse + guard taraması
+     (yasaklı kalıp detail'de de kartı düşürür); **SmartTruncate** — uzun gövde cümle sınırından
+     kırpılır (canlı gözlem: "…eksikliği ri" kelime ortası kesim). MaxOutputTokens 2048→6144;
+     Llm TimeoutSeconds 20→75 (canlı ölçüm: derin üretim ücretsiz modelde 20sn'ye sığmıyor).
+  4. **Web:** `CommentaryCard.detail` (shared tip) + kart altında "Kavram:" bloğu (accent
+     kenarlıklı eğitici stil).
+  5. **Sürpriz bulgu + düzeltme:** Integration testleri Development ortamında User Secrets'taki
+     GERÇEK OpenRouter anahtarını yüklüyordu → commentary testleri CANLI API'ye çıkıp yaşayan
+     sonuca göre kırılıyordu. Factory artık `Llm:ApiKey`'i zorla boşluyor (deterministik, ağsız).
+- **Canlı doğrulama (compose):** 6 kart, gövdeler 421-600 kr, her kartta tanım+atıf+çerçeve+
+  kavram benzetmesi; üretim 23sn; kaynak "llm". Eski kırpık cache Redis'ten temizlendi.
+- **Dokunulan dosyalar:** backend Llm/* (Prompts, Anonymizer, Service, Cached, DTOs, ILlm,
+  LlmOptions), PortfolioController, appsettings.json, testler (Prompts/Anonymizer/Hardening/
+  Service/Metrics/Cached + SqliteWebApplicationFactory), packages/shared types, web
+  CommentaryCardList + App.css + AnalysisPage.test, docs/07 §3-4, 08-BACKLOG (T3.10 satırı)
+- **Test:** Application **166/166** (+10: zenginleştirme ×4, detail ×3, cümle-kırpma, şema ×2) ·
+  Integration **90/90** · Web **64/64** · tsc temiz.
+- **Karar/Not:** Ücretsiz model kalite notu: nadir terim hatası görülebiliyor ("Bireysel Emerit
+  Sistemi" gibi) — guard yönlendirme/tahmini yakalar, imla hatasını yakalamaz; kalıcı çözüm
+  Anthropic anahtarı (T3.1 kararındaki production hedefi). Derin üretim maliyeti: ~4-6k token/
+  üretim; 24s cache + portföy-değişince-tazele disiplini korunuyor (NFR-9).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 (Finnhub hisse metrikleri) — ya da kullanıcı yorum derinliğini canlıda
+  değerlendirip ince ayar isterse T3.10 devamı.
+
 ## 2026-07-11 (6) · ad-hoc — Strateji planlama dokümanlarına işlendi (Faz 5-8 = Dalga 1-3)
 - **Görev(ler):** ad-hoc (kullanıcı: "14-PRODUCT-STRATEGY gerekliliklerine göre fazları/
   taskları/dokümanları düzenle") — strateji önceliklendirmesi böylece onaylanmış oldu.

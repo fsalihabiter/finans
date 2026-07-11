@@ -104,38 +104,47 @@ değer kaybettiğinde portföyünün tümünü birlikte etkiler."
 Yanlış örnek (verme!): "Altından çıkıp hisseye geçmelisin." ← yasak.
 
 ### Kullanıcı promptu (veri)
-Kodun hesapladığı özet **JSON olarak** verilir:
+Kodun hesapladığı özet **JSON olarak** verilir. T3.10 (2026-07-11) ile yük
+zenginleştirildi — hepsi KODDA hesaplanır, PII yine yok (tür bazlı, adsız):
 ```json
 {
-  "baseCurrency": "TRY", "totalValue": 641403, "returnRatio": 0.516,
-  "realReturnRatio": 0.21,
+  "baseCurrency": "TRY", "totalValue": 641403, "totalCost": 422970,
+  "netProfit": 218433, "returnRatio": 0.516, "realReturnRatio": 0.21,
+  "concentrationTop2": 0.841, "cashWeight": 0.009, "holdingCount": 5,
   "allocation": [
-    {"type":"Gold","weight":0.405}, {"type":"Bes","weight":0.436},
-    {"type":"Fx","weight":0.150}, {"type":"Cash","weight":0.009}
+    {"type":"Bes","weight":0.436,"returnRatio":0.62,"itemCount":1},
+    {"type":"Gold","weight":0.405,"returnRatio":0.48,"itemCount":2},
+    {"type":"Fx","weight":0.150,"returnRatio":0.11,"itemCount":1},
+    {"type":"Cash","weight":0.009,"returnRatio":0.0,"itemCount":1}
   ],
-  "concentrationTop2": 0.841
+  "bes": {"ownShare":0.77,"stateShare":0.23}
 }
 ```
+> Tür getirisi/BES payı `HoldingDto` listesi verilirse türetilir (controller verir);
+> verilmezse alanlar boş kalır — geriye uyumlu (`PortfolioAnonymizer`).
 
 ---
 
 ## 4. İstenen Çıktı Şeması (structured)
 
-`04` § 6 ile aynı `commentary` kart şeması:
+`04` § 6 ile aynı `commentary` kart şeması (T3.10 derinleştirme sınırlarıyla):
 ```json
 {
   "cards": [
     {
       "emoji": "🧭", "title": "Genel Sağlık",
-      "body": "string (Türkçe, tavsiye yok)",
+      "body": "string 120-600 char — 3-6 cümle: tanım + senin portföyünde + genel çerçeve (tavsiye yok)",
+      "detail": "opsiyonel ≤500 char — kavramı benzetmeyle sıfırdan anlatan paragraf (rakamsız, tavsiyesiz)",
       "meter": { "value": 0.72, "lowLabel": "Yoğunlaşmış", "highLabel": "Çok dağınık" },
       "tags": ["opsiyonel", "etiketler"]
     }
   ]
 }
 ```
-- `meter` ve `tags` opsiyonel.
+- Kart sayısı **4-6**; `detail`, `meter`, `tags` opsiyonel.
 - Mümkünse sağlayıcının **JSON mode / tool calling** özelliğiyle şemayı zorla.
+- Parse sınırları `CommentaryParseConstraints` ile ikinci kez dayatılır; uzun
+  gövde/detail **cümle sınırından** kırpılır (kelime ortasında kesilmez — SmartTruncate).
 
 ---
 

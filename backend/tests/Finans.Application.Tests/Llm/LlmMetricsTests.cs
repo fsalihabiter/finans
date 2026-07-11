@@ -22,9 +22,10 @@ public class LlmMetricsTests
         Allocation: [new AllocationDto(AssetType.Gold, "G", totalValue, 1m)],
         AsOf: new DateTime(2026, 6, 18, 0, 0, 0, DateTimeKind.Utc));
 
-    private static string CleanCard => "{\"emoji\":\"✅\",\"title\":\"Kart\",\"body\":\"" + new string('a', 80) + "\"}";
+    // Gövdeler ≥120 char (T3.10 MinBody) — yasaklı kart uzunluk filtresine değil GUARD'a takılmalı.
+    private static string CleanCard => "{\"emoji\":\"✅\",\"title\":\"Kart\",\"body\":\"" + new string('a', 150) + "\"}";
     private const string ForbiddenCard =
-        "{\"emoji\":\"🚀\",\"title\":\"Al\",\"body\":\"Bence şimdi altın almalısın, kısa vadede toparlar diye gerçekten düşünüyorum.\"}";
+        "{\"emoji\":\"🚀\",\"title\":\"Al\",\"body\":\"Bence şimdi hiç beklemeden altın almalısın, kısa vadede kesin toparlar diye gerçekten düşünüyorum; bu fırsat bir daha eline geçmez, herkes alırken sen de kaçırmamalısın bence.\"}";
 
     private sealed class RecordingMetrics : ILlmMetrics
     {

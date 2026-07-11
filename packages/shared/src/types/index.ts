@@ -206,6 +206,8 @@ export interface CommentaryCard {
   body: string;
   meter?: CommentaryMeter | null;
   tags?: string[] | null;
+  /** Kavramı sıfırdan öğreten opsiyonel ek paragraf (T3.10) — rakamsız, tavsiyesiz. */
+  detail?: string | null;
 }
 
 /** GET /api/portfolio/commentary yanıtı. `source`: "llm" | "fallback" | "cache". */

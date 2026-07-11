@@ -8,7 +8,8 @@ namespace Finans.Application.Tests.Llm;
 /// <summary>
 /// T3.4 — Güvenli parse hardening: LLM çıktısının şemayı tam tutmadığı vakaları kapatır.
 /// Cards üst sınırı, body min/max, meter clamp, tags filtreleme, ek alanları yutma. T3.5 çıktı
-/// güvenlik filtresi (yasaklı yönlendirme kalıbı) bunun üstüne gelecek; T3.6 cache.
+/// güvenlik filtresi (yasaklı yönlendirme kalıbı) bunun üstüne gelir; T3.6 cache.
+/// T3.10 derinleştirme: sınırlar büyüdü (6 kart, body 120-600) + opsiyonel detail alanı.
 /// </summary>
 public class LlmCommentaryHardeningTests
 {
@@ -32,44 +33,64 @@ public class LlmCommentaryHardeningTests
             Task.FromResult(responder(r));
     }
 
+    // T3.10: MinBody 120 — geçerli fixture gövdesi 150 char.
+    private static string ValidBody() => new('a', 150);
+
     private static string ValidCardJson(int count) =>
         "{\"cards\":[" +
         string.Join(",", Enumerable.Range(1, count).Select(i =>
             $"{{\"emoji\":\"✅\",\"title\":\"Kart {i}\",\"body\":\"" +
-            new string('a', 80) + $"\"}}")) +
+            ValidBody() + $"\"}}")) +
         "]}";
 
     [Fact]
     public async Task Caps_cards_at_max_even_when_llm_returns_more()
     {
-        // 8 kart yolla → ilk 5 alınır (07 §4 maxItems).
-        var svc = BuildService(ValidCardJson(8));
+        // 9 kart yolla → ilk 6 alınır (07 §4 maxItems, T3.10).
+        var svc = BuildService(ValidCardJson(9));
 
         var resp = await svc.GetCommentaryAsync(Summary());
 
-        Assert.Equal(5, resp.Cards.Count);
+        Assert.Equal(6, resp.Cards.Count);
     }
 
     [Fact]
     public async Task Truncates_overlong_body_keeping_card()
     {
-        var longBody = new string('x', 400); // > 220 → kırpılmalı, kart kalmalı
+        var longBody = new string('x', 700); // > 600 → kırpılmalı, kart kalmalı (T3.10)
         var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"OK\",\"body\":\"" + longBody + "\"}]}";
         var svc = BuildService(json);
 
         var resp = await svc.GetCommentaryAsync(Summary());
 
         Assert.Single(resp.Cards);
-        Assert.Equal(220, resp.Cards[0].Body.Length);
+        Assert.Equal(600, resp.Cards[0].Body.Length);
+    }
+
+    [Fact]
+    public async Task Truncation_cuts_at_sentence_boundary_not_mid_word()
+    {
+        // T3.10 canlı gözlem: 600'ü aşan gövde kelime ortasından kesiliyordu ("…eksikliği ri").
+        // Cümleli metinde kesim son cümle sonunda biter.
+        var sentence = "Bu tam bir cümledir ve anlamlı biter. "; // 39 char
+        var longBody = string.Concat(Enumerable.Repeat(sentence, 20)).Trim(); // ~780 char
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"OK\",\"body\":\"" + longBody + "\"}]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.True(resp.Cards[0].Body.Length <= 600);
+        Assert.EndsWith("biter.", resp.Cards[0].Body); // cümle sınırında, kelime ortasında değil
     }
 
     [Fact]
     public async Task Drops_card_with_body_too_short()
     {
-        // 60 char minimum altında → kart düşer.
+        // 120 char minimum altında → kart düşer (tek cümlelik yüzeysel yorum istemiyoruz — T3.10).
         var json = "{\"cards\":[" +
-            "{\"emoji\":\"❌\",\"title\":\"Kısa\",\"body\":\"çok kısa\"}," +
-            "{\"emoji\":\"✅\",\"title\":\"Uzun\",\"body\":\"" + new string('a', 80) + "\"}" +
+            "{\"emoji\":\"❌\",\"title\":\"Kısa\",\"body\":\"" + new string('k', 80) + "\"}," +
+            "{\"emoji\":\"✅\",\"title\":\"Uzun\",\"body\":\"" + ValidBody() + "\"}" +
             "]}";
         var svc = BuildService(json);
 
@@ -83,19 +104,65 @@ public class LlmCommentaryHardeningTests
     public async Task Truncates_overlong_title()
     {
         var longTitle = new string('T', 100);
-        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"" + longTitle + "\",\"body\":\"" + new string('a', 80) + "\"}]}";
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"" + longTitle + "\",\"body\":\"" + ValidBody() + "\"}]}";
         var svc = BuildService(json);
 
         var resp = await svc.GetCommentaryAsync(Summary());
 
         Assert.Single(resp.Cards);
-        Assert.Equal(40, resp.Cards[0].Title.Length);
+        Assert.Equal(48, resp.Cards[0].Title.Length);
+    }
+
+    [Fact]
+    public async Task Keeps_detail_and_truncates_overlong_detail()
+    {
+        // T3.10: detail opsiyonel eğitim paragrafı — 500 üstü kırpılır, kart kalır.
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Detay\",\"body\":\"" + ValidBody() + "\"," +
+            "\"detail\":\"" + new string('d', 620) + "\"}]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.NotNull(resp.Cards[0].Detail);
+        Assert.Equal(500, resp.Cards[0].Detail!.Length);
+    }
+
+    [Fact]
+    public async Task Nulls_detail_when_too_short_but_keeps_card()
+    {
+        // Gürültü seviyesinde kısa detail → null; kart body ile yaşamaya devam eder.
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Detay\",\"body\":\"" + ValidBody() + "\"," +
+            "\"detail\":\"kısa\"}]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.Null(resp.Cards[0].Detail);
+    }
+
+    [Fact]
+    public async Task Drops_card_when_detail_contains_forbidden_directive()
+    {
+        // T3.10: güvenlik filtresi detail'i de tarar — gövde temiz olsa bile yasaklı detail kartı düşürür.
+        var json = "{\"cards\":[" +
+            "{\"emoji\":\"❌\",\"title\":\"Sızma\",\"body\":\"" + ValidBody() + "\"," +
+            "\"detail\":\"Bu durumda altın satmalısın ve hisseye geçmelisin, en mantıklısı bu olur bence.\"}," +
+            "{\"emoji\":\"✅\",\"title\":\"Temiz\",\"body\":\"" + ValidBody() + "\"}" +
+            "]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.Equal("Temiz", resp.Cards[0].Title);
     }
 
     [Fact]
     public async Task Clamps_meter_value_into_unit_interval()
     {
-        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Meter\",\"body\":\"" + new string('a', 80) + "\"," +
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Meter\",\"body\":\"" + ValidBody() + "\"," +
             "\"meter\":{\"value\":2.5,\"lowLabel\":\"Az\",\"highLabel\":\"Çok\"}}]}";
         var svc = BuildService(json);
 
@@ -109,7 +176,7 @@ public class LlmCommentaryHardeningTests
     public async Task Drops_meter_when_labels_all_empty()
     {
         // Anlamsız meter UI'da gri çubuk olmasın.
-        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Meter\",\"body\":\"" + new string('a', 80) + "\"," +
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Meter\",\"body\":\"" + ValidBody() + "\"," +
             "\"meter\":{\"value\":0.5,\"lowLabel\":\"\",\"highLabel\":\"\"}}]}";
         var svc = BuildService(json);
 
@@ -121,7 +188,7 @@ public class LlmCommentaryHardeningTests
     [Fact]
     public async Task Filters_non_string_tags_and_caps_tag_count()
     {
-        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Tags\",\"body\":\"" + new string('a', 80) + "\"," +
+        var json = "{\"cards\":[{\"emoji\":\"✅\",\"title\":\"Tags\",\"body\":\"" + ValidBody() + "\"," +
             "\"tags\":[\"ok\",42,null,\"yine\",\"3\",\"4\",\"5\",\"6\"]}]}";
         var svc = BuildService(json);
 
@@ -136,7 +203,7 @@ public class LlmCommentaryHardeningTests
     public async Task Ignores_unknown_extra_fields_at_root_and_card_level()
     {
         // Forward compat: LLM ek alan üretse de istemci yutar.
-        var json = "{\"meta\":{\"v\":1},\"cards\":[{\"emoji\":\"✅\",\"title\":\"FW\",\"body\":\"" + new string('a', 80) + "\"," +
+        var json = "{\"meta\":{\"v\":1},\"cards\":[{\"emoji\":\"✅\",\"title\":\"FW\",\"body\":\"" + ValidBody() + "\"," +
             "\"futureField\":\"x\"}]}";
         var svc = BuildService(json);
 

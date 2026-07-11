@@ -28,8 +28,13 @@ public sealed class LlmOptions
     /// <summary>Anthropic API sürümü (header). Yalnızca Anthropic için anlamlı.</summary>
     public string AnthropicVersion { get; set; } = "2023-06-01";
 
-    /// <summary>Tek çağrı için maksimum bekleme; sınırı aşan çağrı fallback'e düşer.</summary>
-    public int TimeoutSeconds { get; set; } = 20;
+    /// <summary>
+    /// Tek çağrı için maksimum bekleme; sınırı aşan çağrı fallback'e düşer.
+    /// T3.10: 20→75 — derin yorum (6 kart × uzun gövde + detail ≈ 4-6k token) ücretsiz
+    /// katman modellerinde 20 saniyeye sığmıyordu (canlı ölçüm: timeout → cache fallback).
+    /// Kullanıcı beklemez: yanıt 24s cache'te; soğuk üretim yalnız portföy değişince olur.
+    /// </summary>
+    public int TimeoutSeconds { get; set; } = 75;
 
     /// <summary>
     /// Sağlayıcı taban URL'i. Anthropic varsayılan <c>api.anthropic.com</c>; OpenRouter

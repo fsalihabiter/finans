@@ -22,7 +22,7 @@ describe("AnalysisPage (T3.8)", () => {
     expect(screen.getByRole("note")).toBeInTheDocument();
   });
 
-  it("LLM yanıt geldiğinde kart başlığı ve gövdesi görünür", async () => {
+  it("LLM yanıt geldiğinde kart başlığı, gövdesi ve kavram detayı görünür", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -34,6 +34,7 @@ describe("AnalysisPage (T3.8)", () => {
               emoji: "⚖️",
               title: "Dağılımın Yoğun",
               body: "Portföyünün yaklaşık %84'ü iki kalemde toplanmış (Altın ve BES). Yoğunlaşma demek bu iki varlık aynı anda değer kaybettiğinde büyük etkilenirsin demektir.",
+              detail: "Yoğunlaşmayı tek sepette taşınan yumurta gibi düşünebilirsin: sepet düşerse kaybın büyük olur.",
               tags: ["yoğunlaşma"],
             },
           ],
@@ -46,6 +47,8 @@ describe("AnalysisPage (T3.8)", () => {
     renderWithProviders(<AnalysisPage />);
 
     expect(await screen.findByRole("heading", { name: "Dağılımın Yoğun" })).toBeInTheDocument();
+    // T3.10: opsiyonel kavram detayı ayrık blok olarak render edilir.
+    expect(screen.getByText(/tek sepette taşınan yumurta/i)).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByText(/LLM tarafından üretildi/i)).toBeInTheDocument(),
     );
