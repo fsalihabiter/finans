@@ -227,6 +227,29 @@ kart şeması.
 
 ---
 
+## 7.2 Endpoint'ler — Faz 5 (Değer Seyri)
+
+### `GET /api/portfolio/history`
+Query: `period` = `1m | 3m | 1y | all` (varsayılan `all`) · `baseCurrency` (ops.).
+Günlük portföy değeri + yatırılan maliyet serisi (T5.1 deterministik hesap; son gün
+`summary` ile birebir tutarlı). ≤500 nokta (uçlar korunur); cache 60 sn, anahtar
+`UserId`'li (`11` §3). **Geçmiş gösterir, tahmin içermez** (CLAUDE.md §2).
+
+```json
+200 →
+{
+  "baseCurrency": "TRY", "period": "1y",
+  "points": [ { "date": "2025-07-12", "value": 731022.00, "cost": 575216.00 }, … ],
+  "changeRatio": 0.148,          // dönem uçlarından; ilk değer 0 ise null
+  "firstDate": "2024-06-01",     // TÜM serinin başlangıcı ("veri şu tarihten beri")
+  "asOf": "2026-07-12T09:00:00Z"
+}
+400 → { "error": { "code": "VALIDATION_ERROR", … } }   // geçersiz period
+```
+> Pozisyonu olmayan kullanıcı → `points: []` (izolasyon; başkasının verisi asla dönmez).
+
+---
+
 ## 7.5 Endpoint'ler — Eğitim Modülü (Faz 5)
 
 > Veri modeli `03` §C. İçerik herkese açık (okuma); ilerleme kullanıcıya özel

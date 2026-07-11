@@ -24,7 +24,7 @@ public sealed class HoldingService(
     /// karşılaştırmalarında — kullanıcının pencerede gördüğü gün — gün geçişinde yanıltıcı
     /// "Future/StatePending" yaşamasın diye `DateTime.UtcNow` yerine kullanılır (T-BES.9 fix).
     /// </summary>
-    private static DateTime TrNow() => DateTime.UtcNow.AddHours(3);
+    private static DateTime TrNow() => HoldingMapping.TrNow();
 
     /// <summary>"Plan" türevli (otomatik üretilen) kaynaklar: düzenli plan dedup'unda kullanılır.</summary>
     private static bool IsPlanSource(string source) => source == "Plan";
@@ -684,35 +684,10 @@ public sealed class HoldingService(
     }
 
     /// <summary>
-    /// Okuma anında pozisyonu kaynaktan yeniden türetir (§6, T1.5): miktar/ort. maliyet
-    /// saklanan cache alanından DEĞİL, gerçek işlemlerden (BES değilse) ya da kendi katkı
-    /// toplamından (BES — maliyet = cepten ödenen kendi katkı; devlet katkısı maliyet değil)
-    /// hesaplanır. Salt okunur şekillendirme — kalıcılaştırılmaz (çağrı sonrası SaveChanges yok).
-    /// Eski/sürüklenmiş cache değerlerini gösterimde otomatik düzeltir.
+    /// Okuma anında pozisyonu kaynaktan yeniden türetir — ortak kural
+    /// <see cref="HoldingMapping.ApplyReadPosition"/>'da (liste + özet + değer serisi aynı tabanı kullanır).
     /// </summary>
-    private static void ApplyReadPosition(Holding h)
-    {
-        if (h.BesDetails is not null)
-        {
-            // BES nominal hesap; miktar 1 sabit. Maliyet = CEPTEN ödenen = YATIRILMIŞ kendi katkı
-            // toplamı (ödeme tarihi ≤ kullanıcının BUGÜN'ü). TR yerel — gün geçiş anında doğru sayım.
-            var today = TrNow().Date;
-            h.AvgCost = h.BesContributions
-                .Where(c => c.PaidAtUtc.Date <= today)
-                .Sum(c => c.OwnAmount);
-            return;
-        }
-
-        // İşlem yoksa türetim 0/0 döner — saklanan değerleri SİLMEZ (örn. Nakit: doğrudan miktar
-        // tutulur, alış/satış işlemi olmaz). Yalnız işlem varsa kaynaktan yeniden türetilir.
-        if (h.Transactions.Count == 0)
-            return;
-
-        var pos = PortfolioCalculationService.DerivePosition(
-            h.Transactions.Select(t => new TransactionInput(t.Type, t.Quantity, t.UnitPrice, t.Fee)));
-        h.Quantity = pos.Quantity;
-        h.AvgCost = pos.AvgCost;
-    }
+    private static void ApplyReadPosition(Holding h) => HoldingMapping.ApplyReadPosition(h);
 
     /// <summary>Kullanıcıya ait pozisyonu getirir; yoksa/başkasınınsa 404 (IDOR yok).</summary>
     private async Task<Holding> LoadOwnedAsync(Guid id, CancellationToken ct) =>

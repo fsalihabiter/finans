@@ -20,6 +20,41 @@
 
 ---
 
+## 2026-07-12 (6) · T5.2 — GET /api/portfolio/history + özet bayat-maliyet düzeltmesi
+- **Görev(ler):** T5.2 (Değer Seyri API'si) + ad-hoc kritik düzeltme (canlı teyitte yakalandı).
+- **Ne yapıldı:**
+  1. **`GET /api/portfolio/history?period=1m|3m|1y|all`** (varsayılan all) —
+     `IPortfolioHistoryService` + `PortfolioHistoryService` (EF orkestrasyonu): kullanıcının
+     Transactions + PriceSnapshots + FxRates verisi T5.1 saf servisine indirgenir; dönem
+     dilimleme + ≤500 nokta seyrekleştirme (uçlar korunur) + dönem değişim oranı + `firstDate`;
+     cache 60s, anahtar **UserId'li** (`portfolio:history:{userId}:{ccy}:{period}`).
+  2. **İndirgeme kuralları:** işlemler olay; snapshot'lar + güncel fiyat (bugüne çapa) gözlem;
+     işlemsiz pozisyon (elle nakit) oluşturulma günü açılış olayı; **BES**: kendi katkılar ödeme
+     tarihinde miktar olayı (birim 1), devlet katkısı **yatma tarihinde** (izleyen ay sonu,
+     BesCalculator) birim fiyata işler, bugünkü fon değeri son gözlem → serinin son günü özetle
+     birebir tutarlı.
+  3. **Kritik düzeltme (SC-34):** canlı teyitte seri maliyeti (522.385) ile özet maliyeti
+     (646.635) tutmadı → kök neden: `PortfolioService.GetSummaryAsync` saklanan **bayat**
+     `AvgCost`'u kullanıyordu; gerçek DB'de BES planının **ileri tarihli** katkıları (124.250)
+     maliyete işlenmişti. `ApplyReadPosition` HoldingService'ten `HoldingMapping`'e çıkarıldı ve
+     özet de listeyle aynı "okuma anında kaynaktan türet" kuralına bağlandı →
+     **özet = pozisyon listesi = değer serisi.** (Pano "harcadın" KPI'sı canlıda
+     646.635→522.385'e düzeldi; kâr %10,6→%36,9 — önceki sayı henüz ödenMEMİŞ katkıları
+     harcanmış sayıyordu.)
+  4. 04-API-CONTRACT §7.2'ye sözleşme eklendi.
+- **Canlı doğrulama (Docker, gerçek veri):** history son gün value=714.984,86 == summary ✓;
+  cost=522.384,796 == summary ✓ (düzeltme sonrası); 500 nokta, firstDate=2022-08-25.
+- **Dokunulan dosyalar:** backend: IPortfolioHistoryService.cs (yeni), PortfolioHistoryService.cs
+  (yeni), PortfolioController, DependencyInjection, HoldingMapping (ApplyReadPosition+TrNow ortak),
+  HoldingService (delege), PortfolioService (re-derive); tests: PortfolioHistoryApiTests.cs
+  (yeni, 6); docs: 04 §7.2, 08 (T5.2 [x]), 09 (SC-33/34)
+- **Test:** SC-33 + SC-34 — Application **252/252** · Integration **112/112** (+6) · yeşil.
+- **Karar/Not:** Kurlar kullanıcı-bağımsız global piyasa verisi (FxRates tüm geçmiş). BES fon
+  değeri geçmişi yok → seri katkı nominali taşır, bugünkü gerçek fon değeri son gün görünür
+  (geçmişe yayılMAZ — uydurma yok, CLAUDE.md §2).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5.3 — Web: "Değer Seyri" gerçek grafik + Performans dönem seçicili seri.
+
 ## 2026-07-12 (5) · T5.1 — PortfolioValueHistoryService: günlük portföy değer serisi (Faz 5 açılışı)
 - **Görev(ler):** T5.1 (Dalga 1 / Faz 5 — Değer Seyri + Senaryo v1'in hesap temeli).
 - **Ne yapıldı:**

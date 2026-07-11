@@ -14,6 +14,7 @@ namespace Finans.Api.Controllers;
 [Route("api/[controller]")]
 public sealed class PortfolioController(
     IPortfolioService portfolio,
+    IPortfolioHistoryService history,
     INudgeService nudges,
     ILlmCommentaryService commentary,
     IHoldingService holdings) : ControllerBase
@@ -23,6 +24,15 @@ public sealed class PortfolioController(
     public async Task<ActionResult<PortfolioSummaryDto>> GetSummary(
         [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
         Ok(await portfolio.GetSummaryAsync(baseCurrency, ct));
+
+    /// <summary>
+    /// GET /api/portfolio/history?period=1m|3m|1y|all (T5.2) — günlük değer + yatırılan
+    /// maliyet serisi (Değer Seyri). Geçmişi gösterir; tahmin içermez (CLAUDE.md §2).
+    /// </summary>
+    [HttpGet("history")]
+    public async Task<ActionResult<PortfolioHistoryDto>> GetHistory(
+        [FromQuery] string? period, [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
+        Ok(await history.GetHistoryAsync(period, baseCurrency, ct));
 
     /// <summary>
     /// GET /api/portfolio/nudges — kural tabanlı eğitici notlar (FR-2.4). Durumu açıklar,

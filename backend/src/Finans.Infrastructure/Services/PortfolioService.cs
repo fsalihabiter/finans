@@ -26,7 +26,16 @@ public sealed class PortfolioService(
         var holdings = await db.Holdings
             .Where(h => h.UserId == userId)
             .Include(h => h.Asset)
+            .Include(h => h.Transactions)
+            .Include(h => h.BesDetails)
+            .Include(h => h.BesContributions)
             .ToListAsync(ct);
+
+        // Pozisyonu okuma anında KAYNAKTAN türet (liste ile aynı kural) — saklanan cache alanı
+        // bayatsa (örn. ileri tarihli BES plan katkısı AvgCost'a işlenmişse) özet yanlış maliyet
+        // göstermesin; özet = liste = değer serisi (T5.2'de yakalanan tutarsızlık düzeltmesi).
+        foreach (var holding in holdings)
+            HoldingMapping.ApplyReadPosition(holding);
 
         var converter = await fxRateProvider.GetConverterAsync(ct);
         var inflation = await inflationRateProvider.GetAnnualRateAsync(ct);

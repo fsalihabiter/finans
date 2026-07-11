@@ -217,7 +217,7 @@ LLM çerçeve sunarak açıklıyor (iki yönlü, tavsiyesiz) + veri yoksa anlaml
 | ID | Görev | Bağımlılık | Doküman | Durum |
 |----|-------|-----------|---------|-------|
 | T5.1 | `PortfolioValueHistoryService` — `PriceSnapshots`+`Transactions`'tan **günlük portföy değer serisi** türetimi (deterministik; eksik gün = son bilinen fiyat; işlem günleri pozisyon değişimini yansıtır) + **birim test** (NFR-1) | Faz 2 | `03`, `CLAUDE.md` §6 | [x] (2026-07-12; SC-32 unit 13; kur gün-bazlı + geri-doldurma, işlem fiyatı da gözlem) |
-| T5.2 | `GET /api/portfolio/history?period=1m\|3m\|1y\|all` — DTO + cache (anahtar `UserId`'li) + IDOR testi | T5.1 | `04`, `11` §3, `10` §3 | [ ] |
+| T5.2 | `GET /api/portfolio/history?period=1m\|3m\|1y\|all` — DTO + cache (anahtar `UserId`'li) + IDOR testi | T5.1 | `04`, `11` §3, `10` §3 | [x] (2026-07-12; SC-33/34 integration 6; canlı teyit — bonus: özet bayat AvgCost düzeltmesi, özet=liste=seri) |
 | T5.3 | **Web:** "Değer Seyri" kartı gerçek çizgi grafik (Sparkline/genişletilmiş SVG; veri azken mevcut bilgi kartına zarif düşüş) + Performans sayfasına dönem seçicili zaman serisi | T5.2 | `13` §4 | [ ] |
 | T5.4 | **Senaryo v1 (geçmişe dönük, tek değişken):** "bu varlığı almasaydım / TL'de dursaydı" karşılaştırması (`PriceSnapshots` ile; **tahmin YOK**, kalıcı disclaimer) — ScenarioPage ComingSoon → gerçek sayfa | T5.1 | `14` §4-C1, `CLAUDE.md` §2 | [ ] |
 
