@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-07-11 (5) · ad-hoc — SETUP.md sadeleştirildi: yalnız Docker akışı
+- **Görev(ler):** ad-hoc (kullanıcı isteği: "SETUP sadece Docker üzerinden, kalabalık
+  olmasın; önce gerekli programlar/versiyonlar/kurulum, sonra PowerShell komutları").
+- **Ne yapıldı:** SETUP.md sıfırdan yazıldı (308 → ~120 satır): gereksinim yalnız
+  Git + Docker Desktop (winget komutlarıyla), kod alma + `.env`, tek komut ayağa
+  kaldırma, günlük komutlar tablosu, servis listesi, sorun giderme tablosu. Dev
+  (hot-reload) akışı 06-DEV-PLAYBOOK'a işaret eden tek nota indirildi. README
+  "Getting started" yeni akışla hizalandı (pnpm önkoşulu kalktı); `.env.example`
+  LLM model örneği çalışanla değiştirildi (nemotron; llama-3.3 kalıcı 429 notu).
+- **Dokunulan dosyalar:** `SETUP.md` (yeniden yazım), `README.md`, `.env.example`,
+  `.claude/tasks/TASKLOG.md`
+- **Test:** yok (doküman). Komutlar bu oturumda canlı doğrulanmış akışın aynısı.
+- **Durum:** tamamlandı.
+- **Sıradaki:** Strateji Dalga 1 önceliklendirme onayı.
+
 ## 2026-07-11 (4) · ad-hoc — Tek komut Docker: web SPA compose'a girdi + gerçek veri taşındı
 - **Görev(ler):** ad-hoc (kullanıcı kararı: "her şey Docker'dan kalksın").
 - **Ne yapıldı:**

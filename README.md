@@ -144,35 +144,23 @@ finans/
 
 ## 🚀 Getting started
 
-**Prerequisites:** Node.js ≥ 20 + pnpm 11.5 (`corepack prepare pnpm@11.5.0 --activate`),
-then either Docker Desktop (path A) or .NET 10 SDK + PostgreSQL (path B).
-
-### Path A — full stack with Docker
+**Prerequisites: Git + Docker Desktop.** Nothing else — the API and the web UI
+are compiled inside Docker.
 
 ```bash
 git clone https://github.com/fsalihabiter/finans.git
 cd finans
-pnpm install
-cp .env.example .env          # set POSTGRES_PASSWORD, optionally LLM_API_KEY
-docker compose up --build     # API + PostgreSQL + observability stack
-pnpm dev:web                  # web frontend (Vite dev server, hot reload)
+cp .env.example .env          # optional: set LLM_API_KEY for AI commentary
+docker compose up -d --build  # web + API + PostgreSQL + observability stack
 ```
 
-### Path B — local development
-
-```bash
-pnpm install
-cd backend/src/Finans.Api
-dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=finans;Username=finans;Password=..."
-dotnet run                    # migrates + seeds the dev database automatically
-# in another terminal, from the repo root:
-pnpm dev:web
-```
+Then open **https://localhost** (accept the local-certificate warning once).
 
 No LLM API key? The app still runs — a no-op client serves fallback text, so commentary
 degrades gracefully instead of crashing.
 
-> 📘 Detailed step-by-step setup guide (prerequisites per OS, DB setup, LLM config, troubleshooting): [SETUP.md](SETUP.md)
+> 📘 Step-by-step guide (install commands, everyday operations, troubleshooting): [SETUP.md](SETUP.md)
+> · Contributor/hot-reload workflow: [`.claude/docs/06-DEV-PLAYBOOK.md`](.claude/docs/06-DEV-PLAYBOOK.md)
 
 ## 🧪 Testing
 
