@@ -72,6 +72,8 @@ services:
       Llm__BaseUrl: ${LLM_BASE_URL:-https://openrouter.ai/api/}
       Llm__OpenRouterAppUrl: "https://localhost"
       Llm__OpenRouterAppName: "Finans"
+      # T4.2: Finnhub hisse verisi. Anahtar .env'den (FINNHUB_API_KEY=...); boşsa endpoint 502.
+      Stocks__ApiKey: ${FINNHUB_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

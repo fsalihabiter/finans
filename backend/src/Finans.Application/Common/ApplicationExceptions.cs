@@ -13,6 +13,12 @@ public sealed class NotFoundException(string message = "Kayıt bulunamadı.") : 
 /// <summary>İş kuralı çakışması (örn. aynı varlıkta ikinci aktif pozisyon).</summary>
 public sealed class ConflictException(string message) : AppException(message);
 
+/// <summary>
+/// Dış veri kaynağı erişilemez / yapılandırılmamış (T4.2) → 502 UPSTREAM_ERROR.
+/// Kullanıcıya anlamlı mesaj; iç detay (URL/anahtar) sızmaz (11 §4).
+/// </summary>
+public sealed class UpstreamException(string message) : AppException(message);
+
 /// <summary>Girdi doğrulama hatası — alan bazında ayrıntı taşır (04 §2 details).</summary>
 public sealed class ValidationException(string message, IReadOnlyList<ValidationFailure> failures)
     : AppException(message)

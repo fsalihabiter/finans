@@ -20,6 +20,39 @@
 
 ---
 
+## 2026-07-11 (13) · T4.2 — Hisse metrikleri: Finnhub sağlayıcı + servis + endpoint
+- **Görev(ler):** T4.2 (Faz 4; karar T4.1: Finnhub, ABD).
+- **Ne yapıldı:**
+  1. **Application/Stocks:** `StockMetricsDto` (04 §7 sözleşmesi; oranlar 0-1, eksik veri null),
+     `IStockDataProvider` portu, `StockMetricContext` (kaba bant eşikleri KODDA — F/K
+     negative/low/moderate/above · PD/DD low/moderate/high · temettü none/low/moderate/high ·
+     büyüme negative/flat/positive), `StockDataService` (sembol regex doğrulama+normalize,
+     1 saat ORTAK cache — piyasa verisi per-user değil, tek-uçuş, hata cache'lenmez).
+  2. **Hata eşleme:** yeni `UpstreamException` → `AppExceptionHandler` 502 UPSTREAM_ERROR
+     (iç detay sızmaz); sembol yok → 404; geçersiz sembol → 400 alan detaylı.
+  3. **Infrastructure/Stocks:** `FinnhubStockDataProvider` — 3 uç paralel (`/stock/metric
+     ?metric=all`, `/quote`, `/stock/profile2`); anahtar `X-Finnhub-Token` BAŞLIKTA (URL/log'a
+     sızmaz, 12 §3); Finnhub yüzde ölçeği (0-100) → oran (÷100); alan fallback'leri
+     (peTTM→peNormalizedAnnual vb.); bilinmeyen sembol tespiti (boş profil+sıfır fiyat → null).
+     `NotConfiguredStockDataProvider` (Noop deseni): anahtar yoksa anlamlı 502. DI: anahtar
+     varsa typed HttpClient, yoksa NotConfigured; `StockOptions` (env `Stocks__ApiKey`).
+  4. **API:** `StocksController` `GET /api/stocks/{symbol}/metrics` + "stocks" rate limit
+     (20/dk — Finnhub 60/dk toplam kota + 1s cache dengesi). Compose `FINNHUB_API_KEY`
+     geçişi; `.env.example` + appsettings `Stocks` bölümü.
+  5. **Test factory:** `Stocks:ApiKey` zorla boş (Llm gibi — dev anahtarı canlı çağrı yapmasın).
+- **Dokunulan dosyalar:** Application/Stocks/* (4 yeni), ApplicationExceptions, AppExceptionHandler,
+  Infrastructure/Stocks/* (2 yeni), DependencyInjection, StocksController (yeni), Program.cs,
+  appsettings.json, docker-compose.yml, .env.example, testler (unit 2 dosya + integration 2 dosya
+  + factory), 08-BACKLOG, 09 SC-28, ACTIVE
+- **Test:** SC-28 — Application **226/226** (+33: eşik bantları 23 vaka + servis 8) ·
+  Integration **98/98** (+8: Finnhub stub eşleme 4 + endpoint 200/404/400/502). **Canlı
+  (compose):** anahtar yokken anlamlı 502 + geçersiz sembolde alan detaylı 400 doğrulandı.
+- **Karar/Not:** Finnhub yüzde-ölçek varsayımı (dividendYield/epsGrowth/dp ÷100) stub'la
+  test edildi; **gerçek anahtar gelince canlı yanıtla teyit edilecek** (T4.1 notu gereği).
+  Kullanıcı ücretsiz anahtar almalı: https://finnhub.io/register → `.env` `FINNHUB_API_KEY=...`.
+- **Durum:** tamamlandı (200 yolu canlı teyidi anahtar bekliyor).
+- **Sıradaki:** T4.3 — `LlmStockExplainService` + `GET /.../explain`.
+
 ## 2026-07-11 (12) · T3.15 — LLM maliyet koruması: kaba hash + yorum sabitleme
 - **Görev(ler):** T3.15 (kullanıcı: "varlıklarda değişim yoksa yorumlar sabitlensin, boşuna
   API'ye gidilip maliyet yükselmesin").

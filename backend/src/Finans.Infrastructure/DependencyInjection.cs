@@ -5,8 +5,10 @@ using Finans.Application.Portfolio;
 using Finans.Infrastructure.Caching;
 using Finans.Infrastructure.Llm;
 using Finans.Infrastructure.Persistence;
+using Finans.Application.Stocks;
 using Finans.Infrastructure.Pricing;
 using Finans.Infrastructure.Services;
+using Finans.Infrastructure.Stocks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -115,6 +117,26 @@ public static class DependencyInjection
         {
             services.AddSingleton<ILlmClient, NoopLlmClient>();
         }
+
+        // Hisse verisi (T4.2 — Finnhub, karar T4.1). Anahtar varsa typed HttpClient (token
+        // başlıkta → log'a sızmaz); yoksa NotConfigured sağlayıcı → anlamlı 502 (NFR-5).
+        // Servis: sembol doğrulama + 1 saat ortak cache + tek-uçuş (60 çağrı/dk kota koruması).
+        var stocks = new StockOptions();
+        configuration?.GetSection(StockOptions.SectionName).Bind(stocks);
+        if (!string.IsNullOrWhiteSpace(stocks.ApiKey))
+        {
+            services.AddHttpClient<IStockDataProvider, FinnhubStockDataProvider>(c =>
+            {
+                c.BaseAddress = new Uri(stocks.BaseUrl);
+                c.Timeout = TimeSpan.FromSeconds(Math.Max(1, stocks.TimeoutSeconds));
+                c.DefaultRequestHeaders.Add("X-Finnhub-Token", stocks.ApiKey);
+            });
+        }
+        else
+        {
+            services.AddSingleton<IStockDataProvider, NotConfiguredStockDataProvider>();
+        }
+        services.AddScoped<IStockDataService, StockDataService>();
 
         // T3.9: LLM kullanım/maliyet metriği (Meter "Finans.Llm" → OTel/Prometheus). Singleton.
         services.AddSingleton<ILlmMetrics, LlmMetrics>();

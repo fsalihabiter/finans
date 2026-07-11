@@ -12,12 +12,16 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T4.2** — `IStockDataProvider`/`StockDataService` + `GET /api/stocks/{symbol}/metrics`
-   (Finnhub; desen = Faz 2 `IPriceProvider`: typed HttpClient + DI + stub test + cache)
-2. **T4.3** — `LlmStockExplainService` + `GET /.../explain` (tavsiye YOK)
-3. **T4.4** — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
-4. **Faz 5 başlangıcı: T5.1** — `PortfolioValueHistoryService` (günlük değer serisi + birim test)
-5. OSS kalanı — README Analiz ekran görüntüsü tazeleme (LLM canlı — nemotron)
+1. **T4.3** — `LlmStockExplainService` + `GET /api/stocks/{symbol}/explain` (tavsiye YOK;
+   commentary kart şeması + aynı korkuluklar/dil bekçileri)
+2. **T4.4** — Web: sembol arama + `MetricGrid` + açıklama kartları + disclaimer
+3. **Faz 5 başlangıcı: T5.1** — `PortfolioValueHistoryService` (günlük değer serisi + birim test)
+4. OSS kalanı — README Analiz ekran görüntüsü tazeleme (artık Anthropic ile kaliteli)
+
+> ✅ **T4.2 bitti (2026-07-11):** Finnhub sağlayıcı (3 uç, token başlıkta) + kaba bant
+> eşikleri KODDA + 1s ortak cache + tek-uçuş + anlamlı 400/404/502. Canlıda 502/400 yolları
+> doğrulandı. **Finnhub anahtarı henüz yok** — kullanıcı https://finnhub.io/register'dan
+> ücretsiz anahtar alıp `.env`'e `FINNHUB_API_KEY=...` yazınca 200 yolu canlı test edilecek.
 
 ## Ortam notu (2026-07-11)
 - **Birincil ortam: Docker compose** → `docker compose up -d --build` → **https://localhost**

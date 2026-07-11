@@ -40,6 +40,9 @@ public sealed class SqliteWebApplicationFactory : WebApplicationFactory<Program>
         // testleri CANLI OpenRouter'a çıkıp yaşayan sonuca göre kırılıyordu (2026-07-11 tespiti).
         // Testler ağsız ve deterministik olmalı (09 §2).
         builder.UseSetting("Llm:ApiKey", "");
+        // Aynı gerekçeyle Finnhub anahtarı da testlerde ZORLA boş → NotConfiguredStockDataProvider
+        // (geliştirici makinesindeki olası anahtar canlı çağrıya yol açmasın — T4.2).
+        builder.UseSetting("Stocks:ApiKey", "");
 
         builder.ConfigureTestServices(services =>
         {

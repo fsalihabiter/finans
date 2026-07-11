@@ -161,7 +161,7 @@ rate limit + TLS proxy ayakta**.
 | ID | Görev | Bağımlılık | Doküman |
 |----|-------|-----------|---------|
 | T4.1 | Hisse veri kaynağı kararı → **Finnhub** (ABD; BIST ertelendi) | Faz 3 | `CLAUDE.md` §3.3, `04` §7 | [x] (2026-06-20) |
-| T4.2 | `StockDataService` + `GET /api/stocks/{symbol}/metrics` | T4.1 | `04` §7 |
+| T4.2 | `StockDataService` + `GET /api/stocks/{symbol}/metrics` | T4.1 | `04` §7 | [x] (2026-07-11: `IStockDataProvider`+`FinnhubStockDataProvider` (3 uç, token başlıkta) + `NotConfigured` güvenli varsayılan → anlamlı 502; `StockMetricContext` kaba bant eşikleri KODDA; servis: sembol doğrulama+1s ortak cache+tek-uçuş; `UpstreamException`→502 eşleme; "stocks" rate limit 20/dk; compose `FINNHUB_API_KEY`. SC-28: unit 31 + integration 8) |
 | T4.3 | `LlmStockExplainService` + `GET /.../explain` (tavsiye yok) | T4.2, T3.1 | `07` §8 |
 | T4.4 | **Web:** sembol arama + `MetricGrid` + açıklama kartları + disclaimer | T4.2,T4.3 | `13` §4 |
 

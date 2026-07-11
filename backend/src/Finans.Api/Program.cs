@@ -190,6 +190,17 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+
+        // "stocks" (T4.2): Finnhub ücretsiz kota 60 çağrı/dk (tüm kullanıcılar toplamı);
+        // 1 saat cache'le birlikte kullanıcı başına 20/dk hem UX'e yeter hem kotayı korur.
+        options.AddPolicy("stocks", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(ResolvePartitionKey(httpContext),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
     });
 
     var app = builder.Build();

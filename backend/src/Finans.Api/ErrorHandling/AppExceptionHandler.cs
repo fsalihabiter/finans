@@ -29,6 +29,11 @@ public sealed class AppExceptionHandler : IExceptionHandler
                 StatusCodes.Status409Conflict,
                 new ApiErrorEnvelope(new ApiError(ErrorCodes.Conflict, c.Message))),
 
+            // T4.2: dış veri kaynağı erişilemez/yapılandırılmamış → 502 (anlamlı hata, çökme yok).
+            UpstreamException u => (
+                StatusCodes.Status502BadGateway,
+                new ApiErrorEnvelope(new ApiError(ErrorCodes.Upstream, u.Message))),
+
             _ => (0, null!),
         };
 
