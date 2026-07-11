@@ -20,6 +20,27 @@
 
 ---
 
+## 2026-07-11 (2) · ad-hoc — Ürün stratejisi dokümanı: finansal okuryazarlık vizyonu
+- **Görev(ler):** ad-hoc (kullanıcı isteği: "uzman olarak incele; neler eklenirse piyasada
+  öne çıkar; ulusal düzeyde yön verici, bilinçlendiren, finans okuryazarlığı kazandıran
+  bir ilerleyiş").
+- **Ne yapıldı:** `.claude/docs/14-PRODUCT-STRATEGY.md` yazıldı: konumlandırma ("Nirengi
+  haritayı okumayı öğretir"), mevcut durum güçlü/boşluk analizi, TR rekabet boşluğu,
+  4 katmanlı özellik önerisi (A: okuryazarlık çekirdeği — bağlamsal eğitim/onboarding/
+  şeffaflık/sözlük/davranış aynası; B: TR'ye özgü — enflasyon/TEFAS/altın kültürü/BES;
+  C: ürünleşme — fiyat geçmişi/kimlik/PWA/bildirim/veri dayanıklılığı; D: ulusal etki —
+  demo mod/açık kaynak/işbirlikleri/içerik), tarafsızlığı bozmayan gelir modelleri,
+  yasal hatırlatmalar, 3 dalgalı öncelik planı, "DAU değil öğrenme" metrik çerçevesi.
+  Doküman indeksi (docs/README.md) güncellendi.
+- **Dokunulan dosyalar:** `.claude/docs/14-PRODUCT-STRATEGY.md` (yeni),
+  `.claude/docs/README.md`, `.claude/tasks/TASKLOG.md`
+- **Test:** yok (doküman).
+- **Karar/Not:** Öncelik önerisi: Dalga 1 = Faz 4 bitir → fiyat geçmişi/Değer Seyri →
+  Eğitim MVP → sözlük. Davranış aynası + bildirimler SPK merceğinde avukat görüşüyle
+  tasarlanacak (lansmana bırakılmadan). Kullanıcının dalga önceliklendirmesi bekleniyor.
+- **Durum:** tamamlandı (doküman); uygulama görevleri backlog'a kullanıcı onayıyla girecek.
+- **Sıradaki:** Kullanıcı Dalga 1 sırasını onaylarsa 08-BACKLOG'a görev kırılımı.
+
 ## 2026-07-11 · ad-hoc — Motion katmanı 3: sayaç, donut çizimi, sparkline, bar/hover mikro-animasyonları
 - **Görev(ler):** ad-hoc (kullanıcı isteği: 6 maddelik motion listesi).
 - **Ne yapıldı:**

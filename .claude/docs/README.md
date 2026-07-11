@@ -40,6 +40,7 @@ Her geliştirme oturumunun başında:
 | 11 | [Security / Güvenlik](11-SECURITY.md) | Tehdit modeli, kimlik & yetki (per-user izolasyon), veri koruması, sırlar, KVKK, güvenlik testleri. Her endpoint/PR'da. |
 | 12 | [Observability / Gözlemlenebilirlik](12-OBSERVABILITY.md) | Loglama (Serilog+Seq), metrik/trace (OTel+Prometheus+Grafana), health check, audit log, alarm. İzleme kurarken. |
 | 13 | [Web Frontend / Web Arayüz](13-WEB-FRONTEND.md) | **Birincil yüzey:** ReactJS+Vite SPA, monorepo + paylaşılan paket, web düzen uyarlaması. Web yazarken. |
+| 14 | [Product Strategy / Ürün Stratejisi](14-PRODUCT-STRATEGY.md) | Finansal okuryazarlık vizyonu, rekabet boşluğu, öne çıkaracak özellik katmanları (A-D), dalga planı, gelir modeli. Yol haritası/öncelik tartışırken. |
 
 > **Frontend sırası:** **Web öncelikli** (ReactJS+Vite, `13`). Mobil (React
 > Native, `05`) aynı API ve `@finans/shared` paketi üzerine **sonradan** eklenen
