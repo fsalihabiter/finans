@@ -18,7 +18,9 @@
   ambient ışık lekeleri. **Saf siyah yok** (#000 OLED smear + sertlik).
 - **Motion:** Hareket anlam taşır (giriş hiyerarşisi, basılı geri bildirim);
   süsleme değil. 150-300ms mikro, ≤640ms giriş; `Bezier(0.16,1,0.3,1)` easing;
-  yalnız transform/opacity; `prefers-reduced-motion` her animasyonu durdurur.
+  yalnız transform/opacity. Animasyonlar her sayfa açılışında/yenilemesinde
+  oynar; `prefers-reduced-motion` bilinçli olarak dikkate alınmaz (kullanıcı
+  kararı 2026-07-11 — gerekirse ileride ayar yapılabilir).
 - **Yaklaşım:** Rafine minimalizm. Bolca nefes alanı, net hiyerarşi, abartısız
   ama özenli mikro-detaylar. "AI slop" jenerik görünümden kaçın.
 

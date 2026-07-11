@@ -1,5 +1,5 @@
-import { formatCurrency, formatPercent } from "@finans/shared";
 import type { PortfolioSummary } from "@finans/shared";
+import { CountUpCurrency, CountUpNumber, CountUpPercent } from "./CountUp";
 import { InfoTip } from "./InfoTip";
 
 function tone(v: number | null): string {
@@ -22,18 +22,23 @@ export function KpiGrid({
     <div className="kpis">
       <div className="kpi hero">
         <div className="k">Toplam Portföy Değeri</div>
-        <div className="v tnum">{formatCurrency(totalValue, baseCurrency)}</div>
+        <div className="v tnum"><CountUpCurrency value={totalValue} currency={baseCurrency} /></div>
         <div className={`sub tnum ${tone(netProfit)}`}>
           {profitSign}
-          {formatCurrency(netProfit, baseCurrency)}
-          {returnRatio !== null && ` · ${formatPercent(returnRatio)}`}
+          <CountUpCurrency value={netProfit} currency={baseCurrency} />
+          {returnRatio !== null && (
+            <>
+              {" · "}
+              <CountUpPercent value={returnRatio} />
+            </>
+          )}
         </div>
       </div>
 
       <div className="kpi">
         <div className="k">Toplam Maliyet</div>
-        <div className="v tnum">{formatCurrency(totalCost, baseCurrency)}</div>
-        <div className="sub muted">{positionCount} pozisyon</div>
+        <div className="v tnum"><CountUpCurrency value={totalCost} currency={baseCurrency} /></div>
+        <div className="sub muted"><CountUpNumber value={positionCount} /> pozisyon</div>
       </div>
 
       <div className="kpi">
@@ -46,7 +51,7 @@ export function KpiGrid({
         </div>
         <div className={`v tnum ${tone(netProfit)}`}>
           {profitSign}
-          {formatCurrency(netProfit, baseCurrency)}
+          <CountUpCurrency value={netProfit} currency={baseCurrency} />
         </div>
         <div className={`sub ${tone(netProfit)}`}>tüm zamanlar</div>
       </div>
@@ -60,10 +65,16 @@ export function KpiGrid({
           </InfoTip>
         </div>
         <div className={`v tnum ${tone(returnRatio)}`}>
-          {returnRatio === null ? "—" : formatPercent(returnRatio)}
+          {returnRatio === null ? "—" : <CountUpPercent value={returnRatio} />}
         </div>
         <div className="sub muted tnum">
-          {realReturnRatio === null ? "reel —" : `reel ${formatPercent(realReturnRatio)}`}
+          {realReturnRatio === null ? (
+            "reel —"
+          ) : (
+            <>
+              reel <CountUpPercent value={realReturnRatio} />
+            </>
+          )}
         </div>
       </div>
     </div>

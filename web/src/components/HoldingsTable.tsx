@@ -40,7 +40,7 @@ export function HoldingsTable({
           </tr>
         </thead>
         <tbody>
-          {holdings.map((h) => {
+          {holdings.map((h, i) => {
             const meta = ASSET_META[h.assetType];
             return (
               <tr key={h.id} onClick={() => navigate(`/holdings/${h.id}`)}>
@@ -67,7 +67,14 @@ export function HoldingsTable({
                 <td className="num tnum" data-label="Değer">{money(h.currentValue, baseCurrency)}</td>
                 <td className="num" data-label="Ağırlık">
                   <div className="weight-bar" title={formatPercent(h.weight, 1, true, false)}>
-                    <i style={{ width: `${Math.min(h.weight * 100, 100)}%`, background: meta.color }} />
+                    <i
+                      style={{
+                        width: `${Math.min(h.weight * 100, 100)}%`,
+                        background: meta.color,
+                        // Satır sırasına göre kademeli genişleme (App.css @keyframes bar-grow).
+                        animationDelay: `${200 + Math.min(i, 8) * 60}ms`,
+                      }}
+                    />
                   </div>
                 </td>
                 <td className={`num tnum ${tone(h.returnRatio)}`} data-label="Getiri">

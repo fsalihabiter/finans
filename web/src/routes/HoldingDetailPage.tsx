@@ -7,6 +7,7 @@ import { BesContributionForm } from "../components/BesContributionForm";
 import { BesContributionPlanForm } from "../components/BesContributionPlanForm";
 import { BesContributionHistory } from "../components/BesContributionHistory";
 import { BesProjectionForm } from "../components/BesProjectionForm";
+import { CountUpCurrency, CountUpPercent } from "../components/CountUp";
 import { DateField } from "../components/DateField";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -270,11 +271,21 @@ export function HoldingDetailPage() {
         <div className="detail-col">
           <div className="detail-hero">
             <div className="dh-v tnum">
-              {h.currentValue === null ? "—" : formatCurrency(h.currentValue, h.currency)}
+              {h.currentValue === null ? "—" : <CountUpCurrency value={h.currentValue} currency={h.currency} />}
             </div>
             <div className={`dh-g tnum ${tone(h.profit)}`}>
-              {h.profit === null ? "—" : `${profitSign}${formatCurrency(h.profit, h.currency)}`}
-              {h.returnRatio !== null && ` · ${formatPercent(h.returnRatio)}`}
+              {h.profit === null ? "—" : (
+                <>
+                  {profitSign}
+                  <CountUpCurrency value={h.profit} currency={h.currency} />
+                </>
+              )}
+              {h.returnRatio !== null && (
+                <>
+                  {" · "}
+                  <CountUpPercent value={h.returnRatio} />
+                </>
+              )}
             </div>
           </div>
 

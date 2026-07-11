@@ -26,7 +26,7 @@ body {
 
 /* Atmosfer (v2): yavaşça salınan indigo + turkuaz ambient ışık lekeleri
    (ui-ux-pro-max "Modern Dark": animated ambient light blobs). Sabit katman,
-   içerikle etkileşmez; reduced-motion tercihi animasyonu durdurur. */
+   içerikle etkileşmez. */
 body::before {
   content: "";
   position: fixed;
@@ -47,12 +47,6 @@ body::before {
     transform: translate3d(-28px, 18px, 0) scale(1.06);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
-  }
-}
-
 /* Placeholder — panel üstünde okunur ama girilmiş metinle karışmaz (--muted-2). */
 ::placeholder {
   color: var(--muted-2, #6b7699);
@@ -72,7 +66,7 @@ html {
 }
 
 /* Etkileşim temel kuralları (ui-ux-pro-max: cursor-pointer + 80-150ms basılı geri bildirim).
-   transform layout kaydırmaz; reduced-motion bloğu süreleri zaten sıfırlıyor. */
+   transform layout kaydırmaz. */
 button:not(:disabled) {
   cursor: pointer;
 }

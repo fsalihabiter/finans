@@ -20,6 +20,58 @@
 
 ---
 
+## 2026-07-11 · ad-hoc — Motion katmanı 3: sayaç, donut çizimi, sparkline, bar/hover mikro-animasyonları
+- **Görev(ler):** ad-hoc (kullanıcı isteği: 6 maddelik motion listesi).
+- **Ne yapıldı:**
+  1. **KPI kartları kademeli fade-in:** `.kpis .kpi` sağdan kayma yerine `fade-up`
+     keyframe'i (yukarı süzülerek, 40-190ms stagger korunarak).
+  2. **Para değerleri sayaç animasyonu:** yeni `useCountUp` hook'u (easeOutCubic,
+     ~900ms; reduced-motion/matchMedia'sız ortamda ANINDA hedef → testler deterministik)
+     + `CountUpCurrency` bileşeni. Uygulandı: KpiGrid (4 para değeri), varlık detay
+     hero'su, BES projeksiyon hero'su. Gösterim-katmanı; hesap yine backend'de (NFR-1).
+  3. **Donut dilim çizimi:** `AllocationDonut` dilimlerine `.alloc-seg` + inline
+     `--seg-delay/--seg-dur` (paya orantılı) → `stroke-dasharray` keyframe'iyle çevre
+     boyunca sırayla çizilir; kapsayıcı `donut-in` sadeleşti (rotate kalktı).
+  4. **Sparkline (yeni bileşen):** `Sparkline.tsx` — path draw (`pathLength=1` +
+     dashoffset 1→0) + gecikmeli gradyan alan fade. Gerçek veriyle ilk kullanım: BES
+     projeksiyonunun yıllık fon değeri serisi (proj-hero). "Değer Seyri" kartı Faz 2
+     fiyat geçmişini beklediği için orada veri yok — bileşen hazır.
+  5. **Ağırlık barları genişleme:** `bar-grow` (scaleX, origin left) + satır sırasına
+     göre inline gecikme (HoldingsTable); performans barlarında merkezden dışa doğru
+     (inline `transformOrigin`, `.pb-fill`).
+  6. **Satır hover aksiyonları:** düzenle/sil ikonları `@media (hover: hover)`'da
+     satır hover/focus-within'e dek opacity 0; dokunmatikte hep görünür (özellik kaybı yok).
+  - A11y: reduced-motion bloğuna `animation-delay`/`transition-delay` sıfırlama eklendi
+    (backwards-fill stagger'lar delay boyunca içeriği gizliyordu — mevcut sorun da düzeldi).
+- **Dokunulan dosyalar:** `web/src/lib/useCountUp.ts` (+test), `web/src/components/CountUpCurrency.tsx`,
+  `web/src/components/Sparkline.tsx` (+test), `web/src/components/KpiGrid.tsx`,
+  `web/src/components/AllocationDonut.tsx`, `web/src/components/HoldingsTable.tsx`,
+  `web/src/components/BesProjectionForm.tsx`, `web/src/routes/HoldingDetailPage.tsx`,
+  `web/src/routes/PerformancePage.tsx`, `web/src/App.css`
+- **Test:** `useCountUp` (reduced-motion'da anında hedef ×2) + `Sparkline` (path'ler,
+  pathLength, <2 nokta → null, sabit seri NaN yok) yeni; toplam **60/60 yeşil**, `tsc -b` temiz.
+- **Karar/Not:** jsdom'da `matchMedia` olmaması bilinçli sözleşme olarak kullanıldı —
+  sayaç testte animasyonsuz çalışır, para asserterleri beklemez. Sayaç yalnız gösterim;
+  ara değerler hiçbir hesaba girmez.
+- **Ek (aynı gün, kullanıcı geri bildirimi "sayaç görünmüyor"):** Sayaç KPI'lardaki TÜM
+  sayısal değerlere genişletildi: `CountUpPercent` (getiri, reel getiri, hero yüzdesi,
+  detay hero yüzdesi) + `CountUpNumber` (pozisyon sayısı). `CountUpCurrency.tsx` →
+  `CountUp.tsx` olarak birleştirildi (3 import güncellendi). **Kök neden:** kullanıcının
+  Windows'unda "animasyon efektleri" kapalı → `prefers-reduced-motion: reduce` → sayaç
+  (tasarım gereği) hedefe anında atlıyor. Tarayıcıda matchMedia geçici ezilerek kanıtlandı:
+  ara değerler ₺153.847→₺549.861→₺726.443→₺843.887,52 örneklendi. Test 63/63 yeşil.
+  Not: otomasyon sırasında takılı bir View Transition'ın rAF'i dondurduğu gözlendi
+  (InvalidStateError; taze yüklemede sağlıklı) — normal kullanıcı akışında görülmedi, izlenecek.
+- **Ek 2 (aynı gün, "her yenilemede çalışsın, göremedim"):** `prefers-reduced-motion`
+  desteği KALDIRILDI (kullanıcı kararı): App.css/index.css'teki üç medya bloğu silindi,
+  `useCountUp`'ta reduced-motion kontrolü çıkarıldı (yalnız jsdom/test → anında hedef
+  sözleşmesi korunuyor). DESIGN.md §Motion güncellendi + hafızaya `ui-animations-always-on`
+  yazıldı. Animasyonlar artık OS ayarından bağımsız her açılış/yenilemede/rota geçişinde
+  oynar. Otomasyon bulgusu: gizli sekmede rAF çalışmaz → sayaç görünene dek 0 kalır,
+  görünür olunca son değere tamamlanır (takılma yok — tasarım gereği doğal). Test 63/63.
+- **Durum:** tamamlandı.
+- **Sıradaki:** Tarayıcıda görsel doğrulama + commit (kullanıcı onayıyla) → T4.2.
+
 ## 2026-07-10 (6) · ad-hoc — Analiz sayfası ÇALIŞIR duruma getirildi (LLM yorum canlı)
 - **Görev(ler):** ad-hoc (kullanıcı isteği: "Analiz sayfası çalışsın, ne gerekiyorsa yap").
 - **Kök neden zinciri (üç katman):**

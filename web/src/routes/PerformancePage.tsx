@@ -34,10 +34,13 @@ function ReturnBars({ holdings }: { holdings: Holding[] }) {
             </div>
             <div className="perf-track">
               <i
+                className="pb-fill"
                 style={{
                   left: positive ? "50%" : `${50 - pct}%`,
                   width: `${pct}%`,
                   background: positive ? "var(--mint, #5fc9a0)" : "var(--coral, #e58e6e)",
+                  // Merkez çizgisinden dışa doğru genişler (App.css @keyframes bar-grow).
+                  transformOrigin: positive ? "left center" : "right center",
                 }}
               />
               <i style={{ left: "50%", width: 1, background: "var(--muted-2, #6f6557)" }} />

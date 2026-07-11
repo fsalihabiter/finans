@@ -1,6 +1,6 @@
 /**
  * Yükleme iskeletleri — düz "Yükleniyor…" metni yerine (layout shift'i önler,
- * algılanan hızı artırır). Saf görsel; `prefers-reduced-motion`'da parıltı durur.
+ * algılanan hızı artırır). Saf görsel.
  */
 export function Skeleton({
   width,

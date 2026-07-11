@@ -1,6 +1,13 @@
+import type { CSSProperties } from "react";
 import { formatPercent } from "@finans/shared";
 import type { AllocationSlice, CurrencyCode } from "@finans/shared";
 import { sliceColors } from "../lib/assetMeta";
+
+/* Dilim çizim animasyonu zamanlaması: her dilim, kendinden önceki dilimlerin payı
+   kadar bekler ve kendi payı kadar sürede çizilir (linear) → bütün, tek kalemde
+   çevre boyunca çizilmiş gibi okunur (App.css @keyframes donut-draw). */
+const DRAW_TOTAL_MS = 640;
+const DRAW_START_MS = 160;
 
 const R = 60;
 const STROKE = 26;
@@ -38,12 +45,17 @@ export function AllocationDonut({
           {segments.map(({ slice, length, dashoffset, color }) => (
             <circle
               key={slice.assetType + slice.name}
+              className="alloc-seg"
               r={R}
               fill="none"
               stroke={color}
               strokeWidth={STROKE}
               strokeDasharray={`${length} ${CIRC - length}`}
               strokeDashoffset={dashoffset}
+              style={{
+                "--seg-delay": `${Math.round(DRAW_START_MS + (-dashoffset / CIRC) * DRAW_TOTAL_MS)}ms`,
+                "--seg-dur": `${Math.max(90, Math.round(slice.weight * DRAW_TOTAL_MS))}ms`,
+              } as CSSProperties}
             />
           ))}
         </g>

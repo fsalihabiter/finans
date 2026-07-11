@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { formatCurrency, formatPercent, formatNumber } from "@finans/shared";
 import type { BesProjection } from "@finans/shared";
 import { useBesProjection } from "../lib/hooks";
+import { CountUpCurrency } from "./CountUp";
+import { Sparkline } from "./Sparkline";
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
@@ -202,8 +204,15 @@ function BesProjectionResultCard({ data, years }: { data: BesProjection; years: 
   return (
     <div className="proj-result">
       <div className="proj-hero">
-        <div className="dh-v tnum">{formatCurrency(data.fundValue, "TRY")}</div>
+        <div className="dh-v tnum"><CountUpCurrency value={data.fundValue} currency="TRY" /></div>
         <div className="dh-sub">{years}. yıl sonu varsayımsal fon değeri</div>
+        {/* Yıllık fon değeri serisi — key: yeni hesapta çizim animasyonu baştan oynasın. */}
+        {data.yearly.length >= 2 && (
+          <Sparkline
+            key={`${data.yearly.length}-${data.fundValue}`}
+            values={data.yearly.map((y) => y.fundValue)}
+          />
+        )}
       </div>
 
       <div className="proj-grid">
