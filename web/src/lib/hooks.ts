@@ -31,6 +31,8 @@ export const queryKeys = {
   prices: ["prices"] as const,
   nudges: ["nudges"] as const,
   commentary: ["commentary"] as const,
+  stockMetrics: (symbol: string) => ["stock-metrics", symbol] as const,
+  stockExplain: (symbol: string) => ["stock-explain", symbol] as const,
 };
 
 export function usePortfolioSummary(baseCurrency?: CurrencyCode) {
@@ -98,6 +100,41 @@ export function useCommentary() {
     queryKey: queryKeys.commentary,
     queryFn: () => api.getCommentary(),
     staleTime: 60 * 60_000, // 1 saat — günde 1-2 üretim hedefi (NFR-9)
+    gcTime: 24 * 60 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
+  });
+}
+
+/**
+ * Hisse metrikleri (T4.4 — 04 §7). Backend 1 saat cache'ler; istemci de aynı ritimde.
+ * `symbol` boşken sorgu kapalı (arama yapılmadan istek yok).
+ */
+export function useStockMetrics(symbol: string) {
+  return useQuery({
+    queryKey: queryKeys.stockMetrics(symbol),
+    queryFn: () => api.getStockMetrics(symbol),
+    enabled: symbol.length > 0,
+    staleTime: 60 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: (count, error) =>
+      // 404/400/502 sözleşmeli hatalarda tekrar deneme anlamsız; yalnız ağ hatasında 1 kez.
+      count < 1 && !(error instanceof Object && "status" in error),
+  });
+}
+
+/**
+ * Hisse metrik açıklaması (T4.4 — 07 §8). LLM pahalı: metrikler BAŞARILI olduktan sonra
+ * tetiklenir (geçersiz/bilinmeyen sembolde LLM'e hiç gidilmez); backend sembol başına
+ * 24 saat cache'ler. Disclaimer UI tarafından sabitlenir.
+ */
+export function useStockExplain(symbol: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.stockExplain(symbol),
+    queryFn: () => api.getStockExplain(symbol),
+    enabled: enabled && symbol.length > 0,
+    staleTime: 60 * 60_000,
     gcTime: 24 * 60 * 60_000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

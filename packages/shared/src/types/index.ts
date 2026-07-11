@@ -217,6 +217,39 @@ export interface CommentaryResponse {
   generatedAtUtc: string;
 }
 
+// ── Hisse temel analiz (Faz 4 — 04 §7) ──
+
+/** Dört çekirdek metrik; kaynağın vermediği alan null ("veri yok"). Oranlar 0-1 ondalık. */
+export interface StockMetricValues {
+  peRatio?: number | null;
+  pbRatio?: number | null;
+  dividendYield?: number | null;
+  earningsGrowth?: number | null;
+}
+
+/** Kaba bant etiketleri (KODDA türetilir; tavsiye değil): "low"/"moderate"/"above"/"high"/… */
+export interface StockSectorContext {
+  peRatio?: string | null;
+  pbRatio?: string | null;
+  dividendYield?: string | null;
+  earningsGrowth?: string | null;
+}
+
+/** GET /api/stocks/{symbol}/metrics yanıtı (T4.2). */
+export interface StockMetrics {
+  symbol: string;
+  name: string;
+  exchange?: string | null;
+  currency: string;
+  price?: number | null;
+  /** Günlük değişim oranı (0,012 = %1,2). */
+  changeRatio?: number | null;
+  metrics: StockMetricValues;
+  sectorContext: StockSectorContext;
+  asOfUtc: string;
+  source: string;
+}
+
 /** Bir pozisyona alış/satış (POST .../transactions, POST /holdings içinde). */
 export interface TransactionInput {
   type: TransactionType;

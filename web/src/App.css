@@ -2291,6 +2291,105 @@ body.drawer-lock {
   100% { background-position: -200% 0; }
 }
 
+/* ───── Hisse Analizi (T4.4 — 04 §7) ───── */
+.stock-search {
+  display: flex;
+  gap: 10px;
+  max-width: 480px;
+}
+.stock-search input {
+  flex: 1;
+  background: var(--panel, #131a30);
+  border: 1px solid var(--line-strong, #42507e);
+  border-radius: 13px;
+  color: var(--text, #eef2ff);
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.65rem 0.9rem;
+}
+.stock-search input:focus-visible {
+  outline: 2px solid var(--accent, #8a94dc);
+  outline-offset: 1px;
+}
+.stock-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stock-head-card .stock-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.stock-title h2 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+.stock-sub {
+  font-size: 12px;
+  color: var(--muted, #97a3c9);
+  margin-top: 3px;
+}
+.stock-price {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.stock-change {
+  font-size: 13px;
+  font-weight: 600;
+}
+/* Metrik ızgarası (taslaktaki 2×2): değer + bant rozeti + info-tip. */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+.metric-card {
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.metric-k {
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted, #97a3c9);
+  font-weight: 600;
+}
+.metric-v {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 24px;
+  font-weight: 600;
+}
+/* Bant rozeti: bilgilendirici ton — iyi/kötü hükmü YOK (renkler nötr aile). */
+.metric-band {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 100px;
+  border: 1px solid var(--line, #26304f);
+}
+.band-cool { color: var(--mint, #45d5a2); border-color: rgba(69, 213, 162, 0.35); background: rgba(69, 213, 162, 0.08); }
+.band-mid { color: var(--accent, #8a94dc); border-color: rgba(138, 148, 220, 0.35); background: rgba(138, 148, 220, 0.08); }
+.band-warm { color: #e8b34c; border-color: rgba(232, 179, 76, 0.35); background: rgba(232, 179, 76, 0.08); }
+.band-mute { color: var(--muted, #97a3c9); background: rgba(255, 255, 255, 0.03); }
+
 /* ───── Motion katmanı (v2 — ui-ux-pro-max "Modern Dark", motion 7/10) ─────
    Sadece transform/opacity anime edilir (layout shift yok, CLS=0). Animasyonlar
    her sayfa açılışında/yenilemesinde oynar (kullanıcı kararı 2026-07-11). */

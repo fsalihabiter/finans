@@ -4,18 +4,19 @@
 > başında hook bunu otomatik gösterir. Kaynak plan: [`../docs/08-BACKLOG.md`](../docs/08-BACKLOG.md).
 > Bir görev bitince buradan çıkar, backlog'da `[x]` işaretle, TASKLOG'a girdi ekle.
 
-**Aktif faz:** ✅ Faz 0-3 · 🚧 **Faz 4 — Hisse Temel Analiz** (T4.1 ✅ Finnhub kararı)
-→ sonra **Dalga 1** (Faz 5-6)
+**Aktif faz:** ✅ **Faz 0-4 TAMAM** (Faz 4 kapandı 2026-07-12: /hisse canlı) →
+🚧 **Dalga 1 devamı: Faz 5** (fiyat geçmişi → Değer Seyri + Senaryo v1)
 
 **Strateji (2026-07-11):** [`14-PRODUCT-STRATEGY.md`](../docs/14-PRODUCT-STRATEGY.md) —
 finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da kırılımlı).
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T4.4** — Web: Hisse Analizi sayfası — sembol arama + `MetricGrid` + açıklama
-   kartları + disclaimer (backend hattı hazır: /metrics + /explain canlı)
-2. **Faz 5 başlangıcı: T5.1** — `PortfolioValueHistoryService` (günlük değer serisi + birim test)
-3. OSS kalanı — README Analiz ekran görüntüsü tazeleme (artık Anthropic ile kaliteli)
+1. **T5.1** — `PortfolioValueHistoryService` (PriceSnapshots+Transactions'tan günlük
+   değer serisi, deterministik + birim test)
+2. T5.2 — `GET /api/portfolio/history` (cache + IDOR testi)
+3. T5.3 — Web: Değer Seyri gerçek grafik + Performans zaman serisi
+4. OSS kalanı — README ekran görüntüleri tazeleme (Analiz + Hisse artık kaliteli)
 
 > ✅ **T4.2 + T4.3 bitti (2026-07-11/12):** Finnhub sağlayıcı (3 uç, token başlıkta, kaba bant
 > eşikleri KODDA, 1s cache) canlı teyitli (AAPL/MSFT gerçek veriyle; anahtar .env'de). /explain:

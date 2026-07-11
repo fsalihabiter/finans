@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-07-12 (2) · T4.4 — Hisse Analizi web sayfası — FAZ 4 KAPANDI
+- **Görev(ler):** T4.4 (Faz 4 son görevi).
+- **Ne yapıldı:**
+  1. **Shared:** `StockMetrics`/`StockMetricValues`/`StockSectorContext` tipleri +
+     `getStockMetrics`/`getStockExplain` istemci uçları.
+  2. **Hook'lar:** `useStockMetrics` (1s staleTime; sözleşmeli hatada retry yok) +
+     `useStockExplain` (LLM pahalı — yalnız metrikler BAŞARILI olunca tetiklenir; geçersiz
+     sembolde LLM'e hiç gidilmez).
+  3. **`/hisse` sayfası:** sembol arama formu (BÜYÜT+normalize) + popüler çipler (AAPL…TSLA);
+     başlık kartı (ad/borsa/kaynak + fiyat + günlük değişim renkli); `MetricGrid` — 4 metrik
+     kartı (tr-TR değer + Türkçe bant rozeti "yüksek bant/pozitif…" + InfoTip tanımı; null →
+     "veri yok"); açıklama bölümü `CommentaryCardList` YENİDEN KULLANIM (kavram bloklarıyla);
+     boş durum + iskelet + 404/502 dostu hata + her durumda disclaimer (NFR-2).
+     Bant rozet renkleri bilgilendirici nötr aile — iyi/kötü hükmü yok (CLAUDE.md §2).
+  4. CSS: stock-search/chips/head-card/metric-grid/metric-band.
+- **Test:** Web **67/67** (+3: başlangıç disclaimer+çipler+istek-yok · çip→metrik(tr-TR+bant)
+  +açıklama kartı · 404 sözleşmeli mesaj) · tsc temiz.
+- **Canlı doğrulama (tarayıcı):** /hisse → AAPL çipi → $315,32 + 4 metrik kartı bantlarıyla +
+  "Bu rakamlar ne anlatıyor?" LLM kartları kavramlarıyla — uçtan uca çalışıyor.
+- **Dokunulan dosyalar:** packages/shared (types+api), web hooks/StocksPage(+test)/App.css,
+  08-BACKLOG (T4.4 + Faz 4 DoD), ACTIVE
+- **Karar/Not:** **FAZ 4 TAMAMLANDI** — Dalga 1'de sıra Faz 5'te (fiyat geçmişi → Değer
+  Seyri + Senaryo v1). Teyit adresi artık kullanıcı dostu: **https://localhost/hisse**.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5.1 — `PortfolioValueHistoryService`.
+
 ## 2026-07-12 · T4.3 — Hisse metrik açıklama ucu (`GET /api/stocks/{symbol}/explain`)
 - **Görev(ler):** T4.3 (Faz 4 — 07 §8).
 - **Ne yapıldı:**

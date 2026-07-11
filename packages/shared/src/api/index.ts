@@ -18,6 +18,7 @@ import type {
   PortfolioSummary,
   PricesResponse,
   Settings,
+  StockMetrics,
   TransactionInput,
   UpdateBesContributionInput,
   UpdateBesInput,
@@ -127,6 +128,14 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     /** GET /api/portfolio/commentary — LLM eğitici yorum kartları (tavsiye DEĞİL — CLAUDE.md §2). */
     getCommentary: (baseCurrency?: CurrencyCode) =>
       get<CommentaryResponse>(withBaseCurrency("/api/portfolio/commentary", baseCurrency)),
+
+    // ── Hisse temel analiz (Faz 4 — 04 §7) ──
+    /** GET /api/stocks/{symbol}/metrics — fiyat + 4 metrik + kaba bant etiketleri. */
+    getStockMetrics: (symbol: string) =>
+      get<StockMetrics>(`/api/stocks/${encodeURIComponent(symbol)}/metrics`),
+    /** GET /api/stocks/{symbol}/explain — metriklerin eğitici açıklaması (tavsiye DEĞİL). */
+    getStockExplain: (symbol: string) =>
+      get<CommentaryResponse>(`/api/stocks/${encodeURIComponent(symbol)}/explain`),
 
     // ── Ayarlar (04 §4) ──
     getSettings: () => get<Settings>("/api/settings"),
