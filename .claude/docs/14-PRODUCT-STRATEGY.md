@@ -1,6 +1,8 @@
 # 14 — Ürün Stratejisi: Finansal Okuryazarlık Platformuna Evrim
 
-> **Tarih:** 2026-07-11 · **Durum:** Taslak — ürün sahibinin önceliklendirmesini bekliyor.
+> **Tarih:** 2026-07-11 · **Durum:** ✅ Onaylandı ve plana işlendi (2026-07-11) —
+> Dalga 1-3 → Faz 5-8 olarak `08-BACKLOG.md` (görev kırılımı), `ROADMAP.md`
+> (faz detayları) ve `CLAUDE.md` §4/§9'a yansıtıldı.
 > **Bağlam:** Faz 0-3 tamam, Faz 4 sürüyor. Ürün sahibinin netleşen vizyonu:
 > *"Yatırım tavsiyesi değil; elindekini nasıl değerlendirir, portföyüne nasıl yön
 > verirsin bilgisini kazandırmak — bilgisi olmayan insanları bilinçlendirmek,

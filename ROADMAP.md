@@ -25,12 +25,16 @@
 | 2 | Live Prices & Notes | ~2–3 weeks | Auto-updated values + educational notes | ✅ done |
 | 3 | LLM Commentary Layer | ~2–3 weeks | Analysis that explains the portfolio in educational language | ✅ done |
 | 4 | Stock Fundamentals | Depends on data source | Fetch metrics + let the LLM explain them | 🚧 in progress |
-| 5 | Beyond & Productization | — | New asset classes, simulation, revenue model | 🔜 |
+| 5 | Value History & Scenario v1 | ~2–3 weeks | Real value-over-time chart + backward-looking scenario (strategy **Wave 1**, C1) | 🔜 |
+| 6 | Education MVP + Glossary | ~3–4 weeks | "Learn with your portfolio" lessons + concept glossary (strategy **Wave 1**, A1/A4 — the heart of the vision) | 🔜 |
+| 7 | Personalization & Reach | ~2–4 months | Onboarding/literacy level, accounts, PWA, notifications, TEFAS funds, gold module, guest demo (strategy **Wave 2**) | 🔜 |
+| 8 | Scale & Impact | open-ended | Behavior mirror, inflation panel, mobile (Phase M), revenue model + **legal sign-off** (strategy **Wave 3**) | 🔜 |
 
-**Dependency chain:** 0 → 1 → 2 → 3 → 4 → 5. Phase 3 depends on Phase 1's
-calculation output (the LLM comments on those numbers). Phase 4 can proceed
-independently but had to wait for the data-source decision (made: Finnhub, US
-stocks; BIST deferred).
+**Dependency chain:** 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8. Phases 5–8 implement
+the product strategy in `.claude/docs/14-PRODUCT-STRATEGY.md` (positioning:
+*"Nirengi doesn't tell you what to buy; it teaches you to read the map"* —
+financial literacy through the user's own real portfolio). Task breakdown:
+`.claude/docs/08-BACKLOG.md`.
 
 > ⚠️ **The "not advice" rule:** before starting Phases 3 and 4, re-read
 > `CLAUDE.md` § 2. The output of these phases must never say "buy / sell /
@@ -243,31 +247,83 @@ a finance background. **No predictions, no recommendations.**
 
 ---
 
-## PHASE 5 — Beyond & Productization 🔜
+## PHASE 5 — Value History & Scenario v1 (Wave 1 · strategy C1) 🔜
 
-**Goal:** Broaden the product and prepare the revenue model. Order as needed.
+**Goal:** Turn the price history that has been accumulating since Phase 2 into
+a real **value-over-time chart** and a first **backward-looking scenario** —
+opens the two empty surfaces ("Value History" card + Scenario tab) at once.
 
-### Possible work
-- **New asset classes:** funds, real estate (valuation approach TBD),
-  crypto (if wanted).
-- **Scenario simulation (deep):** "If my allocation had been X, what would the
-  last 12 months have looked like?" — backward-looking display using the
-  `PriceSnapshots` history (not prediction).
-- **Expanded education content:** leveled lessons, mini quizzes, progress tracking.
-- **Notifications:** price/ratio threshold alerts (again: information, not advice).
-- **Revenue model:** subscription (free tracking + paid analysis/education?) —
-  decide the model.
-- **Accounts/identity:** real user accounts, secure sign-in.
+- Daily portfolio value series derived deterministically from
+  `PriceSnapshots` + `Transactions` (unit-tested, NFR-1) → `GET /api/portfolio/history`.
+- Dashboard chart (the `Sparkline` component already exists) + period selector
+  on the Performance page.
+- Scenario v1: single-variable comparisons like "what if I hadn't bought X /
+  had stayed in TRY" — **history, never prediction** (CLAUDE.md § 2).
 
-### Must-dos (before launch)
-- **Legal validation:** expert/lawyer opinion on SPK (the investment-advice
-  boundary) + KVKK (data protection). **Mandatory.**
-- Performance and security review.
-- App Store / Play Store publishing process.
+**✅ DoD:** chart renders from real series; at least one scenario comparison
+works; series math unit-tested; no prediction anywhere. Tasks: `08-BACKLOG` T5.1–T5.4.
 
-### ✅ Definition of Done
-This phase is open-ended; each feature carries its own "done" definition.
-Productization does not start without legal sign-off.
+---
+
+## PHASE 6 — Education MVP + Glossary (Wave 1 · strategy A1/A4) 🔜
+
+**Goal:** The heart of the vision — **"learn with your portfolio."** Micro-lessons
+whose closing section shows the concept **on the user's own real numbers**
+(e.g. the diversification lesson ends with *your* concentration ratio).
+
+- Education data model + endpoints + seed (backlog T5E.1–T5E.4; model `03` §C).
+- First curriculum (5 lessons): inflation & real return · risk-return ·
+  diversification/concentration · cost averaging · using BES well. Content lives
+  in the repo, open to community contributions.
+- "In your portfolio" context API — computed in code, deterministic, no LLM.
+- Searchable **concept glossary** built from the existing InfoTip content.
+- Progress: badges + weekly check-in streak. Success metric = **learning
+  progress, not DAU** (`14-PRODUCT-STRATEGY` § 8).
+
+**✅ DoD:** 5 lessons readable with real-portfolio context; quiz + progress saved;
+glossary searchable; no ComingSoon left on the Education tab. Tasks: T5E.1–T6.4.
+
+---
+
+## PHASE 7 — Personalization & Reach (Wave 2) 🔜
+
+**Goal:** Make the experience match the user's level and open the product to
+more people (closed beta).
+
+- Literacy onboarding (6-8 questions) → explanation depth + LLM tone per level.
+- Real accounts (JWT + Argon2id) + KVKK "delete my data"; IDOR/AuthZ/rate-limit
+  tests green before multi-user opens.
+- PWA (installable, pre-React-Native mobile reach) + weekly summary notification
+  (information, not advice — legal lens).
+- Turkey-specific depth: TEFAS/BEFAS fund data, gold-culture module
+  (çeyrek/bilezik conversions, wedding gold).
+- Guest/demo mode (no sign-up, sample portfolio — usable in schools/workshops).
+- "Why am I seeing this?" transparency on nudges and LLM cards.
+
+**✅ DoD:** closed beta works end-to-end: sign-up → literacy level →
+personalized content; PWA installable; demo mode browsable without an account.
+Tasks: T7.1–T7.9.
+
+---
+
+## PHASE 8 — Scale & Impact (Wave 3; gated on legal) 🔜
+
+**Goal:** The features closest to the advice boundary + productization.
+
+- Behavior mirror (judgment-free pattern awareness from transaction history) —
+  **designed together with an SPK-lens lawyer**, not after.
+- Inflation panel (nominal vs real, "if it had stayed under the mattress").
+- Full scenario simulator (multi-allocation comparison), new asset classes.
+- Mobile arm (Phase M below), provider fallback chains, at-rest encryption,
+  security completion.
+- **Revenue model decision** (freemium / B2B education licence; never ads or
+  fund-referral commissions — neutrality is the brand) + **SPK + KVKK legal
+  sign-off (mandatory launch gate)**.
+- Partnerships (FODER, universities) + content channel — impact measured with
+  the learning metrics of `14-PRODUCT-STRATEGY` § 8.
+
+**✅ DoD:** open-ended; every feature carries its own DoD. **Productization does
+not start without legal sign-off (T8.5).** Tasks: T8.1–T8.8.
 
 ---
 

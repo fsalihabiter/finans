@@ -18,12 +18,15 @@ hata maskeleme, CORS allow-list, User Secrets) + **Docker** (non-root + compose,
 fixture + Vitest/RTL + Playwright). Testler yeşil: backend `dotnet test` 13/13,
 web 2, shared 8, e2e 1.
 
-**Sıradaki adım → FAZ 4: Hisse Temel Analiz.** Faz 0 ✅ · Faz 1 ✅ · Faz 2 ✅ ·
-**Faz 3 ✅** (LLM yorum katmanı T3.1→T3.9 — sağlayıcı/anonimleştirme/prompt+şema/
-güvenli parse/çıktı güvenlik filtresi/cache+fallback/maliyet metriği). **T4.1 ✅
-karar: veri kaynağı Finnhub (ABD)** — bkz. Faz 4 tablosu altındaki karar notu.
-**Sıradaki somut görev: T4.2** (`IStockDataProvider`/`StockDataService` +
-`GET /api/stocks/{symbol}/metrics`).
+**Sıradaki adım → FAZ 4'ü bitir, sonra Dalga 1.** Faz 0 ✅ · Faz 1 ✅ · Faz 2 ✅ ·
+**Faz 3 ✅** (LLM yorum katmanı T3.1→T3.9). **T4.1 ✅ karar: Finnhub (ABD).**
+**Sıradaki somut görev: T4.2** (`StockDataService` + `GET /api/stocks/{symbol}/metrics`).
+
+**Strateji planı işlendi (2026-07-11, [`14-PRODUCT-STRATEGY.md`](14-PRODUCT-STRATEGY.md)):**
+- **Dalga 1:** Faz 4 bitir → **FAZ 5** (fiyat geçmişi → Değer Seyri + Senaryo v1)
+  → **FAZ 6** (Eğitim MVP + sözlük — vizyonun kalbi)
+- **Dalga 2 → FAZ 7:** onboarding/seviye, kimlik, PWA, bildirim, TEFAS, altın modülü, demo mod
+- **Dalga 3 → FAZ 8:** davranış aynası, enflasyon paneli, mobil (FAZ M), gelir modeli + hukuk
 
 ---
 
@@ -198,23 +201,84 @@ anlamlı hata.
 
 ---
 
-## FAZ 5 — Ötesi (açık uçlu, hukuki onaya bağlı)
+## FAZ 5 — Fiyat Geçmişi → Değer Seyri + Senaryo v1 (Strateji C1 · Dalga 1)
 
-- Yeni varlık türleri (fon, gayrimenkul, kripto).
-- Geçmişe dönük senaryo simülasyonu (`PriceSnapshots` ile, tahmin değil).
-- **Eğitim modülü** (model `03` §C, API `04` §7.5, seed `03` §12.5):
-  - T5E.1 — Eğitim entity'leri + migration (Tracks, Lessons, Sections, Prerequisites, ConceptTags, Quizzes, Progress, Attempts).
-  - T5E.2 — Eğitim seed'i (5 ders "Temeller" track'i + 1 quiz + örnek ilerleme — taslakla birebir).
-  - T5E.3 — Eğitim endpoint'leri (tracks/lessons/progress/quiz) — ilerleme `UserId` kapsamlı.
-  - T5E.4 — **Web** Eğitim sayfası: track + ders listesi + ilerleme çubuğu + kilit; ders okuma + mini test; analiz/hisse kartından `ConceptTag` derin bağlantı.
-- Bildirimler (eşik tabanlı, bilgi — tavsiye değil).
-- Gerçek kimlik/hesap (JWT: access+refresh, Argon2id) + KVKK "verimi sil".
-- **Güvenlik tamamlama:** IDOR (SC-13) + AuthZ + rate-limit testleri yeşil;
-  audit log tam; güvenlik dashboard'u; secret rotasyonu; bağımlılık/imaj taraması
-  (Trivy/gitleaks); `/security-review`. Bkz. `11`, `12`.
-- At-rest şifreleme + şifreli yedek + retention politikası (`11` §7).
-- **Lansman öncesi: SPK + KVKK hukuki doğrulama (ŞART).**
-- Gelir modeli (abonelik).
+> Kaynak: [`14-PRODUCT-STRATEGY.md`](14-PRODUCT-STRATEGY.md) §4-C1/§7. En yüksek
+> kaldıraçlı teknik iş: iki boş yüzeyi ("Değer Seyri" kartı + Senaryo sekmesi)
+> birden açar. `PriceSnapshots` zaten Faz 2'den beri yazılıyor; `Sparkline`
+> bileşeni hazır (2026-07-11).
+
+| ID | Görev | Bağımlılık | Doküman | Durum |
+|----|-------|-----------|---------|-------|
+| T5.1 | `PortfolioValueHistoryService` — `PriceSnapshots`+`Transactions`'tan **günlük portföy değer serisi** türetimi (deterministik; eksik gün = son bilinen fiyat; işlem günleri pozisyon değişimini yansıtır) + **birim test** (NFR-1) | Faz 2 | `03`, `CLAUDE.md` §6 | [ ] |
+| T5.2 | `GET /api/portfolio/history?period=1m\|3m\|1y\|all` — DTO + cache (anahtar `UserId`'li) + IDOR testi | T5.1 | `04`, `11` §3, `10` §3 | [ ] |
+| T5.3 | **Web:** "Değer Seyri" kartı gerçek çizgi grafik (Sparkline/genişletilmiş SVG; veri azken mevcut bilgi kartına zarif düşüş) + Performans sayfasına dönem seçicili zaman serisi | T5.2 | `13` §4 | [ ] |
+| T5.4 | **Senaryo v1 (geçmişe dönük, tek değişken):** "bu varlığı almasaydım / TL'de dursaydı" karşılaştırması (`PriceSnapshots` ile; **tahmin YOK**, kalıcı disclaimer) — ScenarioPage ComingSoon → gerçek sayfa | T5.1 | `14` §4-C1, `CLAUDE.md` §2 | [ ] |
+
+**Faz 5 DoD:** Pano "Değer Seyri" gerçek seriyle çiziliyor; Senaryo sayfası en az
+bir geçmişe dönük karşılaştırma sunuyor; seri hesabı birim testli; tahmin/yönlendirme yok.
+
+---
+
+## FAZ 6 — Eğitim MVP + Kavram Sözlüğü (Strateji A1+A4 · Dalga 1)
+
+> Kaynak: `14` §4-A1/A4 — vizyonun kalbi: **"Portföyünle Öğren"**. Her dersin
+> "Senin portföyünde" bölümü kavramı kullanıcının GERÇEK verisiyle gösterir.
+> Model `03` §C, API `04` §7.5, seed `03` §12.5 (T5E kırılımı korunmuştur).
+
+| ID | Görev | Bağımlılık | Doküman | Durum |
+|----|-------|-----------|---------|-------|
+| T5E.1 | Eğitim entity'leri + migration (Tracks, Lessons, Sections, Prerequisites, ConceptTags, Quizzes, Progress, Attempts) | Faz 1 | `03` §C | [ ] |
+| T5E.2 | Eğitim seed'i (5 ders "Temeller" track'i + 1 quiz + örnek ilerleme) | T5E.1 | `03` §12.5 | [ ] |
+| T5E.3 | Eğitim endpoint'leri (tracks/lessons/progress/quiz) — ilerleme `UserId` kapsamlı + IDOR testi | T5E.1 | `04` §7.5, `11` §3 | [ ] |
+| T5E.4 | **Web** Eğitim sayfası: track + ders listesi + ilerleme çubuğu + kilit; ders okuma + mini test; analiz/hisse kartından `ConceptTag` derin bağlantı | T5E.3 | `13` §4 | [ ] |
+| T6.1 | **İlk müfredat içeriği (5 ders):** enflasyon & reel getiri · risk-getiri · çeşitlendirme/yoğunlaşma · maliyet ortalaması · BES'i doğru kullanmak. Her derste "Senin portföyünde" bağlam bloğu şablonu + 2-3 soruluk quiz. İçerik repo'da (topluluk katkısına açık, `14` §4-D2) | T5E.2 | `14` §4-A1 | [ ] |
+| T6.2 | **"Senin portföyünde" bağlam API'si:** ders başına portföyden türetilen bağlam değerleri (örn. çeşitlendirme dersi → kullanıcının yoğunlaşma oranı) — hesap KODDA, deterministik; LLM yok | T5E.3, T1.7 | `14` §4-A1, `CLAUDE.md` §3.1 | [ ] |
+| T6.3 | **Kavram sözlüğü:** InfoTip içeriklerinin aranabilir indeksi (`/egitim/sozluk`) + derslere ve kullanım yerlerine çapraz bağlantı | T5E.4 | `14` §4-A4 | [ ] |
+| T6.4 | İlerleme mekaniği: ders tamamlama rozetleri + haftalık "portföy check-in" serisi (streak) — ölçüm `14` §8 metrikleriyle uyumlu | T5E.4 | `14` §8 | [ ] |
+
+**Faz 6 DoD:** 5 ders gerçek portföy bağlamıyla okunabiliyor; quiz + ilerleme
+kaydediliyor; sözlük aranabilir; Eğitim sekmesinde ComingSoon kalmadı.
+
+---
+
+## FAZ 7 — Kişiselleşme & Erişim (Strateji Dalga 2)
+
+> Kaynak: `14` §7 Dalga 2. Sıralama önerisi tablodaki sırayla; T7.2 (kimlik)
+> çoğu maddenin önkoşulu değil ama kapalı beta için şart.
+
+| ID | Görev | Bağımlılık | Doküman | Durum |
+|----|-------|-----------|---------|-------|
+| T7.1 | **Okuryazarlık profili + onboarding (A2):** ilk açılışta 6-8 soruluk seviye ölçümü ("haritada neredesin" tonunda) → `Users.LiteracyLevel`; InfoTip/açıklama derinliği ve LLM prompt tonu seviyeye bağlanır | Faz 6 | `14` §4-A2, `07` | [ ] |
+| T7.2 | **Kimlik/çok kullanıcı (C2):** JWT (access+refresh) + Argon2id + kayıt/giriş; KVKK "verimi sil"; IDOR (SC-13) + AuthZ + rate-limit testleri yeşil; audit log tam | Faz 1 | `11` §2-3, `03` §B | [ ] |
+| T7.3 | **PWA (C3):** manifest + service worker + yüklenebilirlik (mobil erişim, RN öncesi ara adım) | Faz 5 | `14` §4-C3, `13` | [ ] |
+| T7.4 | **Bildirim v1 (C4):** haftalık portföy özeti + ders hatırlatması (bilgi, tavsiye değil — ⚠ hukuk merceği `14` §6) | T7.2, T7.3 | `14` §4-C4 | [ ] |
+| T7.5 | **TEFAS/BEFAS fon verisi (B2):** `IPriceProvider` deseniyle fon fiyat/kategori; fon gider oranı kavramı Eğitim'e bağlanır | Faz 2 | `14` §4-B2, `02` | [ ] |
+| T7.6 | **Altın kültürü modülü (B3):** çeyrek/yarım/tam/bilezik/22 ayar dönüşümleri + düğün altını takibi | Faz 1 | `14` §4-B3 | [ ] |
+| T7.7 | **Demo/misafir modu (D1):** kayıtsız örnek portföyle tüm akış (salt-okunur) — okul/atölye kullanımı, KVKK yükü sıfır | T7.2 | `14` §4-D1 | [ ] |
+| T7.8 | **Açık kaynak anlatısı (D2):** README konumlandırması ("TR için açık kaynak finansal okuryazarlık altyapısı") + ders içeriği katkı rehberi (CONTRIBUTING) | T6.1 | `14` §4-D2 | [ ] |
+| T7.9 | **"Bunu neden görüyorum?" şeffaflığı (A3):** nudge ve LLM kartlarında açılır kaynak-veri/formül detayı | Faz 3 | `14` §4-A3 | [ ] |
+
+**Faz 7 DoD:** Kapalı beta (aile/arkadaş) çalışıyor: kayıt → seviye ölçümü →
+kişiselleşmiş içerik; PWA yüklenebilir; demo mod kayıtsız geziliyor.
+
+---
+
+## FAZ 8 — Ölçek & Etki (Strateji Dalga 3; hukuki onaya bağlı)
+
+| ID | Görev | Bağımlılık | Doküman | Durum |
+|----|-------|-----------|---------|-------|
+| T8.1 | **Davranış aynası (A5):** işlem geçmişinden geçmişe dönük, yargısız kalıp farkındalığı — ⚠ **SPK merceğinde avukat görüşüyle BİRLİKTE tasarlanır** (`14` §6) | Faz 7 | `14` §4-A5, `CLAUDE.md` §2 | [ ] |
+| T8.2 | **Enflasyon paneli (B1):** nominal vs reel değer grafiği + "yastık altında/mevduatta dursaydı" karşılaştırması (geçmiş veri, TÜİK TÜFE bazlı, kaynak görünür) | Faz 5 | `14` §4-B1 | [ ] |
+| T8.3 | **Senaryo simülatörü tam sürüm:** çoklu dağılım karşılaştırması ("dağılımım X olsaydı son 12 ay") — tahmin değil | T5.4 | `14` §4-C1 | [ ] |
+| T8.4 | **Mobil kol:** FAZ M'yi başlat (aşağıda — TM.1→TM.6) | Faz 7 | `05` | [ ] |
+| T8.5 | **Gelir modeli kararı + hukuki doğrulama:** freemium/B2B seçimi (`14` §5 — reklam/komisyon ASLA) + **SPK + KVKK avukat onayı (lansman kapısı, ŞART)** | Faz 7 | `14` §5-6 | [ ] |
+| T8.6 | **Güvenlik/dayanıklılık tamamlama:** at-rest şifreleme + şifreli yedek + retention (`11` §7); secret rotasyonu; bağımlılık/imaj taraması (Trivy/gitleaks); `/security-review`; fiyat/LLM sağlayıcı fallback zinciri (C5) | T7.2 | `11`, `12`, `14` §4-C5 | [ ] |
+| T8.7 | **İşbirlikleri & içerik kanalı (D3/D4):** FODER/üniversite temasları + haftalık anonim "portföy okuma" içerikleri — ürün dışı, etki kanıtı `14` §8 metrikleriyle | Faz 7 | `14` §4-D3/D4 | [ ] |
+| T8.8 | Yeni varlık türleri: fon (T7.5 üstüne), gayrimenkul, kripto (istenirse) | Faz 5 | `01` | [ ] |
+
+**Faz 8 DoD:** Açık uçlu; her görev kendi DoD'sini taşır. **T8.5 (hukuk) yeşil
+olmadan ürünleşme/lansman başlamaz.**
 
 ---
 

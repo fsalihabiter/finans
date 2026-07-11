@@ -126,8 +126,13 @@ lisansına tabidir. Bu yüzden:
 - **Faz 4 — Hisse temel analiz modülü (süre veri kaynağına bağlı):** Metrikleri
   çek (F/K, PD/DD, temettü verimi, kâr büyümesi), LLM **ne anlama geldiğini**
   açıklasın. Tahmin/öneri YOK.
-- **Faz 5 — Ötesi:** Gayrimenkul, fon, senaryo simülasyonu derinleştirme,
-  topluluk, gelir modeli. Hukuki çerçeve bu noktada netleştirilmeli.
+- **Faz 5-8 — Strateji dalgaları (2026-07-11; detay: `.claude/docs/14-PRODUCT-STRATEGY.md`):**
+  - **Faz 5:** Fiyat geçmişi → Değer Seyri grafiği + Senaryo v1 (geçmişe dönük).
+  - **Faz 6:** Eğitim MVP ("portföyünle öğren" dersleri) + kavram sözlüğü — vizyonun kalbi.
+  - **Faz 7:** Okuryazarlık onboarding'i, kimlik/çok kullanıcı, PWA, bildirim,
+    TEFAS, altın kültürü modülü, demo mod (kapalı beta).
+  - **Faz 8:** Davranış aynası, enflasyon paneli, mobil, gelir modeli +
+    **SPK/KVKK hukuki onay (lansman kapısı)**.
 
 ---
 
@@ -205,9 +210,9 @@ finans/                       ← monorepo (pnpm workspaces)
 
 ## 9. Sıradaki Adım
 
-**Veritabanı şeması + .NET API uç noktalarının (endpoint) tasarımı.**
-Geliştiricinin güçlü olduğu alandan başlanıyor. Şema kesinleştikten sonra
-Faz 1 MVP'sine geçilir.
+**Faz 4'ü bitir (T4.2-T4.4: hisse metrikleri + LLM açıklama), ardından Dalga 1:**
+Faz 5 (fiyat geçmişi → Değer Seyri + Senaryo v1) → Faz 6 (Eğitim MVP + sözlük).
+Görev kırılımı: `.claude/docs/08-BACKLOG.md` · strateji: `.claude/docs/14-PRODUCT-STRATEGY.md`.
 
 ---
 

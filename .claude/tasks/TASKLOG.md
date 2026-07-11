@@ -20,6 +20,36 @@
 
 ---
 
+## 2026-07-11 (6) · ad-hoc — Strateji planlama dokümanlarına işlendi (Faz 5-8 = Dalga 1-3)
+- **Görev(ler):** ad-hoc (kullanıcı: "14-PRODUCT-STRATEGY gerekliliklerine göre fazları/
+  taskları/dokümanları düzenle") — strateji önceliklendirmesi böylece onaylanmış oldu.
+- **Ne yapıldı:**
+  1. **08-BACKLOG:** Eski serbest-liste "Faz 5 — Ötesi" bölümü 4 yapılandırılmış faza
+     dönüştü: **FAZ 5** (T5.1-T5.4: değer serisi servisi → history endpoint → Değer Seyri
+     grafiği → Senaryo v1), **FAZ 6** (T5E.1-4 korunarak + T6.1-T6.4: müfredat içeriği,
+     "Senin portföyünde" bağlam API'si, kavram sözlüğü, ilerleme mekaniği), **FAZ 7**
+     (T7.1-T7.9: onboarding/seviye, kimlik, PWA, bildirim, TEFAS, altın modülü, demo mod,
+     OSS anlatısı, "neden görüyorum" şeffaflığı), **FAZ 8** (T8.1-T8.8: davranış aynası
+     ⚠hukukla birlikte, enflasyon paneli, senaryo tam, mobil, gelir+hukuk kapısı, güvenlik
+     tamamlama, işbirlikleri, yeni varlık türleri). Her faza DoD; başlık durumu Dalga
+     özetiyle güncellendi. Eski listedeki kimlik/güvenlik/bildirim maddeleri T7.2/T7.4/
+     T8.6'ya taşındı (kayıp yok).
+  2. **ROADMAP.md:** genel bakış tablosuna Faz 5-8 satırları; "PHASE 5 — Beyond" bölümü
+     4 ayrı faz bölümüne (amaç + kapsam + DoD + backlog görev referansı) yeniden yazıldı.
+  3. **CLAUDE.md:** §4 faz planına Faz 5-8 dalgaları; §9 "Sıradaki Adım" (proje başından
+     kalma bayat "şema tasarımı" metni) güncel duruma çekildi.
+  4. **ACTIVE.md:** kendi "kısa kal" kuralına göre sıfırdan (225→~45 satır): sıradaki 5
+     görev, ortam notu (Docker birincil), son kilometre taşları. Eski faz özetleri zaten
+     TASKLOG'da.
+  5. **14-PRODUCT-STRATEGY.md** durum satırı: Taslak → ✅ Onaylandı/işlendi.
+- **Dokunulan dosyalar:** `.claude/docs/08-BACKLOG.md`, `ROADMAP.md`, `CLAUDE.md`,
+  `.claude/tasks/ACTIVE.md`, `.claude/docs/14-PRODUCT-STRATEGY.md`, `.claude/tasks/TASKLOG.md`
+- **Test:** yok (planlama dokümanları).
+- **Karar/Not:** Dalga 1 sırası kesinleşti: **T4.2 → T4.3 → T4.4 → T5.1...** T8.1
+  (davranış aynası) ve T7.4 (bildirim) hukuk merceğiyle birlikte tasarlanacak (14 §6).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — `StockDataService` + `GET /api/stocks/{symbol}/metrics` (Finnhub).
+
 ## 2026-07-11 (5) · ad-hoc — SETUP.md sadeleştirildi: yalnız Docker akışı
 - **Görev(ler):** ad-hoc (kullanıcı isteği: "SETUP sadece Docker üzerinden, kalabalık
   olmasın; önce gerekli programlar/versiyonlar/kurulum, sonra PowerShell komutları").
