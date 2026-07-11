@@ -42,9 +42,14 @@
   (şema detail zorunlu), `LlmCommentaryService.cs` (skorlu best-pick + tam-tur koşulu),
   testler (Prompts/Hardening/Cached/Metrics fixture'ları), TASKLOG
 - **Test:** Application **190/190** · web build temiz (imaj derlendi).
-- **Durum:** tamamlandı (boru hattı); model kalitesi Anthropic anahtarını bekliyor.
-- **Sıradaki:** Kullanıcı Anthropic anahtarını .env'e girerse `docker compose up -d api` → tam
-  6 kart + 6 kavram beklenir; sonra T4.2.
+- **Ek — Anthropic'e GEÇİLDİ (aynı gün):** Kullanıcı anahtarı .env'e girdi; provider/model/
+  BaseUrl satırları Anthropic + claude-haiku-4-5'e çevrildi (anahtara dokunulmadı), api yeniden
+  başlatıldı, cache temizlendi. **Canlı sonuç: 6 kart, 5/6 kavram, kusursuz akıcı Türkçe,
+  tüm sayılar tutarlı, sıfır sızıntı** (57sn — bir retry ile). Bekçiler emniyet kemeri olarak
+  aktif kalıyor. `.env.example` Anthropic'i önerilen yapılandırma olarak gösterecek şekilde
+  güncellendi. Maliyet: Haiku ile üretim başına ~1-2 sent; günlük cache disipliniyle ihmal edilebilir.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — Finnhub hisse metrikleri (`StockDataService`).
 
 ## 2026-07-11 (9) · T3.12 — Bekçi yan etkileri giderildi: yeniden üretim + yumuşak detail kuralı
 - **Görev(ler):** T3.12 (kullanıcı geri bildirimi: "şimdi de bir kart eksik ve kavram
