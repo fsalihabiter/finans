@@ -12,11 +12,14 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T5.1** — `PortfolioValueHistoryService` (PriceSnapshots+Transactions'tan günlük
-   değer serisi, deterministik + birim test)
-2. T5.2 — `GET /api/portfolio/history` (cache + IDOR testi)
-3. T5.3 — Web: Değer Seyri gerçek grafik + Performans zaman serisi
+1. **T5.2** — `GET /api/portfolio/history?period=…` (EF orkestrasyonu + DTO + `UserId`'li
+   cache + IDOR testi; BES'in katkı olaylarına indirgenmesi burada)
+2. T5.3 — Web: Değer Seyri gerçek grafik + Performans zaman serisi
+3. T5.4 — Senaryo v1 (geçmişe dönük "dursaydı/almasaydım"; tahmin YOK)
 4. OSS kalanı — README ekran görüntüleri tazeleme (Analiz + Hisse artık kaliteli)
+
+> ✅ **T5.1 bitti (2026-07-12):** `PortfolioValueHistoryService` — günlük değer+maliyet
+> serisi (saf, SC-32 unit 13; fiyat/kur taşıma, geri-doldurma, işlem fiyatı da gözlem).
 
 > ✅ **T4.2 + T4.3 bitti (2026-07-11/12):** Finnhub sağlayıcı (3 uç, token başlıkta, kaba bant
 > eşikleri KODDA, 1s cache) canlı teyitli (AAPL/MSFT gerçek veriyle; anahtar .env'de). /explain:

@@ -20,6 +20,35 @@
 
 ---
 
+## 2026-07-12 (5) · T5.1 — PortfolioValueHistoryService: günlük portföy değer serisi (Faz 5 açılışı)
+- **Görev(ler):** T5.1 (Dalga 1 / Faz 5 — Değer Seyri + Senaryo v1'in hesap temeli).
+- **Ne yapıldı:**
+  1. **Saf hesap servisi** `PortfolioValueHistoryService.Calculate(assets, fxRates, baseCcy,
+     endDate)` — ilk işlem gününden bitişe **her gün** bir `DailyValuePoint(Date, Value, Cost)`
+     (baz pb, tam hassasiyet decimal, NFR-1). Kurallar: eksik gün = son bilinen fiyat taşınır;
+     **işlem birim fiyatı da fiyat gözlemi** (alış günü snapshot yoksa seri fiyatsız kalmaz;
+     aynı gün snapshot kazanır); ort. maliyet `DerivePosition` ile birebir aynı yöntem (satış
+     ortalamayı bozmaz, fee dahil → serinin son günü özetle tutarlı); hiç fiyat yoksa değer =
+     maliyet; **kur gün bazlı taşınır** + seri kur geçmişinden yaşlıysa en eski kayıtla
+     geri-doldurulur; gerekli kur hiç yoksa fırlatır (sessiz yanlış sayı yok); bitiş sonrası
+     işlem/fiyat/kur yok sayılır; boş girdi → boş seri.
+  2. **Modeller** (`PortfolioValueHistoryModels.cs`): `AssetValueHistoryInput`, `PositionEvent`,
+     `PricePoint`, `FxRatePoint`, `DailyValuePoint` — EF'e bağımsız saf veri. BES gibi
+     işlem-dışı kalemler T5.2 orkestrasyonunda bu modele indirgenecek (katkı = miktar olayı).
+  3. Performans: olay/fiyat/kur işaretçileri gün döngüsünde geri dönmez (O(gün+olay+fiyat));
+     converter yalnız kur değişen günlerde yeniden kurulur; sıfır tutar kur çevirisi atlanır.
+- **Dokunulan dosyalar:** backend/src/Finans.Application/Portfolio/PortfolioValueHistoryService.cs
+  (yeni), PortfolioValueHistoryModels.cs (yeni),
+  backend/tests/Finans.Application.Tests/Portfolio/PortfolioValueHistoryServiceTests.cs (yeni, 13),
+  .claude/docs/09-TESTING-STRATEGY.md (SC-32), 08-BACKLOG.md (T5.1 [x])
+- **Test:** SC-32 — Application **252/252** (+13) · Integration **106/106** · yeşil.
+- **Karar/Not:** Maliyet çizgisi de gün kurundan çevrilir (özet ekranı bugünkü kurla çeviriyor →
+  serinin son günü özetle tutarlı). Kur geri-doldurma bilinçli: portföy kur geçmişinden yaşlıysa
+  seri düşmesin, bilinen en yakın kur kullanılır.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5.2 — `GET /api/portfolio/history` (EF orkestrasyonu + DTO + `UserId`'li cache +
+  IDOR testi; BES'in katkı olaylarına indirgenmesi burada).
+
 ## 2026-07-12 (4) · T4.5 devamı — Yorum gezgini: dikey başlık rayı (solda) + dar ekranda accordion
 - **Görev(ler):** T4.5 devamı (kullanıcı geri bildirimi: yorum başlıkları üst şerit yerine
   SOLDA tab/accordion olsun; "güzel ve efektif bir accordion").
