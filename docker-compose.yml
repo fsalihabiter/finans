@@ -9,13 +9,16 @@
 
 services:
   postgres:
-    image: postgres:17-alpine
+    # 18: elle kurulu yerel PostgreSQL 18 ile sürüm eşleşmesi (dump/restore uyumu, 2026-07-11).
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: finans
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finans_dev}
       POSTGRES_DB: finans
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      # 18+ imajda önerilen bağlama noktası /var/lib/postgresql (data alt dizine iner);
+      # eski /var/lib/postgresql/data bağlaması 18'de başlatma hatası verir.
+      - postgres-data:/var/lib/postgresql
     # ⚠ Dışarı port AÇMA (11 §5). Yerel dev'de elle kurulu PostgreSQL'i (5432) kullan.
     # Compose içindeki postgres yalnız compose servislerine açıktır.
     expose:
@@ -135,9 +138,12 @@ services:
       prometheus:
         condition: service_started
 
-  # Reverse proxy + TLS + güvenlik başlıkları (T2.9). 443: TLS (internal CA, localhost); 80: redirect.
+  # Reverse proxy + TLS + güvenlik başlıkları (T2.9) + web SPA sunumu (2026-07-11).
+  # İmaj, web build'ini /srv'ye gömer (compose/caddy/Dockerfile) → https://localhost tüm uygulama.
   caddy:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: compose/caddy/Dockerfile
     restart: unless-stopped
     ports:
       - "80:80"

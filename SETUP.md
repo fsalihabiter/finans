@@ -9,20 +9,27 @@
 
 ## 0. Two ways to run — pick one first
 
-You can run the project two ways. **We recommend B** for development (faster,
-hot reload). A is for when you want to see the product in its "real deployment
-outfit" (TLS + reverse proxy + rate limiting + observability stack).
+You can run the project two ways. **A is the primary way to USE the app**
+(one command, everything included — web UI too, since 2026-07-11). B is for
+day-to-day **development** (hot reload).
 
-| | A) **Full Docker stack** | B) **Local dev (recommended)** |
+| | A) **Full Docker stack (primary)** | B) **Local dev (for coding)** |
 |---|---|---|
-| Command | `docker compose up --build` | `dotnet run` + `pnpm dev:web` |
-| URL | `https://localhost` (Caddy/TLS) | `http://localhost:5173` (web) + API separate |
+| Command | `docker compose up -d --build` | `dotnet run` + `pnpm dev:web` |
+| URL | `https://localhost` (**whole app**, Caddy/TLS) | `http://localhost:5173` (web) + API separate |
+| Web UI | ✅ Built into the Caddy image (SPA) | Vite dev server (HMR) |
 | PostgreSQL | Inside compose (isolated) | You install it **yourself** (port 5432) |
 | Redis | Inside compose (distributed cache) | None — falls back to in-memory cache |
 | Observability | Seq + Prometheus + Grafana included | Not started (optional) |
 | TLS | Yes (Caddy internal CA) | No — plain HTTP |
-| Hot reload | No (web isn't in compose) | Yes (Vite HMR + `dotnet watch`) |
-| When | "Production-like" verification | Day-to-day development |
+| Hot reload | No (rebuild image for web changes) | Yes (Vite HMR + `dotnet watch`) |
+| When | Using the app / production-like runs | Day-to-day development |
+
+> ⚠️ **The two paths use SEPARATE databases.** Compose has its own PostgreSQL
+> volume; local dev uses your own PostgreSQL on port 5432. The browser shows
+> whichever backend it points at — don't mix them up (it looks like "my data
+> disappeared"). The real user data lives in **compose** (migrated 2026-07-11);
+> the local DB is a development sandbox.
 
 Sections **1–3 are common to both paths.** Then read §4 (path A) **or** §5–§7
 (path B).
@@ -139,37 +146,42 @@ POSTGRES_PASSWORD=my_strong_password
 docker compose up --build
 ```
 
-The first run takes 2–5 minutes (images download + the API image builds). What happens:
+The first run takes 2–5 minutes (images download + the API and web images build).
+What happens:
 
-1. `postgres:17-alpine` starts (internal network, not exposed)
+1. `postgres:18-alpine` starts (internal network, not exposed)
 2. `redis:7-alpine` starts (internal network, distributed cache)
 3. The `api` image builds (.NET 10 SDK → publish → alpine runtime, non-root)
-4. The API **migrates + seeds** on startup (`Database__ApplyMigrationsOnStartup=true`)
-5. `caddy:2-alpine` listens on 80/443 — TLS terminates here
+4. The API **migrates + seeds** on startup (`Database__ApplyMigrationsOnStartup=true`;
+   seeding is skipped when the database already has data)
+5. The `caddy` image builds: **the web SPA is compiled inside it**
+   (`compose/caddy/Dockerfile`: node builds `web/` → static files land in `/srv`)
+   and Caddy listens on 80/443 — TLS terminates here, unknown paths fall back to
+   `index.html` (client-side routing)
 6. Observability comes up: **Seq** (logs) on `127.0.0.1:8081`, **Prometheus** on
    `127.0.0.1:9090`, **Grafana** on `127.0.0.1:3001` (provisioned dashboard;
    default login `admin`/`admin`) — all bound to localhost only
 
 ### 4.3 Open in the browser
 
+- **https://localhost** → **the whole app** (portfolio UI)
 - **https://localhost/health** → returns `Healthy`
 - **https://localhost/api/...** → API endpoints (e.g. `/api/holdings`)
 
 > Your browser will warn **"proceed to site" / "advanced → proceed"** on first
 > visit. Reason: Caddy `tls internal` self-signs a certificate. Normal for
-> localhost development.
+> localhost development — accept it once.
 
-### 4.4 Run the web frontend via Vite (not in compose)
+### 4.4 After changing web code
 
-Compose contains only the API + infrastructure. The web app still runs through
-`pnpm` (for hot reload):
+The web UI is baked into the Caddy image, so UI changes need a rebuild:
 
 ```bash
-pnpm dev:web
+docker compose up -d --build caddy
 ```
 
-Opens `http://localhost:5173`. The web app talks to the API through Caddy
-(`https://localhost/api/...`) — CORS is pre-configured in the compose env.
+For rapid UI iteration use path B's Vite dev server instead (hot reload), then
+rebuild the image when done.
 
 ### 4.5 Stop / clean up
 

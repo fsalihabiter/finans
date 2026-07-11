@@ -1,0 +1,22 @@
+# Caddy+web imaj bağlamı (compose/caddy/Dockerfile, context: repo kökü).
+# İmaja yalnız web + packages/shared + compose/caddy girmeli; gerisi dışarıda.
+# (backend/ kendi bağlamını (./backend) ve kendi .dockerignore kurallarını kullanır.)
+.git
+.github
+.claude
+.vscode
+node_modules
+**/node_modules
+backend
+docs
+compose/grafana
+compose/prometheus
+web/dist
+web/playwright-report
+web/test-results
+# Kök dizindeki taslak HTML'leri (web/index.html DEĞİL — o build için gerekli)
+portfoy-*.html
+# Sırlar imaj bağlamına asla girmez (11 §6)
+.env
+.env.*
+!.env.example

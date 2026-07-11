@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-07-11 (4) · ad-hoc — Tek komut Docker: web SPA compose'a girdi + gerçek veri taşındı
+- **Görev(ler):** ad-hoc (kullanıcı kararı: "her şey Docker'dan kalksın").
+- **Ne yapıldı:**
+  1. **Web compose'a girdi:** `compose/caddy/Dockerfile` (context: repo kökü) — aşama 1
+     node:22-alpine + pnpm@11.5.0 ile `@finans/web` build; aşama 2 caddy:2-alpine'e
+     `/srv` olarak gömülür. Caddyfile fallback'i bilgi mesajından **SPA sunumuna** döndü
+     (`root /srv` + `try_files → index.html`). Kök `.dockerignore` eklendi (node_modules/
+     backend/sırlar bağlam dışı; web/index.html korunur).
+  2. **Postgres 17→18-alpine** (yerel PostgreSQL 18 ile sürüm eşleşmesi). 18 imajında
+     volume bağlama noktası değişti: `/var/lib/postgresql/data` → `/var/lib/postgresql`
+     (eski yol 18'de başlatma hatası veriyor — compose güncellendi).
+  3. **Veri taşıma:** yerel DB'den `pg_dump --no-owner --no-privileges` (parola User
+     Secrets'ten belleğe, ekrana yazılmadı) → compose volume sıfırlandı (demo veri
+     silindi — kullanıcı onaylı) → psql ile geri yükleme. Doğrulama: BesContributions 48,
+     Holdings 7, Transactions 10, Users 2, PriceSnapshots 50.
+  4. **Doğrulama (Caddy üzerinden):** `https://localhost` → SPA 200 (`<title>Nirengi`),
+     derin URL fallback 200, `/health` Healthy, `/api/holdings` 48 katkı + planActive.
+     Seed, dolu DB'de atlıyor (Users.Any kontrolü) — migrate idempotent.
+  5. Yerel arka plan süreçleri (dotnet 5298 + Vite 5173) durduruldu; **SETUP.md** §0/§4
+     yeniden yazıldı (A yolu birincil kullanım, ayrı-veritabanı uyarısı, web rebuild
+     talimatı); hafıza `local-dev-database` güncellendi (asıl veri artık compose'da).
+- **Dokunulan dosyalar:** `compose/caddy/Dockerfile` (yeni), `compose/caddy/Caddyfile`,
+  `docker-compose.yml`, `.dockerignore` (yeni), `SETUP.md`, `.claude/tasks/TASKLOG.md`
+- **Test:** kod değişmedi (altyapı); uçtan uca canlı doğrulama yapıldı (yukarıda).
+- **Karar/Not:** Birincil ortam = compose (`https://localhost`); yerel dev (dotnet+Vite)
+  yalnız kod yazarken, ayrı sandbox DB ile. Web değişikliği sonrası
+  `docker compose up -d --build caddy` gerekir. Dump dosyası scratchpad'te (repo dışı).
+- **Durum:** tamamlandı.
+- **Sıradaki:** Kullanıcı tarayıcıda sertifikayı bir kez kabul edecek; strateji Dalga 1
+  önceliklendirmesi bekleniyor.
+
 ## 2026-07-11 (3) · ad-hoc — "BES aylık katkılar kayboldu" teşhisi + geçmişe etkin oran rozeti
 - **Görev(ler):** ad-hoc (kullanıcı: "aylık ödemeler önceden vardı şimdi yok; geçmişte
   devlet katkısı miktarı ve ORANI da görünmeliydi").

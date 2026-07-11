@@ -2,8 +2,8 @@
 #
 # Dev compose yığını için: 443'te TLS terminasyonu (Caddy'nin internal CA'sı; tarayıcı bir kez
 # "Bu siteye git" diye uyaracak), 80 → 443 yönlendirme. /api/* ve /health* → api:8080 iç ağda.
-# Diğer yollar: kısa info mesajı (compose'da web servisi yok — `pnpm dev` ayrı koşar; lansman
-# öncesi prod profili burada file_server /srv ile web/dist sunacak).
+# Diğer yollar: /srv altındaki web SPA build'i (compose/caddy/Dockerfile imaja gömer;
+# SPA fallback → index.html). Geliştirmede Vite (`pnpm dev`, 5173) ayrıca kullanılabilir.
 #
 # Production (gerçek domain) için: `localhost` yerine domain adı, `tls internal` yerine
 # Let's Encrypt'le otomatik HTTPS (Caddy varsayılanı zaten). 11 §5 + 10 §5.
@@ -41,9 +41,12 @@ localhost {
 		reverse_proxy api:8080
 	}
 
-	# Diğer her şey: bilgi mesajı (web compose'da yok — Vite dev ayrı koşar; prod'da file_server).
+	# Web SPA — imaja gömülü statik build. Bilinmeyen yollar index.html'e düşer
+	# (client-side routing); gerçek dosyalar (JS/CSS/font) doğrudan sunulur.
 	handle {
-		respond "Finans API · use /api/* or /health" 200
+		root * /srv
+		try_files {path} /index.html
+		file_server
 	}
 
 	log {
