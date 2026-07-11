@@ -50,12 +50,12 @@ public class LlmCommentaryHardeningTests
     [Fact]
     public async Task Caps_cards_at_max_even_when_llm_returns_more()
     {
-        // 9 kart yolla → ilk 6 alınır (07 §4 maxItems, T3.10).
-        var svc = BuildService(ValidCardJson(9));
+        // 14 kart yolla → ilk 12 alınır (07 §4 maxItems, T3.14 katalog üst sınırı).
+        var svc = BuildService(ValidCardJson(14));
 
         var resp = await svc.GetCommentaryAsync(Summary());
 
-        Assert.Equal(6, resp.Cards.Count);
+        Assert.Equal(12, resp.Cards.Count);
     }
 
     [Fact]

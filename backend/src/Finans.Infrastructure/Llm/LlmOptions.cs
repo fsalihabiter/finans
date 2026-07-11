@@ -30,11 +30,11 @@ public sealed class LlmOptions
 
     /// <summary>
     /// Tek çağrı için maksimum bekleme; sınırı aşan çağrı fallback'e düşer.
-    /// T3.10: 20→75 — derin yorum (6 kart × uzun gövde + detail ≈ 4-6k token) ücretsiz
-    /// katman modellerinde 20 saniyeye sığmıyordu (canlı ölçüm: timeout → cache fallback).
-    /// Kullanıcı beklemez: yanıt 24s cache'te; soğuk üretim yalnız portföy değişince olur.
+    /// T3.10: 20→75 (derin yorum ücretsiz modelde 20sn'ye sığmıyordu) · T3.14: 75→150
+    /// (başlık kataloğu 12 karta kadar ≈ 8-9k token üretim). Kullanıcı beklemez: yanıt
+    /// 24s cache'te; soğuk üretim yalnız portföy değişince olur.
     /// </summary>
-    public int TimeoutSeconds { get; set; } = 75;
+    public int TimeoutSeconds { get; set; } = 150;
 
     /// <summary>
     /// Sağlayıcı taban URL'i. Anthropic varsayılan <c>api.anthropic.com</c>; OpenRouter

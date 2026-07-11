@@ -68,9 +68,10 @@ public class CommentaryPromptsTests
         using var doc = JsonDocument.Parse(CommentaryPrompts.CommentaryJsonSchema);
         var cards = doc.RootElement.GetProperty("properties").GetProperty("cards");
 
-        // T3.12 ek (kullanıcı beklentisi): kart sayısı üretimden üretime değişmesin — TAM 6.
+        // T3.14 başlık kataloğu (kullanıcı kararı): çekirdek 6 başlık garanti, uygulanabilir
+        // her ek başlık ayrı kart — üst sınır 12 (okunabilirlik + maliyet tavanı).
         Assert.Equal(6, cards.GetProperty("minItems").GetInt32());
-        Assert.Equal(6, cards.GetProperty("maxItems").GetInt32());
+        Assert.Equal(12, cards.GetProperty("maxItems").GetInt32());
 
         // T3.10 derinlik kapısı: gövde tek cümlelik yüzeyselliğe İZİN VERMEZ (min ≥100),
         // makale boyuna da kaçamaz (max ≤800).
@@ -89,6 +90,20 @@ public class CommentaryPromptsTests
         Assert.Contains("3-6 cümle", p);
         Assert.Contains("İLK kullanımda", p);
         Assert.Contains("detail", p);
+    }
+
+    [Fact]
+    public void SystemPrompt_contains_the_topic_catalog()
+    {
+        var p = CommentaryPrompts.SystemPrompt;
+
+        // T3.14 regresyon kapısı: başlık kataloğu prompttan silinmesin — "uygulanabilir her
+        // başlık ayrı kart" davranışının kaynağı bu liste.
+        Assert.Contains("BAŞLIK KATALOĞU", p);
+        Assert.Contains("Kazanan/Kaybeden", p);
+        Assert.Contains("TL Dışı Koruma", p);
+        Assert.Contains("Maliyet Tabanı", p);
+        Assert.Contains("En Büyük Kalem", p);
     }
 
     [Fact]

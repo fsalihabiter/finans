@@ -53,10 +53,9 @@ public sealed class LlmCommentaryService(
             SystemPrompt: CommentaryPrompts.SystemPrompt,
             UserPrompt: userPrompt,
             JsonSchema: CommentaryPrompts.CommentaryJsonSchema,
-            // 6144 (T3.10) — derin yorum: 6 kart × (body ≤600 + detail ≤500 char) ≈ 4-5k token
-            // + JSON overhead. OpenRouter free reasoning modellerinin gizli düşünme payı da
-            // (reasoning.exclude/enabled=false'a rağmen bazı modellerde sızıyor) bu marja sığar.
-            MaxOutputTokens: 6144,
+            // 12288 (T3.14) — başlık kataloğu 12 karta kadar: 12 × (body ≤600 + detail ≤500
+            // char) ≈ 8-9k token + JSON overhead. Reasoning payı olan modeller için de marj.
+            MaxOutputTokens: 12288,
             Temperature: 0.2m);
 
         // T3.12: kalite düşerse (parse başarısız / bekçi kart düşürdü) sessizce eksik kart
@@ -93,11 +92,11 @@ public sealed class LlmCommentaryService(
                 bestScore = score;
             }
 
-            // Tam tur = parse tamam + filtre devreye girmedi + TAM 6 kart + HER kartta kavram
-            // bloğu. Eksik kart VEYA eksik kavram yeniden üretim sebebidir (kullanıcı beklentisi:
-            // görünüm üretimden üretime değişmesin).
+            // Tam tur = parse tamam + filtre devreye girmedi + en az MinCards kart (başlık
+            // kataloğunun çekirdeği) + HER kartta kavram bloğu. Az kart VEYA eksik kavram
+            // yeniden üretim sebebidir; üst sınır 12 (uygulanabilir başlık sayısı kadar).
             if (parsed && guardBlocked == 0
-                && cards.Count >= CommentaryParseConstraints.MaxCards
+                && cards.Count >= CommentaryParseConstraints.MinCards
                 && detailCount == cards.Count) break;
 
             if (attempt < maxAttempts)
@@ -298,8 +297,10 @@ public sealed class LlmCommentaryService(
 /// </summary>
 internal static class CommentaryParseConstraints
 {
-    // T3.10 derinleştirme: kart sayısı 6'ya, gövde 120-600'e çıktı; opsiyonel detail eklendi.
-    public const int MaxCards = 6;
+    // T3.10 derinleştirme: gövde 120-600; detail eklendi. T3.14 başlık kataloğu (kullanıcı
+    // kararı: "ne kadar çok değerlendirilebilir başlık, o kadar iyi"): 6-12 kart.
+    public const int MinCards = 6;
+    public const int MaxCards = 12;
     public const int MinTitle = 2;
     public const int MaxTitle = 48;
     public const int MinBody = 120;

@@ -20,6 +20,29 @@
 
 ---
 
+## 2026-07-11 (11) · T3.14 — Analiz başlık kataloğu: sabit 6 kart → uygulanabilir 6-12 başlık
+- **Görev(ler):** T3.14 (kullanıcı kararı: "6 kart olarak değil, ne kadar çok değerlendirilecek
+  başlık olursa o kadar iyi; finansal analiz başlıklarını değerlendirmeliyiz").
+- **Yapılanlar:**
+  1. **12 başlıklı finansal analiz kataloğu** prompt'a işlendi (mevcut anonim veriyle
+     değerlendirilebilenler): Genel Sağlık · Nominal Getiri · Reel Getiri & Enflasyon ·
+     Yoğunlaşma (top2) · En Büyük Kalem (top1) · Çeşitlendirme (tür+kalem sayısı) ·
+     Nakit & Likidite · Tür Bazlı Getiri Karşılaştırması · Kazanan/Kaybeden Dengesi ·
+     BES & Devlet Katkısı · TL Dışı Koruma (Gold+Fx) · Maliyet Tabanı. Kural: verisi olan
+     HER başlık ayrı kart; olmayan atlanır; sıra korunur.
+  2. Şema minItems 6 / maxItems 12; parse `MinCards=6`/`MaxCards=12`; tam-tur koşulu
+     "≥6 kart + hepsi kavramlı"; MaxOutputTokens 6144→12288; timeout 75→150sn
+     (12 kart ≈ 8-9k token üretim).
+- **Canlı doğrulama (Haiku):** **12/12 başlık** kart oldu, 9/12 kavramlı, 98sn soğuk üretim
+  (sonrası 24s cache). Üretim maliyeti ~4-5 sent (Haiku, ~9k çıkış tokeni).
+- **Dokunulan dosyalar:** `CommentaryPrompts.cs`, `LlmCommentaryService.cs`, `LlmOptions.cs`,
+  `appsettings.json`, testler (Prompts katalog regresyonu + Hardening cap 12), 08-BACKLOG (T3.14)
+- **Test:** Application **191/191**.
+- **Karar/Not:** Katalog genişledikçe (Faz 5+ yeni veriler: değer serisi, tarihsel karşılaştırma)
+  yeni başlıklar eklenebilir — tek yer: prompt kataloğu + anonim yük.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — Finnhub hisse metrikleri.
+
 ## 2026-07-11 (10) · T3.13 — Yorum kartları ferah yerleşim + kavram tam-kapsama hedefi
 - **Görev(ler):** T3.13 (kullanıcı: "bitişik sıkışık görüntü hoş değil + birkaç kartta kavram
   yok; skill yükleyip ihtiyaca göre kullanan yaklaşımla yap").

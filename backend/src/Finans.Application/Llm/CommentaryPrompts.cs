@@ -42,11 +42,26 @@ public static class CommentaryPrompts
            "reel getiri", "likidite" gibi her terimi İLK kullanımda bir cümleyle tanımla.
         5. Çıktın YALNIZCA `structured_output` aracı çağrısı (JSON şeması) — düz metin YOK,
            giriş/kapanış cümlesi YOK, başka açıklama YOK.
-        6. HER ZAMAN TAM 6 KART üret — eksik kart teslim etme. Altı tema, her biri bir kart
-           (aynı temayı tekrar etme): (1) Genel Sağlık (toplam değer/maliyet/net kâr),
-           (2) Getiri, (3) Reel Getiri/Enflasyon, (4) Dağılım/Yoğunlaşma, (5) Nakit/Likidite,
-           (6) Tür-özel gözlem (örn. BES'te devlet katkısı payı, tür bazlı getiri farkları —
-           `allocation[].returnRatio` verildiyse).
+        6. BAŞLIK KATALOĞU — aşağıdaki başlıkları sırayla değerlendir ve portföyde karşılığı
+           (verisi) olan HER başlık için AYRI bir kart üret. Ne kadar çok uygulanabilir başlık,
+           o kadar iyi (en az 6, en çok 12 kart). Verisi olmayan başlığı ATLA; aynı başlığı
+           tekrarlama; sırayı koru:
+           (1)  Genel Sağlık — toplam değer, toplam maliyet, net kâr birlikte.
+           (2)  Nominal Getiri — returnRatio.
+           (3)  Reel Getiri & Enflasyon — realReturnRatio; nominal ile farkı.
+           (4)  Yoğunlaşma — concentrationTop2 (ilk iki kalem).
+           (5)  En Büyük Kalem — allocation'daki ilk (en ağır) dilimin tek başına ağırlığı.
+           (6)  Çeşitlendirme — holdingCount + tür sayısı (allocation uzunluğu) + itemCount'lar.
+           (7)  Nakit & Likidite — cashWeight.
+           (8)  Tür Bazlı Getiri Karşılaştırması — allocation[].returnRatio verildiyse en güçlü
+                ve en zayıf türü yan yana koy.
+           (9)  Kazanan/Kaybeden Dengesi — pozitif ve negatif getirili tür sayısı/ağırlığı
+                (allocation[].returnRatio verildiyse).
+           (10) BES & Devlet Katkısı — `bes.ownShare/stateShare` verildiyse.
+           (11) TL Dışı Koruma — Gold/Fx dilimlerinin toplam ağırlığı (bu türler varsa):
+                döviz/altın tutmanın kur ve enflasyon karşısındaki rolü (tahminsiz, çerçeve).
+           (12) Maliyet Tabanı — totalCost'un totalValue'ya oranı; kârın hangi taban
+                üzerinden hesaplandığı.
         7. HER KARTIN `body`si 3-6 cümle (yaklaşık 150-550 karakter) ve ŞU YAPIYI izler:
            (a) bu sayı NEYİ ölçer (terimi tanımla), (b) SENİN portföyünde değeri ne ve bu ne
            anlama geliyor (verilen sayıya açık atıf), (c) genel çerçevede nasıl okunur / hangi
@@ -118,7 +133,7 @@ public static class CommentaryPrompts
             "cards": {
               "type": "array",
               "minItems": 6,
-              "maxItems": 6,
+              "maxItems": 12,
               "items": {
                 "type": "object",
                 "properties": {
