@@ -2390,50 +2390,92 @@ body.drawer-lock {
 .band-warm { color: #e8b34c; border-color: rgba(232, 179, 76, 0.35); background: rgba(232, 179, 76, 0.08); }
 .band-mute { color: var(--muted, #97a3c9); background: rgba(255, 255, 255, 0.03); }
 
-/* ───── Sekmeli yorum gezgini (T4.5) ───── */
-.ctab-strip {
+/* ───── Yorum gezgini (T4.5 devamı): solda dikey başlık rayı + sağda panel; darda accordion ───── */
+.commentary-tabs.is-rail {
+  display: grid;
+  grid-template-columns: clamp(220px, 30%, 300px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: stretch; /* sağ panel sol rayın boyuna hizalanır */
+}
+.ctab-rail {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-  scrollbar-width: thin;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 14px 6px 0;
+  border-right: 1px solid var(--line, #26304f);
 }
 .ctab {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 14px;
-  border-radius: 100px;
-  background: var(--panel-2, #1a2240);
-  border: 1px solid var(--line, #26304f);
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px 11px 16px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--muted, #97a3c9);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
+  text-align: left;
   cursor: pointer;
-  white-space: nowrap;
-  transition: 0.16s;
-  flex-shrink: 0;
+  transition: background 0.16s, color 0.16s, border-color 0.16s, transform 0.16s;
+}
+/* Aktif gösterge çubuğu: soldan yükselerek belirir. */
+.ctab::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 3px;
+  background: var(--accent, #8a94dc);
+  transform: translateY(-50%);
+  transition: height 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ctab:hover {
   color: var(--text, #eef2ff);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(2px);
 }
 .ctab.on {
-  background: rgba(138, 148, 220, 0.13);
-  border-color: var(--accent, #8a94dc);
-  color: var(--accent, #8a94dc);
+  background: rgba(138, 148, 220, 0.1);
+  border-color: rgba(138, 148, 220, 0.28);
+  color: var(--text, #eef2ff);
+}
+.ctab.on::before {
+  height: 62%;
+}
+.ctab-emoji {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 .ctab-title {
-  max-width: 220px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* rayda en çok iki satır; tam başlık paneldeki kartta */
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis; /* sekmede kısaltma normal; tam başlık paneldeki kartta */
+  line-height: 1.4;
+}
+.ctab-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .ctab-panel {
-  margin-top: 8px;
+  flex: 1; /* panel kalan boyu doldurur → kart ray kadar uzar, nav en altta biter */
+  display: flex;
+  animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 /* Panel kartı: tek kart geniş okuma alanı — satır uzunluğu sınırlı (65-75 karakter). */
 .ctab-panel .commentary-card {
   max-width: 860px;
+  width: 100%;
+  align-self: stretch;
 }
 .ctab-panel .commentary-body,
 .ctab-panel .commentary-detail {
@@ -2448,6 +2490,72 @@ body.drawer-lock {
 .ctab-count {
   font-size: 12px;
   color: var(--muted, #97a3c9);
+}
+
+/* Accordion görünümü (≤720px — JS matchMedia ile geçiş) */
+.commentary-tabs.is-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cacc-item {
+  border: 1px solid var(--line, #26304f);
+  border-radius: 16px;
+  background: var(--panel, #131a30);
+  overflow: hidden;
+  transition: border-color 0.16s;
+}
+.cacc-item.open {
+  border-color: rgba(138, 148, 220, 0.35);
+}
+.cacc-item.is-fallback {
+  border-style: dashed;
+  background: var(--panel-2, #1a2240);
+}
+.cacc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: 0;
+  color: var(--text-soft, #cbd5f0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cacc-item.open .cacc-head {
+  color: var(--text, #eef2ff);
+}
+.cacc-title {
+  flex: 1;
+  line-height: 1.4;
+}
+.cacc-chevron {
+  color: var(--muted, #97a3c9);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s;
+}
+.cacc-item.open .cacc-chevron {
+  transform: rotate(180deg);
+  color: var(--accent, #8a94dc);
+}
+.cacc-body {
+  animation: fade-up 320ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+/* Kart accordion gövdesinde çıplak durur: çift çerçeve/başlık tekrarı olmasın. */
+.cacc-body .commentary-card,
+.cacc-body .commentary-card:hover {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 18px 18px;
+}
+.cacc-body .commentary-card-head {
+  display: none; /* başlık zaten accordion başlığında */
 }
 
 /* ───── Fiyat geçmişi grafiği (T4.5) ───── */

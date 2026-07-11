@@ -20,6 +20,35 @@
 
 ---
 
+## 2026-07-12 (4) · T4.5 devamı — Yorum gezgini: dikey başlık rayı (solda) + dar ekranda accordion
+- **Görev(ler):** T4.5 devamı (kullanıcı geri bildirimi: yorum başlıkları üst şerit yerine
+  SOLDA tab/accordion olsun; "güzel ve efektif bir accordion").
+- **Ne yapıldı:**
+  1. `CommentaryTabs` hibrit görünüme çevrildi: **geniş ekranda solda dikey başlık rayı**
+     (tablist `aria-orientation="vertical"`, ↑/↓/Home/End klavye + odak taşıma, aktif öğede
+     soldan yükselen accent çubuğu, başlıklar 2 satır clamp) + sağda tek kart paneli
+     (seçim değişince fade-up giriş animasyonu, `key` ile) + Önceki/Sonraki korundu.
+  2. **≤720px'te accordion** (`matchMedia` ile JS geçişi): her başlık `aria-expanded`'lı
+     buton + dönen chevron; tek açık panel, açığa tıklayınca kapanır; kart accordion
+     gövdesinde çıplak durur (çift çerçeve/başlık tekrarı yok); fallback'te kesikli çerçeve.
+  3. Her iki sayfa (Analiz "Portföyün ne anlatıyor?" + Hisse "Bu rakamlar ne anlatıyor?")
+     aynı bileşeni kullandığından değişiklik ikisine birden yansıdı; sayfa kodu değişmedi.
+  4. **Hizalama (2. geri bildirim):** sağ panel sol rayın boyuna esner (grid `stretch` +
+     panel `flex:1` + kart `align-self:stretch`) — kart ray kadar uzar, etiketler kart
+     altına yaslanır, Önceki/Sonraki rayın bitimiyle hizalı.
+- **Canlı doğrulama (tarayıcı, https://localhost):** Analiz 12 kart — ray seçimi 4/12 panel
+  geçişiyle çalışıyor; Hisse AAPL 5 kart ray; accordion (matchMedia taklidiyle) tek-açık +
+  aç/kapa davranışı doğrulandı.
+- **Dokunulan dosyalar:** web/src/components/CommentaryTabs.tsx (yeniden yazıldı),
+  web/src/components/CommentaryTabs.test.tsx (+5 test), web/src/App.css (ctab rayı + cacc
+  accordion stilleri), .claude/docs/09-TESTING-STRATEGY.md (SC-31)
+- **Test:** SC-31 — Web **76/76** (+5: dikey tablist/↓ klavye + accordion 4) · tsc temiz.
+- **Karar/Not:** jsdom'da matchMedia yok → bileşen ray görünümüne düşer; accordion testleri
+  matchMedia'yı taklit eder. Kırılım noktası 720px (JS `matchMedia`, CSS medya sorgusu değil —
+  iki görünümün DOM'u farklı).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5.1 — `PortfolioValueHistoryService` (Dalga 1 / Faz 5).
+
 ## 2026-07-12 (3) · T4.5 — Fiyat geçmişi grafiği + sekmeli yorum gezgini + başlık düzeltmesi
 - **Görev(ler):** T4.5 (kullanıcı geri bildirimi: başlıklar "…" ile kırpılıyor; kart ızgarası
   hoş değil — slide/tab gezinme; yorumlara grafik; halka arzdan beri fiyat + TradingView-tarzı
