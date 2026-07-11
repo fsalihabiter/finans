@@ -20,6 +20,29 @@
 
 ---
 
+## 2026-07-11 (9) · T3.12 — Bekçi yan etkileri giderildi: yeniden üretim + yumuşak detail kuralı
+- **Görev(ler):** T3.12 (kullanıcı geri bildirimi: "şimdi de bir kart eksik ve kavram
+  açıklamaları kayboldu — bir yeri yaparken diğerlerini bozma").
+- **Kök neden:** T3.11 bekçileri kusurlu kartı/detayı SESSİZCE düşürüyordu → kullanıcıya
+  eksik kart ve kavramsız kartlar yansıdı. Ayrıca "detail'de herhangi bir rakam" kuralı
+  fazla agresifti — "10 kilo elma" gibi masum benzetme sayıları da kavram bloğunu siliyordu.
+- **Yapılanlar (yalnız bu iki kusur; başka davranış değişmedi):**
+  1. **Yeniden üretim (retry):** parse başarısız / bekçi kart düşürdüyse LLM'e BİR kez daha
+     sorulur; denemelerin en iyisi (en çok kart) kullanılır. Temiz turda ikinci çağrı YOK
+     (maliyet disiplini); sağlayıcı hatasında (429/timeout) retry YOK (kota koruması).
+  2. **Detail kuralı yumuşatıldı:** yalnız FİNANSAL sayı (%x, ₺, "100 TL/lira") kavram
+     bloğunu düşürür (tutarsız uydurma yüzde riski); masum sayılar serbest. Prompt kural 8:
+     "opsiyonel" → "HER KARTTA üret" + finansal sayı yasağı netleştirildi.
+- **Canlı doğrulama:** 5 kart (kayıp yok), 3'ünde kavram bloğu, akıcı Türkçe, 14sn, source=llm.
+  Not: kavramında portföyle tutarsız yüzde/tutar tespit edilen kartın kavramı bilerek
+  gösterilmez — yanlış sayı göstermekten iyi.
+- **Dokunulan dosyalar:** `LlmCommentaryService.cs` (retry döngüsü + DetailFinanceNumber),
+  `CommentaryPrompts.cs` (kural 8), `LlmCommentaryHardeningTests.cs` (+4: retry ×3, masum
+  sayı), `LlmMetricsTests.cs` (retry'a uyum), TASKLOG
+- **Test:** Application **188/188**.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T4.2 — ya da kullanıcı yorum kalitesini tekrar değerlendirir.
+
 ## 2026-07-11 (8) · T3.11 — Dil saflığı bekçisi: yabancı dil sızıntısı + alan adı + rakamlı detail
 - **Görev(ler):** T3.11 (ad-hoc, kullanıcı ekran görüntüsüyle: "yorumlarda başka dillerde
   kelimeler var; Türkçe anlamsal olarak daha anlaşılır kelimeler seçilsin").

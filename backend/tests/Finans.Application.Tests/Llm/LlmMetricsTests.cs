@@ -87,7 +87,10 @@ public class LlmMetricsTests
 
         await svc.GetCommentaryAsync(Summary(641_403m));
 
-        Assert.Equal(1, Assert.Single(metrics.Calls).guard); // bir kart filtreyle düştü
+        // T3.12: bekçi kart düşürünce servis BİR kez yeniden üretir → iki çağrı kaydı,
+        // her ikisinde de 1 kart filtreye takıldı (stub aynı yanıtı döner).
+        Assert.Equal(2, metrics.Calls.Count);
+        Assert.All(metrics.Calls, c => Assert.Equal(1, c.guard));
     }
 
     [Fact]

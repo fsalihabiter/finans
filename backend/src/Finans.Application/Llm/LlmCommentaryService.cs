@@ -59,29 +59,51 @@ public sealed class LlmCommentaryService(
             MaxOutputTokens: 6144,
             Temperature: 0.2m);
 
-        var result = await llm.CompleteAsync(req, ct);
-        if (!result.Success)
+        // T3.12: kalite düşerse (parse başarısız / bekçi kart düşürdü) sessizce eksik kart
+        // göstermek yerine BİR kez yeniden üret; denemelerin en iyisi (en çok kart) kullanılır.
+        // Sağlayıcı hatasında (429/timeout) tekrar denenmez — kotayı kötüleştirmeyelim.
+        IReadOnlyList<CommentaryCard> best = Array.Empty<CommentaryCard>();
+        const int maxAttempts = 2;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            _metrics.RecordCall(success: false, inputTokens: 0, outputTokens: 0, guardBlocked: 0);
-            logger.LogInformation("LLM yorumu üretilemedi ({Reason}); fallback kartı dönülüyor.", result.ErrorReason);
-            return Fallback();
+            var result = await llm.CompleteAsync(req, ct);
+            if (!result.Success)
+            {
+                _metrics.RecordCall(success: false, inputTokens: 0, outputTokens: 0, guardBlocked: 0);
+                logger.LogInformation("LLM yorumu üretilemedi ({Reason}).", result.ErrorReason);
+                break;
+            }
+
+            var parsed = TryParseCards(result.Text, out var cards, out var guardBlocked);
+            _metrics.RecordCall(success: true, result.InputTokens, result.OutputTokens, guardBlocked);
+            if (guardBlocked > 0)
+                // Kuşak-2 koruma devreye girdi (T3.5/T3.11): yönlendirme/tahmin ya da dil sızıntısı
+                // yakalandı. Görünür kıl ki model kalitesi sapması fark edilsin.
+                logger.LogWarning(
+                    "LLM yorumunda {Count} kart çıktı filtrelerine takıldı ve düşürüldü (deneme {Attempt}).",
+                    guardBlocked, attempt);
+
+            if (parsed && cards.Count > best.Count) best = cards;
+
+            // Temiz tur (filtre hiç devreye girmedi + parse tamam) → yeniden üretim gereksiz.
+            if (parsed && cards.Count > 0 && guardBlocked == 0) break;
+
+            if (attempt < maxAttempts)
+                logger.LogInformation(
+                    "LLM yorumu eksik/kusurlu ({Cards} kart, {Blocked} düştü) — yeniden üretiliyor.",
+                    best.Count, guardBlocked);
+            else if (!parsed)
+            {
+                // Tanılama: ham yanıt anonim portföy yorumu (PII içermez); ilk 400 char loglanır.
+                var preview = result.Text.Length > 400 ? result.Text[..400] + "…" : result.Text;
+                logger.LogWarning("LLM yanıtı şemayı tutmadı. Ham yanıt önizleme: {Preview}", preview);
+            }
         }
 
-        var parsed = TryParseCards(result.Text, out var cards, out var guardBlocked);
-        _metrics.RecordCall(success: true, result.InputTokens, result.OutputTokens, guardBlocked);
-        if (guardBlocked > 0)
-            // Kuşak-2 koruma devreye girdi (T3.5 / 07 §7): prompt korkuluğunun kaçırdığı yönlendirme/
-            // tahmin kalıbı çıktıda yakalandı. Görünür kıl ki model kalitesi sapması fark edilsin.
-            logger.LogWarning(
-                "LLM yorumunda {Count} kart çıktı güvenlik filtresine (T3.5) takıldı ve düşürüldü.", guardBlocked);
+        if (best.Count > 0)
+            return new CommentaryResponse(best, Source: "llm", GeneratedAtUtc: time.GetUtcNow().UtcDateTime);
 
-        if (parsed && cards.Count > 0)
-            return new CommentaryResponse(cards, Source: "llm", GeneratedAtUtc: time.GetUtcNow().UtcDateTime);
-
-        // Tanılama: ham yanıt anonim portföy yorumu (PII içermez). Hangi şema kuralında düştüğünü
-        // (JSON parse / cards yok / per-kart filtre / güvenlik filtresi) görmek için ilk 400 char'ı logluyoruz.
-        var preview = result.Text.Length > 400 ? result.Text[..400] + "…" : result.Text;
-        logger.LogWarning("LLM yanıtı şemayı tutmadı; fallback kartı dönülüyor. Ham yanıt önizleme: {Preview}", preview);
+        logger.LogWarning("LLM yorumundan kullanılabilir kart çıkmadı; fallback kartı dönülüyor.");
         return Fallback();
     }
 
@@ -154,10 +176,11 @@ public sealed class LlmCommentaryService(
                 var detail = ReadString(c, "detail")?.Trim();
                 if (string.IsNullOrWhiteSpace(detail) || detail!.Length < CommentaryParseConstraints.MinDetail)
                     detail = null;
-                else if (detail.Any(char.IsDigit))
-                    // Kural 8: detail RAKAMSIZ kavram eğitimidir. Rakam varsa model ya girdi
-                    // dışı sayı uydurdu ya da örnek hesap yaptı (canlı gözlem: tutarsız %67/%33)
-                    // → detail atılır, kart gövdeyle yaşar (deterministik halüsinasyon süzgeci).
+                else if (DetailFinanceNumber.IsMatch(detail))
+                    // Kural 8: detail'de FİNANSAL sayı (yüzde / TL tutarı) olamaz — model orada
+                    // girdiyle tutarsız örnek yüzdeler uydurabiliyor (canlı gözlem: %67/%33)
+                    // → detail atılır, kart gövdeyle yaşar. Masum sayılar ("10 kilo elma")
+                    // serbesttir — benzetmelerin doğal parçası (T3.12 yumuşatması).
                     detail = null;
                 else
                     detail = SmartTruncate(detail, CommentaryParseConstraints.MaxDetail);
@@ -229,6 +252,17 @@ public sealed class LlmCommentaryService(
         static string? ReadString(JsonElement el, string name) =>
             el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     }
+
+    /// <summary>
+    /// Detail içinde finansal sayı: "%67", "67 %", "₺", "100 TL", "100 lira(lık)".
+    /// Kavram paragrafı portföy rakamı taşımamalı (tutarsız uydurma riski); benzetmelerdeki
+    /// masum sayılar ("10 kilo") yakalanmaz.
+    /// </summary>
+    private static readonly System.Text.RegularExpressions.Regex DetailFinanceNumber = new(
+        @"%\s*\d|\d\s*%|₺|\d[\d.,]*\s*(TL|lira)\b",
+        System.Text.RegularExpressions.RegexOptions.CultureInvariant |
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+        System.Text.RegularExpressions.RegexOptions.Compiled);
 
     /// <summary>
     /// Üst sınırı aşan metni cümle sınırından (yoksa kelime sınırından) kırpar — kelime ortasında

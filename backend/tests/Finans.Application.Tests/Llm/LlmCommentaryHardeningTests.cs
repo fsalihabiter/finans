@@ -129,9 +129,9 @@ public class LlmCommentaryHardeningTests
     }
 
     [Fact]
-    public async Task Nulls_detail_when_it_contains_digits()
+    public async Task Nulls_detail_when_it_contains_finance_numbers()
     {
-        // Kural 8: detail rakamsız kavram eğitimi. Canlı gözlem: model detail'de girdiyle
+        // Kural 8: detail'de FİNANSAL sayı olamaz. Canlı gözlem: model detail'de girdiyle
         // tutarsız örnek yüzdeler uydurdu (%67/%33) → deterministik süzgeç detail'i atar.
         var json = "{\"cards\":[{\"emoji\":\"🏦\",\"title\":\"BES\",\"body\":\"" + ValidBody() + "\"," +
             "\"detail\":\"Bir bahçenin yarısını sen suluyorsan toplam ürünün payı senin emeğin %67, komşu katkısı %33 olur; benzer çalışır.\"}]}";
@@ -141,6 +141,22 @@ public class LlmCommentaryHardeningTests
 
         Assert.Single(resp.Cards);
         Assert.Null(resp.Cards[0].Detail);
+    }
+
+    [Fact]
+    public async Task Keeps_detail_with_innocent_numbers()
+    {
+        // T3.12 yumuşatma: benzetmedeki masum sayılar ("10 kilo elma") kavram bloğunu ÖLDÜRMEZ —
+        // önceki katı her-rakam kuralı kullanıcının sevdiği kavram açıklamalarını siliyordu.
+        var json = "{\"cards\":[{\"emoji\":\"📉\",\"title\":\"Reel Getiri\",\"body\":\"" + ValidBody() + "\"," +
+            "\"detail\":\"Mağazada aynı parayla önce 10 kilo elma alabiliyordun; şimdi 8 kilo alabiliyorsan gerçek zenginlikten kaybettin demektir.\"}]}";
+        var svc = BuildService(json);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Single(resp.Cards);
+        Assert.NotNull(resp.Cards[0].Detail);
+        Assert.Contains("10 kilo", resp.Cards[0].Detail);
     }
 
     [Fact]
@@ -267,5 +283,63 @@ public class LlmCommentaryHardeningTests
         var resp = await svc.GetCommentaryAsync(Summary());
 
         Assert.Equal("fallback", resp.Source);
+    }
+
+    // ── T3.12: kalite düşünce yeniden üretim (kart kaybını telafi) ──
+
+    private sealed class SequenceLlmClient(params string[] responses) : ILlmClient
+    {
+        public int Calls { get; private set; }
+        public Task<LlmResult> CompleteAsync(LlmRequest r, CancellationToken ct = default) =>
+            Task.FromResult(LlmResult.Ok(responses[Math.Min(Calls++, responses.Length - 1)], 1, 1));
+    }
+
+    [Fact]
+    public async Task Retries_once_when_guard_drops_cards_and_uses_best_attempt()
+    {
+        // 1. deneme: 1 temiz + 1 yasaklı (bekçi düşürür) → kusurlu; 2. deneme: 5 temiz → o kullanılır.
+        var flawed = "{\"cards\":[" +
+            "{\"emoji\":\"✅\",\"title\":\"Temiz\",\"body\":\"" + ValidBody() + "\"}," +
+            "{\"emoji\":\"❌\",\"title\":\"Sızıntı\",\"body\":\"Senin portföyünde bu oran yüzde on — yani her yüz lira invested olduğunda yaklaşık on lira kazanç elde etmiş olursun; oran pozitif olduğu için portföy büyümüş.\"}" +
+            "]}";
+        var client = new SequenceLlmClient(flawed, ValidCardJson(5));
+        var svc = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Equal(2, client.Calls);          // yeniden üretildi
+        Assert.Equal(5, resp.Cards.Count);      // en iyi deneme kullanıldı — kart kaybı yok
+        Assert.Equal("llm", resp.Source);
+    }
+
+    [Fact]
+    public async Task Does_not_retry_when_first_attempt_is_clean()
+    {
+        var client = new SequenceLlmClient(ValidCardJson(4));
+        var svc = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Equal(1, client.Calls);          // temiz turda ikinci çağrı YOK (maliyet disiplini)
+        Assert.Equal(4, resp.Cards.Count);
+    }
+
+    [Fact]
+    public async Task Keeps_first_attempt_when_retry_is_worse()
+    {
+        // 1. deneme: 4 temiz + 1 yasaklı (bekçi 1 düşürdü → 4 kart, kusurlu tur);
+        // 2. deneme: 2 kart → daha kötü. En iyi (ilk) deneme kullanılır.
+        var flawed = "{\"cards\":[" +
+            string.Join(",", Enumerable.Range(1, 4).Select(i =>
+                $"{{\"emoji\":\"✅\",\"title\":\"Kart {i}\",\"body\":\"" + ValidBody() + "\"}")) +
+            ",{\"emoji\":\"❌\",\"title\":\"Sızıntı\",\"body\":\"Bu noktada hiç düşünmeden altın almalısın çünkü kısa sürede ciddi biçimde yükselecek; bu tarihi fırsatı sakın kaçırma, herkes alırken sen de almalısın.\"}" +
+            "]}";
+        var client = new SequenceLlmClient(flawed, ValidCardJson(2));
+        var svc = new LlmCommentaryService(client, NullLogger<LlmCommentaryService>.Instance, TimeProvider.System);
+
+        var resp = await svc.GetCommentaryAsync(Summary());
+
+        Assert.Equal(2, client.Calls);
+        Assert.Equal(4, resp.Cards.Count);      // ilk denemenin 4 temiz kartı korunur
     }
 }

@@ -49,9 +49,10 @@ public static class CommentaryPrompts
            (a) bu sayı NEYİ ölçer (terimi tanımla), (b) SENİN portföyünde değeri ne ve bu ne
            anlama geliyor (verilen sayıya açık atıf), (c) genel çerçevede nasıl okunur / hangi
            senaryoda önem kazanır. Akademik dil yok, samimiyetsiz "yatırımcı dostum" tonu yok.
-        8. `detail` (opsiyonel ama teşvik edilir): kavramı hiç duymamış birine günlük hayattan
-           benzetmeyle anlatan 2-4 cümlelik ek paragraf. Rakam İÇERMEZ (yeni rakam üretme riskini
-           sıfırla), tavsiye içermez — yalnız kavram eğitimi.
+        8. `detail`: HER KARTTA üret — kavramı hiç duymamış birine günlük hayattan benzetmeyle
+           anlatan 2-4 cümlelik ek paragraf. İçinde YÜZDE (%), TL/₺ tutarı veya portföy rakamı
+           OLAMAZ (yoksa otomatik filtre paragrafı siler); benzetmedeki masum sayılar ("iki sepet",
+           "10 kilo elma") serbest. Tavsiye içermez — yalnız kavram eğitimi.
         9. TAMAMEN TÜRKÇE yaz. Başka dilden tek kelime bile KARIŞTIRMA: "means", "becomes",
            "invested" gibi İngilizce kelimeler ve Latin dışı karakterler (Japonca/Çince vb.)
            KESİNLİKLE YASAK — böyle kartlar otomatik filtreyle silinir ve emeğin boşa gider.
