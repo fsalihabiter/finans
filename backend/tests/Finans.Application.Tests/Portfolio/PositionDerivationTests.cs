@@ -101,4 +101,71 @@ public class PositionDerivationTests
 
         Assert.Equal(181851.000m, PortfolioCalculationService.TotalCost(pos.Quantity, pos.AvgCost));
     }
+
+    // ── Kronolojik aşırı satış denetimi (SC-41) ──────────────────────────────
+
+    private static readonly DateOnly D0 = new(2026, 1, 5);
+
+    private static (DateOnly Date, TransactionType Type, decimal Quantity) BuyOn(int day, decimal qty) =>
+        (D0.AddDays(day), TransactionType.Buy, qty);
+
+    private static (DateOnly Date, TransactionType Type, decimal Quantity) SellOn(int day, decimal qty) =>
+        (D0.AddDays(day), TransactionType.Sell, qty);
+
+    [Fact]
+    public void Sell_dated_before_buy_is_flagged_with_sell_date()
+    {
+        // B2 vakası: 10 Oca'da 10 al, satışa 5 Oca tarihi ver → nihai miktar 5 ≥ 0
+        // ama 5 Oca'da pozisyon −5 olurdu → ihlal tarihi 5 Oca döner.
+        var oversold = PortfolioCalculationService.FirstOversoldDate(
+            [BuyOn(5, 10m), SellOn(0, 5m)]);
+
+        Assert.Equal(D0, oversold);
+    }
+
+    [Fact]
+    public void Interior_dip_is_caught_even_when_final_quantity_is_positive()
+    {
+        // g0: +10, g1: −15 (ara günde −5), g2: +10 → nihai 5 ama g1 ihlal.
+        var oversold = PortfolioCalculationService.FirstOversoldDate(
+            [BuyOn(0, 10m), SellOn(1, 15m), BuyOn(2, 10m)]);
+
+        Assert.Equal(D0.AddDays(1), oversold);
+    }
+
+    [Fact]
+    public void Chronologically_valid_sequence_returns_null()
+    {
+        var oversold = PortfolioCalculationService.FirstOversoldDate(
+            [BuyOn(0, 10m), SellOn(3, 4m), BuyOn(5, 2m), SellOn(7, 8m)]);
+
+        Assert.Null(oversold);
+    }
+
+    [Fact]
+    public void Same_day_buy_and_sell_is_allowed_buys_count_first()
+    {
+        // Aynı gün alış + satış (girdi sırası satış önce olsa bile): gün granülünde
+        // alışlar önce sayılır — gün sonu 5 ≥ 0, ihlal yok (seri gün sonunu çizer).
+        var oversold = PortfolioCalculationService.FirstOversoldDate(
+            [SellOn(0, 5m), BuyOn(0, 10m)]);
+
+        Assert.Null(oversold);
+    }
+
+    [Fact]
+    public void Unsorted_input_is_ordered_by_date_before_checking()
+    {
+        // Girdi sırasız gelebilir (DB sırası garanti değil) — tarih sırasına dizilir.
+        var oversold = PortfolioCalculationService.FirstOversoldDate(
+            [SellOn(9, 1m), BuyOn(0, 10m), SellOn(2, 12m)]);
+
+        Assert.Equal(D0.AddDays(2), oversold);
+    }
+
+    [Fact]
+    public void Empty_transactions_have_no_oversell()
+    {
+        Assert.Null(PortfolioCalculationService.FirstOversoldDate([]));
+    }
 }

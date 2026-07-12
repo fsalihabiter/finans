@@ -199,10 +199,49 @@ public class PortfolioCalculationServiceTests
         var results = _sut.CalculateHoldings(holdings);
 
         var priceless = results.Single(r => r.Name == "Fiyatsız");
-        Assert.Null(priceless.CurrentValue);
+        Assert.Null(priceless.CurrentValue);        // satır "fiyatsız" işaretlenebilsin
         Assert.Null(priceless.Profit);
         Assert.Null(priceless.ReturnRatio);
-        Assert.Equal(0m, priceless.Weight); // değeri yok → ağırlığa katılmaz
-        Assert.Equal(500m, priceless.TotalCost); // maliyet yine hesaplanır
+        Assert.Equal(500m, priceless.TotalCost);    // maliyet yine hesaplanır
+        // SC-40: ağırlığa MALİYETİYLE katılır (etkin değer) — toplam 60.000 + 500.
+        Assert.Equal(500m / 60500m, priceless.Weight);
+        Assert.Equal(1m, Math.Round(results.Sum(r => r.Weight), 10));
+    }
+
+    // ── SC-40: fiyatsız kalem özete maliyetiyle girer (sahte −%100 yok) ──────
+
+    [Fact]
+    public void CalculateSummary_priceless_holding_counts_at_cost_not_minus_100_percent()
+    {
+        // Tek fiyatsız kalem: değer = maliyet → kâr 0, getiri %0 (eskiden −%100 görünüyordu).
+        var summary = _sut.CalculateSummary(
+            [new HoldingInput(AssetType.Stock, "Fiyatsız Hisse", 5m, 100m, CurrentPrice: null)]);
+
+        Assert.Equal(500m, summary.TotalCost);
+        Assert.Equal(500m, summary.TotalValue);
+        Assert.Equal(0m, summary.NetProfit);
+        Assert.Equal(0m, summary.ReturnRatio);
+
+        var slice = Assert.Single(summary.Allocation);
+        Assert.Equal(500m, slice.Value);
+        Assert.Equal(1m, slice.Weight);
+    }
+
+    [Fact]
+    public void CalculateSummary_mixed_portfolio_carries_priceless_at_cost_in_totals_and_allocation()
+    {
+        var summary = _sut.CalculateSummary(
+        [
+            new HoldingInput(AssetType.Gold, "Altın", 10m, 5000m, CurrentPrice: 6000m),  // değer 60.000
+            new HoldingInput(AssetType.Stock, "Fiyatsız", 5m, 100m, CurrentPrice: null), // maliyet 500
+        ]);
+
+        Assert.Equal(60500m, summary.TotalValue);  // 60.000 + 500 (maliyetiyle, 0 değil)
+        Assert.Equal(50500m, summary.TotalCost);
+        Assert.Equal(10000m, summary.NetProfit);   // yalnız fiyatlı kalemin kârı
+
+        Assert.Equal(2, summary.Allocation.Count); // fiyatsız kalem dağılımdan düşmez
+        Assert.Equal(500m, summary.Allocation.Single(a => a.Name == "Fiyatsız").Value);
+        Assert.Equal(1m, Math.Round(summary.Allocation.Sum(a => a.Weight), 10));
     }
 }

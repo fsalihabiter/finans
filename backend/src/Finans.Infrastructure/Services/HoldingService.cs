@@ -765,6 +765,15 @@ public sealed class HoldingService(
             throw new ValidationException("quantity", "exceeds_holding",
                 "Satış miktarı eldeki pozisyondan fazla olamaz.");
 
+        // Kronolojik denetim (SC-41): nihai miktar ≥ 0 olsa bile alıştan ÖNCEKİ tarihe
+        // girilen satış ara günlerde pozisyonu negatife düşürür → Değer Seyri negatif
+        // çizilir. Her işlem tarihinde kümülatif miktar ≥ 0 olmalı; değilse 400.
+        var oversoldAt = PortfolioCalculationService.FirstOversoldDate(
+            holding.Transactions.Select(t => (DateOnly.FromDateTime(t.TransactedAtUtc), t.Type, t.Quantity)));
+        if (oversoldAt is { } date)
+            throw new ValidationException("quantity", "exceeds_holding_at_date",
+                $"Satış, {date:dd.MM.yyyy} tarihi itibarıyla eldeki miktarı aşıyor. İşlem tarihlerini kontrol edin.");
+
         holding.Quantity = pos.Quantity;
         holding.AvgCost = pos.AvgCost;
     }

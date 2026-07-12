@@ -345,6 +345,29 @@ Quantity = Σ Buy.Quantity − Σ Sell.Quantity
 > `POST /holdings/{id}/bes-contribution` (kendi + devlet %30) kullanılır ve
 > `Holdings.AvgCost = own + state` doğrudan güncellenir (T1.17).
 
+### 11.1 Fiyatsız Kalem & Kronoloji Kuralları (karar, 2026-07-12)
+
+İki kenar-durum kararı — üç yüzey (özet = pozisyon listesi = değer serisi) aynı
+ilkeyi söyler:
+
+- **Fiyatsız kalem özete MALİYETİYLE girer (SC-40).** `CurrentPrice` hiç
+  girilmemiş kalem toplam değere `0` olarak DEĞİL, toplam maliyetiyle katılır
+  (aksi sahte −%100 zarar gösterir). Kâr katkısı 0; dağılıma maliyet değeriyle
+  girer; ağırlık = etkin değer / toplam etkin değer (toplamlar tutarlı).
+  Kalem satırında `currentValue/profit/returnRatio` **null kalır** — UI
+  "fiyatsız" ayrımını gösterebilir. Değer Seyri'nin "hiç fiyat gözlemi yoksa
+  değer = maliyet" kuralıyla aynı ilke. *Bilinen nüans:* seri, işlem birim
+  fiyatını gözlem saydığı için fee'li/çok-alışlı fiyatsız kalemde serinin son
+  günü ile özet, fee/son-alış-fiyatı kadar ayrışabilir (fee'siz tek alışta
+  birebir eşit — test edildi).
+- **Kronolojik aşırı satış yazmada reddedilir (SC-41).** Nihai `Quantity ≥ 0`
+  denetimi yetmez: alıştan ÖNCEKİ tarihe girilen satış ara günlerde pozisyonu
+  negatife düşürür → değer serisi negatif çizilirdi. Kural: işlemler tarih
+  sırasında (aynı gün alışlar önce — gün granülü) gezilir, **her işlem tarihinde
+  kümülatif miktar ≥ 0** olmalı; ihlalde 400 (`exceeds_holding_at_date`, ihlal
+  tarihi mesajda). Saf denetim: `PortfolioCalculationService.FirstOversoldDate`;
+  tüm işlem yazma yolları (`ApplyDerivedPosition`) uygular.
+
 ---
 
 ## 12. SEED VERİSİ (kapsamlı & tutarlı)

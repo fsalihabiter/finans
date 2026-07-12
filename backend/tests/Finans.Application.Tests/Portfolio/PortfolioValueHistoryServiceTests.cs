@@ -185,6 +185,22 @@ public class PortfolioValueHistoryServiceTests
     }
 
     [Fact]
+    public void Priceless_holding_summary_equals_series_last_day()
+    {
+        // SC-40 tutarlılığı: güncel fiyatı olmayan (snapshot'sız, fee'siz) tek alış —
+        // özet kalemi MALİYETİYLE taşır, seri alış fiyatını gözlem sayar → iki yüzey
+        // aynı sayıyı söyler (özet = seri; fee'li/çok-alışlı nüans 03 §11.1'de).
+        var series = Calc([Asset(CurrencyCode.TRY, [Buy(0, 5m, 100m)])], endDay: 3);
+
+        var summary = new PortfolioCalculationService().CalculateSummary(
+            [new HoldingInput(AssetType.Stock, "Test Varlık", 5m, 100m, CurrentPrice: null)]);
+
+        Assert.Equal(500m, summary.TotalValue);
+        Assert.Equal(summary.TotalValue, series[^1].Value);
+        Assert.Equal(summary.TotalCost, series[^1].Cost);
+    }
+
+    [Fact]
     public void Full_precision_is_preserved_no_rounding()
     {
         // 3 adet @ 33,333333 → 99,999999 (yuvarlama YOK — gösterim ön yüzün işi).

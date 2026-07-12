@@ -220,6 +220,8 @@ LLM çerçeve sunarak açıklıyor (iki yönlü, tavsiyesiz) + veri yoksa anlaml
 | T5.2 | `GET /api/portfolio/history?period=1m\|3m\|1y\|all` — DTO + cache (anahtar `UserId`'li) + IDOR testi | T5.1 | `04`, `11` §3, `10` §3 | [x] (2026-07-12; SC-33/34 integration 6; canlı teyit — bonus: özet bayat AvgCost düzeltmesi, özet=liste=seri) |
 | T5.3 | **Web:** "Değer Seyri" kartı gerçek çizgi grafik (Sparkline/genişletilmiş SVG; veri azken mevcut bilgi kartına zarif düşüş) + Performans sayfasına dönem seçicili zaman serisi | T5.2 | `13` §4 | [x] (2026-07-12; SC-35; ValueHistoryChart iki seri: değer+yatırılan; canlı teyit) |
 | T5.4 | **Senaryo v1 (geçmişe dönük, tek değişken):** "bu varlığı almasaydım / TL'de dursaydı" karşılaştırması (`PriceSnapshots` ile; **tahmin YOK**, kalıcı disclaimer) — ScenarioPage ComingSoon → gerçek sayfa | T5.1 | `14` §4-C1, `CLAUDE.md` §2 | [x] (2026-07-12; SC-36/37; + alım gücü eşiği çizgisi; canlı teyit) |
+| T5.5 | **Bakım/B1:** fiyatsız kalem özette 0 sayılıp sahte −%100 zarar gösteriyordu → özete/dağılıma **maliyetiyle** girer (kalem satırı null kalır; özet = seri ilkesi) | T5.2 | `03` §11.1, SC-40 | [x] (2026-07-12; unit 4 + integration 1) |
+| T5.6 | **Bakım/B2:** kronolojik aşırı satış (alıştan önceki tarihe satış) yazmada yakalanmıyordu → seri negatif çiziliyordu; her işlem tarihinde kümülatif miktar ≥ 0 denetimi (`FirstOversoldDate`) + 400 | T5.1 | `03` §11.1, SC-41 | [x] (2026-07-12; unit 6 + integration 2) |
 
 **Faz 5 DoD:** ✅ **KARŞILANDI (2026-07-12)** — Pano "Değer Seyri" gerçek seriyle çiziliyor;
 Senaryo sayfası "nakitte dursaydı" karşılaştırması + alım gücü eşiği sunuyor; seri

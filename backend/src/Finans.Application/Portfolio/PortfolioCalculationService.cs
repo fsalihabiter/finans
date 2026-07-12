@@ -84,6 +84,32 @@ public sealed class PortfolioCalculationService
     }
 
     /// <summary>
+    /// Kronolojik aşırı satış denetimi (SC-41): işlemler tarihe göre sıralanır (aynı gün
+    /// alışlar önce — gün granülü, değer serisinin gün sonu durumuyla uyumlu) ve her adımda
+    /// kümülatif miktar ≥ 0 olmalı. İhlal eden ilk işlemin tarihini döner; ihlal yoksa null.
+    /// Nihai miktar denetimi tek başına yetmez: alış tarihinden ÖNCEKİ tarihe girilen satış
+    /// nihai toplamı bozmadan ara günlerde pozisyonu negatife düşürür → Değer Seyri negatif
+    /// değer/maliyet çizer. Yazma yolu bu denetimle böyle diziyi reddeder.
+    /// </summary>
+    public static DateOnly? FirstOversoldDate(
+        IEnumerable<(DateOnly Date, TransactionType Type, decimal Quantity)> transactions)
+    {
+        ArgumentNullException.ThrowIfNull(transactions);
+
+        decimal quantity = 0m;
+        foreach (var tx in transactions
+            .OrderBy(t => t.Date)
+            .ThenBy(t => t.Type == TransactionType.Buy ? 0 : 1))
+        {
+            quantity += tx.Type == TransactionType.Buy ? tx.Quantity : -tx.Quantity;
+            if (quantity < 0m)
+                return tx.Date;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Reel getiri = (1 + nominal getiri) / (1 + enflasyon) − 1.
     /// Enflasyon verisi yoksa null (04 §4: realReturnRatio nullable).
     /// </summary>
@@ -109,16 +135,22 @@ public sealed class PortfolioCalculationService
         foreach (var result in results)
         {
             totalCost += result.TotalCost;
-            totalValue += result.CurrentValue ?? 0m;
+            // Fiyatsız kalem toplam değere MALİYETİYLE girer (SC-40): 0 saymak sahte
+            // −%100 zarar üretir; Değer Seyri'nin "hiç fiyat gözlemi yoksa değer = maliyet"
+            // kuralıyla aynı ilke (özet = liste = seri, 03 §11.1).
+            totalValue += result.CurrentValue ?? result.TotalCost;
         }
 
         decimal netProfit = totalValue - totalCost;
         decimal? returnRatio = totalCost != 0m ? netProfit / totalCost : null;
         decimal? realReturnRatio = RealReturn(returnRatio, inflationRate);
 
+        // Dağılım kalemin ETKİN değerini kullanır (fiyatsızsa maliyeti, SC-40) —
+        // dilim değerleri toplamı TotalValue ile, ağırlıklar CalculateHoldings ile tutarlı.
         var allocation = results
-            .Where(r => r.CurrentValue is > 0m)
-            .Select(r => new AllocationSlice(r.AssetType, r.Name, r.CurrentValue!.Value, r.Weight))
+            .Select(r => (Result: r, Value: r.CurrentValue ?? r.TotalCost))
+            .Where(x => x.Value > 0m)
+            .Select(x => new AllocationSlice(x.Result.AssetType, x.Result.Name, x.Value, x.Result.Weight))
             .ToList();
 
         return new PortfolioSummary(totalValue, totalCost, netProfit, returnRatio, realReturnRatio, allocation);
@@ -126,7 +158,8 @@ public sealed class PortfolioCalculationService
 
     /// <summary>
     /// Her kalemin türetilmiş metriklerini (maliyet, değer, kâr, getiri, ağırlık)
-    /// hesaplar. Ağırlık, fiyatlı kalemlerin toplam güncel değerine oranıdır.
+    /// hesaplar. Ağırlık, kalemin ETKİN değerinin (fiyatlıysa güncel değer, fiyatsızsa
+    /// maliyet — SC-40) toplam etkin değere oranıdır; toplam CalculateSummary ile tutarlı.
     /// </summary>
     public IReadOnlyList<HoldingResult> CalculateHoldings(IReadOnlyList<HoldingInput> holdings)
     {
@@ -141,7 +174,7 @@ public sealed class PortfolioCalculationService
             var h = holdings[i];
             costs[i] = TotalCost(h.Quantity, h.AvgCost);
             values[i] = CurrentValue(h.Quantity, h.CurrentPrice);
-            totalValue += values[i] ?? 0m;
+            totalValue += values[i] ?? costs[i];
         }
 
         var results = new List<HoldingResult>(holdings.Count);
@@ -149,7 +182,7 @@ public sealed class PortfolioCalculationService
         {
             var h = holdings[i];
             decimal? value = values[i];
-            decimal weight = totalValue != 0m && value is { } v ? v / totalValue : 0m;
+            decimal weight = totalValue != 0m ? (value ?? costs[i]) / totalValue : 0m;
 
             results.Add(new HoldingResult(
                 h.AssetType,

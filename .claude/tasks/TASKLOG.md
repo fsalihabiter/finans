@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-07-12 (18) · T5.5+T5.6 — Getiri hesabı kenar-durum düzeltmeleri (fiyatsız kalem + kronolojik aşırı satış)
+- **Görev(ler):** T5.5 (B1) + T5.6 (B2) — kod okumasıyla doğrulanmış iki kenar-durum hatası.
+- **Ne yapıldı:**
+  - **B1:** Fiyatsız kalem (`CurrentPrice` null) özette `?? 0m` ile 0 sayılıp sahte −%100
+    zarar gösteriyordu → artık toplam değere/dağılıma **maliyetiyle** girer; ağırlık tabanı
+    etkin değer (değer ?? maliyet). Kalem satırı null kalır (UI "fiyatsız" gösterebilir).
+    Değer Seyri'nin "hiç fiyat yoksa değer = maliyet" kuralıyla aynı ilke — özet = seri.
+  - **B2:** `ApplyDerivedPosition` yalnız NİHAİ miktarı denetliyordu; alış tarihinden önceki
+    tarihe satış girilince seri ara günlerde negatife düşüyordu → yeni saf denetim
+    `PortfolioCalculationService.FirstOversoldDate` (her işlem tarihinde kümülatif ≥ 0,
+    aynı gün alışlar önce) tüm işlem yazma yollarında; ihlalde 400 `exceeds_holding_at_date`
+    (ihlal tarihi TR mesajda). Reddedilen işlem kaydedilmez.
+- **Dokunulan dosyalar:** backend/src/Finans.Application/Portfolio/PortfolioCalculationService.cs ·
+  backend/src/Finans.Infrastructure/Services/HoldingService.cs ·
+  tests: PortfolioCalculationServiceTests, PositionDerivationTests, PortfolioValueHistoryServiceTests,
+  PricelessAndChronologyApiTests (yeni) · docs: 03 §11.1 (karar), 09 §5 (SC-40/41), 08 (T5.5/T5.6).
+- **Test:** SC-40 unit 4 (özet/ağırlık/dağılım + seri-özet tutarlılık) + integration 1 (özet
+  delta = maliyet); SC-41 unit 6 (`FirstOversoldDate`) + integration 2 (geçmişe satış 400 +
+  kalıcı değil; düzenlemeyle geriye taşıma 400). `dotnet test`: **267 unit + 127 integration, 0 hata.**
+- **Karar/Not:** Fiyatsız kalem özet kuralı + kronoloji invariantı `03-DATA-MODEL §11.1`e işlendi.
+  Bilinen nüans: fee'li/çok-alışlı fiyatsız kalemde seri (son gözlem fiyatı) ile özet (maliyet)
+  fee kadar ayrışabilir. Mevcut DB'de daha önce yazılmış kronoloji-ihlalli veri varsa ilk
+  düzenlemede 400 ile yüzeye çıkar (bilinçli). Docker api imajı yeniden kurulunca canlıya geçer.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.2 (eğitim seed'i) — plan değişmedi.
+
 ## 2026-07-12 (17) · ad-hoc — Pano: Değer Seyri genişletildi (dağılımla oran takası)
 - **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: oranlar tersti — grafik dar kalıyordu).
 - **Ne yapıldı:** `.grid-2` 1.55fr/1fr → **1fr/1.55fr** (sol donut dar, sağ Değer Seyri geniş);
