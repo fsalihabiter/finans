@@ -15,6 +15,8 @@ import type {
   HealthResponse,
   Holding,
   NudgesResponse,
+  PortfolioHistory,
+  PortfolioHistoryPeriod,
   PortfolioSummary,
   PricesResponse,
   Settings,
@@ -91,6 +93,10 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     // ── Portföy (04 §4) ──
     getSummary: (baseCurrency?: CurrencyCode) =>
       get<PortfolioSummary>(withBaseCurrency("/api/portfolio/summary", baseCurrency)),
+    /** GET /api/portfolio/history — günlük değer + yatırılan maliyet serisi (Değer Seyri, T5.2). */
+    getPortfolioHistory: (period: PortfolioHistoryPeriod, baseCurrency?: CurrencyCode) =>
+      get<PortfolioHistory>(
+        `/api/portfolio/history?period=${period}${baseCurrency ? `&baseCurrency=${baseCurrency}` : ""}`),
     getHoldings: (baseCurrency?: CurrencyCode) =>
       get<Holding[]>(withBaseCurrency("/api/holdings", baseCurrency)),
     getHolding: (id: string, baseCurrency?: CurrencyCode) =>

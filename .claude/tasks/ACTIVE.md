@@ -12,16 +12,15 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T5.3** — Web: "Değer Seyri" kartı gerçek çizgi grafik + Performans sayfasına dönem
-   seçicili zaman serisi (`GET /api/portfolio/history` hazır ve canlı teyitli)
-2. T5.4 — Senaryo v1 (geçmişe dönük "dursaydı/almasaydım"; tahmin YOK)
-3. OSS kalanı — README ekran görüntüleri tazeleme (Analiz + Hisse artık kaliteli)
+1. **T5.4** — Senaryo v1 (geçmişe dönük "dursaydı/almasaydım" karşılaştırması; tahmin YOK,
+   kalıcı disclaimer) — ScenarioPage ComingSoon → gerçek sayfa; **Faz 5 DoD kapanışı**
+2. OSS kalanı — README ekran görüntüleri tazeleme (pano artık gerçek Değer Seyri ile)
 
-> ✅ **T5.1 + T5.2 bitti (2026-07-12):** günlük değer+maliyet serisi (saf servis SC-32 unit 13)
-> + `GET /api/portfolio/history` (SC-33 integration, canlı teyit). **Bonus düzeltme (SC-34):**
-> özet bayat AvgCost yerine okuma anında türetilen maliyeti kullanır — pano "harcadın" KPI'sı
-> gerçek veride 646.635→522.385 düzeldi (ileri tarihli BES plan katkıları maliyet sayılmaz);
-> artık özet = liste = seri.
+> ✅ **T5.1–T5.3 bitti (2026-07-12):** günlük değer+maliyet serisi (saf servis) →
+> `GET /api/portfolio/history` (canlı teyit) → **web Değer Seyri canlı**: pano kartı
+> (son 1 yıl, compact) + Performans dönem seçicili iki-serili grafik (değer + kesikli
+> yatırılan; "geçmiş, tahmin değil" notu). **Bonus (SC-34):** özet bayat AvgCost
+> düzeltmesi — pano maliyet KPI'sı 646.635→522.385 (özet = liste = seri).
 
 > ✅ **T4.2 + T4.3 bitti (2026-07-11/12):** Finnhub sağlayıcı (3 uç, token başlıkta, kaba bant
 > eşikleri KODDA, 1s cache) canlı teyitli (AAPL/MSFT gerçek veriyle; anahtar .env'de). /explain:

@@ -1,14 +1,21 @@
 import { useState } from "react";
-import { formatPercent } from "@finans/shared";
-import type { Holding } from "@finans/shared";
+import { formatDate, formatPercent } from "@finans/shared";
+import type { Holding, PortfolioHistoryPeriod } from "@finans/shared";
 import { ASSET_META } from "../lib/assetMeta";
 import { KpiGrid } from "../components/KpiGrid";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
-import { useHoldings, usePortfolioSummary } from "../lib/hooks";
+import { ValueHistoryChart } from "../components/ValueHistoryChart";
+import { useHoldings, usePortfolioHistory, usePortfolioSummary } from "../lib/hooks";
 import { useAppShell } from "../lib/appShell";
 
-const PERIODS = ["1A", "3A", "1Y", "Tümü"] as const;
+/** Görünen etiket → API dönem anahtarı (T5.2). */
+const PERIODS = [
+  { label: "1A", key: "1m" },
+  { label: "3A", key: "3m" },
+  { label: "1Y", key: "1y" },
+  { label: "Tümü", key: "all" },
+] as const satisfies ReadonlyArray<{ label: string; key: PortfolioHistoryPeriod }>;
 
 /** Kalem bazında getiri çubuğu (tüm zamanlar) — gerçek veriden, en abartılıdan sırala. */
 function ReturnBars({ holdings }: { holdings: Holding[] }) {
@@ -61,7 +68,8 @@ export function PerformancePage() {
   const summary = usePortfolioSummary();
   const holdings = useHoldings();
   const { openAddHolding } = useAppShell();
-  const [period, setPeriod] = useState<(typeof PERIODS)[number]>("Tümü");
+  const [period, setPeriod] = useState<PortfolioHistoryPeriod>("all");
+  const history = usePortfolioHistory(period);
 
   const holdingList = Array.isArray(holdings.data) ? holdings.data : [];
 
@@ -104,30 +112,59 @@ export function PerformancePage() {
           <div className="card">
             <div className="card-head">
               <h3>Değer Seyri</h3>
-              <div className="periods" role="group" aria-label="Dönem">
-                {PERIODS.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    className={p === period ? "on" : ""}
-                    aria-pressed={p === period}
-                    onClick={() => setPeriod(p)}
+              <div className="chart-head-right">
+                {history.data?.changeRatio != null && (
+                  <span
+                    className={`tnum chart-change ${history.data.changeRatio >= 0 ? "up" : "down"}`}
                   >
-                    {p}
-                  </button>
-                ))}
+                    {history.data.changeRatio >= 0 ? "▲" : "▼"} {formatPercent(history.data.changeRatio)}
+                  </span>
+                )}
+                <div className="periods" role="group" aria-label="Dönem">
+                  {PERIODS.map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      className={p.key === period ? "on" : ""}
+                      aria-pressed={p.key === period}
+                      onClick={() => setPeriod(p.key)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="chart-frame">
-              <div className="cf-empty">
-                <div className="cf-ic" aria-hidden="true">🕒</div>
-                <p>
-                  Zaman içindeki değer grafiği, <b>canlı fiyat geçmişi</b> biriktikçe burada
-                  görünecek (Faz 2). Şimdilik aşağıda kalemlerin <b>tüm zamanlar</b> getiri
-                  dağılımı var.
+            {(history.data?.points.length ?? 0) >= 2 ? (
+              <>
+                <ValueHistoryChart
+                  points={history.data!.points}
+                  currency={history.data!.baseCurrency}
+                  positive={(history.data!.changeRatio ?? 0) >= 0}
+                />
+                <p className="mini chart-note">
+                  {history.data!.firstDate && (
+                    <>Veri {formatDate(history.data!.firstDate)} tarihinden beri birikiyor. </>
+                  )}
+                  Grafik geçmişi gösterir; gelecek performansın göstergesi değildir.
                 </p>
+              </>
+            ) : (
+              <div className="chart-frame">
+                <div className="cf-empty">
+                  <div className="cf-ic" aria-hidden="true">🕒</div>
+                  <p>
+                    {history.isLoading
+                      ? "Değer seyri yükleniyor…"
+                      : history.isError
+                        ? "Değer seyri yüklenemedi — sayılar aşağıda yine de güncel."
+                        : <>Bu dönem için en az iki günlük veri gerekir. Fiyat geçmişi
+                          biriktikçe grafik burada görünecek; aşağıda kalemlerin
+                          <b> tüm zamanlar</b> getiri dağılımı var.</>}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="card">

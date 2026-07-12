@@ -20,6 +20,45 @@
 
 ---
 
+## 2026-07-12 (7) · T5.3 — Web "Değer Seyri": pano grafiği + Performans dönem seçicili seri
+- **Görev(ler):** T5.3 (Değer Seyri UI — Faz 5'in kullanıcıya görünen yüzü).
+- **Ne yapıldı:**
+  1. **`ValueHistoryChart`** (yeni bileşen): PriceChart'ın portföy kardeşi, İKİ seri —
+     portföy değeri (yön renkli dolgulu çizgi + gradyan) ve **yatırılan para** (kesikli
+     referans çizgisi; aradaki boşluk kâr/zararı gösterir). Ölçek iki serinin ortak
+     min/max'ı; lejant (Değer / Yatırılan); `compact` varyantı pano kartı için; <2 noktada
+     null (zarif düşüş sayfada).
+  2. **Shared:** `PortfolioHistory*` tipleri + `getPortfolioHistory(period, baseCurrency?)`;
+     **web hooks:** `usePortfolioHistory` (60s staleTime) + portföy mutasyonlarında
+     `portfolio-history` invalidation.
+  3. **Pano (Genel Bakış):** "Değer Seyri" kartı yer tutucudan gerçek grafiğe geçti (son
+     1 yıl, compact; "Detay →" Performans'a); veri azsa eski bilgilendirme metni korunur.
+  4. **Performans:** dönem seçici (1A/3A/1Y/Tümü → API 1m/3m/1y/all) artık gerçek seriyi
+     çekiyor; dönem değişim rozeti (▲/▼ %) + "veri ŞU tarihten beri birikiyor" +
+     **"grafik geçmişi gösterir; gelecek performansın göstergesi değildir"** notu
+     (CLAUDE.md §2). Hata/az veri durumları ayrı mesajlarla.
+  5. **Hover tooltip (2. geri bildirim):** `useChartHover` ortak hook'u — imleç konumu en
+     yakın veri noktasına eşlenir (pointer olayları: fare + dokunmatik); crosshair + seri
+     noktaları + tooltip (tarih + Değer/Yatırılan; hissede Kapanış). Hem `ValueHistoryChart`
+     hem `PriceChart` (hisse) aynı mekanizmayı kullanır. jsdom PointerEvent bilmediğinden
+     testlerde MouseEvent taklidi + rect mock.
+- **Canlı doğrulama (tarayıcı, https://localhost):** pano kartı 1 yıl grafiği (lejantlı,
+  kesikli yatırılan çizgisi) ✓; Performans "Tümü" 25.08.2022→11.07.2026 + not ✓; "1A"
+  geçişi 10.06→11.07 penceresi + ▲+%18,8 rozeti ✓; hover tooltip Performans'ta
+  (08.10.2024 · Değer ₺36.586 / Yatırılan ₺28.720) ve Hisse'de (28.11.2025 · Kapanış
+  $278,85) ✓.
+- **Dokunulan dosyalar:** packages/shared (types, api), web (ValueHistoryChart.tsx yeni +
+  test 4, PriceChart.tsx hover + test yeni 2, lib/useChartHover.ts yeni, hooks.ts,
+  PortfolioPage.tsx, PerformancePage.tsx + test +1, PortfolioPage.test mock, App.css)
+- **Test:** SC-35 — Web **83/83** (+7) · shared 16/16 · tsc temiz (shared+web).
+- **Karar/Not:** Pano kartı sabit "son 1 yıl" (dönem seçici yalnız Performans'ta — kart
+  sade kalsın). Grafikte serinin son gününe BES bugünkü fon değeri + güncel fiyat çapası
+  girdiğinden eski kayıtlarda uçlarda sıçrama görünebilir — veri dürüstlüğü (geçmişe
+  yayılmaz), fiyat geçmişi biriktikçe doğallaşır.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5.4 — Senaryo v1 (geçmişe dönük "dursaydı/almasaydım"; tahmin YOK) →
+  Faz 5 DoD kapanışı.
+
 ## 2026-07-12 (6) · T5.2 — GET /api/portfolio/history + özet bayat-maliyet düzeltmesi
 - **Görev(ler):** T5.2 (Değer Seyri API'si) + ad-hoc kritik düzeltme (canlı teyitte yakalandı).
 - **Ne yapıldı:**

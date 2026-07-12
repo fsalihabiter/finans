@@ -2604,6 +2604,109 @@ body.drawer-lock {
   margin-top: 6px;
 }
 
+/* ───── Değer Seyri grafiği (T5.3) — iki seri: değer + yatırılan ───── */
+.value-history-chart.compact svg {
+  height: 190px;
+}
+.chart-head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chart-change {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.chart-note {
+  margin: 8px 0 0;
+  color: var(--muted-2, #6f6557);
+}
+.vh-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted, #97a3c9);
+}
+.vh-dot {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-radius: 2px;
+}
+.vh-dot.value {
+  height: 2px; /* rengi inline style verir (dönem yönü rengi) */
+}
+.vh-dot.cost {
+  border-top: 2px dashed var(--muted, #97a3c9);
+}
+/* Maliyet çizgisi de seriyle birlikte belirir (animasyonlar hep açık — 2026-07-11). */
+.vh-cost-line {
+  animation: spark-fade 700ms ease 200ms backwards;
+}
+
+/* ── Grafik hover: crosshair + nokta + tooltip (T5.3 devamı) ── */
+.chart-hover-area {
+  position: relative;
+  touch-action: pan-y; /* dokunmatikte dikey kaydırma engellenmesin */
+}
+.chart-hover {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ch-crosshair {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-strong, #42507e);
+}
+.ch-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--panel, #131a30);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.ch-dot.cost {
+  width: 7px;
+  height: 7px;
+  background: var(--muted, #97a3c9);
+}
+.ch-tip {
+  position: absolute;
+  top: 10px;
+  transform: translateX(-50%);
+  background: var(--panel, #131a30);
+  border: 1px solid var(--line-strong, #42507e);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px -14px rgba(3, 5, 12, 0.9);
+  animation: fade-up 160ms ease backwards;
+  z-index: 2;
+}
+.ch-tip-date {
+  color: var(--muted, #97a3c9);
+  font-size: 10.5px;
+  margin-bottom: 2px;
+}
+.ch-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-soft, #cbd5f0);
+}
+.ch-tip-row b {
+  font-weight: 700;
+  color: var(--text, #eef2ff);
+}
+
 /* ───── Motion katmanı (v2 — ui-ux-pro-max "Modern Dark", motion 7/10) ─────
    Sadece transform/opacity anime edilir (layout shift yok, CLS=0). Animasyonlar
    her sayfa açılışında/yenilemesinde oynar (kullanıcı kararı 2026-07-11). */

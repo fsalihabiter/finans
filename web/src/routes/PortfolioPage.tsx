@@ -12,9 +12,11 @@ import { HoldingsTable } from "../components/HoldingsTable";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
+import { ValueHistoryChart } from "../components/ValueHistoryChart";
 import {
   useHoldings,
   useNudges,
+  usePortfolioHistory,
   usePortfolioSummary,
   usePrices,
   useSettings,
@@ -43,6 +45,7 @@ export function PortfolioPage() {
   const holdings = useHoldings();
   const prices = usePrices();
   const nudges = useNudges();
+  const history = usePortfolioHistory("1y"); // pano kartı: son 1 yıl (detay Performans'ta)
   const updateSettings = useUpdateSettings();
   const { openAddHolding } = useAppShell();
   const { notify } = useToast();
@@ -140,18 +143,32 @@ export function PortfolioPage() {
                 <div className="card">
                   <div className="card-head">
                     <h3>Değer Seyri</h3>
-                    <Link to="/performans" className="mini link">Detay →</Link>
+                    <span className="mini">
+                      son 1 yıl · <Link to="/performans" className="link">Detay →</Link>
+                    </span>
                   </div>
-                  <div className="chart-frame">
-                    <div className="cf-empty">
-                      <div className="cf-ic" aria-hidden="true">🕒</div>
-                      <p>
-                        Zaman içindeki değer grafiği, canlı fiyat geçmişi biriktikçe burada
-                        görünecek (Faz 2). Şimdilik <b>Performans</b> sekmesinde kalem bazında
-                        getiriyi görebilirsin.
-                      </p>
+                  {(history.data?.points.length ?? 0) >= 2 ? (
+                    <ValueHistoryChart
+                      points={history.data!.points}
+                      currency={history.data!.baseCurrency}
+                      positive={(history.data!.changeRatio ?? 0) >= 0}
+                      compact
+                    />
+                  ) : (
+                    // Zarif düşüş: seri için en az iki günlük veri gerekir (T5.3).
+                    <div className="chart-frame">
+                      <div className="cf-empty">
+                        <div className="cf-ic" aria-hidden="true">🕒</div>
+                        <p>
+                          {history.isLoading
+                            ? "Değer seyri yükleniyor…"
+                            : <>Zaman içindeki değer grafiği için en az iki günlük veri gerekir.
+                              Fiyat geçmişi biriktikçe burada görünecek; şimdilik <b>Performans</b>
+                              sekmesinde kalem bazında getiriyi görebilirsin.</>}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 

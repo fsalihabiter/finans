@@ -46,6 +46,8 @@ function mockApi() {
       else if (url.includes("/api/holdings")) body = []; // boş pozisyon listesi
       else if (url.includes("/api/prices")) body = pricesResponse;
       else if (url.includes("/nudges")) body = { nudges: [] };
+      else if (url.includes("/api/portfolio/history"))
+        body = { baseCurrency: "TRY", period: "1y", points: [], changeRatio: null, firstDate: null, asOf: "2026-05-30T00:00:00Z" };
       return Promise.resolve({ ok: true, status: 200, json: async () => body } as Response);
     }),
   );

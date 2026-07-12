@@ -14,6 +14,7 @@ import type {
   CreateHoldingInput,
   CurrencyCode,
   GenerateBesContributionsInput,
+  PortfolioHistoryPeriod,
   StockHistoryRange,
   TransactionInput,
   UpdateBesContributionInput,
@@ -26,6 +27,8 @@ import { api } from "./api";
 /** Query anahtarları — invalidation için tek yerden. */
 export const queryKeys = {
   summary: (baseCurrency?: CurrencyCode) => ["summary", baseCurrency ?? "default"] as const,
+  portfolioHistory: (period: string, baseCurrency?: CurrencyCode) =>
+    ["portfolio-history", period, baseCurrency ?? "default"] as const,
   holdings: (baseCurrency?: CurrencyCode) => ["holdings", baseCurrency ?? "default"] as const,
   holding: (id: string) => ["holding", id] as const,
   settings: ["settings"] as const,
@@ -41,6 +44,19 @@ export function usePortfolioSummary(baseCurrency?: CurrencyCode) {
   return useQuery({
     queryKey: queryKeys.summary(baseCurrency),
     queryFn: () => api.getSummary(baseCurrency),
+  });
+}
+
+/**
+ * Portföy değer geçmişi (T5.3 — Değer Seyri). Backend seriyi 60s cache'ler (UserId'li);
+ * dönem değişimi ucuz (dilimleme). Geçmiş gösterimi — tahmin değil (CLAUDE.md §2).
+ */
+export function usePortfolioHistory(period: PortfolioHistoryPeriod, baseCurrency?: CurrencyCode) {
+  return useQuery({
+    queryKey: queryKeys.portfolioHistory(period, baseCurrency),
+    queryFn: () => api.getPortfolioHistory(period, baseCurrency),
+    staleTime: 60_000,
+    retry: 1,
   });
 }
 
@@ -165,6 +181,7 @@ function useInvalidatePortfolio() {
   return () => {
     void qc.invalidateQueries({ queryKey: ["summary"] });
     void qc.invalidateQueries({ queryKey: ["holdings"] });
+    void qc.invalidateQueries({ queryKey: ["portfolio-history"] });
   };
 }
 

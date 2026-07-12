@@ -235,6 +235,28 @@ export interface StockSectorContext {
   earningsGrowth?: string | null;
 }
 
+/** Portföy değer geçmişi dönem anahtarları (T5.2). */
+export type PortfolioHistoryPeriod = "1m" | "3m" | "1y" | "all";
+
+/** Serinin bir günü: portföy değeri + o güne dek yatırılan maliyet (baz pb; tarih ISO). */
+export interface PortfolioHistoryPoint {
+  date: string;
+  value: number;
+  cost: number;
+}
+
+/** GET /api/portfolio/history yanıtı (T5.2) — geçmiş gösterimi, tahmin DEĞİL. */
+export interface PortfolioHistory {
+  baseCurrency: CurrencyCode;
+  period: string;
+  points: PortfolioHistoryPoint[];
+  /** Dönem başı → sonu değer değişim oranı (0,12 = %12). */
+  changeRatio?: number | null;
+  /** TÜM serinin ilk günü (dönemden bağımsız) — "veri şu tarihten beri". */
+  firstDate?: string | null;
+  asOf: string;
+}
+
 /** Fiyat geçmişi dönem anahtarları (T4.5). */
 export type StockHistoryRange = "1w" | "1m" | "3m" | "1y" | "5y" | "max";
 

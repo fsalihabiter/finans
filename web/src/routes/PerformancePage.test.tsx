@@ -22,11 +22,26 @@ const holdings = [
   },
 ];
 
+/** Değer geçmişi (T5.3): iki günlük mini seri — grafik çizilir. */
+const history = {
+  baseCurrency: "TRY",
+  period: "all",
+  points: [
+    { date: "2026-05-29", value: 250000, cost: 181851 },
+    { date: "2026-05-30", value: 260000, cost: 181851 },
+  ],
+  changeRatio: 0.04,
+  firstDate: "2026-05-29",
+  asOf: "2026-05-30T00:00:00Z",
+};
+
 function mockApi() {
   vi.stubGlobal(
     "fetch",
     vi.fn((url: string) => {
-      const body = url.includes("/api/holdings") ? holdings : summary;
+      let body: unknown = summary;
+      if (url.includes("/api/holdings")) body = holdings;
+      else if (url.includes("/api/portfolio/history")) body = history;
       return Promise.resolve({ ok: true, status: 200, json: async () => body } as Response);
     }),
   );
@@ -50,5 +65,18 @@ describe("PerformancePage", () => {
     // Kalem bazında getiri bölümü + gerçek veriden getiri (+%43,0 birden çok yerde)
     expect(screen.getByText(/Kalem Bazında Getiri/)).toBeInTheDocument();
     expect(screen.getAllByText(/\+%43,0/).length).toBeGreaterThan(0);
+  });
+
+  it("Değer Seyri grafiğini gerçek seriyle çizer (dönem değişimi + tahmin-değil notu)", async () => {
+    mockApi();
+    const { container } = renderWithProviders(<PerformancePage />);
+
+    // Grafik iki çizgiyle (değer + kesikli yatırılan) çizilir.
+    await waitFor(() => expect(container.querySelector(".value-history-chart")).not.toBeNull());
+    expect(container.querySelector(".vh-cost-line")).not.toBeNull();
+
+    // Dönem değişim rozeti (+%4,0) ve "geçmiş, tahmin değil" çerçevesi (CLAUDE.md §2).
+    expect(screen.getByText(/\+%4,0/)).toBeInTheDocument();
+    expect(screen.getByText(/gelecek performansın göstergesi değildir/)).toBeInTheDocument();
   });
 });
