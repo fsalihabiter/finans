@@ -76,5 +76,32 @@ public enum AuditResult
     Failure,
 }
 
+// ── Eğitim modülü (03 §C, T5E.1) ─────────────────────────────────────────────
+
+public enum LessonLevel
+{
+    Beginner,
+    Intermediate,
+    Advanced,
+}
+
+/// <summary>
+/// Ders ilerleme durumu. <c>Locked</c> SAKLANMAZ — ön-koşul derslerin
+/// tamamlanmışlığından okuma anında TÜRETİLİR (03 §C LessonPrerequisites).
+/// </summary>
+public enum LessonStatus
+{
+    NotStarted,
+    InProgress,
+    Completed,
+}
+
+public enum QuizQuestionType
+{
+    SingleChoice,
+    MultipleChoice,
+    TrueFalse,
+}
+
 // Not: PriceSource (Manual | <providerKey>) açık uçlu olduğu için enum DEĞİL,
 // string olarak saklanır (Source kolonları).

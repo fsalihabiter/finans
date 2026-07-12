@@ -1,4 +1,5 @@
 using System.Net;
+using Finans.Domain.Education;
 using Finans.Domain.Enums;
 using Finans.Domain.Identity;
 using Finans.Domain.Portfolio;
@@ -24,6 +25,19 @@ public class FinansDbContext(DbContextOptions<FinansDbContext> options) : DbCont
     public DbSet<FxRate> FxRates => Set<FxRate>();
     public DbSet<InflationRate> InflationRates => Set<InflationRate>();
 
+    // Eğitim (03 §C, T5E.1)
+    public DbSet<LearningTrack> LearningTracks => Set<LearningTrack>();
+    public DbSet<Lesson> Lessons => Set<Lesson>();
+    public DbSet<LessonSection> LessonSections => Set<LessonSection>();
+    public DbSet<LessonPrerequisite> LessonPrerequisites => Set<LessonPrerequisite>();
+    public DbSet<ConceptTag> ConceptTags => Set<ConceptTag>();
+    public DbSet<LessonConceptTag> LessonConceptTags => Set<LessonConceptTag>();
+    public DbSet<Quiz> Quizzes => Set<Quiz>();
+    public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
+    public DbSet<QuizOption> QuizOptions => Set<QuizOption>();
+    public DbSet<UserLessonProgress> UserLessonProgress => Set<UserLessonProgress>();
+    public DbSet<UserQuizAttempt> UserQuizAttempts => Set<UserQuizAttempt>();
+
     // Kimlik / audit
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
@@ -44,6 +58,9 @@ public class FinansDbContext(DbContextOptions<FinansDbContext> options) : DbCont
         configurationBuilder.Properties<UserRole>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<AuditAction>().HaveConversion<string>().HaveMaxLength(30);
         configurationBuilder.Properties<AuditResult>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<LessonLevel>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<LessonStatus>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<QuizQuestionType>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

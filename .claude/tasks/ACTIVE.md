@@ -12,9 +12,15 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **Faz 6 açılışı** — Eğitim MVP + kavram sözlüğü (backlog Faz 6 kırılımı; 5 ders +
-   "Senin portföyünde" bağlamı + quiz + sözlük)
-2. OSS kalanı — README ekran görüntüleri tazeleme (pano Değer Seyri + Senaryo artık canlı)
+1. **T5E.2** — Eğitim seed'i: "Temeller" track'i + 5 ders + ders-1 quiz'i + örnek
+   ilerleme (03 §12.5; içerik T6.1 ile birlikte yazılacak)
+2. T5E.3 — Eğitim endpoint'leri (tracks/lessons/progress/quiz; `UserId` kapsam + IDOR)
+3. T5E.4 — Web Eğitim sayfası (ComingSoon → gerçek: liste + ilerleme + kilit + ders + quiz)
+4. OSS kalanı — README ekran görüntüleri tazeleme (pano Değer Seyri + Senaryo artık canlı)
+
+> ✅ **T5E.1 bitti (2026-07-12):** eğitim şeması canlı — 11 tablo (track/ders/bölüm/
+> ön-koşul/kavram/quiz/ilerleme/deneme), CHECK+unique kısıtları, KVKK kaskadları,
+> migration gerçek Postgres'e uygulandı (SC-38 integration 4).
 
 > ✅ **FAZ 5 KAPANDI (2026-07-12, T5.1→T5.4):** günlük değer+maliyet serisi (saf servis) →
 > `GET /api/portfolio/history` → web Değer Seyri (pano + Performans, hover tooltip) →
