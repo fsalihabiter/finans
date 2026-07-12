@@ -22,13 +22,12 @@ export function ValueHistoryChart({
   compact?: boolean;
 }) {
   const gradientId = useId();
-  const hover = useChartHover(points.length);
-  if (points.length < 2) return null;
-
   const width = 900;
   const height = compact ? 190 : 240;
   const padX = 6;
   const padY = 12;
+  const hover = useChartHover(points.length, padX / width);
+  if (points.length < 2) return null;
 
   // Ölçek iki serinin ortak min/max'ı — maliyet çizgisi de kadraja sığar.
   const all = points.flatMap((p) => [p.value, p.cost]);

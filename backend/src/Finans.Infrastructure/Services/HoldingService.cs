@@ -17,8 +17,19 @@ public sealed class HoldingService(
     ICurrentUser currentUser,
     PortfolioCalculationService calc,
     IFxRateProvider fxRateProvider,
-    BesPlanCatchUpRunner planRunner) : IHoldingService
+    BesPlanCatchUpRunner planRunner,
+    IAppCache cache) : IHoldingService
 {
+    /// <summary>
+    /// Yazma + portföy cache damgası tazeleme: Değer Seyri/Senaryo serileri işlemden hemen
+    /// sonra güncel hesaplansın (60s TTL bekletmesin). Tüm mutasyonlar bunu kullanır.
+    /// </summary>
+    private async Task SaveAndBumpAsync(CancellationToken ct)
+    {
+        await db.SaveChangesAsync(ct);
+        await PortfolioCacheStamp.BumpAsync(cache, currentUser.UserId, ct);
+    }
+
     /// <summary>
     /// TR yerel "şimdi" (UTC+3 sabit; Türkiye 2016'dan beri DST uygulamıyor). BES tarih
     /// karşılaştırmalarında — kullanıcının pencerede gördüğü gün — gün geçişinde yanıltıcı
@@ -41,10 +52,13 @@ public sealed class HoldingService(
         var dto = all.FirstOrDefault(h => h.Id == id)
             ?? throw new NotFoundException();
 
-        // Detayda geçmiş işlemler (en yeni üstte). Holding zaten kullanıcıya kapsanmış (yukarıda).
+        // Detayda geçmiş işlemler (en yeni üstte). Aynı TARİHLİ işlemlerde ikincil ölçüt
+        // kayıt zamanı (CreatedAtUtc) — kullanıcı gün içinde art arda işlem girince en son
+        // girilen en üstte görünür (2026-07-12 geri bildirimi). Holding kullanıcıya kapsanmış.
         var transactions = await db.Transactions
             .Where(t => t.HoldingId == id)
             .OrderByDescending(t => t.TransactedAtUtc)
+            .ThenByDescending(t => t.CreatedAtUtc)
             .Select(t => new TransactionDto(t.Id, t.Type, t.Quantity, t.UnitPrice, t.Fee, t.TransactedAtUtc))
             .ToListAsync(ct);
 
@@ -180,7 +194,7 @@ public sealed class HoldingService(
         ApplyDerivedPosition(holding);
         holding.UpdatedAtUtc = now;
 
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -212,7 +226,7 @@ public sealed class HoldingService(
         ApplyDerivedPosition(holding);
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -240,7 +254,7 @@ public sealed class HoldingService(
         ApplyDerivedPosition(holding);
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -254,7 +268,7 @@ public sealed class HoldingService(
         holding.CurrentPrice = request.CurrentPrice;
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -321,7 +335,7 @@ public sealed class HoldingService(
         holding.AvgCost = bes.OwnContribution;
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -363,7 +377,7 @@ public sealed class HoldingService(
         // Başlangıç tarihi / doğum yılı değişince hak ediş durumu yeniden türetilir.
         bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, DateTime.UtcNow);
         holding.UpdatedAtUtc = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
 
         return await GetByIdAsync(holding.Id, ct: ct);
     }
@@ -436,7 +450,7 @@ public sealed class HoldingService(
         bes.VestingState = BesCalculator.VestingStateFor(bes.JoinedAtUtc, now);
         holding.AvgCost = bes.OwnContribution;
         holding.UpdatedAtUtc = now;
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
 
         return await GetByIdAsync(holding.Id, ct: ct);
     }
@@ -469,7 +483,7 @@ public sealed class HoldingService(
         c.PaidAtUtc = request.PaidAtUtc;
 
         ApplyBesTotals(holding, bes);
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -485,7 +499,7 @@ public sealed class HoldingService(
         db.BesContributions.Remove(c);
 
         ApplyBesTotals(holding, bes);
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
         return await GetByIdAsync(holding.Id, ct: ct);
     }
 
@@ -507,7 +521,7 @@ public sealed class HoldingService(
 
         var added = planRunner.CatchUp(holding, TrNow());
         if (added > 0)
-            await db.SaveChangesAsync(ct);
+            await SaveAndBumpAsync(ct);
     }
 
     /// <summary>BES holding'i (Asset+BesDetails+BesContributions) kullanıcıya kapsanmış yükler; BES değilse 400.</summary>
@@ -546,8 +560,10 @@ public sealed class HoldingService(
             return null;
 
         // Her katkıya tarihten türetilen durum + devlet yatma tarihi (saklanmaz).
+        // Aynı tarihli katkılarda ikincil ölçüt kayıt zamanı (işlem geçmişiyle aynı kural).
         var list = contributions
             .OrderByDescending(c => c.PaidAtUtc)
+            .ThenByDescending(c => c.CreatedAtUtc)
             .Select(c => new BesContributionDto(
                 c.Id, c.OwnAmount, c.StateAmount, c.PaidAtUtc, c.Source,
                 BesCalculator.ContributionStatusFor(c.PaidAtUtc, asOf),
@@ -604,7 +620,7 @@ public sealed class HoldingService(
         var holding = await LoadOwnedAsync(id, ct);
         holding.IsDeleted = true; // soft-delete (03 §1); query filter sonraki okumalarda gizler
         holding.DeletedAtUtc = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        await SaveAndBumpAsync(ct);
     }
 
     public async Task<BesProjectionResult> ProjectBesAsync(Guid id, BesProjectionRequest request, CancellationToken ct = default)
@@ -776,7 +792,7 @@ public sealed class HoldingService(
     {
         try
         {
-            await db.SaveChangesAsync(ct);
+            await SaveAndBumpAsync(ct);
         }
         catch (DbUpdateException)
         {

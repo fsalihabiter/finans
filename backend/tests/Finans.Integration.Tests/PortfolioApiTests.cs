@@ -375,6 +375,22 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
     }
 
     [Fact]
+    public async Task Same_day_transactions_are_listed_newest_entry_first()
+    {
+        var client = ClientAs(Investor);
+        var sameDay = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // Aynı TARİHLİ iki işlem: ikincil sıralama kayıt zamanı → en SON girilen üstte
+        // (2026-07-12 geri bildirimi: gün içi art arda işlemler eski-üstte görünüyordu).
+        var created = await CreateFundWithTransactionsAsync(client, name: "TX Gün İçi Sıra",
+            new TransactionRequest(TransactionType.Buy, 10m, 10m, 0m, sameDay),
+            new TransactionRequest(TransactionType.Buy, 20m, 20m, 0m, sameDay));
+
+        created.Transactions![0].Quantity.Should().Be(20m); // son girilen
+        created.Transactions[1].Quantity.Should().Be(10m);
+    }
+
+    [Fact]
     public async Task Delete_last_transaction_returns_400_with_use_position_delete()
     {
         var client = ClientAs(Investor);

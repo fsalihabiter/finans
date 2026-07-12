@@ -1,28 +1,40 @@
 import { useEffect, useRef, useState } from "react";
 import type { AssetType, CreateBesInput, CreateHoldingInput, CurrencyCode } from "@finans/shared";
-import { useCreateBes, useCreateHolding } from "../lib/hooks";
+import { formatCurrency } from "@finans/shared";
+import { api } from "../lib/api";
+import { useCreateBes, useCreateHolding, usePrices } from "../lib/hooks";
 import { useToast } from "./Toast";
 import { withViewTransition } from "../lib/viewTransition";
 import { ASSET_META } from "../lib/assetMeta";
 import { DateField } from "./DateField";
 
-const ASSET_TYPES: { value: AssetType; label: string; unit: string }[] = [
-  { value: "Gold", label: "Altın", unit: "gram" },
-  { value: "Fx", label: "Döviz", unit: "USD" },
-  { value: "Stock", label: "Hisse", unit: "adet" },
-  { value: "Fund", label: "Fon", unit: "adet" },
-  { value: "Cash", label: "Nakit", unit: "TRY" },
-  { value: "Bes", label: "BES", unit: "birim" },
+const ASSET_TYPES: { value: AssetType; label: string }[] = [
+  { value: "Gold", label: "Altın" },
+  { value: "Fx", label: "Döviz" },
+  { value: "Stock", label: "Hisse" },
+  { value: "Fund", label: "Fon" },
+  { value: "Cash", label: "Nakit" },
+  { value: "Bes", label: "BES" },
 ];
 
 const CURRENCIES: CurrencyCode[] = ["TRY", "USD", "EUR"];
+type FxCcy = "USD" | "EUR";
+
+/** Tür-varsayılan ad — kullanıcı elle değiştirmediyse tür/döviz değişince tazelenir. */
+const defaultNameFor = (type: AssetType, fxCcy: FxCcy): string => {
+  switch (type) {
+    case "Gold": return "Altın (gram)";
+    case "Fx": return fxCcy === "USD" ? "ABD Doları" : "Euro";
+    case "Cash": return "Nakit (TL)";
+    default: return "";
+  }
+};
 
 interface FormState {
   assetType: AssetType;
   name: string;
   symbol: string;
   currency: CurrencyCode;
-  unit: string;
   quantity: string;
   unitPrice: string;
   // ── BES'e özel açılış bakiyesi alanları (assetType === "Bes") ──
@@ -38,10 +50,9 @@ interface FormState {
 
 const INITIAL: FormState = {
   assetType: "Gold",
-  name: "",
+  name: defaultNameFor("Gold", "USD"),
   symbol: "",
   currency: "TRY",
-  unit: "gram",
   quantity: "",
   unitPrice: "",
   providerName: "",
@@ -56,21 +67,38 @@ const INITIAL: FormState = {
 
 const toNumber = (s: string) => Number(s.replace(",", "."));
 
+/** Sayıyı girdi alanına TR ondalık virgülüyle yazar (hesap değil, ön-doldurma). */
+const toInput = (n: number) => String(n).replace(".", ",");
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
- * "Varlık Ekle" modalı (13 §4, FR-1.1). Standart varlıklar (altın/döviz/hisse/fon/nakit) ilk alış
- * işlemiyle `POST /api/holdings`'e gider. **BES** seçilince form BES'e özel **açılış bakiyesi**
- * alanlarına döner (T-BES.8): plan adı, başlangıç/doğum yılı, güncel fon değeri + birikmiş kendi/
- * devlet katkı toplamları + opsiyonel düzenli plan → `POST /api/holdings/bes`. Sayısal hesap YOK.
- * İlk alana autofocus, Tab odak tuzağı (a11y); dolu formda dışına tıklama kapatmaz (veri korunur).
+ * "Varlık Ekle" modalı (13 §4, FR-1.1). Alanlar TÜRE GÖRE uyarlanır (kullanıcı isteği
+ * 2026-07-12 — tek tip form her varlığa uymuyor):
+ * - Altın: ad + gram + ₺/gram (sembol XAU, birim gram, pb TRY otomatik; canlı gram fiyatı ön-dolar)
+ * - Döviz: USD/EUR seçimi + miktar + alış kuru (canlı kur ön-dolar; ad/sembol/birim otomatik)
+ * - Hisse: sembol (alan terkinde ad + güncel $ fiyatı otomatik getirilir) + adet + fiyat
+ * - Fon: ad + sembol (ops.) + adet + birim fiyat (canlı kaynak yok — elle)
+ * - Nakit: yalnız ad + tutar (birim TRY, fiyat 1 otomatik)
+ * Ön-dolan fiyat DÜZENLENEBİLİR — sayı üretmez, yol gösterir (CLAUDE.md §3.1: hesap kodda).
+ * **BES** seçilince açılış bakiyesi formu (T-BES.8). İlk alana autofocus, Tab odak tuzağı;
+ * kullanıcı bir şey girdiyse dışına tıklama kapatmaz.
  */
 export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const create = useCreateHolding();
   const createBes = useCreateBes();
+  const prices = usePrices();
   const { notify } = useToast();
   const [form, setForm] = useState<FormState>(INITIAL);
+  const [fxCcy, setFxCcy] = useState<FxCcy>("USD");
+  const [stockCcy, setStockCcy] = useState<CurrencyCode>("USD");
+  const [touched, setTouched] = useState(false);      // kullanıcı eliyle bir şey girdi mi (overlay kapatma)
+  const [nameTouched, setNameTouched] = useState(false);
+  const [priceTouched, setPriceTouched] = useState(false);
+  const [autoPrice, setAutoPrice] = useState<{ value: number; stale: boolean } | null>(null);
+  const [stockLookup, setStockLookup] = useState<{ loading: boolean; error: string | null; last: string }>(
+    { loading: false, error: null, last: "" });
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
@@ -104,26 +132,114 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // ── Canlı fiyat ön-doldurma: altın (₺/gram) ve döviz (kur) — kullanıcı fiyatı
+  // elle DEĞİŞTİRMEDİYSE tür/döviz değişiminde ve fiyat geldiğinde tazelenir.
+  const livePrice = (() => {
+    const list = prices.data?.prices ?? [];
+    if (form.assetType === "Gold") {
+      const p = list.find((x) => x.kind === "Gold");
+      return p ? { value: p.price, stale: p.stale } : null;
+    }
+    if (form.assetType === "Fx") {
+      const p = list.find((x) => x.kind === "Currency" && x.currency === fxCcy);
+      return p ? { value: p.price, stale: p.stale } : null;
+    }
+    return null;
+  })();
+
+  useEffect(() => {
+    if (!open || priceTouched || !livePrice) return;
+    setForm((f) => ({ ...f, unitPrice: toInput(livePrice.value) }));
+    setAutoPrice(livePrice);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, priceTouched, form.assetType, fxCcy, livePrice?.value]);
+
   if (!open) return null;
 
-  const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
-  const isBes = form.assetType === "Bes";
+  const set = (patch: Partial<FormState>) => {
+    setTouched(true);
+    setForm((f) => ({ ...f, ...patch }));
+  };
+  const type = form.assetType;
+  const isBes = type === "Bes";
+  const isCash = type === "Cash";
   const today = new Date().toISOString().slice(0, 10);
   const thisYear = new Date().getFullYear();
 
   const onAssetTypeChange = (value: AssetType) => {
-    const preset = ASSET_TYPES.find((a) => a.value === value);
-    set({ assetType: value, unit: preset?.unit ?? form.unit });
+    setForm((f) => ({
+      ...f,
+      assetType: value,
+      name: defaultNameFor(value, fxCcy),
+      symbol: "",
+      quantity: "",
+      unitPrice: "",
+    }));
+    setNameTouched(false);
+    setPriceTouched(false);
+    setAutoPrice(null);
+    setStockLookup({ loading: false, error: null, last: "" });
   };
 
-  // ── Doğrulama: standart vs BES ──
+  const onFxCcyChange = (ccy: FxCcy) => {
+    setFxCcy(ccy);
+    setPriceTouched(false);
+    setForm((f) => ({
+      ...f,
+      name: nameTouched ? f.name : defaultNameFor("Fx", ccy),
+      unitPrice: "",
+    }));
+  };
+
+  // ── Hisse: sembol alanı terk edilince ad + güncel fiyat otomatik getirilir. ──
+  const lookupStock = async () => {
+    const sym = form.symbol.trim().toUpperCase();
+    if (sym === "" || sym === stockLookup.last) return;
+    setStockLookup({ loading: true, error: null, last: sym });
+    try {
+      const m = await api.getStockMetrics(sym);
+      setForm((f) => ({
+        ...f,
+        name: nameTouched && f.name.trim() !== "" ? f.name : m.name,
+        unitPrice: !priceTouched && m.price != null ? toInput(m.price) : f.unitPrice,
+      }));
+      if (m.price != null && !priceTouched) setAutoPrice({ value: m.price, stale: false });
+      if (CURRENCIES.includes(m.currency as CurrencyCode)) setStockCcy(m.currency as CurrencyCode);
+      setStockLookup({ loading: false, error: null, last: sym });
+    } catch {
+      setStockLookup({
+        loading: false,
+        error: "Sembol bilgisi alınamadı — ad ve fiyatı elle girebilirsin.",
+        last: sym,
+      });
+    }
+  };
+
+  // ── Türe göre gönderilecek sabitler (gereksiz alan sorulmaz, otomatik gider) ──
+  const derived = (() => {
+    switch (type) {
+      case "Gold": return { symbol: "XAU", unit: "gram", currency: "TRY" as CurrencyCode };
+      case "Fx": return { symbol: fxCcy, unit: fxCcy, currency: "TRY" as CurrencyCode };
+      case "Stock": return { symbol: form.symbol.trim().toUpperCase() || null, unit: "adet", currency: stockCcy };
+      case "Fund": return { symbol: form.symbol.trim() || null, unit: "adet", currency: "TRY" as CurrencyCode };
+      default: return { symbol: null, unit: "TRY", currency: "TRY" as CurrencyCode }; // Cash
+    }
+  })();
+
+  const ccySymbol = derived.currency === "TRY" ? "₺" : derived.currency === "USD" ? "$" : "€";
+  const quantityLabel = type === "Gold" ? "Miktar (gram)"
+    : type === "Fx" ? `Miktar (${fxCcy})`
+    : isCash ? "Tutar (₺)"
+    : "Adet";
+
+  // ── Doğrulama: türe göre ──
   const quantity = toNumber(form.quantity);
-  const unitPrice = toNumber(form.unitPrice);
+  const unitPrice = isCash ? 1 : toNumber(form.unitPrice);
   const standardValid =
     form.name.trim() !== "" &&
-    form.unit.trim() !== "" &&
     Number.isFinite(quantity) && quantity > 0 &&
-    Number.isFinite(unitPrice) && unitPrice >= 0;
+    (isCash || (Number.isFinite(unitPrice) && unitPrice >= 0)) &&
+    (type !== "Stock" || form.symbol.trim() !== "");
 
   const fundValue = toNumber(form.currentFundValue);
   const openingOwn = toNumber(form.openingOwn);
@@ -144,9 +260,16 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
   const err = isBes ? createBes.error : create.error;
   const isError = isBes ? createBes.isError : create.isError;
 
-  const dirty = JSON.stringify(form) !== JSON.stringify(INITIAL);
+  const invalidHint = isBes
+    ? "Plan adı, başlangıç tarihi, fon değeri ve katkı toplamları zorunlu."
+    : isCash
+      ? "Tutar 0'dan büyük olmalı."
+      : type === "Stock"
+        ? "Sembol, adet ve alış fiyatı zorunlu."
+        : "Ad, miktar ve alış fiyatı zorunlu. Miktar 0'dan büyük olmalı.";
+
   const onOverlayClick = () => {
-    if (!dirty) withViewTransition(onClose);
+    if (!touched) withViewTransition(onClose);
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -175,11 +298,11 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
       return;
     }
     const input: CreateHoldingInput = {
-      assetType: form.assetType,
+      assetType: type,
       name: form.name.trim(),
-      symbol: form.symbol.trim() || null,
-      currency: form.currency,
-      unit: form.unit.trim(),
+      symbol: derived.symbol,
+      currency: derived.currency,
+      unit: derived.unit,
       transaction: { type: "Buy", quantity, unitPrice },
     };
     create.mutate(input, {
@@ -213,8 +336,8 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
                   key={a.value}
                   type="button"
                   role="radio"
-                  aria-checked={form.assetType === a.value}
-                  className={form.assetType === a.value ? "sel" : ""}
+                  aria-checked={type === a.value}
+                  className={type === a.value ? "sel" : ""}
                   onClick={() => onAssetTypeChange(a.value)}
                 >
                   <span aria-hidden="true">{ASSET_META[a.value].icon}</span> {a.label}
@@ -223,12 +346,54 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
             </div>
           </div>
 
+          {type === "Fx" && (
+            <div className="field-group">
+              <span className="field-label">Döviz</span>
+              <div className="type-chips" role="radiogroup" aria-label="Döviz türü">
+                {(["USD", "EUR"] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={fxCcy === c}
+                    className={fxCcy === c ? "sel" : ""}
+                    onClick={() => onFxCcyChange(c)}
+                  >
+                    {c === "USD" ? "🇺🇸 ABD Doları" : "🇪🇺 Euro"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {type === "Stock" && (
+            <label>
+              Sembol
+              <input
+                value={form.symbol}
+                onChange={(e) => set({ symbol: e.target.value.toUpperCase() })}
+                onBlur={() => void lookupStock()}
+                placeholder="AAPL"
+                required
+              />
+            </label>
+          )}
+          {type === "Stock" && stockLookup.loading && (
+            <p className="form-hint">Sembol bilgisi getiriliyor…</p>
+          )}
+          {type === "Stock" && stockLookup.error && (
+            <p className="form-hint">{stockLookup.error}</p>
+          )}
+
           <label>
             {isBes ? "Plan / şirket adı" : "Ad"}
             <input
               ref={firstFieldRef}
               value={form.name}
-              onChange={(e) => set({ name: e.target.value })}
+              onChange={(e) => {
+                setNameTouched(true);
+                set({ name: e.target.value });
+              }}
               placeholder={isBes ? "örn. Kadın Temel Emeklilik Planı" : "örn. Altın (gram)"}
               required
             />
@@ -288,32 +453,58 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
             </>
           ) : (
             <>
-              <div className="add-row">
+              {type === "Fund" && (
                 <label>
                   Sembol (ops.)
-                  <input value={form.symbol} onChange={(e) => set({ symbol: e.target.value })} placeholder="XAU" />
+                  <input value={form.symbol} onChange={(e) => set({ symbol: e.target.value })} placeholder="TEKFON" />
                 </label>
-                <label>
-                  Para birimi
-                  <select value={form.currency} onChange={(e) => set({ currency: e.target.value as CurrencyCode })}>
-                    {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
-                  </select>
-                </label>
-                <label>
-                  Birim
-                  <input value={form.unit} onChange={(e) => set({ unit: e.target.value })} placeholder="gram" required />
-                </label>
-              </div>
+              )}
+
               <div className="add-row">
                 <label>
-                  Miktar
-                  <input inputMode="decimal" value={form.quantity} onChange={(e) => set({ quantity: e.target.value })} placeholder="40" required />
+                  {quantityLabel}
+                  <input
+                    inputMode="decimal"
+                    value={form.quantity}
+                    onChange={(e) => set({ quantity: e.target.value })}
+                    placeholder={isCash ? "15.000" : type === "Gold" ? "40" : type === "Fx" ? "2.000" : "12"}
+                    required
+                  />
                 </label>
-                <label>
-                  Alış birim fiyatı ({form.currency})
-                  <input inputMode="decimal" value={form.unitPrice} onChange={(e) => set({ unitPrice: e.target.value })} placeholder="4546,275" required />
-                </label>
+                {!isCash && (
+                  <label>
+                    {type === "Fx" ? `Alış kuru (₺/${fxCcy})` : `Alış birim fiyatı (${ccySymbol})`}
+                    <input
+                      inputMode="decimal"
+                      value={form.unitPrice}
+                      onChange={(e) => {
+                        setPriceTouched(true);
+                        setAutoPrice(null);
+                        set({ unitPrice: e.target.value });
+                      }}
+                      placeholder="4546,275"
+                      required
+                    />
+                  </label>
+                )}
               </div>
+
+              {isCash && (
+                <p className="form-hint">
+                  Nakit TL olarak tutulur — tutarı girmen yeterli; birim ve fiyat otomatik.
+                </p>
+              )}
+              {autoPrice && !priceTouched && (
+                <p className="form-hint">
+                  Güncel fiyat otomatik geldi: <b className="tnum">{formatCurrency(autoPrice.value, derived.currency)}</b>
+                  {autoPrice.stale && " (yaklaşık)"} — geçmiş bir alış giriyorsan fiyatı düzenle.
+                </p>
+              )}
+              {type === "Fund" && (
+                <p className="form-hint">
+                  Fon fiyatı için canlı kaynak yok — alış birim fiyatını fon platformundan bakarak gir.
+                </p>
+              )}
             </>
           )}
 
@@ -323,13 +514,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
             </p>
           )}
 
-          {!valid && !isError && (
-            <p className="form-hint">
-              {isBes
-                ? "Plan adı, başlangıç tarihi, fon değeri ve katkı toplamları zorunlu."
-                : "Ad, miktar ve alış fiyatı zorunlu. Miktar 0'dan büyük olmalı."}
-            </p>
-          )}
+          {!valid && !isError && <p className="form-hint">{invalidHint}</p>}
 
           <div className="add-actions">
             <button type="button" className="btn-ghost" onClick={() => withViewTransition(onClose)}>

@@ -46,7 +46,9 @@ public sealed class PortfolioHistoryService(
         var baseCcy = await HoldingMapping.ResolveBaseCurrencyAsync(db, userId, baseCurrency, ct);
 
         // Cache anahtarı UserId İÇERİR — bir kullanıcının serisi asla başkasına dönmez (10 §3, 11 §3).
-        var key = $"portfolio:history:{userId}:{baseCcy}:{periodKey}";
+        // Damga (stamp): işlem/pozisyon değişince seri ANINDA yeniden hesaplanır (TTL beklenmez).
+        var stamp = await PortfolioCacheStamp.GetAsync(cache, userId, ct);
+        var key = $"portfolio:history:{userId}:{stamp}:{baseCcy}:{periodKey}";
         return await cache.GetOrCreateAsync(key, Ttl,
             innerCt => BuildAsync(userId, baseCcy, periodKey, days, innerCt), ct);
     }

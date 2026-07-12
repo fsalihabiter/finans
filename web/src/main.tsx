@@ -13,6 +13,7 @@ import { SettingsPage } from "./routes/SettingsPage.tsx";
 import { TransactionsPage } from "./routes/TransactionsPage.tsx";
 import { PerformancePage } from "./routes/PerformancePage.tsx";
 import { ScenarioPage } from "./routes/ScenarioPage.tsx";
+import { HoldingsPage } from "./routes/HoldingsPage.tsx";
 import { StocksPage } from "./routes/StocksPage.tsx";
 import { EducationPage } from "./routes/EducationPage.tsx";
 import { queryClient } from "./lib/queryClient.ts";
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <PortfolioPage /> },
+      { path: "varliklar", element: <HoldingsPage /> },
       { path: "holdings/:id", element: <HoldingDetailPage /> },
       { path: "islemler", element: <TransactionsPage /> },
       { path: "performans", element: <PerformancePage /> },

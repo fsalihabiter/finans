@@ -32,7 +32,9 @@ public sealed class ScenarioService(
         var userId = currentUser.UserId;
         var baseCcy = await HoldingMapping.ResolveBaseCurrencyAsync(db, userId, baseCurrency, ct);
 
-        var key = $"portfolio:scenario:{userId}:{holdingId}:{baseCcy}";
+        // Damga (stamp) anahtara girer: işlem/pozisyon değişince seri ANINDA yeniden hesaplanır.
+        var stamp = await PortfolioCacheStamp.GetAsync(cache, userId, ct);
+        var key = $"portfolio:scenario:{userId}:{stamp}:{holdingId}:{baseCcy}";
         return await cache.GetOrCreateAsync(key, Ttl,
             innerCt => BuildAsync(userId, holdingId, baseCcy, innerCt), ct);
     }

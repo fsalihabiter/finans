@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { formatDate, formatPercent } from "@finans/shared";
 import type { Holding, PortfolioHistoryPeriod } from "@finans/shared";
 import { ASSET_META } from "../lib/assetMeta";
@@ -7,7 +8,6 @@ import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
 import { ValueHistoryChart } from "../components/ValueHistoryChart";
 import { useHoldings, usePortfolioHistory, usePortfolioSummary } from "../lib/hooks";
-import { useAppShell } from "../lib/appShell";
 
 /** Görünen etiket → API dönem anahtarı (T5.2). */
 const PERIODS = [
@@ -67,7 +67,6 @@ function ReturnBars({ holdings }: { holdings: Holding[] }) {
 export function PerformancePage() {
   const summary = usePortfolioSummary();
   const holdings = useHoldings();
-  const { openAddHolding } = useAppShell();
   const [period, setPeriod] = useState<PortfolioHistoryPeriod>("all");
   const history = usePortfolioHistory(period);
 
@@ -98,9 +97,9 @@ export function PerformancePage() {
           title="Performans için önce varlık ekle"
           description="Pozisyon ekledikçe getiriler ve zaman içindeki seyir burada görünecek."
           action={
-            <button type="button" className="btn-primary lg" onClick={openAddHolding}>
-              ＋ İlk varlığını ekle
-            </button>
+            <Link to="/varliklar" className="btn-primary lg">
+              ＋ Varlıklarım'da ekle
+            </Link>
           }
         />
       )}

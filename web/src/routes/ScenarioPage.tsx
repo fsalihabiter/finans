@@ -1,12 +1,13 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { formatCurrency, formatPercent } from "@finans/shared";
 import { ASSET_META } from "../lib/assetMeta";
+import { buildScenarioNarrative } from "../lib/scenarioNarrative";
 import { Disclaimer } from "../components/Disclaimer";
 import { EmptyState } from "../components/EmptyState";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { ScenarioChart } from "../components/ScenarioChart";
 import { useHoldings, useScenario } from "../lib/hooks";
-import { useAppShell } from "../lib/appShell";
 
 /**
  * Senaryo v1 (T5.4) — geçmişe dönük "bu varlığı almasaydım / param nakitte dursaydı"
@@ -16,7 +17,6 @@ import { useAppShell } from "../lib/appShell";
  */
 export function ScenarioPage() {
   const holdings = useHoldings();
-  const { openAddHolding } = useAppShell();
   const [selectedId, setSelectedId] = useState("");
 
   // Nakit pozisyonda "nakitte dursaydı" karşılaştırması totolojik → seçenek dışı.
@@ -57,9 +57,9 @@ export function ScenarioPage() {
           title="Karşılaştırma için önce varlık ekle"
           description="Nakit dışı bir pozisyon eklediğinde 'nakitte dursaydı' karşılaştırmasını burada görebilirsin."
           action={
-            <button type="button" className="btn-primary lg" onClick={openAddHolding}>
-              ＋ İlk varlığını ekle
-            </button>
+            <Link to="/varliklar" className="btn-primary lg">
+              ＋ Varlıklarım'da ekle
+            </Link>
           }
         />
       )}
@@ -134,6 +134,9 @@ export function ScenarioPage() {
                   </div>
                 )}
               </div>
+
+              {/* Sayıların METİN okuması — deterministik şablon (LLM/tahmin/tavsiye yok). */}
+              <p className="sc-narrative">{buildScenarioNarrative(s)}</p>
 
               {s.points.length >= 2 ? (
                 <ScenarioChart points={s.points} currency={s.baseCurrency} />

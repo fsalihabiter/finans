@@ -9,6 +9,7 @@ import "./App.css";
 
 const ICONS = {
   home: "M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5Z",
+  wallet: "M4 8h16v11H4V8Zm4 0V6h8v2M4 12h16",
   tx: "M4 7h16M4 12h16M4 17h10",
   perf: "M4 19V5m0 14h16M8 16l3-4 3 2 4-6",
   chart: "M4 19V5m0 14h16M8 13l3 3 3-5 4 4",
@@ -29,8 +30,9 @@ function NavIcon({ d }: { d: string }) {
 
 /**
  * AppShell (13 §4): masaüstünde sol sidebar; ≤1040px'te sidebar bir **drawer**'a
- * dönüşür ve üstte mobil bar gelir (gezinme + "Varlık Ekle" mobilde de erişilebilir).
- * "Varlık Ekle" modalı kabuk seviyesinde — context ile her ekrandan açılır.
+ * dönüşür ve üstte mobil bar gelir. "Varlık Ekle" modalı kabuk seviyesinde kalır
+ * (context) ama tetikleyicisi YALNIZ Varlıklarım sayfasında — konu bütünlüğü
+ * (kullanıcı isteği 2026-07-12).
  */
 export default function App() {
   const [addOpen, setAddOpen] = useState(false);
@@ -72,9 +74,6 @@ export default function App() {
             <div className="brand-mark" aria-hidden="true"><BrandMark /></div>
             <div className="brand-name">Ni<span>rengi</span></div>
           </div>
-          <button type="button" className="mobile-add" aria-label="Varlık ekle" onClick={openAdd}>
-            ＋
-          </button>
         </header>
 
         <div className="app-shell">
@@ -93,6 +92,9 @@ export default function App() {
             <nav className="app-nav" onClick={closeDrawer}>
               <NavLink viewTransition to="/" end>
                 <NavIcon d={ICONS.home} /> Genel Bakış
+              </NavLink>
+              <NavLink viewTransition to="/varliklar">
+                <NavIcon d={ICONS.wallet} /> Varlıklarım
               </NavLink>
               <NavLink viewTransition to="/islemler">
                 <NavIcon d={ICONS.tx} /> İşlemler
@@ -125,9 +127,6 @@ export default function App() {
                 <NavIcon d={ICONS.gear} /> Ayarlar
               </NavLink>
             </nav>
-            <button type="button" className="sidebar-add" onClick={openAdd}>
-              ＋ Varlık Ekle
-            </button>
             <div className="sidebar-user">
               <div className="avatar" aria-hidden="true">👤</div>
               <div>

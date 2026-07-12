@@ -17,13 +17,12 @@ export function ScenarioChart({
   currency: CurrencyCode;
 }) {
   const gradientId = useId();
-  const hover = useChartHover(points.length);
-  if (points.length < 2) return null;
-
   const width = 900;
   const height = 260;
   const padX = 6;
   const padY = 12;
+  const hover = useChartHover(points.length, padX / width);
+  if (points.length < 2) return null;
 
   const hasThreshold = points.some((p) => p.inflationAdjustedCost != null);
 

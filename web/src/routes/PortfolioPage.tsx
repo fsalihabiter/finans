@@ -8,7 +8,6 @@ import { PortfolioInsights } from "../components/PortfolioInsights";
 import { NudgesCard } from "../components/NudgesCard";
 import { PriceTicker } from "../components/PriceTicker";
 import { CurrencySelector } from "../components/CurrencySelector";
-import { HoldingsTable } from "../components/HoldingsTable";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
@@ -22,7 +21,6 @@ import {
   useSettings,
   useUpdateSettings,
 } from "../lib/hooks";
-import { useAppShell } from "../lib/appShell";
 import { currentGreeting } from "../lib/greeting";
 
 /** Zaman damgasını "14:32" (+ "· yaklaşık" bayatsa) / "—" olarak biçimler. */
@@ -47,7 +45,6 @@ export function PortfolioPage() {
   const nudges = useNudges();
   const history = usePortfolioHistory("1y"); // pano kartı: son 1 yıl (detay Performans'ta)
   const updateSettings = useUpdateSettings();
-  const { openAddHolding } = useAppShell();
   const { notify } = useToast();
   const qc = useQueryClient();
 
@@ -175,16 +172,10 @@ export function PortfolioPage() {
               <PortfolioInsights summary={summary.data} holdings={holdingList} />
 
               <NudgesCard nudges={nudges.data?.nudges ?? []} />
-
-              <div className="card">
-                <div className="card-head">
-                  <h3>Varlıklarım</h3>
-                  <span className="mini">Detay için satıra tıkla</span>
-                </div>
-                <HoldingsTable holdings={holdingList} baseCurrency={summary.data.baseCurrency} />
-              </div>
             </>
           ) : (
+            // Pozisyon tablosu ve "Varlık Ekle" artık kendi sayfasında (konu bütünlüğü,
+            // kullanıcı isteği 2026-07-12) — boş durumda oraya yönlendir.
             <EmptyState
               icon="📂"
               title="Portföyün henüz boş"
@@ -195,9 +186,9 @@ export function PortfolioPage() {
                 </>
               }
               action={
-                <button type="button" className="btn-primary lg" onClick={openAddHolding}>
-                  ＋ İlk varlığını ekle
-                </button>
+                <Link to="/varliklar" className="btn-primary lg">
+                  ＋ Varlıklarım'da ekle
+                </Link>
               }
             />
           )}

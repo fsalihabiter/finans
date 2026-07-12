@@ -109,23 +109,7 @@
   flex: 1;
   min-height: 10px;
 }
-.sidebar-add {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 13px;
-  background: linear-gradient(140deg, var(--accent, #8a94dc), #6069bd);
-  border: none;
-  color: #0b0f1e;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 13.5px;
-  cursor: pointer;
-  margin-top: 8px;
-  box-shadow: 0 10px 24px -10px rgba(138, 148, 220, 0.7);
-}
+/* .sidebar-add kaldırıldı — "Varlık Ekle" yalnız Varlıklarım sayfasında (2026-07-12). */
 .sidebar-user {
   display: flex;
   align-items: center;
@@ -297,7 +281,9 @@
 }
 .grid-2 {
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
+  /* Sol: Varlık Dağılımı (donut — dar yeter) · Sağ: Değer Seyri (grafik — GENİŞ olsun;
+     2026-07-12 geri bildirimi: oranlar tersti, grafik dar kalıyordu). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr);
   gap: 16px;
 }
 .grid-3 {
@@ -559,13 +545,30 @@
   gap: 10px;
   margin: 4px 0 8px;
 }
-@media (max-width: 860px) {
+/* Tablet (≤1100px): iki sütun sıkışıyor → alt alta (2026-07-12 geri bildirimi —
+   detay kartları mobil/tablet uyumu). */
+@media (max-width: 1100px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }
   /* Tek sütunda eşitlenecek sol yükseklik yok → liste sayfayı domine etmesin: makul tavan + iç kayma. */
   .history-scroll {
     max-height: 60vh;
+  }
+}
+/* Telefon (≤640px): hero ve başlık sıkılaşır, aksiyon butonları tam satıra yayılır. */
+@media (max-width: 640px) {
+  .detail-hero {
+    padding: 14px;
+  }
+  .detail-hero .dh-v {
+    font-size: 22px;
+  }
+  .detail-actions {
+    gap: 8px;
+  }
+  .detail-actions > * {
+    flex: 1 1 calc(50% - 8px);
   }
 }
 .detail-back {
@@ -1292,6 +1295,40 @@ input.date-input::-webkit-calendar-picker-indicator:hover {
   }
 }
 
+/* Dar ekran: topbar düzeni — döviz şeridi tek kompakt satır (içeride yatay kayar),
+   araçlar (tazelik + Yenile + pb seçici) tek hizalı satır (2026-07-12 geri bildirimi). */
+@media (max-width: 640px) {
+  .topbar {
+    gap: 10px;
+  }
+  .live-prices {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none; /* şerit görünümü — kaydırma çubuğu gizli, dokunuşla kayar */
+    gap: 6px;
+  }
+  .live-prices::-webkit-scrollbar {
+    display: none;
+  }
+  .lp {
+    flex-shrink: 0;
+  }
+  .topbar .tools {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .topbar .tools .btn-ghost {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+  .ccy-selector button {
+    padding: 7px 11px;
+    font-size: 12px;
+  }
+}
+
 /* Dar ekran: pozisyon tablosu → kart düzeni (yatay kaydırma yerine). */
 @media (max-width: 640px) {
   .kpis {
@@ -1426,18 +1463,6 @@ select:focus-visible,
   height: 2px;
   border-radius: 2px;
   background: var(--text, #eef2ff);
-}
-.mobile-add {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  border: none;
-  background: linear-gradient(140deg, var(--accent, #8a94dc), #6069bd);
-  color: #0b0f1e;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  flex-shrink: 0;
 }
 .drawer-scrim {
   position: fixed;
@@ -1986,21 +2011,21 @@ body.drawer-lock {
      uzaması yaşanıyordu. Artık tablo kendi içeriğince + sticky header/tfoot ile scroll'lu. */
   max-height: min(60vh, 540px);
   overflow-y: auto;
-  overflow-x: hidden;
+  /* Sütunlar İÇERİK genişliğinden dar olamaz; toplam alana sığmazsa tablo İÇERİDE
+     yatay kayar (2026-07-12 geri bildirimi) — sığıyorsa kaydırma zaten oluşmaz. */
+  overflow-x: auto;
 }
-/* Sütunlar genişliğe sığsın (yatay taşma yok); uzun metin … ile kesilir.
+/* Sütun genişliği ≥ içerik (auto layout + nowrap): hücreler asla kırpılmaz/sarmalanmaz.
    Not: taban `.holdings-table` 620px min-width taşır (dashboard yatay kaydırma için) →
-   burada SIFIRLA, yoksa dar detay sütununda sağ kolonlar kırpılır. */
+   burada SIFIRLA; genişlik ihtiyacını içerik belirler, taşma .history-scroll'da kayar. */
 .holdings-table.fit {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
   min-width: 0;
 }
 .holdings-table.fit th,
 .holdings-table.fit td {
   white-space: nowrap;
-  /* Elips/"…" YOK (kullanıcı geri bildirimi): değerler tam görünür. table-layout:fixed +
-     min-width:0 ile sütunlar genişliğe paylaşılır; içerik sığmazsa hücre genişler. */
 }
 /* Sticky başlık (kaydırırken görünür kalsın). */
 .history-scroll thead th {
@@ -2608,6 +2633,9 @@ body.drawer-lock {
 .value-history-chart.compact svg {
   height: 190px;
 }
+.scenario-chart svg {
+  height: 260px; /* viewBox (260) ile 1:1 — dikey ölçek bire bir */
+}
 .chart-head-right {
   display: flex;
   align-items: center;
@@ -2753,8 +2781,18 @@ body.drawer-lock {
   margin: 14px 0 0;
   font-size: 12.5px;
   line-height: 1.65;
-  color: var(--muted, #97a3c9);
-  max-width: 88ch;
+  color: var(--muted, #97a3c9); /* tam genişlik — kart neyse o (kullanıcı isteği 2026-07-12) */
+}
+/* Sayıların metin okuması — Kavram bloğu diliyle akraba, vurgulu eğitici blok. */
+.sc-narrative {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--accent, #8a94dc);
+  border-radius: 0 12px 12px 0;
+  background: rgba(138, 148, 220, 0.07);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-soft, #cbd5f0);
 }
 
 /* ───── Motion katmanı (v2 — ui-ux-pro-max "Modern Dark", motion 7/10) ─────
@@ -3006,18 +3044,19 @@ body.drawer-lock {
 /* Satır aksiyonları (düzenle/sil): hover destekleyen cihazda satıra gelinene dek
    gizli, hover'da veya klavye odağında (focus-within) opacity geçişiyle belirir.
    Dokunmatikte (hover yok) her zaman görünür — özellik kaybolmaz. */
-@media (hover: hover) {
-  .holdings-table tbody tr .row-actions .icon-btn {
-    opacity: 0;
-    transition:
-      opacity 180ms ease-out,
-      border-color 0.16s,
-      color 0.16s;
-  }
-  .holdings-table tbody tr:hover .row-actions .icon-btn,
-  .holdings-table tbody tr:focus-within .row-actions .icon-btn {
-    opacity: 1;
-  }
+/* Satır aksiyonları (düzenle/sil) HER ZAMAN görünür (2026-07-12 geri bildirimi —
+   hover'a gizlenmiş buton keşfedilemiyordu). Hover yalnız vurguyu artırır. */
+.holdings-table tbody tr .row-actions .icon-btn {
+  opacity: 0.65;
+  transition:
+    opacity 180ms ease-out,
+    border-color 0.16s,
+    color 0.16s;
+}
+.holdings-table tbody tr:hover .row-actions .icon-btn,
+.holdings-table tbody tr:focus-within .row-actions .icon-btn,
+.holdings-table tbody tr .row-actions .icon-btn:focus-visible {
+  opacity: 1;
 }
 
 /* Hero kart glow'u nefes alır (dekoratif). */

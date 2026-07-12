@@ -31,6 +31,14 @@ localhost {
 
 	encode gzip zstd
 
+	# SPA girişi asla bayat kalmasın: index.html her istekte doğrulanır (deploy sonrası
+	# kullanıcı eski JS/CSS paketiyle kalmasın — 2026-07-12 grafik geri bildirimi).
+	# Hash'li Vite asset'leri içerik-adresli → 1 yıl immutable cache güvenli.
+	@entry path / /index.html
+	header @entry Cache-Control "no-cache"
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
 	# API rotaları — backend container iç ağda 8080'de.
 	handle /api/* {
 		reverse_proxy api:8080

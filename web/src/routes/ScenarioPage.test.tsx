@@ -82,5 +82,9 @@ describe("ScenarioPage (T5.4)", () => {
     // Kalıcı disclaimer (CLAUDE.md §2) + "geçmiş, tahmin değil" çerçevesi.
     expect(screen.getByText(/yatırım tavsiyesi değildir/i)).toBeInTheDocument();
     expect(screen.getByText(/gelecek performansın göstergesi\s+değildir/)).toBeInTheDocument();
+
+    // Sayıların metin okuması (narrative) — deterministik şablon, tavsiye içermez.
+    expect(screen.getByText(/pozisyonuna bugüne dek .* yatırdın/)).toBeInTheDocument();
+    expect(screen.getByText(/al-sat önerisi değildir/)).toBeInTheDocument();
   });
 });

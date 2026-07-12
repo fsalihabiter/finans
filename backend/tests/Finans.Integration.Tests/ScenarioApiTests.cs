@@ -97,6 +97,36 @@ public sealed class ScenarioApiTests : IClassFixture<SqliteWebApplicationFactory
     }
 
     [Fact]
+    public async Task Scenario_reflects_new_transaction_immediately_without_waiting_ttl()
+    {
+        var client = ClientAs(Investor);
+
+        // Kendi pozisyonunu kur (paylaşılan seed kalemlerini BOZMA — sınıf içi diğer testler
+        // altın/BES sayılarına dayanır): 100 adet @10 → yatırılan 1.000.
+        var createResp = await client.PostAsJsonAsync("/api/holdings",
+            new CreateHoldingRequest(AssetType.Fund, "Senaryo Tazelik Fonu", null,
+                CurrencyCode.TRY, "adet", new TransactionRequest(TransactionType.Buy, 100m, 10m)), Json);
+        createResp.IsSuccessStatusCode.Should().BeTrue();
+        var holding = await createResp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+
+        // Senaryoyu bir kez ısıt (cache dolsun) — kullanıcı sayfayı açmış gibi.
+        var before = await client.GetFromJsonAsync<ScenarioComparisonDto>(
+            $"/api/portfolio/scenario/{holding!.Id}", Json);
+        before!.Summary.Invested.Should().Be(1000m);
+
+        // İşlem: 100 adet daha @20 → yatırılan +2.000 (damga cache'i geçersiz kılar).
+        var addResp = await client.PostAsJsonAsync(
+            $"/api/holdings/{holding.Id}/transactions",
+            new TransactionRequest(TransactionType.Buy, 100m, 20m), Json);
+        addResp.IsSuccessStatusCode.Should().BeTrue();
+
+        // TTL beklemeden ANINDA güncel seri (T5.4 geri bildirimi — bayat senaryo kabul edilemez).
+        var after = await client.GetFromJsonAsync<ScenarioComparisonDto>(
+            $"/api/portfolio/scenario/{holding.Id}", Json);
+        after!.Summary.Invested.Should().Be(3000m); // 1.000 + 2.000
+    }
+
+    [Fact]
     public async Task Idor_other_users_holding_returns_404()
     {
         var admin = ClientAs(Admin);

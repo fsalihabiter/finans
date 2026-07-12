@@ -5,15 +5,24 @@ import { AddHoldingDialog } from "./AddHoldingDialog";
 
 afterEach(() => vi.restoreAllMocks());
 
-function mockFetch() {
-  const fetchMock = vi.fn().mockResolvedValue({
-    ok: true,
-    status: 201,
-    json: async () => ({ id: "new" }),
-  } as Response);
+/** URL-duyarlı fetch taklidi: canlı fiyatlar + hisse metrikleri + create uçları. */
+function mockFetch(overrides?: { prices?: unknown; stock?: unknown }) {
+  const prices = overrides?.prices ?? { refreshedAtUtc: "", fromCache: false, hasStale: false, failedSources: [], prices: [] };
+  const fetchMock = vi.fn((url: string) => {
+    let body: unknown = { id: "new" };
+    if (url.includes("/api/prices")) body = prices;
+    else if (url.includes("/api/stocks/")) body = overrides?.stock ?? { name: "Apple Inc", price: 210, currency: "USD" };
+    return Promise.resolve({ ok: true, status: 200, json: async () => body } as Response);
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
+
+/** create çağrısını (POST) bul — mount'taki GET /api/prices çağrılarını atla. */
+const postCall = (fetchMock: ReturnType<typeof mockFetch>, path: string) =>
+  fetchMock.mock.calls.find(
+    (c) => (c as [string, RequestInit?])[0] === path && (c as [string, RequestInit?])[1]?.method === "POST",
+  ) as [string, RequestInit] | undefined;
 
 describe("AddHoldingDialog", () => {
   it("kapalıyken render edilmez", () => {
@@ -21,44 +30,118 @@ describe("AddHoldingDialog", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("formu doldurup POST /api/holdings gönderir ve kapanır", async () => {
+  it("altın: ad ön-dolu; formu doldurup POST /api/holdings gönderir (XAU/gram/TRY otomatik)", async () => {
     const fetchMock = mockFetch();
     const onClose = vi.fn();
 
     renderWithProviders(<AddHoldingDialog open onClose={onClose} />);
 
-    fireEvent.change(screen.getByLabelText("Ad"), { target: { value: "Altın (gram)" } });
-    fireEvent.change(screen.getByLabelText("Miktar"), { target: { value: "40" } });
-    fireEvent.change(screen.getByLabelText(/Alış birim fiyatı/), { target: { value: "4546,275" } });
+    // Ad tür varsayılanıyla gelir; gereksiz alanlar (sembol/birim/pb) sorulmaz.
+    expect(screen.getByLabelText("Ad")).toHaveValue("Altın (gram)");
+    expect(screen.queryByLabelText("Birim")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Para birimi")).not.toBeInTheDocument();
 
+    fireEvent.change(screen.getByLabelText("Miktar (gram)"), { target: { value: "40" } });
+    fireEvent.change(screen.getByLabelText(/Alış birim fiyatı/), { target: { value: "4546,275" } });
     fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    const call = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(call[0]).toBe("/api/holdings");
-    expect(call[1].method).toBe("POST");
+    await waitFor(() => expect(postCall(fetchMock, "/api/holdings")).toBeTruthy());
+    const call = postCall(fetchMock, "/api/holdings")!;
     expect(JSON.parse(call[1].body as string)).toMatchObject({
       assetType: "Gold",
       name: "Altın (gram)",
+      symbol: "XAU",
       currency: "TRY",
       unit: "gram",
       transaction: { type: "Buy", quantity: 40, unitPrice: 4546.275 },
     });
-
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  it("eksik zorunlu alanla Ekle butonu pasif + ipucu görünür", () => {
+  it("canlı altın fiyatı alış fiyatına otomatik gelir (düzenlenebilir ipucuyla)", async () => {
+    mockFetch({
+      prices: {
+        refreshedAtUtc: "", fromCache: false, hasStale: false, failedSources: [],
+        prices: [{ kind: "Gold", currency: "TRY", price: 6225.55, quoteCurrency: "TRY", asOfUtc: "", source: "truncgil", stale: false }],
+      },
+    });
     renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
-    expect(screen.getByRole("button", { name: "Ekle" })).toBeDisabled();
-    expect(screen.getByText(/Ad, miktar ve alış fiyatı zorunlu/)).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Alış birim fiyatı/)).toHaveValue("6225,55"));
+    expect(screen.getByText(/Güncel fiyat otomatik geldi/)).toBeInTheDocument();
   });
 
-  it("tür chip'i seçince birim ön ayarı güncellenir (BES → birim)", () => {
+  it("nakit: yalnız ad + tutar sorulur; fiyat 1 ve birim TRY otomatik gider", async () => {
+    const fetchMock = mockFetch();
     renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
-    expect(screen.getByLabelText("Birim")).toHaveValue("gram");
-    fireEvent.click(screen.getByRole("radio", { name: /BES/ }));
-    expect(screen.getByRole("radio", { name: /BES/ })).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.click(screen.getByRole("radio", { name: /Nakit/ }));
+    expect(screen.getByLabelText("Ad")).toHaveValue("Nakit (TL)");
+    expect(screen.queryByLabelText(/Alış birim fiyatı/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Sembol/)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Tutar (₺)"), { target: { value: "15.000".replace(".", "") } });
+    fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
+
+    await waitFor(() => expect(postCall(fetchMock, "/api/holdings")).toBeTruthy());
+    const body = JSON.parse(postCall(fetchMock, "/api/holdings")![1].body as string);
+    expect(body).toMatchObject({
+      assetType: "Cash",
+      name: "Nakit (TL)",
+      currency: "TRY",
+      unit: "TRY",
+      transaction: { type: "Buy", quantity: 15000, unitPrice: 1 },
+    });
+  });
+
+  it("hisse: sembol terk edilince ad + güncel fiyat otomatik getirilir", async () => {
+    const fetchMock = mockFetch();
+    renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /Hisse/ }));
+    fireEvent.change(screen.getByLabelText("Sembol"), { target: { value: "aapl" } });
+    fireEvent.blur(screen.getByLabelText("Sembol"));
+
+    await waitFor(() => expect(screen.getByLabelText("Ad")).toHaveValue("Apple Inc"));
+    expect(screen.getByLabelText(/Alış birim fiyatı/)).toHaveValue("210");
+
+    fireEvent.change(screen.getByLabelText("Adet"), { target: { value: "12" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
+
+    await waitFor(() => expect(postCall(fetchMock, "/api/holdings")).toBeTruthy());
+    const body = JSON.parse(postCall(fetchMock, "/api/holdings")![1].body as string);
+    expect(body).toMatchObject({
+      assetType: "Stock",
+      name: "Apple Inc",
+      symbol: "AAPL",
+      currency: "USD",
+      unit: "adet",
+      transaction: { type: "Buy", quantity: 12, unitPrice: 210 },
+    });
+  });
+
+  it("döviz: USD/EUR seçimi ad ve birimi otomatik ayarlar", () => {
+    mockFetch();
+    renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /Döviz/ }));
+    expect(screen.getByLabelText("Ad")).toHaveValue("ABD Doları");
+    expect(screen.getByLabelText("Miktar (USD)")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Euro/ }));
+    expect(screen.getByLabelText("Ad")).toHaveValue("Euro");
+    expect(screen.getByLabelText("Miktar (EUR)")).toBeInTheDocument();
+  });
+
+  it("eksik zorunlu alanla Ekle butonu pasif + türe uygun ipucu görünür", () => {
+    mockFetch();
+    renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
+    expect(screen.getByRole("button", { name: "Ekle" })).toBeDisabled();
+    expect(screen.getByText(/miktar ve alış fiyatı zorunlu/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Nakit/ }));
+    expect(screen.getByText(/Tutar 0'dan büyük olmalı/)).toBeInTheDocument();
   });
 
   it("BES seçilince açılış bakiyesiyle POST /api/holdings/bes çağrılır", async () => {
@@ -73,10 +156,8 @@ describe("AddHoldingDialog", () => {
     fireEvent.change(screen.getByLabelText(/Birikmiş devlet katkısı/), { target: { value: "28554" } });
     fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    const call = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(call[0]).toBe("/api/holdings/bes");
-    expect(call[1].method).toBe("POST");
+    await waitFor(() => expect(postCall(fetchMock, "/api/holdings/bes")).toBeTruthy());
+    const call = postCall(fetchMock, "/api/holdings/bes")!;
     expect(JSON.parse(call[1].body as string)).toMatchObject({
       name: "Örnek BES",
       currentFundValue: 279378,

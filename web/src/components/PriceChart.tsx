@@ -19,13 +19,12 @@ export function PriceChart({
   positive?: boolean;
 }) {
   const gradientId = useId();
-  const hover = useChartHover(points.length);
-  if (points.length < 2) return null;
-
   const width = 900;
   const height = 240;
   const padX = 6;
   const padY = 12;
+  const hover = useChartHover(points.length, padX / width);
+  if (points.length < 2) return null;
 
   const closes = points.map((p) => p.close);
   const min = Math.min(...closes);

@@ -20,6 +20,164 @@
 
 ---
 
+## 2026-07-12 (17) · ad-hoc — Pano: Değer Seyri genişletildi (dağılımla oran takası)
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: oranlar tersti — grafik dar kalıyordu).
+- **Ne yapıldı:** `.grid-2` 1.55fr/1fr → **1fr/1.55fr** (sol donut dar, sağ Değer Seyri geniş);
+  minmax(0, …) ile taşma güvenli. ≤1040px tek sütun davranışı değişmedi.
+- **Canlı doğrulama:** pano — grafik satırın ~%60'ında ✓.
+- **Dokunulan dosyalar:** web/src/App.css · **Test:** CSS-only, süitler yeşil.
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (16) · ad-hoc — Mobil Genel Bakış: döviz şeridi + araç satırı düzeni
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: mobilde döviz değerleri ve butonlar dağınık).
+- **Ne yapıldı:** ≤640px'te topbar düzeni: canlı fiyat şeridi (EUR/USD/altın) tam genişlik
+  TEK kompakt satır — sarmak yerine içeride yatay kayar (kaydırma çubuğu gizli, dokunuşla);
+  araçlar satırı (tazelik + Yenile + TRY/USD/EUR) tam genişlikte `space-between` ile tek
+  hizada; buton/çip dolguları mobilde sıkılaştırıldı.
+- **Doğrulama notu:** CSS-only; masaüstü görünüm etkilenmedi (canlı ✓). Telefon genişliği
+  bu oturumun tarayıcısında doğrulanamadı (pencere maksimize; iframe önizlemesini kendi
+  X-Frame-Options: DENY başlığımız engelledi — güvenlik doğru çalışıyor). Kullanıcı
+  telefonda sert yenilemeyle görecek.
+- **Dokunulan dosyalar:** web/src/App.css
+- **Test:** mevcut süitler yeşil (CSS-only).
+- **Durum:** tamamlandı (kullanıcı telefon teyidi bekleniyor).
+
+## 2026-07-12 (15) · ad-hoc — İşlem geçmişi sıralaması + görünür aksiyonlar + tablo taşması + detay responsive
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi, pozisyon detayı — 4 madde).
+- **Ne yapıldı:**
+  1. **Sıralama:** işlem geçmişinde aynı TARİHLİ kayıtlar için ikincil ölçüt yoktu → gün içi
+     art arda işlemler eski-üstte görünüyordu. `OrderByDescending(TransactedAtUtc)
+     .ThenByDescending(CreatedAtUtc)` — en son girilen üstte. BES katkı listesinde aynı kural
+     (PaidAtUtc → CreatedAtUtc). Integration testi eklendi (aynı gün 2 işlem → son girilen ilk).
+  2. **Aksiyon butonları:** düzenle/sil `@media (hover:hover)` ile hover'a dek gizliydi
+     (keşfedilemiyor) → artık HER ZAMAN görünür (opacity 0,65; hover/odakta 1).
+  3. **Tablo taşması:** `.holdings-table.fit` `table-layout: fixed` → `auto` (sütun ≥ içerik,
+     kırpma yok); `.history-scroll` `overflow-x: hidden` → `auto` (sığmazsa içeride yatay
+     kayar, sığıyorsa kaydırma oluşmaz).
+  4. **Detay responsive:** iki sütunlu `detail-grid` kırılımı 860→1100px (tablet alt alta);
+     ≤640px hero sıkılaşır + aksiyon butonları %50'lik satırlara yayılır.
+- **Canlı doğrulama:** Nakit detayı — 12.07'nin son işlemi (30.000 çıkarma) artık üstte ✓;
+  ✎/🗑 ikonları hover'sız görünür ✓; sütunlar içerik genişliğinde ✓.
+- **Dokunulan dosyalar:** backend (HoldingService sıralama ×2), tests (PortfolioApiTests +1),
+  web (App.css)
+- **Test:** Integration **122/122** (+1) · Web 94/94 · tsc temiz.
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (14) · ad-hoc — Varlık Ekle formu türe uyarlanır + canlı fiyat ön-doldurma
+- **Görev(ler):** ad-hoc (kullanıcı isteği: alanlar her varlık için aynı değil; gereksizler
+  sorulmasın; anlık fiyat alış fiyatına otomatik gelsin — yol gösterici olsun).
+- **Ne yapıldı (SC-39):** `AddHoldingDialog` tür-bazlı forma dönüştü:
+  - **Altın:** ad (ön-dolu "Altın (gram)") + gram + ₺/gram; XAU/gram/TRY otomatik gider;
+    **canlı gram altın fiyatı** alış fiyatına ön-dolar.
+  - **Döviz:** USD/EUR çipleri (ad/sembol/birim otomatik) + miktar + alış kuru; **canlı kur**
+    ön-dolar; döviz değişince tazelenir.
+  - **Hisse:** sembol alanı terk edilince `GET /stocks/{sym}/metrics` ile **ad + güncel $
+    fiyat otomatik**; hata → "elle gir" ipucu; pb kaynaktan (USD).
+  - **Fon:** ad + sembol (ops.) + adet + elle fiyat ("canlı kaynak yok" notu).
+  - **Nakit:** yalnız ad ("Nakit (TL)") + tutar; birim TRY, fiyat 1 otomatik.
+  - Sembol/birim/para birimi girdileri standart türlerden kaldırıldı (türden türetilir);
+    ön-dolan fiyat DÜZENLENEBİLİR ("Güncel fiyat otomatik geldi… geçmiş alışsa düzenle"
+    ipucu; kullanıcı elledikten sonra üzerine yazılmaz). Overlay kapatma "kullanıcı bir şey
+    girdiyse kapatma" kuralına bağlandı (ön-doldurma dirty saymaz).
+- **Canlı doğrulama:** Altın ₺6.225,55 · USD kuru ₺46,985 · MSFT → "Microsoft Corp" +
+  $385,10 otomatik; Nakit yalnız tutar; Döviz USD↔EUR geçişi ✓.
+- **Dokunulan dosyalar:** web (AddHoldingDialog.tsx yeniden yazıldı, test 8'e çıktı), 09 (SC-39)
+- **Test:** Web **94/94** (+3 net) · tsc temiz.
+- **Karar/Not:** Ön-dolan fiyat gösterim/kolaylık — hesap yine KODDA (CLAUDE.md §3.1);
+  fiyat alanı her zaman elle değiştirilebilir (geçmiş alış girişi ana senaryo).
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (13) · ad-hoc — "Varlıklarım" kendi sayfası + "Varlık Ekle" tek yerde
+- **Görev(ler):** ad-hoc (kullanıcı isteği: pozisyon tablosu panonun dibinde sönük;
+  ayrı menü/sayfa olsun; "Varlık Ekle" butonu ve işlevi YALNIZ orada — konu bütünlüğü).
+- **Ne yapıldı:**
+  1. **`HoldingsPage` (/varliklar):** başlıkta "＋ Varlık Ekle" (kabuk modalını açar),
+     pozisyon sayacı + tablo (satır → detay), yüklenme/hata/boş durumları. Menüye
+     "Varlıklarım" (cüzdan ikonu, Genel Bakış'ın altına) eklendi.
+  2. **Pano sadeleşti:** "Varlıklarım" kartı kaldırıldı (KPI + dağılım + Değer Seyri +
+     içgörü + notlar kaldı); boş durum CTA'sı /varliklar'a yönlendirir.
+  3. **"Varlık Ekle" tek yerde:** sidebar ve mobil üst bar butonları kaldırıldı (ölü CSS
+     dahil); Performans/Senaryo boş durum CTA'ları da /varliklar bağlantısına çevrildi.
+     Modal kabuk seviyesinde kaldı (context) — tetikleyici yalnız Varlıklarım'da.
+- **Canlı doğrulama:** /varliklar 4 pozisyonla ✓; Varlık Ekle modalı açılıyor ✓;
+  panoda tablo yok, menüde yeni öğe ✓.
+- **Dokunulan dosyalar:** web (HoldingsPage.tsx yeni + test 2, App.tsx, main.tsx,
+  PortfolioPage, PerformancePage, ScenarioPage, App.css)
+- **Test:** Web **91/91** (+2) · tsc temiz.
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (12) · ad-hoc — Grafik hover isabeti + SPA bayat paket düzeltmesi
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: hover noktası çizgiyle hizasız; "yarım
+  çizgi" hâlâ görülüyor).
+- **Ne yapıldı:**
+  1. **Hover isabeti:** imleç→nokta eşlemesi çizim alanının yatay kenar boşluğunu (padX=6/900)
+     hesaba katmıyordu → nokta imleçten ~10px kayıyor, dik segmentlerde "çizgiyle hizasız"
+     görünüyordu. `useChartHover(count, insetRatio)` — oran padX..width−padX aralığına
+     normalize edilir; üç grafik de geçirir. Canlı ölçüm: nokta x == imleç x, nokta çizginin
+     üstünde (getScreenCTM doğrulaması + zoom).
+  2. **Bayat SPA paketi (asıl "yarım çizgi hâlâ var" sebebi):** index.html'de Cache-Control
+     yoktu → tarayıcı sezgisel cache'liyor, deploy sonrası eski JS/CSS görünebiliyordu.
+     Caddyfile: `/` + `/index.html` → `no-cache`; `/assets/*` (hash'li) → 1 yıl immutable.
+     Kullanıcının BİR KEZ Ctrl+F5 yapması gerekir; sonrası otomatik.
+  3. ScenarioChart svg CSS yüksekliği viewBox'la 1:1 (260px).
+- **Dokunulan dosyalar:** web (useChartHover, PriceChart, ValueHistoryChart, ScenarioChart,
+  App.css), compose/caddy/Caddyfile
+- **Test:** Web **89/89** · tsc temiz · canlı: Cache-Control doğrulandı, hover zoom teyidi.
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (11) · T5.4 devamı — Senaryo tazeliği (cache damgası) + metin okuma + tam genişlik
+- **Görev(ler):** T5.4 devamı (kullanıcı geri bildirimi: işlem sonrası senaryo bayat kaldı;
+  sayıların metin yorumu istendi; açıklama paragrafı tam genişlik olsun).
+- **Ne yapıldı:**
+  1. **Cache damgası (`PortfolioCacheStamp`):** kullanıcı bazlı damga Değer Seyri + Senaryo
+     cache anahtarlarına girer; `HoldingService`'teki TÜM yazmalar (12 mutasyon —
+     `SaveAndBumpAsync`) damgayı tazeler → seriler işlemden hemen sonra **anında** güncel
+     (60s TTL beklenmez). Yanıt: seriler istek anında hesaplanır; önbellek 60 sn'dir ve
+     artık her işlemde otomatik düşer.
+  2. **Metin okuma (`buildScenarioNarrative`):** özet sayılarının deterministik cümle hâli
+     (yatırılan/bugünkü değer/nakde göre önde-geride/eşik üstü-altı + "durum tespitidir,
+     al-sat önerisi değildir") — LLM yok, web'de şablon; accent bloklu `.sc-narrative`.
+  3. **Tam genişlik:** `.sc-explain` max-width kaldırıldı (kart genişliğine uyar).
+- **Canlı doğrulama:** kullanıcının USD satışı sonrası senaryo 93.970/86.540 (holdings ile
+  birebir) — eski 140.955/133.430 bayatlığı bitti; narrative bloğu ve tam genişlik açıklama
+  ekranda ✓.
+- **Dokunulan dosyalar:** backend (PortfolioCacheStamp yeni, HoldingService SaveAndBump,
+  ScenarioService + PortfolioHistoryService anahtarlar), tests (ScenarioApiTests +1:
+  işlem→anında güncel), web (scenarioNarrative.ts yeni + test 4, ScenarioPage, App.css)
+- **Test:** SC-37 güncellendi — Integration **121/121** (+1) · Web **89/89** (+4) · tsc temiz.
+- **Karar/Not:** Fiyat tazelemesi (PriceFetchService, global) damgayı BUMP ETMEZ — orada
+  60s TTL yeterli (kullanıcı-bağımsız veri). Web vitest'i tam süitte OOM'a düşebiliyor →
+  `--maxWorkers=2` ile stabil (not).
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (10) · T5E.1 — Eğitim modülü veri modeli + migration (Faz 6 açılışı)
+- **Görev(ler):** T5E.1 (Faz 6 / Eğitim MVP'nin şema temeli — 03 §C birebir).
+- **Ne yapıldı:**
+  1. **Enum'lar:** `LessonLevel`, `LessonStatus` (Locked SAKLANMAZ — ön-koşuldan türetilir),
+     `QuizQuestionType` (varchar allow-list + CHECK, mevcut desen).
+  2. **11 entity** (`Finans.Domain/Education/`): LearningTrack, Lesson, LessonSection,
+     LessonPrerequisite (bileşik PK + kendine-ön-koşul CHECK yasağı), ConceptTag,
+     LessonConceptTag (M:N), Quiz (derse 1:0..1, LessonId null = bağımsız), QuizQuestion
+     (Explanation: doğru cevap neden doğru), QuizOption, UserLessonProgress (**UserId
+     kapsamlı**, UNIQUE(UserId,LessonId), ProgressPercent 0-100 CHECK), UserQuizAttempt.
+     `UserQuizAnswers` bilinçli MVP dışı (03 §C "ops." — analitik gerekirse).
+  3. **EF konfigürasyonları** (EducationConfigurations): unique slug'lar (Lessons,
+     LearningTracks, ConceptTags.Key), (TrackId,OrderIndex) indeksi, KVKK kaskadları
+     (User silinince progress/attempt düşer), track→ders→quiz kaskad zinciri
+     (PrerequisiteLesson Restrict — çift kaskad yolu yok).
+  4. **Migration `EducationModule`** üretildi ve compose başlangıç migrate'iyle canlı
+     Postgres'e uygulandı (11 tablo doğrulandı, `\dt`).
+- **Dokunulan dosyalar:** backend Domain (Enums + Education/ 11 dosya), Infrastructure
+  (FinansDbContext DbSet+conventions, EducationConfigurations yeni, Migrations/
+  20260712080722_EducationModule), tests (EducationModelTests yeni 4), docs (08/09)
+- **Test:** SC-38 — Integration **120/120** (+4: slug unique, %101 CHECK, kendine ön-koşul,
+  track kaskadı) · Application 258/258 · yeşil.
+- **Karar/Not:** İçerik DB'de Markdown (03 §C); MVP'de `Lessons.BodyMarkdown` yeter,
+  `LessonSections` zengin içerik için hazır. Kilit durumu şemada yok — okuma yolunda türetim.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.2 — eğitim seed'i (Temeller track'i + 5 ders + quiz + örnek ilerleme,
+  03 §12.5) → T6.1 içerikle birlikte düşünülecek.
+
 ## 2026-07-12 (9) · ad-hoc — Grafik çizgisi sonuna kadar çizilmiyor (Chromium dash hatası)
 - **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: Performans + Hisse grafiklerinde yeşil
   çizgi sağ kenara ulaşmıyor).
