@@ -2640,6 +2640,9 @@ body.drawer-lock {
 .vh-dot.cost {
   border-top: 2px dashed var(--muted, #97a3c9);
 }
+.vh-dot.threshold {
+  border-top: 2px dotted #e8b34c;
+}
 /* Maliyet çizgisi de seriyle birlikte belirir (animasyonlar hep açık — 2026-07-11). */
 .vh-cost-line {
   animation: spark-fade 700ms ease 200ms backwards;
@@ -2705,6 +2708,53 @@ body.drawer-lock {
 .ch-tip-row b {
   font-weight: 700;
   color: var(--text, #eef2ff);
+}
+
+/* ───── Senaryo sayfası (T5.4) ───── */
+.sc-picker {
+  margin-bottom: 4px;
+}
+.sc-picker button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.sc-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sc-stat {
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.sc-stat .label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted, #97a3c9);
+  margin-bottom: 6px;
+}
+.sc-stat .num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #eef2ff);
+}
+.sc-stat .sub {
+  font-size: 11.5px;
+  color: var(--muted, #97a3c9);
+  margin-top: 3px;
+}
+.sc-explain {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted, #97a3c9);
+  max-width: 88ch;
 }
 
 /* ───── Motion katmanı (v2 — ui-ux-pro-max "Modern Dark", motion 7/10) ─────
@@ -2920,13 +2970,26 @@ body.drawer-lock {
   height: 56px;
   margin-top: 10px;
 }
+/* Çizim animasyonu (pathLength=1 + dashoffset 1→0). Chromium, non-scaling-stroke'lu
+   yollarda dash uzunluğunu EKRAN uzayında ölçer (bilinen hata) → yatay esnetilmiş
+   grafikte dasharray:1 yolu tam kapatamaz ve çizginin kuyruğu eksik kalırdı. Bu yüzden
+   çizim bitince ikinci (1ms) animasyon dash kısıtını tamamen kaldırır — çizgi her
+   tarayıcıda garantili TAM çizilir. */
 .spark-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: spark-draw 1000ms cubic-bezier(0.33, 1, 0.68, 1) 150ms forwards;
+  animation:
+    spark-draw 1000ms cubic-bezier(0.33, 1, 0.68, 1) 150ms forwards,
+    spark-solid 1ms linear 1160ms forwards;
 }
 @keyframes spark-draw {
   to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes spark-solid {
+  to {
+    stroke-dasharray: none;
     stroke-dashoffset: 0;
   }
 }

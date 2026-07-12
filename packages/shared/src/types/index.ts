@@ -257,6 +257,36 @@ export interface PortfolioHistory {
   asOf: string;
 }
 
+/** Senaryo serisinin bir günü (T5.4). inflationAdjustedCost null = enflasyon verisi yok. */
+export interface ScenarioPoint {
+  date: string;
+  value: number;
+  cost: number;
+  inflationAdjustedCost?: number | null;
+}
+
+/** Senaryo özeti — sayılar koddan; yorum/tavsiye YOK (çerçeve UI'da). */
+export interface ScenarioSummary {
+  currentValue: number;
+  invested: number;
+  difference: number;
+  differenceRatio?: number | null;
+  inflationAdjustedInvested?: number | null;
+  annualInflationRate?: number | null;
+}
+
+/** GET /api/portfolio/scenario/{holdingId} yanıtı (T5.4) — geçmişe dönük, tahmin DEĞİL. */
+export interface ScenarioComparison {
+  holdingId: string;
+  name: string;
+  assetType: AssetType;
+  baseCurrency: CurrencyCode;
+  points: ScenarioPoint[];
+  summary: ScenarioSummary;
+  firstDate?: string | null;
+  asOf: string;
+}
+
 /** Fiyat geçmişi dönem anahtarları (T4.5). */
 export type StockHistoryRange = "1w" | "1m" | "3m" | "1y" | "5y" | "max";
 

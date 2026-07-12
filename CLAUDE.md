@@ -210,8 +210,8 @@ finans/                       ← monorepo (pnpm workspaces)
 
 ## 9. Sıradaki Adım
 
-**Faz 4'ü bitir (T4.2-T4.4: hisse metrikleri + LLM açıklama), ardından Dalga 1:**
-Faz 5 (fiyat geçmişi → Değer Seyri + Senaryo v1) → Faz 6 (Eğitim MVP + sözlük).
+**Faz 0-5 tamam (Faz 5 kapandı 2026-07-12: Değer Seyri + Senaryo v1 canlı).**
+Dalga 1 finali: **Faz 6 — Eğitim MVP + kavram sözlüğü** (vizyonun kalbi).
 Görev kırılımı: `.claude/docs/08-BACKLOG.md` · strateji: `.claude/docs/14-PRODUCT-STRATEGY.md`.
 
 ---

@@ -15,6 +15,7 @@ namespace Finans.Api.Controllers;
 public sealed class PortfolioController(
     IPortfolioService portfolio,
     IPortfolioHistoryService history,
+    IScenarioService scenario,
     INudgeService nudges,
     ILlmCommentaryService commentary,
     IHoldingService holdings) : ControllerBase
@@ -33,6 +34,16 @@ public sealed class PortfolioController(
     public async Task<ActionResult<PortfolioHistoryDto>> GetHistory(
         [FromQuery] string? period, [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
         Ok(await history.GetHistoryAsync(period, baseCurrency, ct));
+
+    /// <summary>
+    /// GET /api/portfolio/scenario/{holdingId} (T5.4) — geçmişe dönük "almasaydım /
+    /// nakitte dursaydı" karşılaştırması: değer vs yatırılan vs alım gücü eşiği.
+    /// **Tahmin ve tavsiye yok** (CLAUDE.md §2); başkasının pozisyonu → 404 (IDOR yok).
+    /// </summary>
+    [HttpGet("scenario/{holdingId:guid}")]
+    public async Task<ActionResult<ScenarioComparisonDto>> GetScenario(
+        Guid holdingId, [FromQuery] CurrencyCode? baseCurrency, CancellationToken ct) =>
+        Ok(await scenario.CompareAsync(holdingId, baseCurrency, ct));
 
     /// <summary>
     /// GET /api/portfolio/nudges — kural tabanlı eğitici notlar (FR-2.4). Durumu açıklar,

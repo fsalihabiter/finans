@@ -54,6 +54,8 @@ public static class DependencyInjection
         services.AddScoped<IPortfolioService, PortfolioService>();
         // T5.2: değer geçmişi — T5.1 saf servisinin EF orkestrasyonu; cache anahtarı UserId'li.
         services.AddScoped<IPortfolioHistoryService, PortfolioHistoryService>();
+        // T5.4: Senaryo v1 — tek pozisyon "nakitte dursaydı" karşılaştırması (tahmin yok).
+        services.AddScoped<IScenarioService, ScenarioService>();
         services.AddScoped<ISettingsService, SettingsService>();
 
         // Arka plan job (T-BES.6b ileri): aktif BES planlarını periyodik ilerletir. Konfig

@@ -19,6 +19,7 @@ import type {
   PortfolioHistoryPeriod,
   PortfolioSummary,
   PricesResponse,
+  ScenarioComparison,
   Settings,
   StockHistory,
   StockHistoryRange,
@@ -97,6 +98,10 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     getPortfolioHistory: (period: PortfolioHistoryPeriod, baseCurrency?: CurrencyCode) =>
       get<PortfolioHistory>(
         `/api/portfolio/history?period=${period}${baseCurrency ? `&baseCurrency=${baseCurrency}` : ""}`),
+    /** GET /api/portfolio/scenario/{id} — "nakitte dursaydı" karşılaştırması (T5.4; tahmin DEĞİL). */
+    getScenario: (holdingId: string, baseCurrency?: CurrencyCode) =>
+      get<ScenarioComparison>(
+        withBaseCurrency(`/api/portfolio/scenario/${encodeURIComponent(holdingId)}`, baseCurrency)),
     getHoldings: (baseCurrency?: CurrencyCode) =>
       get<Holding[]>(withBaseCurrency("/api/holdings", baseCurrency)),
     getHolding: (id: string, baseCurrency?: CurrencyCode) =>

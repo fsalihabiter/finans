@@ -29,6 +29,7 @@ export const queryKeys = {
   summary: (baseCurrency?: CurrencyCode) => ["summary", baseCurrency ?? "default"] as const,
   portfolioHistory: (period: string, baseCurrency?: CurrencyCode) =>
     ["portfolio-history", period, baseCurrency ?? "default"] as const,
+  scenario: (holdingId: string) => ["scenario", holdingId] as const,
   holdings: (baseCurrency?: CurrencyCode) => ["holdings", baseCurrency ?? "default"] as const,
   holding: (id: string) => ["holding", id] as const,
   settings: ["settings"] as const,
@@ -55,6 +56,20 @@ export function usePortfolioHistory(period: PortfolioHistoryPeriod, baseCurrency
   return useQuery({
     queryKey: queryKeys.portfolioHistory(period, baseCurrency),
     queryFn: () => api.getPortfolioHistory(period, baseCurrency),
+    staleTime: 60_000,
+    retry: 1,
+  });
+}
+
+/**
+ * Senaryo v1 (T5.4): tek pozisyon "nakitte dursaydı" karşılaştırması.
+ * Geçmişe dönük — tahmin değil (CLAUDE.md §2).
+ */
+export function useScenario(holdingId: string) {
+  return useQuery({
+    queryKey: queryKeys.scenario(holdingId),
+    queryFn: () => api.getScenario(holdingId),
+    enabled: holdingId.length > 0,
     staleTime: 60_000,
     retry: 1,
   });
@@ -182,6 +197,7 @@ function useInvalidatePortfolio() {
     void qc.invalidateQueries({ queryKey: ["summary"] });
     void qc.invalidateQueries({ queryKey: ["holdings"] });
     void qc.invalidateQueries({ queryKey: ["portfolio-history"] });
+    void qc.invalidateQueries({ queryKey: ["scenario"] });
   };
 }
 

@@ -4,23 +4,22 @@
 > başında hook bunu otomatik gösterir. Kaynak plan: [`../docs/08-BACKLOG.md`](../docs/08-BACKLOG.md).
 > Bir görev bitince buradan çıkar, backlog'da `[x]` işaretle, TASKLOG'a girdi ekle.
 
-**Aktif faz:** ✅ **Faz 0-4 TAMAM** (Faz 4 kapandı 2026-07-12: /hisse canlı) →
-🚧 **Dalga 1 devamı: Faz 5** (fiyat geçmişi → Değer Seyri + Senaryo v1)
+**Aktif faz:** ✅ **Faz 0-5 TAMAM** (Faz 5 kapandı 2026-07-12: Değer Seyri + Senaryo v1 canlı) →
+🚧 **Dalga 1 finali: Faz 6** (Eğitim MVP + kavram sözlüğü — vizyonun kalbi)
 
 **Strateji (2026-07-11):** [`14-PRODUCT-STRATEGY.md`](../docs/14-PRODUCT-STRATEGY.md) —
 finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da kırılımlı).
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T5.4** — Senaryo v1 (geçmişe dönük "dursaydı/almasaydım" karşılaştırması; tahmin YOK,
-   kalıcı disclaimer) — ScenarioPage ComingSoon → gerçek sayfa; **Faz 5 DoD kapanışı**
-2. OSS kalanı — README ekran görüntüleri tazeleme (pano artık gerçek Değer Seyri ile)
+1. **Faz 6 açılışı** — Eğitim MVP + kavram sözlüğü (backlog Faz 6 kırılımı; 5 ders +
+   "Senin portföyünde" bağlamı + quiz + sözlük)
+2. OSS kalanı — README ekran görüntüleri tazeleme (pano Değer Seyri + Senaryo artık canlı)
 
-> ✅ **T5.1–T5.3 bitti (2026-07-12):** günlük değer+maliyet serisi (saf servis) →
-> `GET /api/portfolio/history` (canlı teyit) → **web Değer Seyri canlı**: pano kartı
-> (son 1 yıl, compact) + Performans dönem seçicili iki-serili grafik (değer + kesikli
-> yatırılan; "geçmiş, tahmin değil" notu). **Bonus (SC-34):** özet bayat AvgCost
-> düzeltmesi — pano maliyet KPI'sı 646.635→522.385 (özet = liste = seri).
+> ✅ **FAZ 5 KAPANDI (2026-07-12, T5.1→T5.4):** günlük değer+maliyet serisi (saf servis) →
+> `GET /api/portfolio/history` → web Değer Seyri (pano + Performans, hover tooltip) →
+> **Senaryo v1 canlı**: "nakitte dursaydı" karşılaştırması + alım gücü eşiği (üç çizgi,
+> tahmin YOK). Bonus (SC-34): özet bayat AvgCost düzeltmesi (özet = liste = seri).
 
 > ✅ **T4.2 + T4.3 bitti (2026-07-11/12):** Finnhub sağlayıcı (3 uç, token başlıkta, kaba bant
 > eşikleri KODDA, 1s cache) canlı teyitli (AAPL/MSFT gerçek veriyle; anahtar .env'de). /explain:

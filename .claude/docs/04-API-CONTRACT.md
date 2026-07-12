@@ -248,6 +248,26 @@ Günlük portföy değeri + yatırılan maliyet serisi (T5.1 deterministik hesap
 ```
 > Pozisyonu olmayan kullanıcı → `points: []` (izolasyon; başkasının verisi asla dönmez).
 
+### `GET /api/portfolio/scenario/{holdingId}`
+Senaryo v1 (T5.4): tek pozisyon için geçmişe dönük **"almasaydım / nakitte dursaydı"**
+karşılaştırması. Üç seri: gerçek değer · yatırılan (nominal) · alım gücü eşiği
+(enflasyon düzeltmeli yatırılan; enflasyon verisi yoksa null). **Tahmin/tavsiye YOK**
+(CLAUDE.md §2). Başkasının pozisyonu → 404 (IDOR yok); cache 60 sn `UserId`'li; ≤500 nokta.
+
+```json
+200 →
+{
+  "holdingId": "…", "name": "Altın (gram)", "assetType": "Gold", "baseCurrency": "TRY",
+  "points": [ { "date": "2024-06-01", "value": 181851, "cost": 181851, "inflationAdjustedCost": 181851 }, … ],
+  "summary": {
+    "currentValue": 260000, "invested": 181851, "difference": 78149,
+    "differenceRatio": 0.4297, "inflationAdjustedInvested": 250000, "annualInflationRate": 0.38
+  },
+  "firstDate": "2024-06-01", "asOf": "2026-07-12T09:00:00Z"
+}
+404 → başkasının / bilinmeyen pozisyon
+```
+
 ---
 
 ## 7.5 Endpoint'ler — Eğitim Modülü (Faz 5)

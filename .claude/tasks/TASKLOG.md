@@ -20,6 +20,54 @@
 
 ---
 
+## 2026-07-12 (9) · ad-hoc — Grafik çizgisi sonuna kadar çizilmiyor (Chromium dash hatası)
+- **Görev(ler):** ad-hoc (kullanıcı geri bildirimi: Performans + Hisse grafiklerinde yeşil
+  çizgi sağ kenara ulaşmıyor).
+- **Ne yapıldı:** Kök neden: çizim animasyonu `pathLength=1` + `stroke-dasharray:1` kullanır;
+  Chromium, `vector-effect: non-scaling-stroke`'lu yollarda dash uzunluğunu **ekran uzayında**
+  ölçer (bilinen hata) → yatay esnetilmiş grafikte 1 birimlik dash yolu kapatamaz, kuyruk eksik
+  kalırdı. Çözüm: çizim bitince 1ms'lik ikinci animasyon (`spark-solid`) dash kısıtını tamamen
+  kaldırır (`stroke-dasharray:none`) — çizgi her tarayıcıda garantili tam. Tüm grafikler
+  (`spark-line` kullanan Sparkline/PriceChart/ValueHistoryChart/ScenarioChart) düzeldi.
+- **Canlı doğrulama:** Performans Tümü + 1A ve Hisse GOOGL 1Y — çizgi sağ kenara kadar ✓.
+- **Dokunulan dosyalar:** web/src/App.css (spark-line animasyonu + açıklama)
+- **Test:** CSS-only; mevcut süitler yeşil (SC-35 kapsamı).
+- **Durum:** tamamlandı.
+
+## 2026-07-12 (8) · T5.4 — Senaryo v1: "nakitte dursaydı" karşılaştırması — FAZ 5 KAPANDI
+- **Görev(ler):** T5.4 (Senaryo v1 — geçmişe dönük, tek değişken; Faz 5 DoD kapanışı).
+- **Ne yapıldı:**
+  1. **Backend:** `GET /api/portfolio/scenario/{holdingId}` — `IScenarioService` +
+     `ScenarioService`: tek pozisyon `HoldingHistoryInputs` ortak indirgemesiyle (T5.2'den
+     çıkarıldı — Değer Seyri ile AYNI kurallar) T5.1 saf servisine → günlük (değer,
+     yatırılan) serisi; üzerine **alım gücü eşiği**: `ScenarioCalculationService.
+     InflationAdjustedCostSeries` (saf; eşik(d)=eşik(d−1)×g+Δmaliyet, g=(1+π)^(1/365,25);
+     enflasyon yoksa null). Özet: bugünkü değer, yatırılan, fark ₺/%, eşik, kullanılan oran.
+     IDOR 404; cache `UserId+HoldingId` 60s; ≤500 nokta (ortak Downsample).
+  2. **Web:** ScenarioPage ComingSoon → **gerçek sayfa**: pozisyon seçici çipler (nakit
+     seçenek dışı — totolojik), özet kartları, `ScenarioChart` (ÜÇ çizgi: değer dolgulu ·
+     nakitte dursaydı kesikli · alım gücü eşiği noktalı amber; hover tooltip üç değerle),
+     eğitici çerçeve paragrafı + kalıcı Disclaimer + "geçmiş, tahmin değil". shared:
+     `ScenarioComparison` tipleri + `getScenario`; hook `useScenario` + invalidation.
+  3. 04-API-CONTRACT §7.2'ye sözleşme; 08 T5.4 [x] + **Faz 5 DoD ✅**.
+- **Canlı doğrulama (Docker, gerçek veri):** USD: değer 140.955 > eşik 136.895 (alım gücünü
+  korumuş); Altın: nominal +67.779 kârda AMA eşik 346.835 > değer 273.924 (reel kayıp) —
+  vizyondaki eğitici ânın kendisi. Üç çizgili tooltip (27.09.2025 · üç değer) çalışıyor.
+- **Dokunulan dosyalar:** backend (ScenarioCalculationService + IScenarioService yeni,
+  ScenarioService yeni, HoldingHistoryInputs yeni [T5.2'den ayrıştırma],
+  PortfolioHistoryService sadeleşti, PortfolioController, DI), tests
+  (ScenarioCalculationServiceTests 6 yeni, ScenarioApiTests 4 yeni), shared (types+api),
+  web (ScenarioChart yeni, ScenarioPage gerçek sayfa + test 2, hooks, App.css), docs (04/08/09)
+- **Test:** SC-36 + SC-37 — Application **258/258** (+6) · Integration **116/116** (+4) ·
+  Web **85/85** (+2) · tsc temiz.
+- **Karar/Not:** Eşik çizgisi gösterge amaçlı (parasal doğruluk kaynağı değil; günlük çarpan
+  tek Math.Pow, sonrası decimal — deterministik). Satış deltası eşikten nominal düşer
+  (illüstrasyon sadeliği). Enflasyon oranı UI'da şeffafça gösterilir ("yıllık %38,0
+  enflasyonla") — placeholder TÜİK verisi gerçekle değiştirilmeli (Faz 8 enflasyon paneli).
+- **Durum:** tamamlandı — **FAZ 5 DoD karşılandı.**
+- **Sıradaki:** Faz 6 — Eğitim MVP + kavram sözlüğü (T6.1 backlog kırılımı) veya OSS README
+  ekran görüntüleri tazeleme.
+
 ## 2026-07-12 (7) · T5.3 — Web "Değer Seyri": pano grafiği + Performans dönem seçicili seri
 - **Görev(ler):** T5.3 (Değer Seyri UI — Faz 5'in kullanıcıya görünen yüzü).
 - **Ne yapıldı:**
