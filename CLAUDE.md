@@ -298,3 +298,46 @@ Her geliştirmede, **kullanıcı istemese bile** şunlar sağlanır:
 > Hızlı kontrol: `11` §10 (güvenlik kontrol listesi) ve `10` §9 / `12` §10
 > (yapma listeleri). Çok-kullanıcı (kimlik) açılmadan IDOR + AuthZ + rate-limit
 > testleri yeşil olmalı.
+
+---
+
+## 14. Model Yönlendirme (Claude Code araç kutusu)
+
+> Bu bölüm **uygulamanın LLM'i (§3.1) hakkında DEĞİL** — geliştirme sırasında
+> Claude Code'un/aracıların **hangi modeli hangi iş için** kullanacağıyla ilgili.
+> İlke: *işi kalite çıtasını karşılayan en ucuz modele ver; pahalı zekayı
+> yalnızca gerçekten gerektiğinde harca.* Puanlar 1–10, göreli (kesin fiyat değil).
+
+| Model | Maliyet skoru (yüksek = ucuz) | Zeka | Beğeni | Ne zaman |
+|---|:---:|:---:|:---:|---|
+| **Fable 5** (`claude-fable-5`) | 1 | 10 | 10 | En zor, **uzun-ufuklu** işler: çok adımlı refactor/migrasyon, derin tasarım, tek yanlış kararın pahalı olduğu yerler. **Rezerve** — rutin trafiğe sokma. |
+| **Opus 4.8** (`claude-opus-4-8`) | 3 | 9 | 9 | **Orkestratör / planlayıcı**: yüksek yargıyla kapsam + adversaryal kontrol; beğeni isteyen karmaşık kod ve kararlar. Etkileşimli zor işlerin varsayılanı. |
+| **Sonnet 5** (`claude-sonnet-5`) | 6 | 7 | 7 | **Delege yürütme / scout**: iyi kapsanmış implementasyon, kod arama, çok-dosyalı mekanik iş. Kalite/maliyet dengesinin tatlı noktası. |
+| **Haiku 4.5** (`claude-haiku-4-5-20251001`) | 8 | 5 | 4 | **En ucuz scout**: rutin trafik, hızlı arama/lookup, yüksek hacimli fan-out, basit düzenleme. Hacim + hız gerektiğinde. |
+| **Yerel / nemotron** (`nvidia/nemotron-3-super-120b-a12b:free`) | 10 | 3 | 2 | Ücretsiz/çevrimdışı at-üstü işler: maliyet/gizliliğin kaliteden önemli olduğu taslaklar. **Parasal hesap veya güven-kritik yorumda tek başına ASLA** (bkz. §3.1, deterministik bekçiler). |
+
+### 14.1 Dinamik iş akışı yönlendirme kuralı
+
+Çok adımlı / dinamik iş akışlarında (orkestratör + alt-ajanlar):
+
+1. **Orkestratör yüksek yargıyla planlar** (Opus 4.8, gerekiyorsa Fable 5):
+   kapsamı belirler + **adversaryal** kontrol yapar (fable-mode kapıları: scope,
+   evidence, adversarial, verify, calibrate). Plan ve karar burada oturur.
+2. **Yürütmeyi kalite çıtasını karşılayan EN UCUZ modele delege eder** — tipik
+   olarak **Sonnet 5** (ya da yeterliyse **Haiku 4.5**) scout'ları. Scout'lar
+   arama/implementasyon/kontrol yapıp **bulgularını orkestratöre geri raporlar.**
+3. **Orkestratör raporları birleştirir, doğrular (verify)** ve gerekirse yeniden
+   delege eder. Sentez/karar hep üst-model orkestratörde kalır.
+
+**Varsayılanlar:**
+- **Rutin trafik → daha ucuz model.** Basit düzenleme, arama, lookup, tekrarlı
+  fan-out varsayılan olarak **Haiku/Sonnet**'e gider; Opus'u yalnızca yargı/beğeni
+  gerektiğinde çağır.
+- **Fable 5 → yalnızca zor, uzun-ufuklu işler için rezerve.** Orkestratör bir işi
+  açıkça "Fable-sınıfı" işaretlemedikçe kullanılmaz.
+- **Yerel/ücretsiz nemotron → gizlilik/maliyet hassas, kaliteyi feda edebilen
+  işler**; sonuç deterministik doğrulamadan geçmeden güvenilmez.
+
+> Uygulama karşılığı: `Workflow` script'inde orkestratör ana döngüdür; `agent()`
+> çağrılarında `opts.model` / `opts.effort` ile scout'ları ucuz modele indir,
+> yalnızca en zor doğrula/yargıla aşamalarını üst modele bırak.

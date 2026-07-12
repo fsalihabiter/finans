@@ -20,6 +20,72 @@
 
 ---
 
+## 2026-07-12 (21) · ad-hoc — CLAUDE.md §14: Claude Code araç kutusu model yönlendirme tablosu + kural
+- **Görev(ler):** ad-hoc (araç kutusu/geliştirme konvansiyonu; finans backlog dışı).
+- **Ne yapıldı:** CLAUDE.md'ye **§14 Model Yönlendirme** eklendi — (1) 5 modelli tablo
+  (Fable 5 · Opus 4.8 · Sonnet 5 · Haiku 4.5 · yerel nemotron; kolonlar: maliyet skoru
+  [yüksek=ucuz] · zeka · beğeni · ne zaman); (2) §14.1 dinamik iş akışı kuralı:
+  orkestratör (Opus/Fable) yüksek yargıyla planlar (kapsam+adversaryal) → yürütmeyi
+  kalite çıtasını karşılayan **en ucuz** modele (Sonnet/Haiku scout) delege eder →
+  scout'lar orkestratöre geri raporlar; rutin trafik ucuz modele, Fable 5 yalnız
+  zor/uzun-ufuklu işlere rezerve. Workflow `agent(opts.model/effort)` karşılığı not düşüldü.
+  Yerel model kimliği kullanıcıyla teyit edildi (nemotron :free — uygulamanın Analiz modeli).
+- **Dokunulan dosyalar:** CLAUDE.md (§14 + §14.1)
+- **Test:** yok (yalnız doküman/konvansiyon; kod-davranış değişmedi).
+- **Karar/Not:** §14 uygulamanın LLM'i (§3.1) değil, geliştirme aracı-kutusu yönlendirmesidir;
+  bu ayrım bölüm başında açıkça yazıldı.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.2 (eğitim seed'i) — plan değişmedi.
+
+## 2026-07-12 (20) · ad-hoc — ScenarioService'e FX yarışı telafisi (SC-42 deseni /scenario'ya)
+- **Görev(ler):** ad-hoc (girdi 19'un bilinen sınırı; SC-42 genişletmesi).
+- **Ne yapıldı:** `ScenarioService.BuildAsync` de aynı saf servisi kullandığından aynı yarışta
+  işlenmemiş `MissingFxRateException` → 500 dönebiliyordu. `PortfolioHistoryService`'teki desen
+  birebir uygulandı: kur bulunamayınca `IPriceFetchService.RefreshAsync` **bir kez** tetiklenir
+  (single-flight → paralel `/prices` ile birleşir), kurlar yeniden okunup hesap tekrarlanır;
+  kur yine yoksa sözleşmeli **502 UPSTREAM_ERROR** (`UpstreamException`).
+- **Dokunulan dosyalar:** backend/src/Finans.Infrastructure/Services/ScenarioService.cs ·
+  backend/tests/Finans.Integration.Tests/PortfolioHistoryFxRaceTests.cs (+2 senaryo testi) ·
+  .claude/docs/09-TESTING-STRATEGY.md (SC-42 satırı genişletildi)
+- **Test:** SC-42 ✓ — FxRace integration 4/4 (history self-heal+502, scenario self-heal+502;
+  kur silinmiş seed + stub/çökük sağlayıcı, `fxStub.Calls==1`); tam backend süiti yeşil
+  (bu girdinin altındaki koşum). Web değişmedi (96 test önceki koşumda yeşil).
+- **Karar/Not:** LoadFxAsync iki serviste yinelendi (küçük, bilinçli — ortaklaştırma ileride
+  üçüncü kullanıcı çıkarsa).
+- **Durum:** tamamlandı (canlı Docker doğrulaması yapılmadı — backend imajı yeniden build ister).
+- **Sıradaki:** T5E.2 (eğitim seed'i) — plan değişmedi.
+
+## 2026-07-12 (19) · ad-hoc — Pano Değer Seyri ilk yüklemede boş görünme (FX yarışı) düzeltmesi
+- **Görev(ler):** ad-hoc (kod okumasıyla doğrulanmış teşhis; SC-42).
+- **Ne yapıldı:**
+  - **Web (maskeleme):** Pano Değer Seyri kartına `history.isError` dalı eklendi — hata artık
+    "en az iki günlük veri gerekir" boş-veri metniyle MASKELENMİYOR (Performans sayfasındaki
+    desenin panoya uyarlanması).
+  - **Web (telafi):** Fiyat tazeleme etkisi (`refreshedAtUtc` değişimi) artık `portfolio-history`
+    sorgusunu da invalidate ediyor (önce yalnız summary+holdings) → ilk yüklemede hatada kalan
+    seri kendini toparlıyor.
+  - **Backend (kök neden):** `CurrencyConverter.Convert` artık ayrı tip `MissingFxRateException`
+    (InvalidOperationException'dan türer) fırlatıyor. `PortfolioHistoryService` bu hatayı yakalayıp
+    **bir kez** `IPriceFetchService.RefreshAsync` tetikliyor (single-flight → paralel `/prices`
+    çağrısıyla birleşir, çift dış çağrı yok), kurları yeniden okuyup hesaplıyor; kur yine yoksa
+    500 yerine sözleşmeli **502 UPSTREAM_ERROR** (`UpstreamException`).
+- **Dokunulan dosyalar:** web/src/routes/PortfolioPage.tsx · web/src/routes/PortfolioPage.test.tsx ·
+  backend/src/Finans.Application/Portfolio/CurrencyConverter.cs ·
+  backend/src/Finans.Infrastructure/Services/PortfolioHistoryService.cs ·
+  backend/tests/Finans.Application.Tests/Portfolio/{CurrencyConverterTests,PortfolioValueHistoryServiceTests}.cs ·
+  backend/tests/Finans.Integration.Tests/PortfolioHistoryFxRaceTests.cs (yeni) ·
+  .claude/docs/09-TESTING-STRATEGY.md (SC-42)
+- **Test:** SC-42 ✓ — integration 2 yeni (kur silinmiş seed: stub sağlayıcıyla self-heal 200 +
+  `fxStub.Calls==1`; çökük sağlayıcıyla 502 UPSTREAM_ERROR) + web 2 yeni (hata metni; history
+  yeniden tetikleme) + 2 unit assert `MissingFxRateException`e sıkılaştırıldı.
+  `dotnet test` 267+127 yeşil · web vitest 31 dosya/96 test yeşil.
+- **Karar/Not:** Kur-yokluğu ayrı istisna tipi olarak modellendi ki üst katman FX yarışını
+  diğer beklenmeyen hatalardan ayırabilsin. **Bilinen sınır:** `ScenarioService` aynı saf
+  servisi kullanıyor ve aynı yarışta hâlâ 500 dönebilir — ayrı iş olarak işaretlendi.
+- **Durum:** tamamlandı (canlı Docker doğrulaması yapılmadı — web imajı yeniden build ister:
+  `docker compose up -d --build caddy`).
+- **Sıradaki:** T5E.2 (eğitim seed'i) — plan değişmedi.
+
 ## 2026-07-12 (18) · T5.5+T5.6 — Getiri hesabı kenar-durum düzeltmeleri (fiyatsız kalem + kronolojik aşırı satış)
 - **Görev(ler):** T5.5 (B1) + T5.6 (B2) — kod okumasıyla doğrulanmış iki kenar-durum hatası.
 - **Ne yapıldı:**
