@@ -74,8 +74,11 @@ public class CurrencyConverterTests
     public void RateFor_throws_when_rate_unknown()
     {
         // Hiç kur yokken USD→TRY bilinmez → sessizce yanlış sayı değil, açık hata.
+        // Ayrı tip (MissingFxRateException) → üst katman FX yarışını ayırt edebilir (SC-42).
         var empty = new CurrencyConverter([]);
-        Assert.Throws<InvalidOperationException>(() => empty.RateFor(CurrencyCode.USD, CurrencyCode.TRY));
+        var ex = Assert.Throws<MissingFxRateException>(() => empty.RateFor(CurrencyCode.USD, CurrencyCode.TRY));
+        Assert.Equal(CurrencyCode.USD, ex.From);
+        Assert.Equal(CurrencyCode.TRY, ex.To);
     }
 
     [Fact]

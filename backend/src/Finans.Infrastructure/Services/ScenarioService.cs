@@ -1,5 +1,6 @@
 using Finans.Application.Common;
 using Finans.Application.Portfolio;
+using Finans.Application.Pricing;
 using Finans.Domain.Enums;
 using Finans.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +14,18 @@ namespace Finans.Infrastructure.Services;
 /// <see cref="ScenarioCalculationService"/>) eklenir. **Tahmin yok** (CLAUDE.md §2).
 /// **Kullanıcıya kapsanır**: başkasının pozisyonu → 404 (IDOR yok, 11 §3); cache anahtarı
 /// UserId + HoldingId içerir (10 §3).
+///
+/// FX yarışı (SC-42 — Değer Seyri ile aynı desen): kur satırları fiyat tazeleme turunda
+/// yazılır; kur commit edilmeden gelen istekte tazelemeyi bir kez kendisi tetikler
+/// (single-flight → paralel /prices ile birleşir) ve yeniden hesaplar; kur yine yoksa
+/// 500 yerine sözleşmeli 502 döner.
 /// </summary>
 public sealed class ScenarioService(
     FinansDbContext db,
     ICurrentUser currentUser,
     IInflationRateProvider inflationRateProvider,
     IAppCache cache,
+    IPriceFetchService priceFetch,
     TimeProvider clock) : IScenarioService
 {
     internal static readonly TimeSpan Ttl = TimeSpan.FromSeconds(60);
@@ -62,16 +69,29 @@ public sealed class ScenarioService(
             .Select(p => new PricePoint(DateOnly.FromDateTime(p.AsOfUtc), p.Price))
             .ToList();
 
-        var fxRates = (await db.FxRates
-                .OrderBy(r => r.AsOfUtc)
-                .Select(r => new { r.FromCurrency, r.ToCurrency, r.Rate, r.AsOfUtc })
-                .ToListAsync(ct))
-            .Select(r => new FxRatePoint(
-                DateOnly.FromDateTime(r.AsOfUtc), r.FromCurrency, r.ToCurrency, r.Rate))
-            .ToList();
-
         var input = HoldingHistoryInputs.ToInput(holding, snapshots, today);
-        var series = PortfolioValueHistoryService.Calculate([input], fxRates, baseCcy, today);
+
+        IReadOnlyList<DailyValuePoint> series;
+        try
+        {
+            series = PortfolioValueHistoryService.Calculate([input], await LoadFxAsync(ct), baseCcy, today);
+        }
+        catch (MissingFxRateException)
+        {
+            // İlk yükleme FX yarışı: kur satırları paralel fiyat tazeleme turunda henüz
+            // yazılmamış olabilir. Turu bir kez tetikle (cache'li/single-flight), kurları
+            // yeniden okuyup dene; hâlâ yoksa sözleşmeli 502 — 500 değil (NFR-5).
+            await priceFetch.RefreshAsync(ct);
+            try
+            {
+                series = PortfolioValueHistoryService.Calculate([input], await LoadFxAsync(ct), baseCcy, today);
+            }
+            catch (MissingFxRateException)
+            {
+                throw new UpstreamException(
+                    "Kur verisi şu anda hazırlanamadı; senaryo geçici olarak gösterilemiyor. Lütfen birazdan tekrar dene.");
+            }
+        }
 
         // Alım gücü eşiği — enflasyon verisi yoksa çizgi üretilmez (null; UI iki çizgiyle kalır).
         var inflation = await inflationRateProvider.GetAnnualRateAsync(ct);
@@ -103,4 +123,14 @@ public sealed class ScenarioService(
             series.Count > 0 ? series[0].Date : null,
             nowUtc);
     }
+
+    /// <summary>Kurlar kullanıcı-bağımsız (global piyasa verisi); tazeleme sonrası yeniden okunabilir.</summary>
+    private async Task<List<FxRatePoint>> LoadFxAsync(CancellationToken ct) =>
+        (await db.FxRates
+            .OrderBy(r => r.AsOfUtc)
+            .Select(r => new { r.FromCurrency, r.ToCurrency, r.Rate, r.AsOfUtc })
+            .ToListAsync(ct))
+        .Select(r => new FxRatePoint(
+            DateOnly.FromDateTime(r.AsOfUtc), r.FromCurrency, r.ToCurrency, r.Rate))
+        .ToList();
 }

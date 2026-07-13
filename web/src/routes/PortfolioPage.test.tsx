@@ -37,18 +37,28 @@ const pricesResponse = {
 };
 
 /** Fetch'i URL'e göre yanıtlar (settings + holdings + summary + prices + nudges). */
-function mockApi() {
+function mockApi(opts?: { historyFails?: boolean }) {
   vi.stubGlobal(
     "fetch",
     vi.fn((url: string) => {
       let body: unknown = summary;
+      let ok = true;
+      let status = 200;
       if (url.includes("/api/settings")) body = { baseCurrency: "TRY" };
       else if (url.includes("/api/holdings")) body = []; // boş pozisyon listesi
       else if (url.includes("/api/prices")) body = pricesResponse;
       else if (url.includes("/nudges")) body = { nudges: [] };
-      else if (url.includes("/api/portfolio/history"))
-        body = { baseCurrency: "TRY", period: "1y", points: [], changeRatio: null, firstDate: null, asOf: "2026-05-30T00:00:00Z" };
-      return Promise.resolve({ ok: true, status: 200, json: async () => body } as Response);
+      else if (url.includes("/api/portfolio/history")) {
+        if (opts?.historyFails) {
+          // FX yarışı anı: kur commit edilmeden istek DB'ye ulaştı → sözleşmeli 502.
+          ok = false;
+          status = 502;
+          body = { error: { code: "UPSTREAM_ERROR", message: "Kur verisi şu anda hazırlanamadı." } };
+        } else {
+          body = { baseCurrency: "TRY", period: "1y", points: [], changeRatio: null, firstDate: null, asOf: "2026-05-30T00:00:00Z" };
+        }
+      }
+      return Promise.resolve({ ok, status, json: async () => body } as Response);
     }),
   );
 }
@@ -79,5 +89,33 @@ describe("PortfolioPage", () => {
     // TRY seçili (aria-pressed)
     const tryBtn = screen.getByRole("button", { name: "TRY" });
     expect(tryBtn).toHaveAttribute("aria-pressed", "true");
+  });
+
+  // SC-42: hata veri-yokluğu ("en az iki günlük veri gerekir") gibi MASKELENMEZ.
+  it("değer seyri isteği hata verirse hata metnini gösterir (veri-yokluğu değil)", async () => {
+    mockApi({ historyFails: true });
+    renderPage();
+
+    // usePortfolioHistory retry:1 → hata durumu ~1sn retry gecikmesinden sonra oturur.
+    await waitFor(
+      () => expect(screen.getByText(/Değer seyri yüklenemedi/)).toBeInTheDocument(),
+      { timeout: 4000 },
+    );
+    expect(screen.queryByText(/en az iki günlük veri/)).not.toBeInTheDocument();
+  });
+
+  // SC-42: fiyat tazelemesi (refreshedAtUtc) değer serisini de invalidate eder —
+  // ilk yüklemedeki FX yarışında hatalı kalan sorgu böylece kendini toparlar.
+  it("fiyat tazelemesi değer seyri sorgusunu da yeniden tetikler", async () => {
+    mockApi();
+    renderPage();
+
+    const fetchMock = vi.mocked(fetch);
+    await waitFor(() => {
+      const historyCalls = fetchMock.mock.calls.filter(([url]) =>
+        String(url).includes("/api/portfolio/history"),
+      );
+      expect(historyCalls.length).toBeGreaterThanOrEqual(2);
+    });
   });
 });

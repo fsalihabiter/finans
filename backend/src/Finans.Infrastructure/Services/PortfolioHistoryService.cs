@@ -1,5 +1,6 @@
 using Finans.Application.Common;
 using Finans.Application.Portfolio;
+using Finans.Application.Pricing;
 using Finans.Domain.Enums;
 using Finans.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,17 @@ namespace Finans.Infrastructure.Services;
 /// indirger (ortak kurallar: <see cref="HoldingHistoryInputs"/>), tam seriyi hesaplar,
 /// dönem dilimler, ≤500 noktaya seyrekleştirir. **Kullanıcıya kapsanır** (11 §3);
 /// cache anahtarı UserId içerir (10 §3).
+///
+/// FX yarışı (SC-42): ilk yüklemede /prices tazelemesi kur satırlarını henüz commit
+/// etmemişken bu istek gelirse gerekli kur bulunamaz. O durumda tazelemeyi bir kez
+/// kendisi tetikler (single-flight → paralel /prices çağrısıyla birleşir, çift dış
+/// çağrı yok) ve yeniden hesaplar; kur yine yoksa 500 yerine sözleşmeli 502 döner.
 /// </summary>
 public sealed class PortfolioHistoryService(
     FinansDbContext db,
     ICurrentUser currentUser,
     IAppCache cache,
+    IPriceFetchService priceFetch,
     TimeProvider clock) : IPortfolioHistoryService
 {
     /// <summary>Kısa TTL: işlem eklenince/fiyat tazelenince en geç 60 sn'de yansır (10 §3).</summary>
@@ -83,20 +90,30 @@ public sealed class PortfolioHistoryService(
                     g => g.Key,
                     g => g.Select(p => new PricePoint(DateOnly.FromDateTime(p.AsOfUtc), p.Price)).ToList());
 
-            // Kurlar kullanıcı-bağımsız (global piyasa verisi).
-            var fxRates = (await db.FxRates
-                    .OrderBy(r => r.AsOfUtc)
-                    .Select(r => new { r.FromCurrency, r.ToCurrency, r.Rate, r.AsOfUtc })
-                    .ToListAsync(ct))
-                .Select(r => new FxRatePoint(
-                    DateOnly.FromDateTime(r.AsOfUtc), r.FromCurrency, r.ToCurrency, r.Rate))
-                .ToList();
-
             var inputs = holdings
                 .Select(h => HoldingHistoryInputs.ToInput(h, snapshotsByAsset.GetValueOrDefault(h.AssetId), today))
                 .ToList();
 
-            full = [.. PortfolioValueHistoryService.Calculate(inputs, fxRates, baseCcy, today)];
+            try
+            {
+                full = [.. PortfolioValueHistoryService.Calculate(inputs, await LoadFxAsync(ct), baseCcy, today)];
+            }
+            catch (MissingFxRateException)
+            {
+                // İlk yükleme FX yarışı: kur satırları paralel fiyat tazeleme turunda henüz
+                // yazılmamış olabilir. Turu bir kez tetikle (cache'li/single-flight), kurları
+                // yeniden okuyup dene; hâlâ yoksa sözleşmeli 502 — 500 değil (NFR-5).
+                await priceFetch.RefreshAsync(ct);
+                try
+                {
+                    full = [.. PortfolioValueHistoryService.Calculate(inputs, await LoadFxAsync(ct), baseCcy, today)];
+                }
+                catch (MissingFxRateException)
+                {
+                    throw new UpstreamException(
+                        "Kur verisi şu anda hazırlanamadı; değer seyri geçici olarak gösterilemiyor. Lütfen birazdan tekrar dene.");
+                }
+            }
         }
 
         var firstDate = full.Count > 0 ? full[0].Date : (DateOnly?)null;
@@ -118,6 +135,16 @@ public sealed class PortfolioHistoryService(
         var points = sampled.Select(p => new PortfolioHistoryPointDto(p.Date, p.Value, p.Cost)).ToList();
         return new PortfolioHistoryDto(baseCcy, periodKey, points, changeRatio, firstDate, nowUtc);
     }
+
+    /// <summary>Kurlar kullanıcı-bağımsız (global piyasa verisi); tazeleme sonrası yeniden okunabilir.</summary>
+    private async Task<List<FxRatePoint>> LoadFxAsync(CancellationToken ct) =>
+        (await db.FxRates
+            .OrderBy(r => r.AsOfUtc)
+            .Select(r => new { r.FromCurrency, r.ToCurrency, r.Rate, r.AsOfUtc })
+            .ToListAsync(ct))
+        .Select(r => new FxRatePoint(
+            DateOnly.FromDateTime(r.AsOfUtc), r.FromCurrency, r.ToCurrency, r.Rate))
+        .ToList();
 
     /// <summary>Eşit adımlı seyrekleştirme — ortak yardımcıya delege (Senaryo da kullanır).</summary>
     internal static IReadOnlyList<DailyValuePoint> Downsample(IReadOnlyList<DailyValuePoint> points, int max) =>

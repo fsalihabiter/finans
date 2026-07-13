@@ -6,6 +6,18 @@ namespace Finans.Application.Portfolio;
 public sealed record FxQuote(CurrencyCode From, CurrencyCode To, decimal Rate);
 
 /// <summary>
+/// Gerekli kur tırnağı hiç yok (sessizce yanlış sayı dönmesin diye fırlatılır).
+/// Ayrı tip: üst katman "kur henüz yazılmamış" durumunu (örn. ilk yükleme FX yarışı)
+/// diğer beklenmeyen hatalardan ayırıp tazeleme/degrade uygulayabilsin.
+/// </summary>
+public sealed class MissingFxRateException(CurrencyCode from, CurrencyCode to)
+    : InvalidOperationException($"Kur bulunamadı: {from} → {to}.")
+{
+    public CurrencyCode From { get; } = from;
+    public CurrencyCode To { get; } = to;
+}
+
+/// <summary>
 /// Para birimi dönüşümünün deterministik, saf çekirdeği (CLAUDE.md §3.2, NFR-1):
 /// <c>tutar × kur(varlık_pb → baz_pb)</c>. Değişmez bir kur anlık görüntüsü alır;
 /// I/O yapmaz → %100 testlenebilir. Kur yükleme/cache <see cref="IFxRateProvider"/>
@@ -39,12 +51,12 @@ public sealed class CurrencyConverter
     /// <summary>
     /// <paramref name="amount"/> tutarını <paramref name="from"/>'dan
     /// <paramref name="to"/>'ya çevirir. Kur bulunamazsa
-    /// <see cref="InvalidOperationException"/> fırlatır (sessizce yanlış sayı dönmesin).
+    /// <see cref="MissingFxRateException"/> fırlatır (sessizce yanlış sayı dönmesin).
     /// </summary>
     public decimal Convert(decimal amount, CurrencyCode from, CurrencyCode to) =>
         TryConvert(amount, from, to, out var result)
             ? result
-            : throw new InvalidOperationException($"Kur bulunamadı: {from} → {to}.");
+            : throw new MissingFxRateException(from, to);
 
     /// <summary>Kur biliniyorsa çevirir; bilinmiyorsa <c>false</c> döner (çökme yok).</summary>
     public bool TryConvert(decimal amount, CurrencyCode from, CurrencyCode to, out decimal result)

@@ -128,8 +128,9 @@ public class PortfolioValueHistoryServiceTests
     [Fact]
     public void Missing_required_rate_throws_instead_of_silently_wrong_number()
     {
-        // USD varlık var ama USD→TRY kuru hiç yok → sessiz yanlış sayı yerine fırlatır.
-        Assert.Throws<InvalidOperationException>(() =>
+        // USD varlık var ama USD→TRY kuru hiç yok → sessiz yanlış sayı yerine fırlatır
+        // (MissingFxRateException — üst katman FX yarışında tazeleme/502 uygular, SC-42).
+        Assert.Throws<MissingFxRateException>(() =>
             Calc([Asset(CurrencyCode.USD, [Buy(0, 1m, 100m)])], endDay: 0));
     }
 

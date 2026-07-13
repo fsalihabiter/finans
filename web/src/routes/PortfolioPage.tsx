@@ -48,8 +48,10 @@ export function PortfolioPage() {
   const { notify } = useToast();
   const qc = useQueryClient();
 
-  // Canlı fiyat tazelendiğinde backend Holding.CurrentPrice'ı yazdı → özet+holdings'i
-  // tazele ki pano canlı değeri yansıtsın. Aynı tur için yeniden tetiklemeyi engelle.
+  // Canlı fiyat tazelendiğinde backend Holding.CurrentPrice + FxRates + PriceSnapshots'ı
+  // yazdı → özet+holdings+değer serisini tazele ki pano canlı değeri yansıtsın. History
+  // ilk yüklemede kur satırları commit edilmeden 500 almış olabilir (FX yarışı) — bu
+  // invalidation hatalı sorguyu da yeniden dener. Aynı tur için yeniden tetiklemeyi engelle.
   const lastRefresh = useRef<string | null>(null);
   useEffect(() => {
     const refreshed = prices.data?.refreshedAtUtc;
@@ -57,6 +59,7 @@ export function PortfolioPage() {
       lastRefresh.current = refreshed;
       void qc.invalidateQueries({ queryKey: ["summary"] });
       void qc.invalidateQueries({ queryKey: ["holdings"] });
+      void qc.invalidateQueries({ queryKey: ["portfolio-history"] });
     }
   }, [prices.data?.refreshedAtUtc, qc]);
 
@@ -159,9 +162,13 @@ export function PortfolioPage() {
                         <p>
                           {history.isLoading
                             ? "Değer seyri yükleniyor…"
-                            : <>Zaman içindeki değer grafiği için en az iki günlük veri gerekir.
-                              Fiyat geçmişi biriktikçe burada görünecek; şimdilik <b>Performans</b>
-                              sekmesinde kalem bazında getiriyi görebilirsin.</>}
+                            : history.isError
+                              // Hata veri-yokluğu gibi maskelenmez; fiyat tazelemesi
+                              // sorguyu yeniden tetikler (üstteki invalidation).
+                              ? "Değer seyri yüklenemedi — pano sayıları yine de güncel. Fiyatlar tazelenince otomatik yeniden denenir."
+                              : <>Zaman içindeki değer grafiği için en az iki günlük veri gerekir.
+                                Fiyat geçmişi biriktikçe burada görünecek; şimdilik <b>Performans</b>
+                                sekmesinde kalem bazında getiriyi görebilirsin.</>}
                         </p>
                       </div>
                     </div>
