@@ -20,6 +20,49 @@
 
 ---
 
+## 2026-07-14 (2) · ad-hoc — Analiz "yorum üretilemedi" düzeltildi: kurumsal proxy CA + .env sağlayıcı uyuşmazlığı
+- **Görev(ler):** ad-hoc (ortam/yapılandırma; finans backlog dışı — kod davranışı değişmedi).
+- **Ne yapıldı:** Analiz sayfası geçerli anahtarla bile fallback karta düşüyordu. İki kök neden:
+  (1) **Kurumsal TLS interception** — makine `proxy.gumruk.local` arkasında; giden HTTPS,
+  `GumrukSertifika`/`TICARETROOTCA` kök CA'larıyla yeniden imzalanıyor, container bu CA'lara
+  güvenmediği için tüm LLM/Finnhub çağrıları `PartialChain` (certificate verify failed) ile
+  patlıyordu. Çözüm: Windows güven deposunun tamamı PEM'e aktarıldı (`compose/certs/gumruk-ca.crt`,
+  76 sertifika) + git-ignored `docker-compose.override.yml` ile `/certs` mount edilip sistem
+  CA paketiyle birleştirilerek `SSL_CERT_FILE` üzerinden .NET'e tanıtıldı (root/imaj değişikliği
+  yok; bundle 195 sertifika). (2) **`.env` sağlayıcı/anahtar uyuşmazlığı** — duplike blok yüzünden
+  `LLM_PROVIDER=OpenRouter` iken anahtar `sk-ant-...` (Anthropic) idi; tek Anthropic bloğuna indirildi.
+  Teyit: `api/portfolio/commentary` artık gerçek LLM kartları döndürüyor (fallback değil).
+- **Dokunulan dosyalar:** .env, .gitignore, docker-compose.override.yml (yeni, git-ignored),
+  compose/certs/gumruk-ca.crt + export-ca.ps1 (yeni, git-ignored), SETUP.md (§8 + troubleshooting),
+  .claude/tasks/TASKLOG.md
+- **Test:** yok (yapılandırma; kod değişmedi). Manuel doğrulama: canlı Anthropic çağrısı 200 +
+  gerçek kart içeriği; loglarda PartialChain yok.
+- **Karar/Not:** Kurumsal proxy CA + override **ortama özgü**, repoya girmez (11 §6; .gitignore'a
+  eklendi). Proxy container'a Docker Desktop'ça şeffaf yönlendiriliyor → `HTTP_PROXY` gerekmedi,
+  yalnız CA güveni yetti. Yöntem SETUP.md §8'de belgelendi.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.2 (eğitim seed'i) — plan değişmedi.
+
+---
+
+## 2026-07-14 · ad-hoc — SETUP.md genişletildi (İngilizce, daha açıklayıcı kurulum rehberi)
+- **Görev(ler):** ad-hoc (dokümantasyon; finans backlog dışı).
+- **Ne yapıldı:** SETUP.md yeniden düzenlendi ve zenginleştirildi — (1) PostgreSQL'in
+  ayrıca kurulmasına gerek olmadığı açıkça vurgulandı (Docker içinde `postgres:18-alpine`,
+  otomatik migrate+seed, `postgres-data` volume); (2) yeni **§3 Secrets & configuration**
+  bölümü: tüm `.env` değişkenleri için "gerekli mi / varsayılan / ne işe yarar" tablosu +
+  §3.1 AI Analiz sayfasını açma (OpenRouter ücretsiz / Anthropic önerilen iki seçenek);
+  (3) proje portları (80/443/8081/9090/3001) ve çakışma çözümü troubleshooting'e eklendi;
+  (4) `docker compose up -d api` ile `.env` değişikliğini uygulama komutu eklendi.
+- **Dokunulan dosyalar:** SETUP.md, .claude/tasks/TASKLOG.md
+- **Test:** yok (yalnız doküman; kod-davranış değişmedi).
+- **Karar/Not:** İçerik kullanıcının makinesinde teyit edilen durumla hizalı — Docker kurulu
+  ve çalışıyor, proje portları boş, PostgreSQL yerelde gerekmiyor.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.2 (eğitim seed'i) — plan değişmedi.
+
+---
+
 ## 2026-07-12 (21) · ad-hoc — CLAUDE.md §14: Claude Code araç kutusu model yönlendirme tablosu + kural
 - **Görev(ler):** ad-hoc (araç kutusu/geliştirme konvansiyonu; finans backlog dışı).
 - **Ne yapıldı:** CLAUDE.md'ye **§14 Model Yönlendirme** eklendi — (1) 5 modelli tablo

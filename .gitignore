@@ -77,6 +77,10 @@ Thumbs.db
 # ───────────── Docker / lokal veri ─────────────
 .docker-data/
 postgres-data/
+# Ortama özel compose override + kurumsal kök sertifika (ör. proxy MITM CA).
+# Makineye/ağa özgüdür, repoya girmez (11 §6). Bkz. SETUP.md §8.
+docker-compose.override.yml
+compose/certs/
 
 # Üçüncü taraf skill kurulumları (uipro init — yerel gelistirme araci, repoya girmez)
 .claude/skills/ui-ux-pro-max/
