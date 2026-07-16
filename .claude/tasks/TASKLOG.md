@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-07-17 · T5E.4 — Web Eğitim sayfası (ComingSoon → gerçek liste/okuma/quiz)
+- **Görev(ler):** T5E.4 (Faz 6 — Eğitim MVP; 13 §4, 04 §7.5).
+- **Ne yapıldı:** (1) **Shared** (`@finans/shared`, kaynaktan tüketilir): eğitim tipleri (types) +
+  6 istemci metodu (api) — LearningTrack/LessonListItem/LessonDetail/Quiz…; (2) **web hook'ları**
+  (`useEducationTracks/useTrackLessons/useLesson/useUpdateLessonProgress/useSubmitQuizAttempt/
+  useLessonsByConcept`); (3) **`MiniMarkdown`** — markdown lib YOK; güvenli el-yazımı alt-küme
+  renderer (başlık/kalın/alıntı/liste/paragraf; **`dangerouslySetInnerHTML` yok** → XSS-güvenli,
+  topluluk içeriğine uygun 14 §4-D2); (4) **EducationPage** ComingSoon→gerçek: "Temeller" seti +
+  ilerleme çubuğu (mint segment) + kilitli/tamamlandı rozetleri + sayfa-içi ders okuma (Markdown +
+  kavram çipleri + "Dersi tamamla") + **mini test** (tam-eşleşme; sonuçta doğru şık yeşil / yanlış
+  mercan + açıklama açılır); (5) paylaşılan `.page-head/.kicker/.page-lead` stilleri (stilsizdi →
+  Analiz/Hisse de iyileşti) + eğitim CSS'i (pano tasarım diliyle: aksan/mint/kart derinliği).
+- **Dokunulan dosyalar:** `packages/shared/src/{types,api}/index.ts`, `web/src/lib/hooks.ts`,
+  `web/src/components/MiniMarkdown.tsx` (+test), `web/src/routes/EducationPage.tsx` (+test),
+  `web/src/App.css`, docs (08/09).
+- **Test:** SC-45 — MiniMarkdown 2 + EducationPage 3 (liste+ilerleme+kilit / kilitli-disabled /
+  tıkla→okuma+markdown+kavram). Tam web süiti **101/101** yeşil. **Canlı Postgres uçtan uca teyit:**
+  api+caddy rebuild → `/api/education/tracks` "Temeller" döndü (seed Postgres'e işledi) → tarayıcıda
+  `/egitim` seed'le birebir (3/5 tamamlandı, ders 5 kilitli), ders okuma + MiniMarkdown (başlık/kalın/
+  blockquote) + mini test render doğrulandı (ekran görüntüsüyle).
+- **Karar/Not:** `@finans/shared` `main`→`src/index.ts` (build yok); web kaynağı doğrudan görür.
+  Sayfa-içi master-detail (local state) — ayrı rota gerekmedi. **Web değişikliği görünürlüğü için
+  Docker rebuild ŞART** (bu turda api+caddy rebuild edildi).
+- **Durum:** çekirdek tamam (liste/okuma/quiz/ilerleme canlı). **Kalan:** ConceptTag derin bağlantı
+  (Analiz/Hisse kartından `/lessons/by-concept`) → T5E.4b.
+- **Sıradaki:** T5E.4b (kavram derin bağlantı) ya da T6.1 (5 dersin derin içeriği).
+
 ## 2026-07-16 (3) · T5E.3 — Eğitim endpoint'leri (tracks/lessons/progress/quiz; UserId kapsam + IDOR)
 - **Görev(ler):** T5E.3 (Faz 6 — Eğitim MVP; 04 §7.5, 11 §3).
 - **Ne yapıldı:** `Finans.Application.Education` (DTO'lar + `IEducationService`) + `Finans.Infrastructure.Services.EducationService`

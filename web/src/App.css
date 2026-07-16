@@ -3207,3 +3207,305 @@ body.drawer-lock {
 .kpi.hero::after {
   animation: glow-breathe 5.5s ease-in-out infinite alternate;
 }
+
+/* ───── Sayfa başlığı (paylaşılan — Analiz/Hisse/Eğitim; T5E.4'te stillendi) ───── */
+.page-head {
+  margin-bottom: 18px;
+}
+.page-head .kicker {
+  margin: 0 0 3px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #8a94dc);
+}
+.page-head h1 {
+  margin: 0 0 6px;
+}
+.page-head .page-lead {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--muted, #97a3c9);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* ───── Eğitim (T5E.4) ───── */
+
+/* İlerleme çubuğu: ders başına segment; tamamlanan mint dolu. */
+.edu-track {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 16px;
+}
+.edu-seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 4px;
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+}
+.edu-seg.done {
+  background: var(--mint, #45d5a2);
+  border-color: var(--mint, #45d5a2);
+}
+
+/* Ders listesi */
+.lesson-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.lesson {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: var(--text, #eef2ff);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease-out,
+    transform 160ms ease-out,
+    background-color 160ms ease-out;
+}
+.lesson:not(:disabled):hover {
+  border-color: var(--accent, #8a94dc);
+  transform: translateY(-1px);
+}
+.lesson.is-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.lesson-num {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: var(--panel, #131a30);
+  border: 1px solid var(--line, #26304f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--accent, #8a94dc);
+}
+.lesson-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lesson-ti {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.lesson-de {
+  font-size: 12px;
+  color: var(--muted, #97a3c9);
+  line-height: 1.45;
+}
+.lesson-mt {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted-2, #6f6557);
+  margin-top: 4px;
+}
+.lesson-status.done {
+  color: var(--mint, #45d5a2);
+}
+.lesson-status.inprogress {
+  color: var(--accent, #8a94dc);
+}
+.lesson-chev {
+  flex-shrink: 0;
+  color: var(--muted-2, #6f6557);
+}
+
+/* Ders okuma */
+.lesson-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.lesson-head h2 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 22px;
+  margin: 0;
+}
+.concept-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.concept-tag {
+  font-size: 11.5px;
+  color: var(--accent, #8a94dc);
+  background: rgba(138, 148, 220, 0.1);
+  border: 1px solid rgba(138, 148, 220, 0.28);
+  border-radius: 100px;
+  padding: 4px 11px;
+}
+
+/* Markdown gövde (MiniMarkdown) */
+.markdown-body {
+  color: var(--text-soft, #cbd5f0);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.markdown-body h3 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 16px;
+  margin: 20px 0 8px;
+}
+.markdown-body h4 {
+  font-size: 14px;
+  margin: 16px 0 6px;
+}
+.markdown-body p {
+  margin: 0 0 12px;
+  max-width: 72ch;
+}
+.markdown-body strong {
+  color: var(--text, #eef2ff);
+  font-weight: 700;
+}
+.markdown-body blockquote {
+  margin: 12px 0;
+  padding: 10px 16px;
+  border-left: 3px solid var(--accent, #8a94dc);
+  border-radius: 0 12px 12px 0;
+  background: rgba(138, 148, 220, 0.07);
+  color: var(--text, #eef2ff);
+  font-family: var(--font-display, Georgia, serif);
+}
+.markdown-body ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+.markdown-body li {
+  margin: 4px 0;
+  max-width: 70ch;
+}
+.lesson-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line, #26304f);
+}
+.lesson-done-badge {
+  color: var(--mint, #45d5a2);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+/* Mini test */
+.quiz-panel {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line, #26304f);
+}
+.quiz-score {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.quiz-score.done {
+  color: var(--mint, #45d5a2);
+}
+.quiz-score.fail {
+  color: var(--coral, #f97f7f);
+}
+.quiz-questions {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+}
+.quiz-prompt {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+.quiz-options {
+  display: grid;
+  gap: 8px;
+}
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: var(--text, #eef2ff);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease-out,
+    background-color 140ms ease-out;
+}
+.quiz-option:not(:disabled):hover {
+  border-color: var(--accent, #8a94dc);
+}
+.quiz-option.selected {
+  border-color: var(--accent, #8a94dc);
+  background: rgba(138, 148, 220, 0.1);
+}
+.quiz-option.correct {
+  border-color: var(--mint, #45d5a2);
+  background: rgba(69, 213, 162, 0.12);
+}
+.quiz-option.wrong {
+  border-color: var(--coral, #f97f7f);
+  background: rgba(249, 127, 127, 0.12);
+}
+.quiz-mark {
+  width: 18px;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--muted, #97a3c9);
+}
+.quiz-option.correct .quiz-mark {
+  color: var(--mint, #45d5a2);
+}
+.quiz-option.wrong .quiz-mark {
+  color: var(--coral, #f97f7f);
+}
+.quiz-explanation {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted, #97a3c9);
+}
+.quiz-explanation.correct {
+  color: var(--mint, #45d5a2);
+}
+.quiz-explanation.wrong {
+  color: var(--text-soft, #cbd5f0);
+}
+.quiz-actions {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

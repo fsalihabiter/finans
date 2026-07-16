@@ -16,10 +16,12 @@ import type {
   GenerateBesContributionsInput,
   PortfolioHistoryPeriod,
   StockHistoryRange,
+  SubmitQuizAttemptInput,
   TransactionInput,
   UpdateBesContributionInput,
   UpdateBesInput,
   UpdateHoldingInput,
+  UpdateLessonProgressInput,
   UpdateSettingsInput,
 } from "@finans/shared";
 import { api } from "./api";
@@ -39,6 +41,10 @@ export const queryKeys = {
   stockMetrics: (symbol: string) => ["stock-metrics", symbol] as const,
   stockExplain: (symbol: string) => ["stock-explain", symbol] as const,
   stockHistory: (symbol: string, range: string) => ["stock-history", symbol, range] as const,
+  eduTracks: ["edu-tracks"] as const,
+  eduTrackLessons: (slug: string) => ["edu-track-lessons", slug] as const,
+  eduLesson: (slug: string) => ["edu-lesson", slug] as const,
+  eduByConcept: (conceptKey: string) => ["edu-by-concept", conceptKey] as const,
 };
 
 export function usePortfolioSummary(baseCurrency?: CurrencyCode) {
@@ -355,5 +361,57 @@ export function useUpdateSettings() {
       void qc.invalidateQueries({ queryKey: ["summary"] });
       void qc.invalidateQueries({ queryKey: ["holdings"] });
     },
+  });
+}
+
+// ── Eğitim (04 §7.5) ──
+export function useEducationTracks() {
+  return useQuery({
+    queryKey: queryKeys.eduTracks,
+    queryFn: () => api.getEducationTracks(),
+    staleTime: 5 * 60_000, // içerik statik-benzeri; sık tazeleme gereksiz
+  });
+}
+
+export function useTrackLessons(slug: string) {
+  return useQuery({
+    queryKey: queryKeys.eduTrackLessons(slug),
+    queryFn: () => api.getTrackLessons(slug),
+    enabled: slug.length > 0,
+  });
+}
+
+export function useLesson(slug: string) {
+  return useQuery({
+    queryKey: queryKeys.eduLesson(slug),
+    queryFn: () => api.getLesson(slug),
+    enabled: slug.length > 0,
+  });
+}
+
+export function useLessonsByConcept(conceptKey: string) {
+  return useQuery({
+    queryKey: queryKeys.eduByConcept(conceptKey),
+    queryFn: () => api.getLessonsByConcept(conceptKey),
+    enabled: conceptKey.length > 0,
+  });
+}
+
+export function useUpdateLessonProgress(lessonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateLessonProgressInput) => api.updateLessonProgress(lessonId, input),
+    onSuccess: () => {
+      // Ders listesi (durum/kilit) + ders detayı yeniden çekilsin.
+      void qc.invalidateQueries({ queryKey: ["edu-track-lessons"] });
+      void qc.invalidateQueries({ queryKey: ["edu-lesson"] });
+      void qc.invalidateQueries({ queryKey: ["edu-by-concept"] });
+    },
+  });
+}
+
+export function useSubmitQuizAttempt(quizId: string) {
+  return useMutation({
+    mutationFn: (input: SubmitQuizAttemptInput) => api.submitQuizAttempt(quizId, input),
   });
 }

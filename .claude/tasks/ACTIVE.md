@@ -12,15 +12,21 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T5E.4** — Web Eğitim sayfası (ComingSoon → gerçek: liste + ilerleme + kilit + ders + quiz;
-   **shared TS tipleri + istemci burada eklenir** — backend uçları hazır)
+1. **T5E.4b** — Kavram derin bağlantı: Analiz/Hisse kartından `ConceptTag` → `/egitim` ilgili ders
+   (`getLessonsByConcept` istemcisi hazır; kartlardan tetikleme kaldı)
 2. T6.1 — İlk müfredat içeriği (5 dersin derin gövdesi + "Senin portföyünde" şablonu)
-3. OSS kalanı — README ekran görüntüleri tazeleme (pano Değer Seyri + Senaryo artık canlı)
+3. OSS kalanı — README ekran görüntüleri tazeleme (pano + Eğitim artık canlı)
+
+> ✅ **T5E.4 çekirdek bitti (2026-07-17):** Eğitim sayfası canlı (ComingSoon kalktı) — "Temeller"
+> seti + ilerleme çubuğu + kilit/tamamlandı rozetleri + sayfa-içi ders okuma (**`MiniMarkdown`** —
+> güvenli, lib'siz) + mini test (tam-eşleşme; sonuçta doğru şık+açıklama açılır). Shared tipler+istemci
+> +hook'lar eklendi. SC-45 web 101/101; **canlı Postgres uçtan uca teyit** (api+caddy rebuild →
+> /egitim seed'le birebir). Kalan: ConceptTag derin bağlantı → T5E.4b.
 
 > ✅ **T5E.3 bitti (2026-07-16):** eğitim uçları canlı — `api/education` 6 uç (tracks·track-lessons·
 > lesson-detay·progress-upsert·quiz-attempt·by-concept). Kilit ön-koşuldan türetilir; içerik açık,
 > durum/ilerleme+deneme `UserId` kapsamlı (per-user izolasyon testli); quiz cevap-anahtarı yalnız
-> deneme sonucunda açılır. SC-44 integration 12/12. ⚠ Canlı Postgres için api imajı rebuild bekliyor.
+> deneme sonucunda açılır. SC-44 integration 12/12. **Canlı Postgres'te teyit edildi (T5E.4 ile).**
 
 > ✅ **T5E.2 bitti (2026-07-16):** eğitim seed'i canlı — "Temeller" track + 5 ders
 > (sıralı ön-koşul zinciri) + 6 kavram etiketi + Ders 1'e 3 soruluk quiz + örnek ilerleme

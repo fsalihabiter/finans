@@ -323,6 +323,122 @@ export interface StockMetrics {
   source: string;
 }
 
+// ── Eğitim (Faz 5 — 04 §7.5) ─────────────────────────────────────────────────
+export type LessonLevel = "Beginner" | "Intermediate" | "Advanced";
+export type LessonStatus = "NotStarted" | "InProgress" | "Completed";
+export type QuizQuestionType = "SingleChoice" | "MultipleChoice" | "TrueFalse";
+
+/** GET /api/education/tracks — ders seti kartı. */
+export interface LearningTrack {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  level: LessonLevel;
+  lessonCount: number;
+}
+
+/** Ders listesi öğesi — status/progressPercent kullanıcının; locked ön-koşuldan türetilir. */
+export interface LessonListItem {
+  id: string;
+  slug: string;
+  order: number;
+  title: string;
+  summary: string;
+  estimatedMinutes: number;
+  level: LessonLevel;
+  status: LessonStatus;
+  progressPercent: number;
+  locked: boolean;
+}
+
+export interface LessonSection {
+  order: number;
+  heading: string | null;
+  bodyMarkdown: string;
+}
+
+export interface ConceptTag {
+  key: string;
+  label: string;
+}
+
+/** Test şıkkı — doğru cevap SIZMAZ (yalnız deneme sonucunda). */
+export interface QuizOption {
+  id: string;
+  order: number;
+  text: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  order: number;
+  type: QuizQuestionType;
+  prompt: string;
+  options: QuizOption[];
+}
+
+export interface Quiz {
+  id: string;
+  title: string;
+  passingScore: number;
+  questions: QuizQuestion[];
+}
+
+/** GET /api/education/lessons/{slug} — tek ders detayı + kullanıcı durumu. */
+export interface LessonDetail {
+  id: string;
+  slug: string;
+  order: number;
+  title: string;
+  summary: string;
+  bodyMarkdown: string;
+  estimatedMinutes: number;
+  level: LessonLevel;
+  status: LessonStatus;
+  progressPercent: number;
+  locked: boolean;
+  sections: LessonSection[];
+  quiz: Quiz | null;
+  conceptTags: ConceptTag[];
+}
+
+/** PUT /api/education/lessons/{id}/progress — ilerleme upsert. */
+export interface UpdateLessonProgressInput {
+  status: LessonStatus;
+  progressPercent: number;
+}
+
+export interface LessonProgress {
+  lessonId: string;
+  status: LessonStatus;
+  progressPercent: number;
+}
+
+export interface QuizAnswerInput {
+  questionId: string;
+  selectedOptionIds: string[];
+}
+
+/** POST /api/education/quizzes/{id}/attempts. */
+export interface SubmitQuizAttemptInput {
+  answers: QuizAnswerInput[];
+}
+
+/** Deneme sonucu — doğru cevap + eğitici açıklama BURADA açılır. */
+export interface QuizQuestionResult {
+  questionId: string;
+  correct: boolean;
+  explanation: string;
+  correctOptionIds: string[];
+}
+
+export interface QuizAttemptResult {
+  score: number;
+  passed: boolean;
+  results: QuizQuestionResult[];
+}
+
 /** Bir pozisyona alış/satış (POST .../transactions, POST /holdings içinde). */
 export interface TransactionInput {
   type: TransactionType;

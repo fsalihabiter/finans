@@ -14,20 +14,27 @@ import type {
   GenerateBesContributionsInput,
   HealthResponse,
   Holding,
+  LearningTrack,
+  LessonDetail,
+  LessonListItem,
+  LessonProgress,
   NudgesResponse,
   PortfolioHistory,
   PortfolioHistoryPeriod,
   PortfolioSummary,
   PricesResponse,
+  QuizAttemptResult,
   ScenarioComparison,
   Settings,
   StockHistory,
   StockHistoryRange,
   StockMetrics,
+  SubmitQuizAttemptInput,
   TransactionInput,
   UpdateBesContributionInput,
   UpdateBesInput,
   UpdateHoldingInput,
+  UpdateLessonProgressInput,
   UpdateSettingsInput,
 } from "../types/index";
 
@@ -152,6 +159,25 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     /** GET /api/stocks/{symbol}/history — halka arzdan bugüne dönem dilimli kapanış serisi. */
     getStockHistory: (symbol: string, range: StockHistoryRange) =>
       get<StockHistory>(`/api/stocks/${encodeURIComponent(symbol)}/history?range=${range}`),
+
+    // ── Eğitim (Faz 5 — 04 §7.5) ──
+    /** GET /api/education/tracks — yayındaki ders setleri (+ ders sayısı). */
+    getEducationTracks: () => get<LearningTrack[]>("/api/education/tracks"),
+    /** GET /api/education/tracks/{slug}/lessons — setin dersleri + kullanıcı durumu/kilit. */
+    getTrackLessons: (slug: string) =>
+      get<LessonListItem[]>(`/api/education/tracks/${encodeURIComponent(slug)}/lessons`),
+    /** GET /api/education/lessons/{slug} — tek ders detayı + kullanıcı durumu. */
+    getLesson: (slug: string) =>
+      get<LessonDetail>(`/api/education/lessons/${encodeURIComponent(slug)}`),
+    /** PUT /api/education/lessons/{id}/progress — ilerleme upsert (UserId kapsamlı). */
+    updateLessonProgress: (id: string, input: UpdateLessonProgressInput) =>
+      send<LessonProgress>("PUT", `/api/education/lessons/${id}/progress`, input),
+    /** POST /api/education/quizzes/{id}/attempts — deneme değerlendir + kaydet. */
+    submitQuizAttempt: (id: string, input: SubmitQuizAttemptInput) =>
+      send<QuizAttemptResult>("POST", `/api/education/quizzes/${encodeURIComponent(id)}/attempts`, input),
+    /** GET /api/education/lessons/by-concept/{key} — kavramdan derse derin bağlantı. */
+    getLessonsByConcept: (conceptKey: string) =>
+      get<LessonListItem[]>(`/api/education/lessons/by-concept/${encodeURIComponent(conceptKey)}`),
 
     // ── Ayarlar (04 §4) ──
     getSettings: () => get<Settings>("/api/settings"),
