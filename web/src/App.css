@@ -209,7 +209,8 @@
 /* ───── KPI'lar ───── */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Hero kolon daha geniş → en önemli sayı görsel çapa (impeccable: hiyerarşi). */
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
   gap: 16px;
 }
 .kpi {
@@ -219,10 +220,20 @@
   padding: 17px 19px;
   position: relative;
   overflow: hidden;
+  /* Dinlenme derinliği: yumuşak, zemine göre tint'li gölge (impeccable: siyah gölge yok). */
+  box-shadow: 0 8px 24px -20px rgba(3, 5, 12, 0.85);
 }
 .kpi.hero {
-  background: linear-gradient(150deg, #1d2647, #141b34);
-  border-color: #2c3760;
+  /* Cesur hero: aksan-tint'li köşe ışığı + zengin gradyan + yükseltilmiş elevation +
+     1px iç kenar highlight (premium kenar). Diğer 3 kart düz kalır → net hiyerarşi. */
+  background:
+    radial-gradient(130% 150% at 0% 0%, rgba(138, 148, 220, 0.2), transparent 58%),
+    linear-gradient(150deg, #232e57, #141b34);
+  border-color: #3a4480;
+  padding: 20px 22px;
+  box-shadow:
+    0 22px 46px -26px rgba(3, 5, 12, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 .kpi.hero::after {
   content: "";
@@ -247,11 +258,38 @@
   letter-spacing: -0.01em;
   position: relative;
 }
+/* Hero değeri belirgin büyük → göz önce buraya iner. */
+.kpi.hero .v {
+  font-size: 40px;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  margin-top: 10px;
+}
 .kpi .sub {
   font-size: 12px;
   margin-top: 6px;
   font-weight: 600;
   position: relative;
+}
+/* Hero kâr/zarar: tint'li pill + yön oku (▲/▼) → kazanç/kayıp bir bakışta okunur. */
+.kpi.hero .sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 13px;
+  padding: 5px 12px 5px 10px;
+  font-size: 13px;
+  border-radius: 100px;
+  background: rgba(69, 213, 162, 0.14);
+  border: 1px solid rgba(69, 213, 162, 0.32);
+}
+.kpi.hero .sub.down {
+  background: rgba(249, 127, 127, 0.14);
+  border-color: rgba(249, 127, 127, 0.32);
+}
+.kpi.hero .delta-arrow {
+  font-size: 10px;
+  line-height: 1;
 }
 
 /* ───── Kartlar / grid ───── */
@@ -260,6 +298,8 @@
   border: 1px solid var(--line, #26304f);
   border-radius: 20px;
   padding: 21px;
+  /* Dinlenme derinliği (düz panellere hafif katman); hover'da güçlenir. */
+  box-shadow: 0 10px 30px -24px rgba(3, 5, 12, 0.85);
 }
 .card-head {
   display: flex;
@@ -1308,6 +1348,10 @@ input.date-input::-webkit-calendar-picker-indicator:hover {
   }
   .kpis {
     grid-template-columns: 1fr 1fr;
+  }
+  /* Dar kolonda 40px hero taşmasın. */
+  .kpi.hero .v {
+    font-size: 30px;
   }
   .grid-2,
   .grid-3 {

@@ -24,14 +24,17 @@ export function KpiGrid({
         <div className="k">Toplam Portföy Değeri</div>
         <div className="v tnum"><CountUpCurrency value={totalValue} currency={baseCurrency} /></div>
         <div className={`sub tnum ${tone(netProfit)}`}>
-          {profitSign}
-          <CountUpCurrency value={netProfit} currency={baseCurrency} />
-          {returnRatio !== null && (
-            <>
-              {" · "}
-              <CountUpPercent value={returnRatio} />
-            </>
-          )}
+          <span className="delta-arrow" aria-hidden="true">{netProfit >= 0 ? "▲" : "▼"}</span>
+          <span>
+            {profitSign}
+            <CountUpCurrency value={netProfit} currency={baseCurrency} />
+            {returnRatio !== null && (
+              <>
+                {" · "}
+                <CountUpPercent value={returnRatio} />
+              </>
+            )}
+          </span>
         </div>
       </div>
 
