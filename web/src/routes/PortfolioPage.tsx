@@ -106,7 +106,10 @@ export function PortfolioPage() {
             onClick={onRefresh}
             disabled={refreshing}
           >
-            {refreshing ? "Yenileniyor…" : "↻ Yenile"}
+            <span className={`refresh-ic${refreshing ? " spinning" : ""}`} aria-hidden="true">
+              ↻
+            </span>
+            {refreshing ? "Yenileniyor…" : "Yenile"}
           </button>
           {baseCurrency && (
             <CurrencySelector

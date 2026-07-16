@@ -1207,11 +1207,31 @@ input.date-input::-webkit-calendar-picker-indicator:hover {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.16s;
+  /* emil-design-eng: asla `transition: all` (0.16s kısaltması = all) — yalnız değişen
+     özellikleri geç (perf + niyet). Hover border+color, :active global transform. */
+  transition:
+    border-color 0.16s ease-out,
+    color 0.16s ease-out,
+    background-color 0.16s ease-out,
+    transform 0.12s ease-out;
 }
 .btn-ghost:hover {
   border-color: var(--accent, #8a94dc);
   color: var(--accent, #8a94dc);
+}
+/* Yenile ikonu: yenilenirken döner → yükleme durumunu taşır (impeccable "product":
+   motion conveys state; emil: hızlı spinner yüklemeyi daha hızlı HİSSETTİRİR). */
+.refresh-ic {
+  display: inline-block;
+  margin-right: 5px;
+}
+.refresh-ic.spinning {
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Birincil / tehlikeli (dolu) buton — boş durum CTA, retry, onay diyaloğu. */
@@ -1517,6 +1537,21 @@ body.drawer-lock {
   height: 6px;
   border-radius: 50%;
   background: var(--mint, #45d5a2);
+}
+/* Canlı-veri nabzı: taze (bayat DEĞİL) durumda nokta hafifçe atar → "veri canlı"
+   durumunu taşır (impeccable "product": state indicator motion serbest). Bayatta
+   (.stale) atmaz — bayat veri canlı değildir. */
+.freshness:not(.stale) .fresh-dot {
+  animation: fresh-pulse 2.4s ease-in-out infinite;
+}
+@keyframes fresh-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(69, 213, 162, 0.5);
+  }
+  55% {
+    box-shadow: 0 0 0 4px rgba(69, 213, 162, 0);
+  }
 }
 
 /* ───── Toast ───── */
