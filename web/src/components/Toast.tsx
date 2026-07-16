@@ -32,8 +32,8 @@ const TONE_ICON: Record<ToastTone, string> = {
 };
 
 const AUTO_DISMISS_MS = 3800;
-/** Çıkış keyframe süresi (App.css `toast-out` = 440ms) — otomatik kapanışta silmeden önce oynar. */
-const EXIT_MS = 440;
+/** Çıkış keyframe süresi (App.css `toast-out` = 300ms) — otomatik kapanışta silmeden önce oynar. */
+const EXIT_MS = 300;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);

@@ -2529,7 +2529,7 @@ body.drawer-lock {
 .ctab-panel {
   flex: 1; /* panel kalan boyu doldurur → kart ray kadar uzar, nav en altta biter */
   display: flex;
-  animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: fade-up 280ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 /* Panel kartı: tek kart geniş okuma alanı — satır uzunluğu sınırlı (65-75 karakter). */
 .ctab-panel .commentary-card {
@@ -2603,7 +2603,7 @@ body.drawer-lock {
   color: var(--accent, #8a94dc);
 }
 .cacc-body {
-  animation: fade-up 320ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: fade-up 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 /* Kart accordion gövdesinde çıplak durur: çift çerçeve/başlık tekrarı olmasın. */
 .cacc-body .commentary-card,
@@ -2708,7 +2708,7 @@ body.drawer-lock {
 }
 /* Maliyet çizgisi de seriyle birlikte belirir (animasyonlar hep açık — 2026-07-11). */
 .vh-cost-line {
-  animation: spark-fade 700ms ease 200ms backwards;
+  animation: spark-fade 520ms ease 160ms backwards;
 }
 
 /* ── Grafik hover: crosshair + nokta + tooltip (T5.3 devamı) ── */
@@ -2832,7 +2832,10 @@ body.drawer-lock {
 
 /* ───── Motion katmanı (v2 — ui-ux-pro-max "Modern Dark", motion 7/10) ─────
    Sadece transform/opacity anime edilir (layout shift yok, CLS=0). Animasyonlar
-   her sayfa açılışında/yenilemesinde oynar (kullanıcı kararı 2026-07-11). */
+   her sayfa açılışında/yenilemesinde oynar (kullanıcı kararı 2026-07-11).
+   Süreler impeccable(product) bandına çekildi (2026-07-16 "snappier" turu):
+   giriş/geçiş koreografisi ~150-420ms — kullanıcı akışta, koreografiyi beklemez;
+   animasyonlar KALDIRILMADI, yalnız hızlandı (easing + "hep açık" korundu). */
 
 /* Sayfa içeriği: sağdan kayarak giriş — rota slide'ıyla aynı yön dili (route değişiminde yeniden oynar). */
 @keyframes rise-in {
@@ -2846,7 +2849,7 @@ body.drawer-lock {
   }
 }
 .page > * {
-  animation: rise-in 540ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 /* Kademeli giriş — 45ms aralıklı stagger (MD: 30-50ms/öğe). */
 .page > *:nth-child(1) { animation-delay: 0ms; }
@@ -2870,7 +2873,7 @@ body.drawer-lock {
   }
 }
 .kpis .kpi {
-  animation: fade-up 600ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .kpis .kpi:nth-child(1) { animation-delay: 40ms; }
 .kpis .kpi:nth-child(2) { animation-delay: 90ms; }
@@ -2889,8 +2892,8 @@ body.drawer-lock {
   }
 }
 .alloc-donut {
-  animation: donut-in 480ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: 100ms;
+  animation: donut-in 360ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 90ms;
 }
 
 /* Donut dilimleri: stroke-dasharray/-offset ile parça parça çizilir. Her dilimin
@@ -2903,7 +2906,7 @@ body.drawer-lock {
   }
 }
 .alloc-seg {
-  animation: donut-draw var(--seg-dur, 600ms) linear var(--seg-delay, 160ms) backwards;
+  animation: donut-draw var(--seg-dur, 480ms) linear var(--seg-delay, 120ms) backwards;
 }
 
 /* Kart hover: yumuşak yüzey + kenarlık geçişi (150-300ms bandı). */
@@ -2935,20 +2938,20 @@ body.drawer-lock {
 @keyframes page-exit {
   to {
     opacity: 0;
-    transform: translateX(-72px);
+    transform: translateX(-44px);
   }
 }
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateX(88px);
+    transform: translateX(52px);
   }
 }
 ::view-transition-old(root) {
-  animation: page-exit 340ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: page-exit 240ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 ::view-transition-new(root) {
-  animation: page-enter 480ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+  animation: page-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both;
 }
 
 /* Modal giriş: perde yumuşak kararır, panel yay gibi büyüyerek gelir.
@@ -2961,11 +2964,11 @@ body.drawer-lock {
 @keyframes modal-slide-up {
   0% {
     opacity: 0;
-    transform: translateY(72px);
+    transform: translateY(44px);
   }
-  70% {
+  72% {
     opacity: 1;
-    transform: translateY(-4px);
+    transform: translateY(-3px);
   }
   100% {
     opacity: 1;
@@ -2973,10 +2976,10 @@ body.drawer-lock {
   }
 }
 .modal-overlay {
-  animation: overlay-in 340ms ease-out both;
+  animation: overlay-in 220ms ease-out both;
 }
 .modal {
-  animation: modal-slide-up 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: modal-slide-up 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Toast yaşam döngüsü: sağdan yaylanarak girer (toast-in), otomatik kapanmadan
@@ -3002,10 +3005,10 @@ body.drawer-lock {
   }
 }
 .toast {
-  animation: toast-in 580ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: toast-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .toast.toast-leaving {
-  animation: toast-out 440ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: toast-out 300ms cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 /* Kart hover: hafif kalkış (transform — layout değişmez; transition yukarıda tanımlı). */
@@ -3029,10 +3032,10 @@ body.drawer-lock {
 }
 .weight-bar i {
   transform-origin: left center;
-  animation: bar-grow 700ms cubic-bezier(0.16, 1, 0.3, 1) 200ms backwards;
+  animation: bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) 160ms backwards;
 }
 .perf-track .pb-fill {
-  animation: bar-grow 700ms cubic-bezier(0.16, 1, 0.3, 1) 200ms backwards;
+  animation: bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) 160ms backwards;
 }
 
 /* Sparkline: çizgi soldan sağa çizilir (pathLength=1 normalize edildiği için
@@ -3052,8 +3055,8 @@ body.drawer-lock {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation:
-    spark-draw 1000ms cubic-bezier(0.33, 1, 0.68, 1) 150ms forwards,
-    spark-solid 1ms linear 1160ms forwards;
+    spark-draw 720ms cubic-bezier(0.33, 1, 0.68, 1) 130ms forwards,
+    spark-solid 1ms linear 860ms forwards;
 }
 @keyframes spark-draw {
   to {
@@ -3068,7 +3071,7 @@ body.drawer-lock {
 }
 .spark-area {
   opacity: 0;
-  animation: spark-fade 700ms ease-out 600ms forwards;
+  animation: spark-fade 520ms ease-out 460ms forwards;
 }
 @keyframes spark-fade {
   to {

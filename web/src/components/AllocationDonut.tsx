@@ -6,8 +6,8 @@ import { sliceColors } from "../lib/assetMeta";
 /* Dilim çizim animasyonu zamanlaması: her dilim, kendinden önceki dilimlerin payı
    kadar bekler ve kendi payı kadar sürede çizilir (linear) → bütün, tek kalemde
    çevre boyunca çizilmiş gibi okunur (App.css @keyframes donut-draw). */
-const DRAW_TOTAL_MS = 640;
-const DRAW_START_MS = 160;
+const DRAW_TOTAL_MS = 480;
+const DRAW_START_MS = 120;
 
 const R = 60;
 const STROKE = 26;
