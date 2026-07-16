@@ -90,3 +90,7 @@ compose/certs/
 .claude/skills/design-system/
 .claude/skills/slides/
 .claude/skills/ui-styling/
+# Tasarım "taste" skilleri (2026-07-16 kuruldu; kaynak: emilkowalski/skills · pbakaus/impeccable · Leonxlnx/taste-skill)
+.claude/skills/emil-design-eng/
+.claude/skills/impeccable/
+.claude/skills/taste-skill/
