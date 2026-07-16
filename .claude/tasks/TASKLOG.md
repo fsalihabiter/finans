@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-07-16 (3) · T5E.3 — Eğitim endpoint'leri (tracks/lessons/progress/quiz; UserId kapsam + IDOR)
+- **Görev(ler):** T5E.3 (Faz 6 — Eğitim MVP; 04 §7.5, 11 §3).
+- **Ne yapıldı:** `Finans.Application.Education` (DTO'lar + `IEducationService`) + `Finans.Infrastructure.Services.EducationService`
+  + `Finans.Api.Controllers.EducationController` (route `api/education`) + DI kaydı. **6 uç:**
+  `GET /tracks` · `GET /tracks/{slug}/lessons` · `GET /lessons/{slug}` · `PUT /lessons/{id}/progress`
+  · `POST /quizzes/{id}/attempts` · `GET /lessons/by-concept/{key}`. **Güvenlik/kurallar:** içerik
+  (track/ders/quiz sorusu) herkese açık; **ders durumu/ilerleme + quiz denemesi daima `currentUser.UserId`
+  kapsamlı** (11 §3); **kilit ön-koşul derslerinden TÜRETİLİR** (saklanmaz); **quiz cevap-anahtarı
+  (IsCorrect) + Explanation ders detayında SIZMAZ** — yalnız deneme SONUCUNDA açılır; grading tam-küme
+  eşleşmesi (SingleChoice/TrueFalse/MultipleChoice), skor = doğru/toplam yuvarlanmış, geçti = skor≥PassingScore.
+  Progress upsert (UNIQUE UserId,LessonId), Tamamlandı→%100 sabitlenir; yüzde 0-100 dışı 400, ders yok 404.
+- **Dokunulan dosyalar:** `Finans.Application/Education/{EducationDtos,IEducationService}.cs`,
+  `Finans.Infrastructure/Services/EducationService.cs`, `Finans.Api/Controllers/EducationController.cs`,
+  `Finans.Infrastructure/DependencyInjection.cs`, `tests/.../EducationApiTests.cs` (yeni).
+- **Test:** **SC-44 — EducationApiTests 12/12** (içerik + **per-user izolasyon** [Investor Completed vs Admin
+  NotStarted] + kilit türetimi + detayda cevap-sızıntısı yok + progress upsert/unlock/400/404 + quiz grading
+  tam/kısmi/404). Backend tam süit: Application 267 + Integration 143 yeşil; **4 başarısız = önceden-kırık
+  düz-host testleri** (HealthEndpoint/ObservabilitySecurity — WebApplicationFactory<Program> bu ortamda boot
+  etmiyor; eğitimle İLGİSİZ, T5E.3 öncesinden). Test kirlenmesi dersi: paylaşılan SQLite fixture'ında
+  mutasyon testi **taze kullanıcıyla** yapıldı (seed kullanıcıları kirletmesin).
+- **Karar/Not:** Read cache YOK — içerik açık/ucuz DB sorgusu, ilerleme indeksli (UserId) tekil sorgu;
+  codebase deseni basit read'leri cache'lemez (SettingsService gibi). Canlı Postgres smoke-test için api
+  imajı rebuild gerek (çalışan imaj T5E.3 öncesi) — istenirse yapılır.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.4 — Web Eğitim sayfası (ComingSoon → liste + ilerleme + kilit + ders + quiz; shared TS
+  tipleri + istemci burada eklenir).
+
 ## 2026-07-16 (2) · ad-hoc — Tasarım "taste" skilleri kuruldu + pano görsel güzellemesi
 - **Görev(ler):** ad-hoc (araç kutusu + UX; finans backlog dışı — kullanıcı isteği).
 - **Ne yapıldı:** (1) Üç tasarım skili kuruldu (`emilkowalski/skills`→emil-design-eng ·

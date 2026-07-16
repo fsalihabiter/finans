@@ -1,4 +1,5 @@
 using Finans.Application.Common;
+using Finans.Application.Education;
 using Finans.Application.Llm;
 using Finans.Application.Pricing;
 using Finans.Application.Portfolio;
@@ -57,6 +58,8 @@ public static class DependencyInjection
         // T5.4: Senaryo v1 — tek pozisyon "nakitte dursaydı" karşılaştırması (tahmin yok).
         services.AddScoped<IScenarioService, ScenarioService>();
         services.AddScoped<ISettingsService, SettingsService>();
+        // T5E.3: Eğitim modülü — içerik açık, ders durumu/ilerleme + quiz denemesi UserId kapsamlı.
+        services.AddScoped<IEducationService, EducationService>();
 
         // Arka plan job (T-BES.6b ileri): aktif BES planlarını periyodik ilerletir. Konfig
         // `Bes:PlanCatchUp:Enabled` (varsayılan true; test fixture'ı false yapar).

@@ -12,10 +12,15 @@ finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
 ## Sıradaki (öncelik sırası)
-1. **T5E.3** — Eğitim endpoint'leri (tracks/lessons/progress/quiz; `UserId` kapsam + IDOR)
-2. T5E.4 — Web Eğitim sayfası (ComingSoon → gerçek: liste + ilerleme + kilit + ders + quiz)
-3. T6.1 — İlk müfredat içeriği (5 dersin derin gövdesi + "Senin portföyünde" şablonu)
-4. OSS kalanı — README ekran görüntüleri tazeleme (pano Değer Seyri + Senaryo artık canlı)
+1. **T5E.4** — Web Eğitim sayfası (ComingSoon → gerçek: liste + ilerleme + kilit + ders + quiz;
+   **shared TS tipleri + istemci burada eklenir** — backend uçları hazır)
+2. T6.1 — İlk müfredat içeriği (5 dersin derin gövdesi + "Senin portföyünde" şablonu)
+3. OSS kalanı — README ekran görüntüleri tazeleme (pano Değer Seyri + Senaryo artık canlı)
+
+> ✅ **T5E.3 bitti (2026-07-16):** eğitim uçları canlı — `api/education` 6 uç (tracks·track-lessons·
+> lesson-detay·progress-upsert·quiz-attempt·by-concept). Kilit ön-koşuldan türetilir; içerik açık,
+> durum/ilerleme+deneme `UserId` kapsamlı (per-user izolasyon testli); quiz cevap-anahtarı yalnız
+> deneme sonucunda açılır. SC-44 integration 12/12. ⚠ Canlı Postgres için api imajı rebuild bekliyor.
 
 > ✅ **T5E.2 bitti (2026-07-16):** eğitim seed'i canlı — "Temeller" track + 5 ders
 > (sıralı ön-koşul zinciri) + 6 kavram etiketi + Ders 1'e 3 soruluk quiz + örnek ilerleme
