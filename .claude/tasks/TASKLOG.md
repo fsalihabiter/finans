@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-07-16 · T5E.2 — Eğitim seed'i ("Temeller" track + 5 ders + Ders 1 quiz + örnek ilerleme)
+- **Görev(ler):** T5E.2 (Faz 6 — Eğitim MVP; 03 §12.5).
+- **Ne yapıldı:** `SeedData`'ya **portföyden bağımsız idempotent** eğitim bölümü eklendi
+  (`SeedEducationAsync`, gate: `LearningTracks var mı?` → portföyü zaten seed'li mevcut DB'ler
+  bir sonraki açılışta eğitimi de alır; `SeedAsync` artık portföy+eğitim iki bölümü çağırır).
+  İçerik taslakla birebir: **"Temeller"** track'i (published/Beginner) + **5 ders** (slug/sıra/
+  dakika + Summary metinleri taslaktan; kısa eğitici BodyMarkdown, tavsiye YOK §2) + **sıralı
+  ön-koşul zinciri** (her ders bir öncekini ister → kilit türetimi) + **6 kavram etiketi**
+  (real-return/diversification/pe-ratio/pb-ratio/risk-return/compound; F/K dersi iki etiket) +
+  **Ders 1 mini testi** (3 soru, her soruda tam 1 doğru şık + eğitici Explanation, PassingScore 60) +
+  **örnek ilerleme** (User#1: 1-3 Tamamlandı %100 · 4 Devam %0 · 5 kayıt YOK → türetilmiş Kilitli).
+  Deterministik `Id(key)` → çoğaltmaz.
+- **Dokunulan dosyalar:** `backend/src/Finans.Infrastructure/Seed/SeedData.cs`,
+  `backend/tests/Finans.Integration.Tests/EducationSeedTests.cs` (yeni), `03-DATA-MODEL.md` §12.5,
+  `08-BACKLOG.md` (T5E.2 [x]), `09-TESTING-STRATEGY.md` (SC-43).
+- **Test:** SC-43 — EducationSeedTests **6/6** yeşil (içerik/ön-koşul zinciri/etiket/quiz/ilerleme/
+  idempotency, InMemory); SQLite kısıtları SC-38 (EducationModelTests 4/4) aynı seed yolundan; ayrıca
+  SeedConsistency 3/3. ⚠ Ön-koşul: pull edilen `68062c9` (SETUP/TASKLOG docs) ff ile alındı.
+- **Karar/Not:** Eğitim seed'i portföyden **ayrı idempotent** → çalışan Docker DB'sinde re-migrate/
+  reseed gerektirmeden bir sonraki `Database:Seed` açılışında eklenir. Ders **içeriği** (derin
+  müfredat) T6.1'e ait; bu görev seed **yapısını** kurar.
+- **Bilinen (görev dışı, önceden kırık):** `ObservabilitySecurityTests`'te web host başlatan 3 test
+  bu ortamda `WebApplicationFactory<Program>` ayağa kalkmadığı için kırmızı (değişikliklerim
+  stash'liyken de kırık — T5E.2 ile ilgisiz; düz factory, DB'siz).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T5E.3 — Eğitim endpoint'leri (tracks/lessons/progress/quiz; `UserId` kapsam + IDOR testi).
+
 ## 2026-07-14 (2) · ad-hoc — Analiz "yorum üretilemedi" düzeltildi: kurumsal proxy CA + .env sağlayıcı uyuşmazlığı
 - **Görev(ler):** ad-hoc (ortam/yapılandırma; finans backlog dışı — kod davranışı değişmedi).
 - **Ne yapıldı:** Analiz sayfası geçerli anahtarla bile fallback karta düşüyordu. İki kök neden:

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Finans.Domain.Education;
 using Finans.Domain.Enums;
 using Finans.Domain.Identity;
 using Finans.Domain.Portfolio;
@@ -15,6 +16,8 @@ namespace Finans.Infrastructure.Seed;
 /// Bu set aynı zamanda integration test fixture'ıdır (09 §2). USD-fiyatlı AAPL
 /// summary'de gerçek kur çevrimini (USD→TRY ×48) tetikler.
 /// Deterministik Id'ler (anahtar→GUID) sayesinde tekrar çalışınca çoğaltmaz.
+/// Eğitim içeriği (03 §12.5, T5E.2) ayrı, bağımsız idempotent bölümde eklenir —
+/// böylece portföyü zaten seed'lenmiş mevcut DB'ler bir sonraki açılışta eğitimi de alır.
 /// </summary>
 public static class SeedData
 {
@@ -24,10 +27,16 @@ public static class SeedData
 
     public static async Task SeedAsync(FinansDbContext db, CancellationToken ct = default)
     {
-        if (await db.Users.AnyAsync(ct))
-            return; // zaten seed'lenmiş
-
         var now = DateTime.UtcNow;
+        await SeedPortfolioAsync(db, now, ct);
+        await SeedEducationAsync(db, now, ct);
+    }
+
+    private static async Task SeedPortfolioAsync(FinansDbContext db, DateTime now, CancellationToken ct)
+    {
+        if (await db.Users.AnyAsync(ct))
+            return; // portföy zaten seed'lenmiş
+
         var purchase = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc); // alış dönemi
 
         // ── Roller & kullanıcılar (12.1) ──────────────────────────────────────
@@ -147,6 +156,238 @@ public static class SeedData
             Source = "Opening",
             CreatedAtUtc = now,
         });
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Eğitim içeriği seed'i (03 §12.5, T5E.2) — taslaktaki "Temeller" track'i + 5 ders
+    /// (her biri bir öncekini ön-koşul ister) + Ders 1'e bağlı 3 soruluk mini test +
+    /// örnek ilerleme (User#1: 1-3 Tamamlandı, 4 Devam ediyor, 5 türetilmiş Kilitli).
+    /// Portföyden BAĞIMSIZ idempotent (LearningTracks var mı?) → mevcut DB'ler de alır.
+    /// Ders gövdeleri kısa eğitici metin; derinleştirme T6.1'de. Tavsiye YOK (CLAUDE.md §2).
+    /// </summary>
+    private static async Task SeedEducationAsync(FinansDbContext db, DateTime now, CancellationToken ct)
+    {
+        if (await db.LearningTracks.AnyAsync(ct))
+            return; // eğitim zaten seed'lenmiş
+
+        var userId = Id("user-1"); // portföy seed'inin tekil kullanıcısı (ilerleme sahibi)
+
+        // ── Kavram etiketleri (12.5) — Analiz/Hisse kartından derse derin bağlantı ──
+        var tagRealReturn = new ConceptTag { Id = Id("tag-real-return"), Key = "real-return", Label = "Reel Getiri" };
+        var tagDiversification = new ConceptTag { Id = Id("tag-diversification"), Key = "diversification", Label = "Çeşitlendirme" };
+        var tagPe = new ConceptTag { Id = Id("tag-pe-ratio"), Key = "pe-ratio", Label = "F/K Oranı" };
+        var tagPb = new ConceptTag { Id = Id("tag-pb-ratio"), Key = "pb-ratio", Label = "PD/DD Oranı" };
+        var tagRiskReturn = new ConceptTag { Id = Id("tag-risk-return"), Key = "risk-return", Label = "Risk ve Getiri" };
+        var tagCompound = new ConceptTag { Id = Id("tag-compound"), Key = "compound", Label = "Bileşik Getiri" };
+        db.ConceptTags.AddRange(tagRealReturn, tagDiversification, tagPe, tagPb, tagRiskReturn, tagCompound);
+
+        // ── Track "Temeller" (12.5) ──────────────────────────────────────────────
+        var track = new LearningTrack
+        {
+            Id = Id("track-temeller"),
+            Slug = "temeller",
+            Title = "Temeller",
+            Description = "Yatırımın temel kavramları — enflasyon, çeşitlendirme, hisse okuma, risk ve bileşik getiri. Temellerden ileri seviyeye, kendi hızında.",
+            Level = LessonLevel.Beginner,
+            OrderIndex = 1,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        db.LearningTracks.Add(track);
+
+        // ── Dersler (12.5) — Summary metinleri taslakla birebir ──────────────────
+        var lesson1 = new Lesson
+        {
+            Id = Id("lesson-enflasyon"),
+            TrackId = track.Id,
+            Slug = "enflasyon-ve-reel-getiri",
+            OrderIndex = 1,
+            Title = "Enflasyon ve Reel Getiri",
+            Summary = "\"Param büyüdü mü, yoksa sadece rakam mı?\" sorusunun cevabı.",
+            BodyMarkdown =
+                "## Nominal mi, reel mi?\n\n" +
+                "Paran bir yılda 100.000 ₺'den 140.000 ₺'ye çıktıysa **nominal** getirin %40'tır. " +
+                "Ama aynı dönemde fiyatlar %38 arttıysa, elindeki parayla neredeyse aynı şeyleri alabilirsin.\n\n" +
+                "**Reel getiri**, enflasyondan arındırılmış gerçek kazançtır:\n\n" +
+                "> reel getiri = (1 + nominal) / (1 + enflasyon) − 1\n\n" +
+                "Örnekte: (1,40 / 1,38) − 1 ≈ **%1,4**. Yani rakam %40 büyüdü ama alım gücün yalnızca ~%1,4 arttı.\n\n" +
+                "Basit çıkarma (%40 − %38 = %2) kaba bir yaklaşımdır; enflasyon yükseldikçe formülle arasındaki fark açılır. " +
+                "Yatırımın \"kârda\" görünmesi her zaman \"zenginleştim\" demek değildir — asıl soru **alım gücün** ne oldu.",
+            EstimatedMinutes = 4,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        var lesson2 = new Lesson
+        {
+            Id = Id("lesson-cesitlendirme"),
+            TrackId = track.Id,
+            Slug = "cesitlendirme-neden-onemli",
+            OrderIndex = 2,
+            Title = "Çeşitlendirme Neden Önemli?",
+            Summary = "Tüm yumurtaları tek sepete koymamanın matematiği.",
+            BodyMarkdown =
+                "## Tüm yumurtalar tek sepette\n\n" +
+                "Bir portföyün değeri tek bir varlığa bağlıysa, o varlık düştüğünde portföyün tümü birlikte düşer. " +
+                "Farklı davranan varlıkları bir arada tutmak, biri kötü giderken diğerlerinin dengelemesine olan şansı artırır.\n\n" +
+                "**Yoğunlaşma** = değerin az sayıda kalemde toplanması. Örneğin portföyünün %84'ü iki varlıktaysa, " +
+                "bu iki varlığın ortak kaderi senin de kaderin olur.\n\n" +
+                "Çeşitlendirme riski **yok etmez**, farklı kaynaklara **yayar**. Amaç, varlıkların aynı anda aynı yöne " +
+                "hareket etme ihtimalini azaltmaktır.\n\n" +
+                "Bu bir \"şu kadar varlık iyi\" kuralı değil, bir farkındalıktır: ağırlığın nerede toplandığını bilmek.",
+            EstimatedMinutes = 5,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        var lesson3 = new Lesson
+        {
+            Id = Id("lesson-fk-pddd"),
+            TrackId = track.Id,
+            Slug = "fk-pddd-nedir",
+            OrderIndex = 3,
+            Title = "F/K, PD/DD Nedir?",
+            Summary = "Bir hisseyi okumanın en temel üç rakamı.",
+            BodyMarkdown =
+                "## Bir hisseyi okumanın rakamları\n\n" +
+                "**F/K (Fiyat / Kazanç)**: hisse fiyatının, şirketin hisse başına kârına oranı. \"Şirketin 1 liralık kârı " +
+                "için kaç lira ödüyorum?\" sorusunu yanıtlar. Yüksek F/K, piyasanın gelecekten çok şey beklediğini (prim ödediğini) gösterebilir.\n\n" +
+                "**PD/DD (Piyasa Değeri / Defter Değeri)**: şirketin borsadaki değerinin, muhasebe defterindeki öz kaynağına oranı. " +
+                "1'in üzerinde olması, piyasanın şirkete defter değerinden fazla değer biçtiği anlamına gelir.\n\n" +
+                "**Temettü verimi**: şirketin dağıttığı kâr payının fiyata oranı. Büyümeye yatırım yapan şirketlerde bu düşük olabilir.\n\n" +
+                "Bu oranların hiçbiri tek başına bir hisseyi \"iyi\" ya da \"kötü\" yapmaz — sana **neye bakman gerektiğini** " +
+                "ve rakamların hikâyesini anlatır. Karşılaştırma genelde aynı sektör içinde anlamlıdır.",
+            EstimatedMinutes = 6,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        var lesson4 = new Lesson
+        {
+            Id = Id("lesson-risk-getiri"),
+            TrackId = track.Id,
+            Slug = "risk-ve-getiri-iliskisi",
+            OrderIndex = 4,
+            Title = "Risk ve Getiri İlişkisi",
+            Summary = "Neden yüksek getiri her zaman yüksek risk demektir.",
+            BodyMarkdown =
+                "## Yüksek getiri, yüksek risk\n\n" +
+                "Bir yatırımın yüksek getiri \"vaat etmesi\", aynı zamanda o getirinin gerçekleşmeme (hatta zarar) ihtimalinin " +
+                "de yüksek olması demektir. Risk ve beklenen getiri genelde birlikte hareket eder.\n\n" +
+                "**Risk** burada \"kötü bir şey olma ihtimali\" değil, sonucun **ne kadar oynak/belirsiz** olduğudur. " +
+                "Mevduat düşük oynaklık–düşük getiri; hisse yüksek oynaklık–yüksek potansiyel getiri ucundadır.\n\n" +
+                "\"Garantili yüksek getiri\" ifadesi bir çelişkidir — birileri riski üstleniyorsa bir yerde saklıdır.\n\n" +
+                "Doğru soru \"en yüksek getiri hangisi?\" değil, \"bu getiriye ulaşmak için ne kadar oynaklığa katlanabilirim?\" sorusudur.",
+            EstimatedMinutes = 5,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        var lesson5 = new Lesson
+        {
+            Id = Id("lesson-bilesik"),
+            TrackId = track.Id,
+            Slug = "bilesik-getirinin-gucu",
+            OrderIndex = 5,
+            Title = "Bileşik Getirinin Gücü",
+            Summary = "Zamanın yatırımcının en büyük dostu olması.",
+            BodyMarkdown =
+                "## Zaman senin dostun\n\n" +
+                "Bileşik getiri, kazancının da kazanç getirmesidir. Sadece ana paran değil, geçmiş getirilerin de üzerine " +
+                "getiri biner — ve bu etki zamanla hızlanır.\n\n" +
+                "100.000 ₺ yılda %20 büyürse: 1. yıl sonu 120.000, 2. yıl sonu 144.000 (sadece +20.000 değil, +24.000). " +
+                "Fark, önceki kârın da çalışmasından gelir.\n\n" +
+                "**Erken başlamak** ve **kazancı yeniden yatırmak** (dağıtmamak), bileşik etkinin en güçlü iki bileşenidir. " +
+                "Küçük ama düzenli katkılar, uzun vadede tek seferlik büyük tutarları geçebilir.\n\n" +
+                "Bu yüzden bileşik getiriye çoğu zaman \"zamanın armağanı\" denir — en büyük değişkeni **süre**dir.",
+            EstimatedMinutes = 5,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        db.Lessons.AddRange(lesson1, lesson2, lesson3, lesson4, lesson5);
+
+        // ── Ön-koşul zinciri (12.5) — her ders bir öncekini ister (kilit türetimi) ──
+        db.LessonPrerequisites.AddRange(
+            new LessonPrerequisite { LessonId = lesson2.Id, PrerequisiteLessonId = lesson1.Id },
+            new LessonPrerequisite { LessonId = lesson3.Id, PrerequisiteLessonId = lesson2.Id },
+            new LessonPrerequisite { LessonId = lesson4.Id, PrerequisiteLessonId = lesson3.Id },
+            new LessonPrerequisite { LessonId = lesson5.Id, PrerequisiteLessonId = lesson4.Id });
+
+        // ── Ders ↔ kavram etiketi (12.5) ─────────────────────────────────────────
+        db.LessonConceptTags.AddRange(
+            new LessonConceptTag { LessonId = lesson1.Id, ConceptTagId = tagRealReturn.Id },
+            new LessonConceptTag { LessonId = lesson2.Id, ConceptTagId = tagDiversification.Id },
+            new LessonConceptTag { LessonId = lesson3.Id, ConceptTagId = tagPe.Id },
+            new LessonConceptTag { LessonId = lesson3.Id, ConceptTagId = tagPb.Id },
+            new LessonConceptTag { LessonId = lesson4.Id, ConceptTagId = tagRiskReturn.Id },
+            new LessonConceptTag { LessonId = lesson5.Id, ConceptTagId = tagCompound.Id });
+
+        // ── Ders 1 mini testi (12.5) — 3 soru, her birinde eğitici Explanation ────
+        var quiz = new Quiz
+        {
+            Id = Id("quiz-enflasyon"),
+            LessonId = lesson1.Id,
+            Title = "Enflasyon ve Reel Getiri — Mini Test",
+            PassingScore = 60,
+        };
+        db.Quizzes.Add(quiz);
+
+        var q1 = new QuizQuestion
+        {
+            Id = Id("quiz-enflasyon-q1"),
+            QuizId = quiz.Id,
+            OrderIndex = 1,
+            Type = QuizQuestionType.SingleChoice,
+            Prompt = "Nominal getirin %40, enflasyon %38 ise reel getirin yaklaşık kaçtır?",
+            Explanation = "Reel getiri = (1 + nominal) / (1 + enflasyon) − 1. Basit çıkarma (%40 − %38) kaba bir tahmindir; " +
+                          "doğru formül (1,40 / 1,38) − 1 ≈ %1,4 verir. Enflasyon yükseldikçe iki yöntem arasındaki fark büyür.",
+        };
+        var q2 = new QuizQuestion
+        {
+            Id = Id("quiz-enflasyon-q2"),
+            QuizId = quiz.Id,
+            OrderIndex = 2,
+            Type = QuizQuestionType.TrueFalse,
+            Prompt = "Paran bir yılda %20 arttı ama enflasyon %25 olduysa, alım gücün artmıştır.",
+            Explanation = "Nominal olarak paran büyüdü ama fiyatlar daha hızlı arttığı için aynı parayla daha az şey alabilirsin — " +
+                          "reel getirin negatif. \"Rakam büyüdü\" her zaman \"zenginleştim\" anlamına gelmez.",
+        };
+        var q3 = new QuizQuestion
+        {
+            Id = Id("quiz-enflasyon-q3"),
+            QuizId = quiz.Id,
+            OrderIndex = 3,
+            Type = QuizQuestionType.SingleChoice,
+            Prompt = "Reel getiri neyi ölçer?",
+            Explanation = "Reel getiri kazancını enflasyona göre düzeltir; \"param gerçekte ne kadar değer kazandı ya da kaybetti?\" " +
+                          "sorusunu yanıtlar. Ham lira artışı ise nominal getiridir.",
+        };
+        db.QuizQuestions.AddRange(q1, q2, q3);
+
+        db.QuizOptions.AddRange(
+            new QuizOption { Id = Id("q1-o1"), QuestionId = q1.Id, OrderIndex = 1, Text = "%78 — ikisini toplarsın", IsCorrect = false },
+            new QuizOption { Id = Id("q1-o2"), QuestionId = q1.Id, OrderIndex = 2, Text = "%2 — ikisini çıkarırsın", IsCorrect = false },
+            new QuizOption { Id = Id("q1-o3"), QuestionId = q1.Id, OrderIndex = 3, Text = "Yaklaşık %1,4 — (1 + 0,40) / (1 + 0,38) − 1", IsCorrect = true },
+            new QuizOption { Id = Id("q1-o4"), QuestionId = q1.Id, OrderIndex = 4, Text = "%40 — enflasyon getiriyi etkilemez", IsCorrect = false },
+
+            new QuizOption { Id = Id("q2-o1"), QuestionId = q2.Id, OrderIndex = 1, Text = "Doğru", IsCorrect = false },
+            new QuizOption { Id = Id("q2-o2"), QuestionId = q2.Id, OrderIndex = 2, Text = "Yanlış", IsCorrect = true },
+
+            new QuizOption { Id = Id("q3-o1"), QuestionId = q3.Id, OrderIndex = 1, Text = "Paranın kaç lira arttığını", IsCorrect = false },
+            new QuizOption { Id = Id("q3-o2"), QuestionId = q3.Id, OrderIndex = 2, Text = "Enflasyondan arındırılmış, gerçek alım gücü değişimini", IsCorrect = true },
+            new QuizOption { Id = Id("q3-o3"), QuestionId = q3.Id, OrderIndex = 3, Text = "Bankanın uyguladığı faiz oranını", IsCorrect = false },
+            new QuizOption { Id = Id("q3-o4"), QuestionId = q3.Id, OrderIndex = 4, Text = "Döviz kurundaki değişimi", IsCorrect = false });
+
+        // ── Örnek ilerleme (12.5) — User#1: 1-3 Tamamlandı · 4 Devam · 5 türetilmiş Kilitli ──
+        // Ders 5 için KAYIT YOK: kilit, ön-koşulun (Ders 4) tamamlanmamış olmasından TÜRETİLİR.
+        db.UserLessonProgress.AddRange(
+            new UserLessonProgress { Id = Id("progress-l1"), UserId = userId, LessonId = lesson1.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-12), CompletedAtUtc = now.AddDays(-12), UpdatedAtUtc = now.AddDays(-12) },
+            new UserLessonProgress { Id = Id("progress-l2"), UserId = userId, LessonId = lesson2.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-9), CompletedAtUtc = now.AddDays(-9), UpdatedAtUtc = now.AddDays(-9) },
+            new UserLessonProgress { Id = Id("progress-l3"), UserId = userId, LessonId = lesson3.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-5), CompletedAtUtc = now.AddDays(-5), UpdatedAtUtc = now.AddDays(-5) },
+            new UserLessonProgress { Id = Id("progress-l4"), UserId = userId, LessonId = lesson4.Id, Status = LessonStatus.InProgress, ProgressPercent = 0, StartedAtUtc = now.AddDays(-1), UpdatedAtUtc = now.AddDays(-1) });
 
         await db.SaveChangesAsync(ct);
     }

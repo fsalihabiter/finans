@@ -422,6 +422,11 @@ ilkeyi söyler:
 > **düzeltip birebir tutarlı** hale getirir — "doğru veri" ilkesi (NFR-1).
 
 ### 12.5 Eğitim İçeriği (taslaktaki derslerle birebir)
+> ✅ **Uygulandı (T5E.2, 2026-07-16):** `SeedData.SeedEducationAsync` — portföyden
+> **bağımsız idempotent** (LearningTracks var mı? → mevcut DB'ler bir sonraki açılışta
+> eğitimi de alır). Ders gövdeleri kısa/eğitici (tavsiye YOK, §2); derinleştirme T6.1.
+> SC-43 (09 §5) içerik+ilerleme+idempotency'i doğrular.
+
 - `LearningTracks`: **"Temeller"** (slug `temeller`, Level `Beginner`, yayında).
 - `Lessons` (track içi, sıralı; ön-koşul: her ders bir öncekini ister):
   1. **Enflasyon ve Reel Getiri** — 4 dk — tag `real-return` — *Tamamlandı*

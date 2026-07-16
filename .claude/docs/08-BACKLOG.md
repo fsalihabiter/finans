@@ -238,7 +238,7 @@ hesabı birim testli (SC-32/36); tahmin/yönlendirme yok (kalıcı disclaimer).
 | ID | Görev | Bağımlılık | Doküman | Durum |
 |----|-------|-----------|---------|-------|
 | T5E.1 | Eğitim entity'leri + migration (Tracks, Lessons, Sections, Prerequisites, ConceptTags, Quizzes, Progress, Attempts) | Faz 1 | `03` §C | [x] (2026-07-12; SC-38; 11 tablo + CHECK/unique; UserQuizAnswers bilinçli MVP dışı) |
-| T5E.2 | Eğitim seed'i (5 ders "Temeller" track'i + 1 quiz + örnek ilerleme) | T5E.1 | `03` §12.5 | [ ] |
+| T5E.2 | Eğitim seed'i (5 ders "Temeller" track'i + 1 quiz + örnek ilerleme) | T5E.1 | `03` §12.5 | [x] (2026-07-16; SC-43; "Temeller" + 5 ders + ön-koşul zinciri + 6 kavram etiketi + Ders 1'e 3 soruluk quiz + örnek ilerleme (1-3 Tamamlandı·4 Devam·5 türetilmiş Kilitli); portföyden bağımsız idempotent → mevcut DB'ler de alır; içerik kısa/eğitici, derinleştirme T6.1) |
 | T5E.3 | Eğitim endpoint'leri (tracks/lessons/progress/quiz) — ilerleme `UserId` kapsamlı + IDOR testi | T5E.1 | `04` §7.5, `11` §3 | [ ] |
 | T5E.4 | **Web** Eğitim sayfası: track + ders listesi + ilerleme çubuğu + kilit; ders okuma + mini test; analiz/hisse kartından `ConceptTag` derin bağlantı | T5E.3 | `13` §4 | [ ] |
 | T6.1 | **İlk müfredat içeriği (5 ders):** enflasyon & reel getiri · risk-getiri · çeşitlendirme/yoğunlaşma · maliyet ortalaması · BES'i doğru kullanmak. Her derste "Senin portföyünde" bağlam bloğu şablonu + 2-3 soruluk quiz. İçerik repo'da (topluluk katkısına açık, `14` §4-D2) | T5E.2 | `14` §4-A1 | [ ] |
