@@ -20,6 +20,28 @@
 
 ---
 
+## 2026-07-16 (2) · ad-hoc — Tasarım "taste" skilleri kuruldu + pano görsel güzellemesi
+- **Görev(ler):** ad-hoc (araç kutusu + UX; finans backlog dışı — kullanıcı isteği).
+- **Ne yapıldı:** (1) Üç tasarım skili kuruldu (`emilkowalski/skills`→emil-design-eng ·
+  `pbakaus/impeccable` · `Leonxlnx/taste-skill`) — proje-düzeyi `.claude/skills/`, **git-ignore'lu**
+  (mevcut konvansiyon; impeccable script'lerine hook BAĞLANMADI). (2) Skiller **Portföy panosuna
+  uygulandı** (audit-first): önce motion cilası (`transition:all` kaldırıldı · Yenile spinner ·
+  canlı-veri nabzı), sonra **global "snappier" turu** (giriş/geçiş/reveal süreleri impeccable-product
+  150-250ms bandına — animasyonlar korunarak), sonra **cesur görsel tur** (kullanıcı "güzelleme
+  görmedim" → asıl sebep **bayat Docker imajıydı**; rebuild sonrası): hero KPI genişledi+büyüdü
+  (26→40px) + aksan glow/elevation + kazanç/kayıp ▲/▼ pill; kart derinliği; alt kartlarda başlık
+  aksan lead-bar + getiri pill + Yoğunlaşma konsantrasyon barı + Hızlı Bilgi satır ayraçları.
+  Her tur **canlıda https://localhost** ekran görüntüsüyle doğrulandı (tarayıcı sürülerek).
+- **Dokunulan dosyalar:** `web/src/App.css`, `web/src/routes/PortfolioPage.tsx`,
+  `web/src/components/{KpiGrid,PortfolioInsights,Toast,AllocationDonut}.tsx`, `.gitignore`.
+- **Test:** tsc --noEmit temiz; web **96/96** yeşil (her turda). Görsel = canlı Docker teyidi.
+- **Karar/Not:** Kilitli kararlara saygı — [[ui-animations-always-on]] (reduced-motion yok)
+  skil "zorunlu" dese de override edilmedi; taste-skill dashboard'u kendi §13'ünde kapsam dışı
+  bırakır → panoda yalnız evrensel hijyeni. Memory: `design-taste-skills`. **Web değişikliği
+  görünürlüğü için `docker compose up -d --build caddy` ŞART** (yerel `pnpm dev` ayrı).
+- **Durum:** tamamlandı (6 commit yerelde, push bekliyor — kullanıcıya soruldu).
+- **Sıradaki:** T5E.3 (Eğitim endpoint'leri) — finans backlog kaldığı yerden.
+
 ## 2026-07-16 · T5E.2 — Eğitim seed'i ("Temeller" track + 5 ders + Ders 1 quiz + örnek ilerleme)
 - **Görev(ler):** T5E.2 (Faz 6 — Eğitim MVP; 03 §12.5).
 - **Ne yapıldı:** `SeedData`'ya **portföyden bağımsız idempotent** eğitim bölümü eklendi
