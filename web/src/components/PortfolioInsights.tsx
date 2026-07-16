@@ -44,14 +44,28 @@ export function PortfolioInsights({
               <div className="bw-t">En iyi</div>
               <div className="bw-n">{best ? best.name : "—"}</div>
               <div className={`bw-g tnum ${best && best.returnRatio! > 0 ? "up" : "down"}`}>
-                {best ? formatPercent(best.returnRatio!) : "—"}
+                {best ? (
+                  <>
+                    <span className="delta-arrow" aria-hidden="true">{best.returnRatio! > 0 ? "▲" : "▼"}</span>
+                    {formatPercent(best.returnRatio!)}
+                  </>
+                ) : (
+                  "—"
+                )}
               </div>
             </div>
             <div className="bw-item">
               <div className="bw-t">En zayıf</div>
               <div className="bw-n">{worst ? worst.name : "—"}</div>
               <div className={`bw-g tnum ${worst && worst.returnRatio! >= 0 ? "up" : "down"}`}>
-                {worst ? formatPercent(worst.returnRatio!) : "—"}
+                {worst ? (
+                  <>
+                    <span className="delta-arrow" aria-hidden="true">{worst.returnRatio! >= 0 ? "▲" : "▼"}</span>
+                    {formatPercent(worst.returnRatio!)}
+                  </>
+                ) : (
+                  "—"
+                )}
               </div>
             </div>
           </div>
@@ -79,6 +93,21 @@ export function PortfolioInsights({
                 <div className="bw-t">{ASSET_META[a.assetType].icon} {a.name}</div>
                 <div className="bw-n tnum">{formatPercent(a.weight, 1, true, false)}</div>
               </div>
+            ))}
+          </div>
+          <div
+            className="conc-bar"
+            role="img"
+            aria-label={`İlk iki kalem portföyün ${formatPercent(top2Weight, 1, true, false)}'ini oluşturur`}
+          >
+            {top2.map((a, i) => (
+              <i
+                key={a.assetType + a.name}
+                style={{
+                  width: `${a.weight * 100}%`,
+                  background: i === 0 ? "var(--accent, #8a94dc)" : "var(--accent-soft, #a6aee8)",
+                }}
+              />
             ))}
           </div>
           <p className="note-muted">

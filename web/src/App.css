@@ -315,6 +315,19 @@
   font-weight: 600;
   margin: 0;
 }
+/* Başlık aksan lead-bar'ı: tüm kartlarda tutarlı marka ornamenti (impeccable:
+   tutarlı sistem = "voice"; rastgele süs değil). KPI kartlarında card-head yok. */
+.card-head h2::before,
+.card-head h3::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 15px;
+  margin-right: 9px;
+  vertical-align: -2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--accent, #8a94dc), var(--accent-soft, #a6aee8));
+}
 .card-head .mini {
   font-size: 12px;
   color: var(--muted, #97a3c9);
@@ -402,10 +415,44 @@
   font-weight: 700;
   margin-top: 4px;
 }
+/* Getiri → oklu tint'li pill (hero diliyle tutarlı): kazanç mint, kayıp mercan. */
 .bestworst .bw-g {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 9px 3px 7px;
   font-size: 12px;
-  font-weight: 600;
-  margin-top: 2px;
+  font-weight: 700;
+  border-radius: 100px;
+  background: rgba(138, 148, 220, 0.12);
+}
+.bestworst .bw-g.up {
+  background: rgba(69, 213, 162, 0.14);
+}
+.bestworst .bw-g.down {
+  background: rgba(249, 127, 127, 0.14);
+}
+.bestworst .bw-g .delta-arrow {
+  font-size: 9px;
+  line-height: 1;
+}
+/* Konsantrasyon barı (Yoğunlaşma): ilk 2 kalem ağırlığı görsel — accent + accent-soft
+   segment, kalanı track. Kullanışlı viz (impeccable: veri yerini hak eder). */
+.conc-bar {
+  display: flex;
+  height: 8px;
+  margin-top: 14px;
+  border-radius: 100px;
+  overflow: hidden;
+  background: var(--panel-2, #1a2240);
+  border: 1px solid var(--line, #26304f);
+}
+.conc-bar i {
+  display: block;
+  height: 100%;
+  transform-origin: left center;
+  animation: bar-grow 520ms cubic-bezier(0.16, 1, 0.3, 1) 160ms backwards;
 }
 .quickinfo {
   font-size: 12.5px;
@@ -415,6 +462,11 @@
 .quickinfo .qi {
   display: flex;
   justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+.quickinfo .qi:last-child {
+  border-bottom: 0;
 }
 .quickinfo .qi span {
   color: var(--muted, #97a3c9);
