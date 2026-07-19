@@ -41,13 +41,31 @@ sırların durduğu yer, container imajı, bağımlılıklar.
 
 - **Mekanizma:** JWT (kısa ömürlü **access** ~15 dk + **refresh** token).
   Stateless → yatay ölçeklenmeyle uyumlu (`10` §5).
-- **Parola saklama:** **Argon2id** (veya ASP.NET Core Identity'nin PBKDF2'si).
-  **Asla** düz/zayıf hash. Salt otomatik.
-- **Refresh token:** sunucuda saklanır/iptal edilebilir, rotasyonlu, çalınma
-  tespitinde iptal.
+- **Parola saklama:** **Argon2id** (karar netleşti 2026-07-19: OWASP birinci
+  tercih, asgari **m=19 MiB / t=2 / p=1**; ASP.NET Identity varsayılan
+  PBKDF2'si OWASP eşiğinin altında → alternatif DEĞİL). **Asla** düz/zayıf
+  hash. Salt otomatik. Hash fonksiyonu birim testli (NFR-1 disiplini).
+- **Refresh token:** sunucuda **hash'i** saklanır/iptal edilebilir, her
+  kullanımda **rotasyon** + iptal edilmiş token yeniden gelirse **aile iptali**
+  (çalınma tespiti) + mutlak ömür sınırı (IETF browser-based-apps BCP şartı).
+- **Hazır yapı NOTU (2026-07-19):** `MapIdentityApi` **kullanılmaz** — refresh
+  rotasyonu yok (dotnet/aspnetcore#52815, .NET 11 öncesi gelmiyor) ve Microsoft
+  kendisi "basit senaryolar" ile sınırlıyor. Mevcut `Users`/`RefreshTokens`/
+  `Roles` şeması (`03` §B) + `ICurrentUser` takası üzerine kendin-yap.
+  Harici IdP (Keycloak/Zitadel) ve SaaS (Auth0/Clerk) değerlendirildi ve
+  reddedildi (tek-VPS yükü / KVKK m.9 yurt dışı aktarım) — analiz: TASKLOG
+  2026-07-19. Sosyal giriş gerekirse yükseltme yolu: OpenIddict (in-app).
 - **Brute-force:** başarısız giriş sayacı + geçici lockout + rate limit (§5).
-- **Token taşıma:** mobilde **güvenli depo** (`expo-secure-store` / Keychain /
-  Keystore) — `AsyncStorage`'a token koyma.
+- **Token taşıma (web) — KARAR 2026-07-19, cookie/BFF:** tarayıcıda token
+  **JavaScript'in erişebildiği hiçbir yerde durmaz** (localStorage/
+  sessionStorage/memory YASAK — IETF BCP + MS Learn aynı yönde). JWT'ler
+  **`httpOnly + Secure + SameSite` cookie** ile taşınır + **CSRF koruması**
+  (antiforgery veya SameSite=Strict + özel header şartı). Caddy SPA'yı ve
+  `/api`'yi aynı origin'den sunduğu için ayrı BFF süreci GEREKMEZ — desenin
+  kazanımı bedavaya gelir (CORS yok).
+- **Token taşıma (mobil):** aynı endpoint'lerden `Authorization: Bearer` +
+  **güvenli depo** (`expo-secure-store` / Keychain / Keystore) —
+  `AsyncStorage`'a token koyma.
 
 ---
 

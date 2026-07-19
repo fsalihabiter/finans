@@ -35,9 +35,12 @@
   öneriler: web'de httpOnly cookie taşıma (IETF BFF BCP), MapIdentityApi KULLANMA (rotasyon yok,
   dotnet/aspnetcore#52815), Argon2id OWASP min m=19MiB/t=2/p=1; SaaS (Auth0/Clerk) KVKK m.9 yurt
   dışı aktarım yükü nedeniyle reddedildi; Keycloak/Zitadel tek-VPS'e ağır (Zitadel core AGPL'e
-  geçti 2025-03). Karar sahibi onaylarsa `11` §2'ye cookie/BFF notu işlenecek.
+  geçti 2025-03). **Onaylandı (aynı gün):** `11` §2'ye işlendi — Argon2id netleşti (PBKDF2
+  alternatif olmaktan çıktı, OWASP min parametreler), web'de httpOnly cookie + CSRF (BFF-lite,
+  aynı-origin), MapIdentityApi yasağı, aile-iptali + mutlak ömür, harici IdP/SaaS ret gerekçesi.
+  Kırmızı-kalan doğrulama aşaması 18:38'de cache'ten yeniden koşturuldu (sonuç ayrı girdiyle).
 - **Dokunulan dosyalar:** `.claude/docs/08-BACKLOG.md` (FAZ 9 bölümü), `.claude/docs/01-NEEDS-ANALYSIS.md`
-  (§5), `.claude/tasks/TASKLOG.md`, `.claude/tasks/ACTIVE.md`.
+  (§5), `.claude/docs/11-SECURITY.md` (§2 — onay sonrası), `.claude/tasks/TASKLOG.md`, `.claude/tasks/ACTIVE.md`.
 - **Test:** yok (yalnız doküman/plan değişikliği).
 - **Karar/Not:** (a) Açık bankacılık/ÖHVPS **reddedildi** (maliyet+kapsam+tüzel kişilik);
   (b) ekstre yükleme = kapsam İÇİ, canlı banka API = kapsam DIŞI (`01` §5);
