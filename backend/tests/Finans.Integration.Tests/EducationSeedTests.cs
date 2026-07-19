@@ -108,8 +108,10 @@ public sealed class EducationSeedTests
             options.Count(o => o.IsCorrect).Should().Be(1); // tam bir doğru cevap
         }
 
-        // Bağımsız test yok — tek quiz Ders 1'e bağlı.
-        (await db.Quizzes.CountAsync()).Should().Be(1);
+        // Bağımsız (derse bağlı olmayan) test yok — her quiz bir derse bağlı.
+        // T6.1 ile quiz sayısı 1 → 5 oldu (2-5. dersler de test aldı).
+        (await db.Quizzes.CountAsync()).Should().Be(5);
+        (await db.Quizzes.CountAsync(q => q.LessonId == null)).Should().Be(0);
     }
 
     [Fact]
@@ -152,9 +154,119 @@ public sealed class EducationSeedTests
         (await db.ConceptTags.CountAsync()).Should().Be(6);
         (await db.LessonConceptTags.CountAsync()).Should().Be(6);
         (await db.LessonPrerequisites.CountAsync()).Should().Be(4);
-        (await db.Quizzes.CountAsync()).Should().Be(1);
-        (await db.QuizQuestions.CountAsync()).Should().Be(3);
-        (await db.QuizOptions.CountAsync()).Should().Be(10);
+        (await db.Quizzes.CountAsync()).Should().Be(5);          // T6.1: 1 → 5 (her derse bir test)
+        (await db.QuizQuestions.CountAsync()).Should().Be(15);    // 5 × 3
+        (await db.QuizOptions.CountAsync()).Should().Be(50);      // 5 × (4+2+4)
+        (await db.LessonSections.CountAsync()).Should().Be(25);   // T6.1: 5 ders × 5 blok
         (await db.UserLessonProgress.CountAsync()).Should().Be(4);
+    }
+
+    // ── T6.1: katmanlı içerik (SC-E12) ───────────────────────────────────────
+
+    [Fact]
+    public async Task Every_lesson_has_full_depth_ladder_and_example_and_trap()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var lessons = await db.Lessons.OrderBy(l => l.OrderIndex).ToListAsync();
+        var sections = await db.LessonSections.ToListAsync();
+
+        foreach (var lesson in lessons)
+        {
+            var own = sections.Where(s => s.LessonId == lesson.Id).OrderBy(s => s.OrderIndex).ToList();
+
+            // Derinlik merdiveni eksiksiz: her ders üç katmanda da anlatım taşır.
+            own.Should().Contain(s => s.DepthTier == DepthTier.Core && s.Kind == SectionKind.Explain,
+                $"'{lesson.Slug}' L1 Core anlatımı taşımalı");
+            own.Should().Contain(s => s.DepthTier == DepthTier.Context && s.Kind == SectionKind.Explain,
+                $"'{lesson.Slug}' L2 Context anlatımı taşımalı");
+            own.Should().Contain(s => s.DepthTier == DepthTier.Deep && s.Kind == SectionKind.Explain,
+                $"'{lesson.Slug}' L3 Deep anlatımı taşımalı");
+
+            // Dik eksen: jenerik örnek + tuzak blokları.
+            own.Should().Contain(s => s.Kind == SectionKind.Example, $"'{lesson.Slug}' jenerik örnek taşımalı");
+            own.Should().Contain(s => s.Kind == SectionKind.Trap, $"'{lesson.Slug}' tuzak bloğu taşımalı");
+
+            own.Select(s => s.OrderIndex).Should().Equal(1, 2, 3, 4, 5);
+            own.Should().OnlyContain(s => s.BodyMarkdown.Length > 100); // boş/yer tutucu içerik yok
+        }
+    }
+
+    [Fact]
+    public async Task Lesson_content_uses_only_supported_markdown_and_avoids_advice()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var bodies = await db.LessonSections.Select(s => s.BodyMarkdown).ToListAsync();
+
+        foreach (var body in bodies)
+        {
+            // MiniMarkdown alt kümesi: tablo/link/kod bloğu render EDİLMEZ (T6.8'e kadar).
+            body.Should().NotContain("|", "tablo MiniMarkdown'da desteklenmiyor");
+            body.Should().NotContain("](", "link MiniMarkdown'da desteklenmiyor");
+            body.Should().NotContain("```", "kod bloğu MiniMarkdown'da desteklenmiyor");
+
+            // Başlıklar yalnız ## / ### (h1/h2 yok).
+            foreach (var line in body.Split('\n').Where(l => l.TrimStart().StartsWith('#')))
+                line.TrimStart().Should().MatchRegex("^#{2,3} ");
+        }
+
+        // CLAUDE.md §2 — yönlendirme fiilleri içerikte geçmemeli (tavsiye YOK).
+        var all = string.Join("\n", bodies);
+        foreach (var banned in new[] { "almalısın", "satmalısın", "tavsiye ederiz", "öneririz", "yükselecek", "düşecek" })
+            all.Should().NotContainEquivalentOf(banned, $"eğitim içeriği tavsiye vermez (yasak ifade: {banned})");
+    }
+
+    [Fact]
+    public async Task Section_seed_backfills_databases_that_already_have_lessons()
+    {
+        // Gerçek dünya senaryosu: eğitim T5E.2 ile gelmiş, bölümler YOK (canlı kurulum).
+        // SeedEducationAsync "track var mı?" kapısıyla korunduğu için oradan bölüm gelmez;
+        // ayrı kapı sayesinde ikinci açılışta katmanlı içerik geriye dönük yüklenmeli.
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        db.LessonSections.RemoveRange(await db.LessonSections.ToListAsync());
+        db.Quizzes.RemoveRange(await db.Quizzes.Where(q => q.Id != SeedData.Id("quiz-enflasyon")).ToListAsync());
+        await db.SaveChangesAsync();
+        (await db.LessonSections.CountAsync()).Should().Be(0);
+
+        await SeedData.SeedAsync(db); // "bir sonraki açılış"
+
+        (await db.LessonSections.CountAsync()).Should().Be(25);
+        (await db.Quizzes.CountAsync()).Should().Be(5);
+        (await db.Lessons.CountAsync()).Should().Be(5); // dersler çoğaltılmadı
+    }
+
+    [Fact]
+    public async Task Every_lesson_has_a_quiz_with_three_scorable_questions()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var lessons = await db.Lessons.ToListAsync();
+        var quizzes = await db.Quizzes.ToListAsync();
+        var questions = await db.QuizQuestions.ToListAsync();
+        var options = await db.QuizOptions.ToListAsync();
+
+        foreach (var lesson in lessons)
+        {
+            var quiz = quizzes.Should().ContainSingle(q => q.LessonId == lesson.Id).Subject;
+            quiz.PassingScore.Should().Be(60);
+
+            var own = questions.Where(q => q.QuizId == quiz.Id).OrderBy(q => q.OrderIndex).ToList();
+            own.Should().HaveCount(3);
+            own.Select(q => q.OrderIndex).Should().Equal(1, 2, 3);
+
+            foreach (var q in own)
+            {
+                q.Explanation.Should().NotBeNullOrWhiteSpace("her soru eğitici açıklama taşır");
+                var opts = options.Where(o => o.QuestionId == q.Id).ToList();
+                opts.Should().HaveCountGreaterThanOrEqualTo(2);
+                opts.Count(o => o.IsCorrect).Should().Be(1, "tek doğru şık (tam-eşleşme puanlaması)");
+            }
+        }
     }
 }

@@ -134,14 +134,63 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
             .Select(t => t.GetProperty("key").GetString()).Should().Contain("real-return");
     }
 
+    /// <summary>
+    /// Testin kendi dersini <b>kendi track'inde</b> kurar (seed içeriğinden BAĞIMSIZ).
+    /// Ön-koşulu yoktur → kilitli değildir. <paramref name="sections"/> boş bırakılırsa
+    /// "bölümsüz ders" senaryosu elde edilir.
+    /// </summary>
+    /// <remarks>
+    /// Ayrı track ŞART: ders "temeller" setine eklenirse `GET /tracks/temeller/lessons`
+    /// çıktısını kirletir ve ilerleme/kilit testlerini bozar (test izolasyonu).
+    /// </remarks>
+    private async Task<string> NewLessonAsync(string slug, params LessonSection[] sections)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
+
+        var track = new LearningTrack
+        {
+            Slug = $"track-{slug}",
+            Title = "Test Seti",
+            Level = LessonLevel.Beginner,
+            OrderIndex = 90,
+            IsPublished = true,
+        };
+        db.LearningTracks.Add(track);
+
+        var lesson = new Lesson
+        {
+            TrackId = track.Id,
+            Slug = slug,
+            OrderIndex = 90,
+            Title = "Test Dersi",
+            Summary = "Özet",
+            BodyMarkdown = "## Gövde\n\nBölümsüz derslerin fallback içeriği.",
+            EstimatedMinutes = 3,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+        };
+        db.Lessons.Add(lesson);
+
+        foreach (var s in sections)
+        {
+            s.LessonId = lesson.Id;
+            db.LessonSections.Add(s);
+        }
+
+        await db.SaveChangesAsync();
+        return slug;
+    }
+
     [Fact]
     public async Task Lesson_without_sections_falls_back_to_body_markdown()
     {
-        // SC-E2 (T6.5) — geriye dönük uyum: seed'lenmiş 5 dersin hiç `LessonSection`'ı
-        // yok. Katmanlı şema eklendikten SONRA da bu dersler kırılmamalı: `sections`
-        // boş dizi döner ve istemci `bodyMarkdown`'a düşer.
-        var lesson = await JsonAsync(
-            await ClientAs(Investor).GetAsync("/api/education/lessons/enflasyon-ve-reel-getiri"));
+        // SC-E2 (T6.5) — geriye dönük uyum: bölümü OLMAYAN bir ders (eski içerik ya da
+        // topluluk katkısı) katmanlı şema geldikten sonra da kırılmamalı: `sections`
+        // boş dizi döner, istemci `bodyMarkdown`'a düşer.
+        var slug = await NewLessonAsync("bolumsuz-test-dersi");
+
+        var lesson = await JsonAsync(await ClientAs(Investor).GetAsync($"/api/education/lessons/{slug}"));
 
         lesson.GetProperty("sections").GetArrayLength().Should().Be(0);
         lesson.GetProperty("bodyMarkdown").GetString().Should().NotBeNullOrEmpty();
@@ -152,37 +201,25 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
     {
         // T6.5 — katmanlı bölümler API'ye derinlik + tür bilgisiyle çıkar; sıralama
         // OrderIndex'e sadıktır (filtreleme YOK — seviyeye göre katlama istemcide, T6.7).
-        Guid lessonId;
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
-            var lesson = await db.Lessons.SingleAsync(l => l.Slug == "bilesik-getirinin-gucu");
-            lessonId = lesson.Id;
+        var slug = await NewLessonAsync("katmanli-test-dersi",
+            new LessonSection
+            {
+                OrderIndex = 1,
+                Heading = "Özü",
+                BodyMarkdown = "Çekirdek anlatım",
+                DepthTier = DepthTier.Core,
+                Kind = SectionKind.Explain,
+            },
+            new LessonSection
+            {
+                OrderIndex = 2,
+                Heading = "Sık yapılan hata",
+                BodyMarkdown = "Tuzak metni",
+                DepthTier = DepthTier.Context,
+                Kind = SectionKind.Trap,
+            });
 
-            db.LessonSections.AddRange(
-                new LessonSection
-                {
-                    LessonId = lessonId,
-                    OrderIndex = 1,
-                    Heading = "Özü",
-                    BodyMarkdown = "Çekirdek anlatım",
-                    DepthTier = DepthTier.Core,
-                    Kind = SectionKind.Explain,
-                },
-                new LessonSection
-                {
-                    LessonId = lessonId,
-                    OrderIndex = 2,
-                    Heading = "Sık yapılan hata",
-                    BodyMarkdown = "Tuzak metni",
-                    DepthTier = DepthTier.Context,
-                    Kind = SectionKind.Trap,
-                });
-            await db.SaveChangesAsync();
-        }
-
-        var detail = await JsonAsync(
-            await ClientAs(Investor).GetAsync("/api/education/lessons/bilesik-getirinin-gucu"));
+        var detail = await JsonAsync(await ClientAs(Investor).GetAsync($"/api/education/lessons/{slug}"));
 
         var sections = detail.GetProperty("sections");
         sections.GetArrayLength().Should().Be(2);
@@ -191,6 +228,22 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
         sections[1].GetProperty("depthTier").GetString().Should().Be("Context");
         sections[1].GetProperty("kind").GetString().Should().Be("Trap");
         sections[1].GetProperty("heading").GetString().Should().Be("Sık yapılan hata");
+    }
+
+    [Fact]
+    public async Task Seeded_lesson_serves_full_depth_ladder()
+    {
+        // T6.1 — seed'lenmiş gerçek ders, üç derinlik katmanını da API'den sunar.
+        var detail = await JsonAsync(
+            await ClientAs(Investor).GetAsync("/api/education/lessons/enflasyon-ve-reel-getiri"));
+
+        var tiers = detail.GetProperty("sections").EnumerateArray()
+            .Select(s => s.GetProperty("depthTier").GetString()).ToList();
+        var kinds = detail.GetProperty("sections").EnumerateArray()
+            .Select(s => s.GetProperty("kind").GetString()).ToList();
+
+        tiers.Should().Contain(["Core", "Context", "Deep"]);
+        kinds.Should().Contain(["Explain", "Example", "Trap"]);
     }
 
     [Fact]

@@ -30,6 +30,11 @@ public static class SeedData
         var now = DateTime.UtcNow;
         await SeedPortfolioAsync(db, now, ct);
         await SeedEducationAsync(db, now, ct);
+        // AYRI kapı (T6.1): SeedEducationAsync "track var mı?" ile korunur, dolayısıyla
+        // eğitimi ZATEN almış DB'ler katmanlı içeriği ondan alamaz. Bu adım kendi
+        // kapısıyla çalışır → çalışan kurulumlar da bir sonraki açılışta bölümleri alır.
+        await SeedEducationSectionsAsync(db, ct);
+        await SeedRemainingQuizzesAsync(db, ct);
     }
 
     private static async Task SeedPortfolioAsync(FinansDbContext db, DateTime now, CancellationToken ct)
@@ -388,6 +393,104 @@ public static class SeedData
             new UserLessonProgress { Id = Id("progress-l2"), UserId = userId, LessonId = lesson2.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-9), CompletedAtUtc = now.AddDays(-9), UpdatedAtUtc = now.AddDays(-9) },
             new UserLessonProgress { Id = Id("progress-l3"), UserId = userId, LessonId = lesson3.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-5), CompletedAtUtc = now.AddDays(-5), UpdatedAtUtc = now.AddDays(-5) },
             new UserLessonProgress { Id = Id("progress-l4"), UserId = userId, LessonId = lesson4.Id, Status = LessonStatus.InProgress, ProgressPercent = 0, StartedAtUtc = now.AddDays(-1), UpdatedAtUtc = now.AddDays(-1) });
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Katmanlı ders içeriği seed'i (T6.1, 15 §2) — 5 dersin L1/L2/L3 + örnek + tuzak
+    /// blokları. İçerik <see cref="EducationContent"/> dosyasında (ayrı tutuldu ki
+    /// topluluk katkısına açılabilsin — 14 §4-D2).
+    /// </summary>
+    /// <remarks>
+    /// <b>KENDİ kapısı var</b> (<c>LessonSections.Any()</c>): <see cref="SeedEducationAsync"/>
+    /// "track var mı?" ile korunduğu için eğitimi zaten almış DB'ler oradan bölüm alamaz.
+    /// Bu ayrım sayesinde çalışan kurulumlar re-migrate gerekmeden katmanlı içeriğe geçer.
+    /// Ders bulunamazsa (özel/eksik kurulum) sessizce atlanır — seed hiçbir zaman çökmez.
+    /// </remarks>
+    private static async Task SeedEducationSectionsAsync(FinansDbContext db, CancellationToken ct)
+    {
+        if (await db.LessonSections.AnyAsync(ct))
+            return; // katmanlı içerik zaten seed'lenmiş
+
+        // Ders kimlikleri deterministik (Id(...)) — slug'a değil kimliğe bağlanmak,
+        // içerik ile ders eşleşmesini yeniden adlandırmalara karşı korur.
+        var builders = new (Guid LessonId, Func<Guid, IEnumerable<LessonSection>> Build)[]
+        {
+            (Id("lesson-enflasyon"), EducationContent.Lesson1),
+            (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
+            (Id("lesson-fk-pddd"), EducationContent.Lesson3),
+            (Id("lesson-risk-getiri"), EducationContent.Lesson4),
+            (Id("lesson-bilesik"), EducationContent.Lesson5),
+        };
+
+        var existing = await db.Lessons.Select(l => l.Id).ToListAsync(ct);
+        foreach (var (lessonId, build) in builders)
+        {
+            if (!existing.Contains(lessonId))
+                continue; // beklenmedik kurulum — bu dersi atla, seed'i çökertme
+
+            db.LessonSections.AddRange(build(lessonId));
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// 2-5. derslerin mini testleri (T6.1). Ders 1'inki T5E.2'de gelmişti; bu adım
+    /// kalan dörde 3'er soru ekler. <b>Kendi kapısı:</b> hedef derste quiz var mı?
+    /// (Derse en fazla bir quiz — <c>Quizzes.LessonId</c> UNIQUE.)
+    /// </summary>
+    private static async Task SeedRemainingQuizzesAsync(FinansDbContext db, CancellationToken ct)
+    {
+        foreach (var (lessonKey, quizKey, title, questions) in EducationContent.RemainingQuizzes())
+        {
+            var lessonId = Id(lessonKey);
+            if (!await db.Lessons.AnyAsync(l => l.Id == lessonId, ct))
+                continue; // ders yoksa atla
+            if (await db.Quizzes.AnyAsync(q => q.LessonId == lessonId, ct))
+                continue; // bu dersin testi zaten var → idempotent
+
+            var quiz = new Quiz
+            {
+                Id = Id(quizKey),
+                LessonId = lessonId,
+                Title = title,
+                PassingScore = 60,
+            };
+            db.Quizzes.Add(quiz);
+
+            var qOrder = 1;
+            foreach (var q in questions)
+            {
+                var question = new QuizQuestion
+                {
+                    Id = Id($"{quizKey}-q{qOrder}"),
+                    QuizId = quiz.Id,
+                    OrderIndex = qOrder,
+                    Type = q.Type,
+                    Prompt = q.Prompt,
+                    Explanation = q.Explanation,
+                };
+                db.QuizQuestions.Add(question);
+
+                var oOrder = 1;
+                foreach (var (text, isCorrect) in q.Options)
+                {
+                    db.QuizOptions.Add(new QuizOption
+                    {
+                        Id = Id($"{quizKey}-q{qOrder}-o{oOrder}"),
+                        QuestionId = question.Id,
+                        OrderIndex = oOrder,
+                        Text = text,
+                        IsCorrect = isCorrect,
+                    });
+                    oOrder++;
+                }
+
+                qOrder++;
+            }
+        }
 
         await db.SaveChangesAsync(ct);
     }

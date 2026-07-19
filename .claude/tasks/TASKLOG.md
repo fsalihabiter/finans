@@ -20,6 +20,36 @@
 
 ---
 
+## 2026-07-19 · T6.1 — Katmanlı ders içeriği (5 ders × L1/L2/L3 + örnek + tuzak) + 4 yeni test
+- **Görev(ler):** T6.1 (Faz 6 — müfredat içeriği; `15` §2/§6).
+- **Ne yapıldı:** (1) **Yeni dosya `EducationContent.cs`** — 5 dersin **25 bloğu** (her ders:
+  L1 Core anlatım ~150 kelime · L2 Context ~300 · L3 Deep ~400 · jenerik **örnek** · **tuzak**).
+  SeedData'dan AYRI tutuldu: içerik topluluk katkısına açılabilsin (`14` §4-D2) ve seed mantığı
+  şişmesin; (2) **2-5. derslere mini test** (quiz 1→**5**, soru 3→**15**, şık 10→**50**) — her
+  soruda eğitici `Explanation`, tek doğru şık; (3) **`SeedEducationSectionsAsync` +
+  `SeedRemainingQuizzesAsync`** — **kendi idempotent kapılarıyla**.
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Seed/{EducationContent.cs (yeni),SeedData.cs}`,
+  `tests/Finans.Integration.Tests/{EducationSeedTests.cs,EducationApiTests.cs}`, docs (08/09).
+- **Test:** **SC-E12** — 4 seed (derinlik merdiveni eksiksiz · MiniMarkdown alt kümesi + tavsiye
+  yasağı · **geriye dönük yükleme** · her derste 3 soruluk test) + 1 API (seed'li ders üç katmanı
+  da sunar). Education **32/32**, Application **267/267**. **Canlı Postgres teyitli:** api rebuild →
+  5 ders × 5 bölüm + 5 quiz/15 soru **geriye dönük yüklendi**, portföy verisi sağlam (7 holding).
+- **Karar/Not:** ⚠ **Kritik tuzak yakalandı:** `SeedEducationAsync` en başta
+  `if (LearningTracks.Any()) return;` diyor → dersleri ZATEN olan canlı DB katmanlı içeriği
+  ondan **asla alamazdı**. Bu yüzden iki yeni adım kendi kapılarını kullanıyor
+  (`LessonSections.Any()` / ders başına `Quizzes.Any(LessonId)`), böylece çalışan kurulumlar
+  re-migrate gerekmeden içeriğe geçiyor — testle sabitlendi. ⚠ **T6.5'te yazdığım 3 test
+  bayatladı** (seed'de hiç bölüm olmadığını varsayıyorlardı) → testler artık **kendi track+dersini**
+  kuruyor; ilk düzeltmem test derslerini paylaşılan "temeller" setine ekleyip `GET /tracks/temeller/
+  lessons` çıktısını kirletmişti (izolasyon hatası), ayrı track ile çözüldü. İçerik kısıtları koda
+  değil **teste** bağlandı: MiniMarkdown alt kümesi (tablo/link/kod YOK — T6.8'e kadar) ve
+  `CLAUDE.md` §2 yasak ifadeler (almalısın/yükselecek…). Örneklerde **enstrüman adı kullanılmadı**
+  ("A/B yatırımı") — sıralama zımni yönlendirme sayılır (`15` §3.4).
+  **`LiveContext` bloğu bilinçli olarak yazılmadı** → `ContextKey` sözleşmesi gerektiriyor, T6.2.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T6.2 ("Senin portföyünde" bağlam API'si — `LessonContextService`, 3 durum) ya da
+  T6.7 (uyarlanabilir render; T6.6 tanılaması olmadan varsayılan Başlangıç ile de çalışır).
+
 ## 2026-07-19 · T6.5 — Katmanlı içerik şeması (LessonSection.DepthTier/Kind)
 - **Görev(ler):** T6.5 (Faz 6 — eğitim derinliği; `15` §2).
 - **Ne yapıldı:** (1) **İki enum** (`Enums.cs`): `DepthTier {Core,Context,Deep}` (derinlik) +
