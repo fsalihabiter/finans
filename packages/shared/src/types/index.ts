@@ -352,10 +352,22 @@ export interface LessonListItem {
   locked: boolean;
 }
 
+/** Ders içi içerik bloğunun derinlik katmanı (15 §2.2, T6.5). */
+export type DepthTier = "Core" | "Context" | "Deep";
+
+/** Ders içi içerik bloğunun türü — derinlikten DİK eksen (15 §2.3, T6.5). */
+export type SectionKind = "Explain" | "Example" | "Trap" | "LiveContext" | "Source";
+
+/**
+ * Ders içi içerik bloğu. `sections` boşsa istemci `LessonDetail.bodyMarkdown`
+ * alanına düşer (geriye dönük uyum, 15 §2.1 / SC-E2).
+ */
 export interface LessonSection {
   order: number;
   heading: string | null;
   bodyMarkdown: string;
+  depthTier: DepthTier;
+  kind: SectionKind;
 }
 
 export interface ConceptTag {

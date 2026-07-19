@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using Finans.Domain.Education;
 using Finans.Domain.Enums;
 using Finans.Domain.Identity;
 using Finans.Infrastructure.Persistence;
@@ -131,6 +132,65 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
 
         lesson.GetProperty("conceptTags").EnumerateArray()
             .Select(t => t.GetProperty("key").GetString()).Should().Contain("real-return");
+    }
+
+    [Fact]
+    public async Task Lesson_without_sections_falls_back_to_body_markdown()
+    {
+        // SC-E2 (T6.5) — geriye dönük uyum: seed'lenmiş 5 dersin hiç `LessonSection`'ı
+        // yok. Katmanlı şema eklendikten SONRA da bu dersler kırılmamalı: `sections`
+        // boş dizi döner ve istemci `bodyMarkdown`'a düşer.
+        var lesson = await JsonAsync(
+            await ClientAs(Investor).GetAsync("/api/education/lessons/enflasyon-ve-reel-getiri"));
+
+        lesson.GetProperty("sections").GetArrayLength().Should().Be(0);
+        lesson.GetProperty("bodyMarkdown").GetString().Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task Lesson_sections_expose_depth_tier_and_kind()
+    {
+        // T6.5 — katmanlı bölümler API'ye derinlik + tür bilgisiyle çıkar; sıralama
+        // OrderIndex'e sadıktır (filtreleme YOK — seviyeye göre katlama istemcide, T6.7).
+        Guid lessonId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
+            var lesson = await db.Lessons.SingleAsync(l => l.Slug == "bilesik-getirinin-gucu");
+            lessonId = lesson.Id;
+
+            db.LessonSections.AddRange(
+                new LessonSection
+                {
+                    LessonId = lessonId,
+                    OrderIndex = 1,
+                    Heading = "Özü",
+                    BodyMarkdown = "Çekirdek anlatım",
+                    DepthTier = DepthTier.Core,
+                    Kind = SectionKind.Explain,
+                },
+                new LessonSection
+                {
+                    LessonId = lessonId,
+                    OrderIndex = 2,
+                    Heading = "Sık yapılan hata",
+                    BodyMarkdown = "Tuzak metni",
+                    DepthTier = DepthTier.Context,
+                    Kind = SectionKind.Trap,
+                });
+            await db.SaveChangesAsync();
+        }
+
+        var detail = await JsonAsync(
+            await ClientAs(Investor).GetAsync("/api/education/lessons/bilesik-getirinin-gucu"));
+
+        var sections = detail.GetProperty("sections");
+        sections.GetArrayLength().Should().Be(2);
+        sections[0].GetProperty("depthTier").GetString().Should().Be("Core");
+        sections[0].GetProperty("kind").GetString().Should().Be("Explain");
+        sections[1].GetProperty("depthTier").GetString().Should().Be("Context");
+        sections[1].GetProperty("kind").GetString().Should().Be("Trap");
+        sections[1].GetProperty("heading").GetString().Should().Be("Sık yapılan hata");
     }
 
     [Fact]

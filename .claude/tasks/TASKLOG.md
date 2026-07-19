@@ -20,6 +20,35 @@
 
 ---
 
+## 2026-07-19 · T6.5 — Katmanlı içerik şeması (LessonSection.DepthTier/Kind)
+- **Görev(ler):** T6.5 (Faz 6 — eğitim derinliği; `15` §2).
+- **Ne yapıldı:** (1) **İki enum** (`Enums.cs`): `DepthTier {Core,Context,Deep}` (derinlik) +
+  `SectionKind {Explain,Example,Trap,LiveContext,Source}` (blok türü) — **DİK eksenler**;
+  (2) **`LessonSection`** kullanılmayan tablodan katmanlı içeriğin taşıyıcısına dönüştü —
+  `DepthTier`/`Kind` alanları, **varsayılan Core/Explain** (geriye dönük uyum);
+  (3) **EF**: iki CHECK allow-list (`CK_LessonSections_DepthTier`/`_Kind`) + `(LessonId,DepthTier)`
+  indeksi (T6.7 sorgusu) + enum→varchar(20) konvansiyonu; (4) **DTO+servis**: `LessonSectionDto`
+  derinlik/tür taşır, servis **filtrelemez** (seviyeye göre katlama istemcide, T6.7); (5) **shared
+  tipleri** (`DepthTier`/`SectionKind` union'ları); (6) migration `20260719210255`.
+- **Dokunulan dosyalar:** `Finans.Domain/{Enums.cs,Education/LessonSection.cs}`,
+  `Finans.Infrastructure/Persistence/{FinansDbContext.cs,Configurations/EducationConfigurations.cs,
+  Migrations/20260719210255_LessonSectionDepthTier.cs}`, `Finans.Application/Education/EducationDtos.cs`,
+  `Finans.Infrastructure/Services/EducationService.cs`, `packages/shared/src/types/index.ts`,
+  `tests/Finans.Integration.Tests/{EducationModelTests.cs,EducationApiTests.cs}`, docs (08/09).
+- **Test:** **SC-E11** — 3 model (varsayılan Core/Explain · tüm tier×kind round-trip · ders→bölüm
+  kaskad) + 2 API (bölümsüz derste `sections` boş + `bodyMarkdown` dolu = **SC-E2'nin veri-sözleşmesi
+  yarısı** · bölümler derinlik+türle çıkar). Education **27/27**, Application **267/267**,
+  web **101/101** yeşil. **Canlı Postgres uçtan uca teyit:** `docker compose up -d --build api` →
+  migration uygulandı (`__EFMigrationsHistory`'de), kolonlar+2 CHECK yerinde, geçersiz `DepthTier`
+  INSERT'i DB tarafından reddedildi; **veri kaybı yok** (7 holding / 12 işlem / 2 kullanıcı sağlam).
+- **Karar/Not:** ⚠ **EF'in ürettiği migration hatalıydı** — `AddColumn ... defaultValue: ""` koymuştu;
+  boş string kendi CHECK allow-list'ini ihlal ederdi (tablo şu an boş olduğu için sessizce geçerdi,
+  ama sonraki her `INSERT` için tuzak). `'Core'`/`'Explain'` ile elle düzeltildi. Ayrıca `dotnet ef
+  migrations add --no-build` **boş migration** üretti (Api'nin eski derlemesini okudu) → tam derleme
+  şart. `Lesson.BodyMarkdown` **kaldırılmadı**: bölümsüz derslerin fallback'i (15 §2.1).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T6.1 (5 dersin L1/L2/L3 gövdeleri) — şema artık hazır; ardından T6.6 (tanılama).
+
 ## 2026-07-19 · Kimlik analizi doğrulaması tamamlandı — `11` §2 kanıtla keskinleştirildi
 - **Görev(ler):** ad-hoc (aynı gün yazılan `11` §2 kararının doğrulanması).
 - **Ne yapıldı:** İlk turda oturum limitine takılan doğrulama aşaması cache'ten yeniden koşturuldu

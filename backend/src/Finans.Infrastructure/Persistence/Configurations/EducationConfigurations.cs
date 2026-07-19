@@ -42,8 +42,16 @@ internal sealed class LessonSectionConfiguration : IEntityTypeConfiguration<Less
 {
     public void Configure(EntityTypeBuilder<LessonSection> b)
     {
-        b.ToTable("LessonSections");
+        b.ToTable("LessonSections", t =>
+        {
+            // Katmanlı içerik (T6.5, 15 §2) — DB seviyesinde allow-list savunması.
+            t.HasCheckConstraint("CK_LessonSections_DepthTier", Check.EnumIn<DepthTier>("DepthTier"));
+            t.HasCheckConstraint("CK_LessonSections_Kind", Check.EnumIn<SectionKind>("Kind"));
+        });
         b.HasIndex(x => new { x.LessonId, x.OrderIndex });
+
+        // Seviyeye göre bölüm çekme (T6.7 uyarlanabilir render) sık sorgu → indeks.
+        b.HasIndex(x => new { x.LessonId, x.DepthTier });
 
         b.HasOne(x => x.Lesson)
             .WithMany(l => l.Sections)

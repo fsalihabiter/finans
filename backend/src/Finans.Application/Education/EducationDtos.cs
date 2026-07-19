@@ -15,7 +15,14 @@ public sealed record LessonListItemDto(
     Guid Id, string Slug, int Order, string Title, string Summary, int EstimatedMinutes,
     LessonLevel Level, LessonStatus Status, int ProgressPercent, bool Locked);
 
-public sealed record LessonSectionDto(int Order, string? Heading, string BodyMarkdown);
+/// <summary>
+/// Ders içi içerik bloğu (T6.5, 15 §2). <paramref name="DepthTier"/> derinlik
+/// katmanı, <paramref name="Kind"/> blok türü — DİK eksenler. İstemci
+/// kullanıcının seviyesine kadarki katmanları açık, üstünü "Daha derine in"
+/// arkasında gösterir (T6.7).
+/// </summary>
+public sealed record LessonSectionDto(
+    int Order, string? Heading, string BodyMarkdown, DepthTier DepthTier, SectionKind Kind);
 
 public sealed record ConceptTagDto(string Key, string Label);
 

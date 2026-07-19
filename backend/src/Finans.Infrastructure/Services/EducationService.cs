@@ -66,9 +66,12 @@ public sealed class EducationService(FinansDbContext db, ICurrentUser currentUse
         var completed = await LoadCompletedSetAsync(ct);
         var prereqs = await LoadPrereqsAsync([lesson.Id], ct);
 
+        // Katmanlı içerik (T6.5): derinlik + tür DİK eksenler; sıralama OrderIndex'e
+        // sadık kalır (yazar hangi sırada kurguladıysa). Filtreleme YOK — istemci
+        // seviyeye göre katlar (T6.7). Bölüm yoksa istemci BodyMarkdown'a düşer (SC-E2).
         var sections = lesson.Sections
             .OrderBy(s => s.OrderIndex)
-            .Select(s => new LessonSectionDto(s.OrderIndex, s.Heading, s.BodyMarkdown))
+            .Select(s => new LessonSectionDto(s.OrderIndex, s.Heading, s.BodyMarkdown, s.DepthTier, s.Kind))
             .ToList();
 
         var tags = lesson.ConceptTags

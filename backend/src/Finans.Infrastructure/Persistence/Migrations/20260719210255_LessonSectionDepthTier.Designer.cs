@@ -4,6 +4,7 @@ using System.Net;
 using Finans.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Finans.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FinansDbContext))]
-    partial class FinansDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260719210255_LessonSectionDepthTier")]
+    partial class LessonSectionDepthTier
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

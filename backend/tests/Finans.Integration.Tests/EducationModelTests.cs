@@ -117,6 +117,126 @@ public sealed class EducationModelTests : IClassFixture<SqliteWebApplicationFact
         }
     }
 
+    // ── T6.5: katmanlı içerik şeması (15 §2, SC-E2) ──────────────────────────
+
+    [Fact]
+    public async Task Section_defaults_to_core_explain_when_not_specified()
+    {
+        // Geriye dönük uyum: değer verilmeyen bölüm Core/Explain'e düşer —
+        // eski içerik "herkesin gördüğü anlatım" olarak davranmaya devam eder.
+        Guid sectionId;
+
+        var db = NewDb(out var scope);
+        using (scope)
+        {
+            var track = NewTrack("t-section-default");
+            var lesson = NewLesson(track.Id, "varsayilan-bolum");
+            var section = new LessonSection
+            {
+                LessonId = lesson.Id,
+                OrderIndex = 1,
+                BodyMarkdown = "Eski usul içerik", // DepthTier/Kind VERİLMEDİ
+            };
+            db.LearningTracks.Add(track);
+            db.Lessons.Add(lesson);
+            db.LessonSections.Add(section);
+            await db.SaveChangesAsync();
+            sectionId = section.Id;
+        }
+
+        var db2 = NewDb(out var scope2);
+        using (scope2)
+        {
+            var saved = await db2.LessonSections.SingleAsync(s => s.Id == sectionId);
+            saved.DepthTier.Should().Be(DepthTier.Core);
+            saved.Kind.Should().Be(SectionKind.Explain);
+        }
+    }
+
+    [Fact]
+    public async Task Section_roundtrips_all_depth_tiers_and_kinds()
+    {
+        // Derinlik ve tür DİK eksenler: her kombinasyon saklanıp geri okunabilmeli.
+        Guid lessonId;
+
+        var db = NewDb(out var scope);
+        using (scope)
+        {
+            var track = NewTrack("t-section-matrix");
+            var lesson = NewLesson(track.Id, "katmanli-ders");
+            db.LearningTracks.Add(track);
+            db.Lessons.Add(lesson);
+
+            var order = 1;
+            foreach (var tier in Enum.GetValues<DepthTier>())
+            {
+                foreach (var kind in Enum.GetValues<SectionKind>())
+                {
+                    db.LessonSections.Add(new LessonSection
+                    {
+                        LessonId = lesson.Id,
+                        OrderIndex = order++,
+                        BodyMarkdown = $"{tier}/{kind}",
+                        DepthTier = tier,
+                        Kind = kind,
+                    });
+                }
+            }
+
+            await db.SaveChangesAsync();
+            lessonId = lesson.Id;
+        }
+
+        var db2 = NewDb(out var scope2);
+        using (scope2)
+        {
+            var sections = await db2.LessonSections
+                .Where(s => s.LessonId == lessonId)
+                .ToListAsync();
+
+            var expected = Enum.GetValues<DepthTier>().Length * Enum.GetValues<SectionKind>().Length;
+            sections.Should().HaveCount(expected);
+            sections.Should().OnlyContain(s => s.BodyMarkdown == $"{s.DepthTier}/{s.Kind}");
+        }
+    }
+
+    [Fact]
+    public async Task Deleting_lesson_cascades_sections()
+    {
+        // KVKK/temizlik: ders silinince katmanlı içerik artık kalmaz.
+        Guid lessonId;
+        Guid sectionId;
+
+        var db = NewDb(out var scope);
+        using (scope)
+        {
+            var track = NewTrack("t-section-cascade");
+            var lesson = NewLesson(track.Id, "kaskad-bolum-dersi");
+            var section = new LessonSection
+            {
+                LessonId = lesson.Id,
+                OrderIndex = 1,
+                BodyMarkdown = "Derin katman",
+                DepthTier = DepthTier.Deep,
+                Kind = SectionKind.Trap,
+            };
+            db.LearningTracks.Add(track);
+            db.Lessons.Add(lesson);
+            db.LessonSections.Add(section);
+            await db.SaveChangesAsync();
+            (lessonId, sectionId) = (lesson.Id, section.Id);
+        }
+
+        var db2 = NewDb(out var scope2);
+        using (scope2)
+        {
+            db2.Lessons.Remove(await db2.Lessons.SingleAsync(l => l.Id == lessonId));
+            await db2.SaveChangesAsync();
+
+            (await db2.LessonSections.AnyAsync(s => s.Id == sectionId)).Should().BeFalse();
+        }
+    }
+
     [Fact]
     public async Task Deleting_track_cascades_lessons_and_quiz()
     {

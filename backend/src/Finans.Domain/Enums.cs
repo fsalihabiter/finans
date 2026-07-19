@@ -103,5 +103,46 @@ public enum QuizQuestionType
     TrueFalse,
 }
 
+// ── Katmanlı içerik derinliği (15 §2, T6.5) ──────────────────────────────────
+
+/// <summary>
+/// Ders bölümünün derinlik katmanı (15 §2.2). Kullanıcının
+/// <c>LiteracyLevel</c>'ına KADAR olan katmanlar varsayılan açık gelir; alt
+/// seviyedeki kullanıcı üst katmanı "Daha derine in" ile açabilir — tavan
+/// kapatılmaz.
+/// </summary>
+public enum DepthTier
+{
+    /// <summary>Herkes görür. Kavram nedir, neden önemli (~150 kelime).</summary>
+    Core,
+
+    /// <summary>Gelişen+. Nasıl hesaplanır, ne zaman yanıltır (~300 kelime).</summary>
+    Context,
+
+    /// <summary>İleri. Formül, kenar durum, TR'ye özgü incelik (~400 kelime).</summary>
+    Deep,
+}
+
+/// <summary>
+/// Ders bölümünün türü (15 §2.3) — derinlik katmanından DİK bir eksendir.
+/// </summary>
+public enum SectionKind
+{
+    /// <summary>Anlatım (katmanlı).</summary>
+    Explain,
+
+    /// <summary>Jenerik örnek — statik, herkes için aynı, güvenli sayılar.</summary>
+    Example,
+
+    /// <summary>Yaygın yanlış anlama / davranışsal tuzak.</summary>
+    Trap,
+
+    /// <summary>"Senin portföyünde" — canlı bağlam (T6.2 doldurur).</summary>
+    LiveContext,
+
+    /// <summary>Sayılar nereden geldi (şeffaflık, 14 §4-A3).</summary>
+    Source,
+}
+
 // Not: PriceSource (Manual | <providerKey>) açık uçlu olduğu için enum DEĞİL,
 // string olarak saklanır (Source kolonları).
