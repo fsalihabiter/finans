@@ -9,8 +9,29 @@ namespace Finans.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/education")]
-public sealed class EducationController(IEducationService education) : ControllerBase
+public sealed class EducationController(
+    IEducationService education,
+    IDiagnosticService diagnostic) : ControllerBase
 {
+    // ── Tanılama testi (T6.6, 15 §4) ─────────────────────────────────────────
+    // ⚠ Hiçbir uç RiskAttitude DÖNMEZ (15 §1.1 · SC-E4).
+
+    /// <summary>GET /api/education/diagnostic — 8 tanılama sorusu (cevap anahtarı YOK).</summary>
+    [HttpGet("diagnostic")]
+    public ActionResult<IReadOnlyList<DiagnosticQuestionDto>> GetDiagnostic() =>
+        Ok(diagnostic.GetQuestions());
+
+    /// <summary>GET /api/education/profile — kullanıcının seviyesi + ölçülmüş mü (onboarding kararı).</summary>
+    [HttpGet("profile")]
+    public async Task<ActionResult<LiteracyProfileDto>> GetProfile(CancellationToken ct) =>
+        Ok(await diagnostic.GetProfileAsync(ct));
+
+    /// <summary>POST /api/education/diagnostic — cevapları değerlendirir, profili yazar. Boş liste = atla.</summary>
+    [HttpPost("diagnostic")]
+    public async Task<ActionResult<DiagnosticResultDto>> SubmitDiagnostic(
+        [FromBody] SubmitDiagnosticRequest request, CancellationToken ct) =>
+        Ok(await diagnostic.SubmitAsync(request, ct));
+
     /// <summary>GET /api/education/tracks — yayındaki ders setleri (+ ders sayısı).</summary>
     [HttpGet("tracks")]
     public async Task<ActionResult<IReadOnlyList<LearningTrackDto>>> GetTracks(CancellationToken ct) =>

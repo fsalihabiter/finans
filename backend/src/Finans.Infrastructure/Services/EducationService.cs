@@ -154,6 +154,29 @@ public sealed class EducationService(
 
         var userId = currentUser.UserId;
         var now = DateTime.UtcNow;
+
+        // ── Öğrenme kapısı: testi olan ders, test GEÇİLMEDEN tamamlanamaz ──────
+        // Sunucuda zorlanır (istemciye güvenilmez): "Dersi tamamla" düğmesini
+        // gizlemek UX'tir, kural burasıdır. Ön-koşul zinciri bu duruma bağlı
+        // olduğundan, kapı olmadan kullanıcı hiçbir şey okumadan tüm seti açabilirdi.
+        if (request.Status == LessonStatus.Completed)
+        {
+            var quizId = await db.Quizzes
+                .Where(q => q.LessonId == lessonId)
+                .Select(q => (Guid?)q.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (quizId is { } qid)
+            {
+                var passed = await db.UserQuizAttempts
+                    .AnyAsync(a => a.UserId == userId && a.QuizId == qid && a.Passed, ct);
+
+                if (!passed)
+                    throw new ValidationException(
+                        "status", "quiz_not_passed",
+                        "Bu dersi tamamlamak için önce mini testi geçmen gerekiyor.");
+            }
+        }
         var progress = await db.UserLessonProgress
             .FirstOrDefaultAsync(p => p.UserId == userId && p.LessonId == lessonId, ct);
 
@@ -216,15 +239,41 @@ public sealed class EducationService(
         var passed = score >= quiz.PassingScore;
 
         var now = DateTime.UtcNow;
+        var userId = currentUser.UserId;
         db.UserQuizAttempts.Add(new UserQuizAttempt
         {
-            UserId = currentUser.UserId,
+            UserId = userId,
             QuizId = quizId,
             Score = score,
             Passed = passed,
             StartedAtUtc = now,
             CompletedAtUtc = now,
         });
+
+        // Testi GEÇMEK dersi tamamlar (öğrenme kapısının diğer yüzü): ayrıca
+        // "Dersi tamamla"ya basmaya gerek yok — geçtiyse öğrenme kanıtlanmıştır.
+        // Kalmak mevcut durumu BOZMAZ (daha önce tamamlanmışsa geri alınmaz).
+        if (passed && quiz.LessonId is { } lessonId)
+        {
+            var progress = await db.UserLessonProgress
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.LessonId == lessonId, ct);
+
+            if (progress is null)
+            {
+                progress = new UserLessonProgress { UserId = userId, LessonId = lessonId };
+                db.UserLessonProgress.Add(progress);
+            }
+
+            if (progress.Status != LessonStatus.Completed)
+            {
+                progress.Status = LessonStatus.Completed;
+                progress.ProgressPercent = 100;
+                progress.StartedAtUtc ??= now;
+                progress.CompletedAtUtc ??= now;
+                progress.UpdatedAtUtc = now;
+            }
+        }
+
         await db.SaveChangesAsync(ct);
 
         return new QuizAttemptResultDto(score, passed, results);

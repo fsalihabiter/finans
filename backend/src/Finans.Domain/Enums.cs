@@ -124,6 +124,19 @@ public enum DepthTier
 }
 
 /// <summary>
+/// Kullanıcının dalgalanma karşısındaki tutumu (15 §4.2, T6.6).
+/// <b>⚠ KULLANICIYA GÖSTERİLMEZ</b> ve hiçbir dağılım/portföy çıktısı üretmez
+/// (15 §1.1 — SPK yerindelik testi taklidi DEĞİL). Yalnızca davranış derslerinin
+/// sırasını ve metin varyantını sessizce etkiler. Sızıntısı SC-E4 ile test edilir.
+/// </summary>
+public enum RiskAttitude
+{
+    Temkinli,
+    Dengeli,
+    Atilgan,
+}
+
+/// <summary>
 /// "Senin portföyünde" bağlam bloğunun veri durumu (15 §3.2, T6.2).
 /// Üç durum da birinci sınıf: hiçbiri hata değildir, ders asla kilitlenmez.
 /// </summary>

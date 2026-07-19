@@ -15,7 +15,10 @@ import type {
   HealthResponse,
   Holding,
   LearningTrack,
+  DiagnosticQuestion,
+  DiagnosticResult,
   LessonDetail,
+  LiteracyProfile,
   LessonListItem,
   LessonProgress,
   NudgesResponse,
@@ -29,6 +32,7 @@ import type {
   StockHistory,
   StockHistoryRange,
   StockMetrics,
+  SubmitDiagnosticInput,
   SubmitQuizAttemptInput,
   TransactionInput,
   UpdateBesContributionInput,
@@ -175,6 +179,13 @@ export function createApiClient({ baseUrl }: ApiClientOptions) {
     /** POST /api/education/quizzes/{id}/attempts — deneme değerlendir + kaydet. */
     submitQuizAttempt: (id: string, input: SubmitQuizAttemptInput) =>
       send<QuizAttemptResult>("POST", `/api/education/quizzes/${encodeURIComponent(id)}/attempts`, input),
+    /** GET /api/education/diagnostic — 8 tanılama sorusu (cevap anahtarı yok). */
+    getDiagnostic: () => get<DiagnosticQuestion[]>("/api/education/diagnostic"),
+    /** GET /api/education/profile — seviye + ölçüldü mü (onboarding kararı). */
+    getLiteracyProfile: () => get<LiteracyProfile>("/api/education/profile"),
+    /** POST /api/education/diagnostic — cevapları değerlendirir; boş liste = atla. */
+    submitDiagnostic: (input: SubmitDiagnosticInput) =>
+      send<DiagnosticResult>("POST", "/api/education/diagnostic", input),
     /** GET /api/education/lessons/by-concept/{key} — kavramdan derse derin bağlantı. */
     getLessonsByConcept: (conceptKey: string) =>
       get<LessonListItem[]>(`/api/education/lessons/by-concept/${encodeURIComponent(conceptKey)}`),

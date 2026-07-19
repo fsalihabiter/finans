@@ -16,6 +16,7 @@ import type {
   GenerateBesContributionsInput,
   PortfolioHistoryPeriod,
   StockHistoryRange,
+  SubmitDiagnosticInput,
   SubmitQuizAttemptInput,
   TransactionInput,
   UpdateBesContributionInput,
@@ -365,6 +366,39 @@ export function useUpdateSettings() {
 }
 
 // ── Eğitim (04 §7.5) ──
+// ── Tanılama testi (T6.6, 15 §4) ─────────────────────────────────────────────
+
+/** Kullanıcının okuryazarlık profili — onboarding gösterilecek mi? */
+export function useLiteracyProfile() {
+  return useQuery({
+    queryKey: ["edu-profile"],
+    queryFn: () => api.getLiteracyProfile(),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** 8 tanılama sorusu (cevap anahtarı gelmez). */
+export function useDiagnosticQuestions(enabled: boolean) {
+  return useQuery({
+    queryKey: ["edu-diagnostic"],
+    queryFn: () => api.getDiagnostic(),
+    staleTime: Infinity, // soru bankası statik
+    enabled,
+  });
+}
+
+export function useSubmitDiagnostic() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SubmitDiagnosticInput) => api.submitDiagnostic(input),
+    onSuccess: () => {
+      // Profil değişti → ders derinliği (T6.7) ve onboarding kararı tazelenmeli.
+      void qc.invalidateQueries({ queryKey: ["edu-profile"] });
+      void qc.invalidateQueries({ queryKey: ["edu-lesson"] });
+    },
+  });
+}
+
 export function useEducationTracks() {
   return useQuery({
     queryKey: queryKeys.eduTracks,
@@ -411,7 +445,15 @@ export function useUpdateLessonProgress(lessonId: string) {
 }
 
 export function useSubmitQuizAttempt(quizId: string) {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: SubmitQuizAttemptInput) => api.submitQuizAttempt(quizId, input),
+    onSuccess: () => {
+      // Testi GEÇMEK dersi tamamlar (öğrenme kapısı, backend) → ders durumu ve
+      // sonraki dersin kilidi değişmiş olabilir; liste + detay tazelenmeli.
+      void qc.invalidateQueries({ queryKey: ["edu-track-lessons"] });
+      void qc.invalidateQueries({ queryKey: ["edu-lesson"] });
+      void qc.invalidateQueries({ queryKey: ["edu-by-concept"] });
+    },
   });
 }

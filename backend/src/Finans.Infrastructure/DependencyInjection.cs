@@ -62,6 +62,8 @@ public static class DependencyInjection
         services.AddScoped<IEducationService, EducationService>();
         // T6.2 — "Senin portföyünde" bağlamı; portföy özetini okur, sayıları KODDA biçimler.
         services.AddScoped<ILessonContextService, LessonContextService>();
+        // T6.6 — tanılama testi: bilgi seviyesi (derinlik) + risk tutumu (yalnız sıra, gizli).
+        services.AddScoped<IDiagnosticService, DiagnosticService>();
 
         // Arka plan job (T-BES.6b ileri): aktif BES planlarını periyodik ilerletir. Konfig
         // `Bes:PlanCatchUp:Enabled` (varsayılan true; test fixture'ı false yapar).

@@ -116,31 +116,16 @@ public sealed class EducationSeedTests
     }
 
     [Fact]
-    public async Task Sample_progress_leaves_lesson_five_locked_by_derivation()
+    public async Task Seed_starts_everyone_from_zero_progress()
     {
+        // KARAR 2026-07-19: seed artık HİÇ ilerleme yazmaz. Önceden 1-3 "Tamamlandı"
+        // geliyordu; kullanıcı okumadığı dersleri bitirmiş görünüyordu. Artık Ders 1
+        // açık, 2-5 ön-koşuldan TÜRETİLMİŞ kilitli.
         await using var db = NewContext();
         await SeedData.SeedAsync(db);
 
-        var userId = SeedData.Id("user-1");
-        var lessons = await db.Lessons.OrderBy(l => l.OrderIndex).ToListAsync();
-        var progress = await db.UserLessonProgress
-            .Where(p => p.UserId == userId).ToListAsync();
-
-        // 1-3 Tamamlandı (%100), 4 Devam (%0), 5 için KAYIT YOK (kilit türetilir).
-        progress.Should().HaveCount(4);
-        progress.Single(p => p.LessonId == lessons[0].Id).Status.Should().Be(LessonStatus.Completed);
-        progress.Single(p => p.LessonId == lessons[1].Id).Status.Should().Be(LessonStatus.Completed);
-        progress.Single(p => p.LessonId == lessons[2].Id).Status.Should().Be(LessonStatus.Completed);
-        progress.Where(p => p.Status == LessonStatus.Completed).Should().OnlyContain(p => p.ProgressPercent == 100);
-
-        var l4 = progress.Single(p => p.LessonId == lessons[3].Id);
-        l4.Status.Should().Be(LessonStatus.InProgress);
-        l4.ProgressPercent.Should().Be(0);
-        l4.CompletedAtUtc.Should().BeNull();
-
-        // Ders 5: ilerleme kaydı yok + ön-koşulu (Ders 4) tamamlanmadı → türetilmiş Kilitli.
-        progress.Should().NotContain(p => p.LessonId == lessons[4].Id);
-        l4.Status.Should().NotBe(LessonStatus.Completed);
+        (await db.UserLessonProgress.CountAsync()).Should().Be(0);
+        (await db.UserQuizAttempts.CountAsync()).Should().Be(0);
     }
 
     [Fact]
@@ -159,7 +144,7 @@ public sealed class EducationSeedTests
         (await db.QuizQuestions.CountAsync()).Should().Be(15);    // 5 × 3
         (await db.QuizOptions.CountAsync()).Should().Be(50);      // 5 × (4+2+4)
         (await db.LessonSections.CountAsync()).Should().Be(30);   // T6.1+T6.2: 5 ders × 6 blok
-        (await db.UserLessonProgress.CountAsync()).Should().Be(4);
+        (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
 
     // ── T6.1: katmanlı içerik (SC-E12) ───────────────────────────────────────

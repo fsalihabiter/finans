@@ -421,6 +421,46 @@ export interface LessonDetail {
   nextLesson: NextLesson | null;
 }
 
+/** Tanılama sorusu türü (T6.6, 15 §4). */
+export type DiagnosticKind = "Knowledge" | "Scenario";
+
+/** Tanılama şıkkı — cevap anahtarı istemciye GELMEZ. */
+export interface DiagnosticOption {
+  key: string;
+  text: string;
+}
+
+export interface DiagnosticQuestion {
+  key: string;
+  kind: DiagnosticKind;
+  prompt: string;
+  options: DiagnosticOption[];
+}
+
+export interface DiagnosticAnswerInput {
+  questionKey: string;
+  optionKey: string;
+}
+
+export interface SubmitDiagnosticInput {
+  answers: DiagnosticAnswerInput[];
+}
+
+/**
+ * Tanılama sonucu. ⚠ `riskAttitude` BİLİNÇLİ olarak YOK — risk tutumu
+ * kullanıcıya gösterilmez ve API'den dönmez (15 §1.1, SC-E4).
+ */
+export interface DiagnosticResult {
+  literacyLevel: LessonLevel;
+  message: string;
+}
+
+/** Okuryazarlık profili — onboarding gösterilsin mi? */
+export interface LiteracyProfile {
+  literacyLevel: LessonLevel | null;
+  profiled: boolean;
+}
+
 /** "Senin portföyünde" bloğunun veri durumu (15 §3.2, T6.2). */
 export type LessonContextState = "Own" | "Demo" | "Stale";
 

@@ -20,6 +20,43 @@
 
 ---
 
+## 2026-07-19 · T6.6 — Tanılama testi + öğrenme kapısı (quiz geçmeden tamamlama YOK) + ilerleme sıfırlama
+- **Görev(ler):** T6.6 (+ kullanıcı isteği: ilerlemeyi sıfırla, testler çözülmeden ders tamamlanmasın).
+- **Ne yapıldı:** (1) **Öğrenme kapısı** — testi olan ders, test **geçilmeden** tamamlanamaz;
+  kural **sunucuda** (`EducationService.UpdateProgressAsync` → 400 `quiz_not_passed`), istemcide
+  düğmeyi gizlemek yalnız UX. Kapının diğer yüzü: **testi geçmek dersi tamamlar** (ayrıca düğmeye
+  basmaya gerek yok) → ön-koşul zinciri sayesinde yalnız bir sonraki ders açılır. Kalmak mevcut
+  durumu bozmaz. (2) **Sıfır başlangıç** — seed artık **hiç ilerleme yazmıyor** (önceden 1-3
+  "Tamamlandı" geliyordu: kullanıcı okumadığı dersleri bitirmiş görünüyor, ilerleme çubuğu
+  yalan söylüyordu). (3) **T6.6 tanılama**: `DiagnosticContent` (8 soru: 4 bilgi + 4 senaryo,
+  saf puanlama) + `IDiagnosticService` + 3 uç + `Users.LiteracyLevel/RiskAttitude/ProfiledAtUtc`
+  + migration `UserLiteracyProfile` (nullable — defaultValue tuzağı yok) + web onboarding
+  (ölçülmemişse dersten önce, "Atla" seçenekli, sonuçta yalnız seviye + yönlendirme).
+- **Dokunulan dosyalar:** `Finans.Domain/{Enums.cs,Identity/User.cs}`,
+  `Finans.Application/Education/Diagnostic.cs` (yeni), `Finans.Infrastructure/{Services/
+  {DiagnosticService.cs (yeni),EducationService.cs},DependencyInjection.cs,Persistence/
+  {FinansDbContext.cs,Migrations/*UserLiteracyProfile*},Seed/SeedData.cs}`,
+  `Finans.Api/Controllers/EducationController.cs`, `packages/shared/src/{types,api}/index.ts`,
+  `web/src/{lib/hooks.ts,routes/EducationPage.tsx (+test),App.css}`, testler, docs (08/09).
+- **Test:** **SC-E15** (kapı, 5 integration) + **SC-E14** (tanılama: 10 unit + 6 integration +
+  3 bileşen). Application **291/291**, Integration **164/168** (aynı 4 bilinen host testi),
+  web **107/107**. **Canlı uçtan uca:** sıfır liste (1 açık, 2-5 kilitli) → quizsiz tamamlama
+  denemesi **400** → testi geç → ders Completed + **yalnız 2. açıldı**, 3. hâlâ kilitli.
+- **Karar/Not:** 🔒 **SPK sınırı korundu:** `RiskAttitude` DB'ye yazılır ama **hiçbir DTO/API
+  yanıtı/arayüzde görünmez** — `DiagnosticResultDto`/`LiteracyProfileDto` içinde alanı YOK, testler
+  ham yanıt gövdesini tarıyor (SC-E4). Yönlendirme mesajı puan/yanlış sayısı vermez ve tutum
+  etiketi anmaz. **Cevaplanmayan bilgi sorusu yanlış sayılır** (atlamak derin içeriği açmamalı);
+  atlayan **Dengeli** tutum alır. ⚠ **İzolasyon hatası yakalandı:** quiz denemesi artık dersi
+  tamamladığı için, `Investor` ile deneme atan mevcut testler paylaşılan durumu kirletti →
+  o testler taze kullanıcıya çevrildi. ⚠ **`tsc --noEmit` yetersiz kaldı:** `npm run build`
+  farklı tsconfig kullanıyor ve shared paketteki eksik import'ları yalnız o yakaladı (Docker
+  derlemesi patladı) → bundan sonra web doğrulaması `npm run build` ile.
+  **CANLI VERİ:** ilerleme + quiz denemeleri **kullanıcı isteğiyle silindi** (5 ilerleme + 1 deneme;
+  doğrulama sonrası kalanlar da temizlendi). Portföy verisine **dokunulmadı** (7 holding /
+  12 işlem / 48 BES katkısı sağlam).
+- **Durum:** tamamlandı.
+- **Sıradaki:** T6.7 (seviyeye göre katlama + "Daha derine in") — girdisi (`LiteracyLevel`) artık hazır.
+
 ## 2026-07-19 · T6.2 — "Senin portföyünde" bağlamı + ders ilerleme akışı
 - **Görev(ler):** T6.2 (+ kullanıcı isteği: tamamlanan ders sonrakini açsın ve geçilebilsin).
 - **Ne yapıldı:** (1) **`ILessonContextService` + `ContextKeys`** (9 anahtar) — içerik yazarı

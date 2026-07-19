@@ -386,13 +386,12 @@ public static class SeedData
             new QuizOption { Id = Id("q3-o3"), QuestionId = q3.Id, OrderIndex = 3, Text = "Bankanın uyguladığı faiz oranını", IsCorrect = false },
             new QuizOption { Id = Id("q3-o4"), QuestionId = q3.Id, OrderIndex = 4, Text = "Döviz kurundaki değişimi", IsCorrect = false });
 
-        // ── Örnek ilerleme (12.5) — User#1: 1-3 Tamamlandı · 4 Devam · 5 türetilmiş Kilitli ──
-        // Ders 5 için KAYIT YOK: kilit, ön-koşulun (Ders 4) tamamlanmamış olmasından TÜRETİLİR.
-        db.UserLessonProgress.AddRange(
-            new UserLessonProgress { Id = Id("progress-l1"), UserId = userId, LessonId = lesson1.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-12), CompletedAtUtc = now.AddDays(-12), UpdatedAtUtc = now.AddDays(-12) },
-            new UserLessonProgress { Id = Id("progress-l2"), UserId = userId, LessonId = lesson2.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-9), CompletedAtUtc = now.AddDays(-9), UpdatedAtUtc = now.AddDays(-9) },
-            new UserLessonProgress { Id = Id("progress-l3"), UserId = userId, LessonId = lesson3.Id, Status = LessonStatus.Completed, ProgressPercent = 100, StartedAtUtc = now.AddDays(-5), CompletedAtUtc = now.AddDays(-5), UpdatedAtUtc = now.AddDays(-5) },
-            new UserLessonProgress { Id = Id("progress-l4"), UserId = userId, LessonId = lesson4.Id, Status = LessonStatus.InProgress, ProgressPercent = 0, StartedAtUtc = now.AddDays(-1), UpdatedAtUtc = now.AddDays(-1) });
+        // ── İlerleme: HİÇ KAYIT YOK (karar 2026-07-19) ───────────────────────────
+        // Önceden 1-3 "Tamamlandı" seed'leniyordu; bu, kullanıcıya hiç okumadığı
+        // dersleri bitirmiş gibi gösteriyordu ve ilerleme çubuğunu yalanlıyordu.
+        // Artık herkes sıfırdan başlar: Ders 1 açık, 2-5 ön-koşuldan TÜRETİLMİŞ kilitli.
+        // Ders ancak mini testi geçilince tamamlanır (öğrenme kapısı — EducationService).
+        _ = userId;
 
         await db.SaveChangesAsync(ct);
     }

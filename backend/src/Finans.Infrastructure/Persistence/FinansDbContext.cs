@@ -63,6 +63,7 @@ public class FinansDbContext(DbContextOptions<FinansDbContext> options) : DbCont
         configurationBuilder.Properties<QuizQuestionType>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<DepthTier>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<SectionKind>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<RiskAttitude>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

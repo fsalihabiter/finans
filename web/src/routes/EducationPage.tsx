@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type {
+  DiagnosticOption,
   LessonContextState,
   LessonDetail,
   LessonListItem,
@@ -12,7 +13,10 @@ import { MiniMarkdown } from "../components/MiniMarkdown";
 import { Skeleton } from "../components/Skeleton";
 import { useToast } from "../components/Toast";
 import {
+  useDiagnosticQuestions,
   useEducationTracks,
+  useLiteracyProfile,
+  useSubmitDiagnostic,
   useLesson,
   useSubmitQuizAttempt,
   useTrackLessons,
@@ -39,6 +43,12 @@ export function EducationPage() {
   const lessons = useTrackLessons(trackSlug);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
 
+  // Onboarding (T6.6): profil ölçülmemişse önce tanılama. Kullanıcı "Atla" derse
+  // veya bitirirse bu tur için kapanır; profil yazıldığı için tekrar sorulmaz.
+  const profile = useLiteracyProfile();
+  const [skippedDiagnostic, setSkippedDiagnostic] = useState(false);
+  const showDiagnostic = !skippedDiagnostic && profile.data?.profiled === false;
+
   return (
     <section className="page edu-page">
       <header className="page-head">
@@ -51,7 +61,9 @@ export function EducationPage() {
         </p>
       </header>
 
-      {selectedSlug ? (
+      {showDiagnostic ? (
+        <DiagnosticOnboarding onDone={() => setSkippedDiagnostic(true)} />
+      ) : selectedSlug ? (
         <LessonReader
           slug={selectedSlug}
           onBack={() => setSelectedSlug(null)}
@@ -173,6 +185,116 @@ function LessonList({
 }
 
 // ── Ders okuma + tamamla + quiz ─────────────────────────────────────────────
+
+/**
+ * Tanılama testi (T6.6, 15 §4) — eğitime başlamadan önce 8 soru.
+ * 4 bilgi sorusu içerik derinliğini, 4 senaryo sorusu ders sırasını belirler.
+ *
+ * ⚠ Risk tutumu kullanıcıya **gösterilmez** (15 §1.1): sonuç ekranında yalnız
+ * seviye ve yönlendirme mesajı var; "Temkinli/Dengeli/Atılgan" etiketi hiç geçmez.
+ * ⚠ "Utandırmayan" ilke (14 §4-A2): doğru/yanlış sayısı gösterilmez.
+ */
+function DiagnosticOnboarding({ onDone }: { onDone: () => void }) {
+  const questions = useDiagnosticQuestions(true);
+  const submit = useSubmitDiagnostic();
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  const items = questions.data ?? [];
+  const answered = items.filter((q) => answers[q.key]).length;
+
+  if (questions.isLoading)
+    return (
+      <div className="card" style={{ marginTop: 14 }}>
+        <Skeleton width="45%" height={22} />
+        <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+          <Skeleton height={14} />
+          <Skeleton height={14} />
+        </div>
+      </div>
+    );
+
+  // Sorular gelmezse eğitim engellenmez — doğrudan derslere düş (NFR-5).
+  if (questions.isError || items.length === 0) {
+    onDone();
+    return null;
+  }
+
+  if (submit.data)
+    return (
+      <div className="card diagnostic-result" style={{ marginTop: 14 }}>
+        <h3>Hazırız</h3>
+        <p className="page-lead">{submit.data.message}</p>
+        <button type="button" className="btn-primary" onClick={onDone}>
+          Derslere başla →
+        </button>
+      </div>
+    );
+
+  return (
+    <div className="card diagnostic" style={{ marginTop: 14 }}>
+      <div className="page-head" style={{ marginBottom: 4 }}>
+        <span className="kicker">Başlamadan önce</span>
+        <h2>Haritada neredesin?</h2>
+      </div>
+      <p className="page-lead">
+        8 kısa soru — doğru cevap aranmıyor. Amacı dersleri sana uygun derinlikte
+        göstermek. İstersen atlayabilirsin.
+      </p>
+
+      <p className="diagnostic-progress mini">
+        {answered}/{items.length} soru yanıtlandı
+      </p>
+
+      <ol className="diagnostic-list">
+        {items.map((q) => (
+          <li key={q.key} className="diagnostic-q">
+            <p className="diagnostic-prompt">{q.prompt}</p>
+            <div className="diagnostic-options">
+              {q.options.map((o: DiagnosticOption) => (
+                <label key={o.key} className={answers[q.key] === o.key ? "picked" : undefined}>
+                  <input
+                    type="radio"
+                    name={q.key}
+                    value={o.key}
+                    checked={answers[q.key] === o.key}
+                    onChange={() => setAnswers((prev) => ({ ...prev, [q.key]: o.key }))}
+                  />
+                  <span>{o.text}</span>
+                </label>
+              ))}
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div className="lesson-actions">
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={submit.isPending}
+          onClick={() =>
+            submit.mutate({
+              answers: Object.entries(answers).map(([questionKey, optionKey]) => ({
+                questionKey,
+                optionKey,
+              })),
+            })
+          }
+        >
+          {submit.isPending ? "Değerlendiriliyor…" : "Bitir"}
+        </button>
+        <button
+          type="button"
+          className="btn-ghost"
+          disabled={submit.isPending}
+          onClick={() => submit.mutate({ answers: [] })}
+        >
+          Atla
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /** "Senin portföyünde" bloğunun veri kaynağı rozeti (15 §3.2). Own'da rozet YOK. */
 function ContextBadge({ state, asOf }: { state: LessonContextState; asOf: string | null }) {
@@ -298,9 +420,14 @@ function LessonReader({
           <LessonBody lesson={lesson.data} />
 
           <div className="lesson-actions">
-            {lesson.data.status === "Completed" ? (
+            {lesson.data.status === "Completed" && (
               <span className="lesson-done-badge">✓ Bu dersi tamamladın</span>
-            ) : (
+            )}
+
+            {/* Öğrenme kapısı (backend zorunlu kılar): testi olan ders ancak test
+                geçilince tamamlanır. "Dersi tamamla" düğmesi bu yüzden yalnızca
+                TESTİ OLMAYAN derslerde çıkar — aksi hâlde kullanıcıyı 400'e sürerdi. */}
+            {lesson.data.status !== "Completed" && !lesson.data.quiz && (
               <button
                 type="button"
                 className="btn-primary"
@@ -309,6 +436,12 @@ function LessonReader({
               >
                 {complete.isPending ? "Kaydediliyor…" : "Dersi tamamla"}
               </button>
+            )}
+
+            {lesson.data.status !== "Completed" && lesson.data.quiz && (
+              <span className="lesson-gate-hint">
+                Bu dersi tamamlamak için aşağıdaki mini testi geç.
+              </span>
             )}
 
             {/* İlerleme akışı (T6.2): ders tamamlandıysa sonrakine doğrudan geç.

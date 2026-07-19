@@ -127,6 +127,84 @@ describe("EducationPage", () => {
     expect(await screen.findByText(/Örnek portföy/)).toBeInTheDocument();
   });
 
+  // ── T6.6: tanılama onboarding'i ────────────────────────────────────────────
+
+  const diagnosticQuestions = [
+    {
+      key: "real-return",
+      kind: "Knowledge",
+      prompt: "Faiz %40, enflasyon %50. Alım gücün ne olur?",
+      options: [
+        { key: "increased", text: "Arttı" },
+        { key: "decreased", text: "Azaldı" },
+        { key: "same", text: "Aynı kaldı" },
+      ],
+    },
+    {
+      key: "drawdown",
+      kind: "Scenario",
+      prompt: "Portföyün %20 düştü. İlk tepkin?",
+      options: [
+        { key: "sell", text: "Satarım" },
+        { key: "wait", text: "Beklerim" },
+        { key: "buy", text: "Eklerim" },
+      ],
+    },
+  ];
+
+  /** Profil ölçülmemiş kullanıcı → onboarding görünmeli. */
+  function mockUnprofiled(result?: unknown) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init?: RequestInit) => {
+        if (url.endsWith("/api/education/profile"))
+          return ok({ literacyLevel: null, profiled: false });
+        if (url.endsWith("/api/education/diagnostic") && init?.method === "POST")
+          return ok(result ?? { literacyLevel: "Beginner", message: "Baştan başlayalım." });
+        if (url.endsWith("/api/education/diagnostic")) return ok(diagnosticQuestions);
+        if (url.endsWith("/api/education/tracks")) return ok(tracks);
+        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
+        if (url.includes("/api/education/lessons/")) return ok(lessonDetail);
+        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
+      }),
+    );
+  }
+
+  it("profil ölçülmemişse önce tanılama testini gösterir", async () => {
+    mockUnprofiled();
+    renderWithProviders(<EducationPage />);
+
+    expect(await screen.findByText("Haritada neredesin?")).toBeInTheDocument();
+    expect(screen.getByText(/Faiz %40, enflasyon %50/)).toBeInTheDocument();
+    // Ders listesi henüz gösterilmez.
+    expect(screen.queryByText("Enflasyon ve Reel Getiri")).not.toBeInTheDocument();
+  });
+
+  it("tanılama sonucu risk tutumunu ASLA göstermez (SPK sınırı)", async () => {
+    mockUnprofiled();
+    renderWithProviders(<EducationPage />);
+
+    fireEvent.click(await screen.findByText("Azaldı"));
+    fireEvent.click(screen.getByText("Eklerim"));
+    fireEvent.click(screen.getByRole("button", { name: "Bitir" }));
+
+    expect(await screen.findByText("Baştan başlayalım.")).toBeInTheDocument();
+    // 🔒 15 §1.1 — tutum etiketi hiçbir yerde geçmemeli.
+    for (const label of ["Temkinli", "Dengeli", "Atılgan", "Atilgan"]) {
+      expect(screen.queryByText(new RegExp(label, "i"))).not.toBeInTheDocument();
+    }
+  });
+
+  it("tanılama atlanabilir ve derslere düşer", async () => {
+    mockUnprofiled();
+    renderWithProviders(<EducationPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Atla" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Derslere başla/ }));
+
+    expect(await screen.findByText("Enflasyon ve Reel Getiri")).toBeInTheDocument();
+  });
+
   it("tamamlanmış derste sonraki derse geçiş sunar; set sonunda sunmaz", async () => {
     mockDetail(
       detailWithSections({

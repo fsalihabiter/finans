@@ -118,7 +118,7 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
 
         var lesson = JsonDocument.Parse(raw).RootElement;
         lesson.GetProperty("bodyMarkdown").GetString().Should().NotBeNullOrEmpty();
-        lesson.GetProperty("status").GetString().Should().Be("Completed"); // Investor ders 1'i tamamladı
+        lesson.GetProperty("status").GetString().Should().Be("NotStarted"); // seed ilerleme yazmaz
         lesson.GetProperty("locked").GetBoolean().Should().BeFalse();
         var quiz = lesson.GetProperty("quiz");
         quiz.GetProperty("passingScore").GetInt32().Should().Be(60);
@@ -260,20 +260,19 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
     // ── Per-user durum + kilit türetimi + İZOLASYON (11 §3) ──────────────────
 
     [Fact]
-    public async Task Track_lessons_reflect_investor_progress_and_derived_lock()
+    public async Task Everyone_starts_from_zero_with_only_first_lesson_open()
     {
+        // KARAR 2026-07-19: seed hiç ilerleme yazmaz → herkes sıfırdan başlar.
+        // Ders 1 açık (ön-koşulsuz), 2..5 ön-koşuldan TÜRETİLMİŞ kilitli.
         var lessons = ByOrder(await JsonAsync(
             await ClientAs(Investor).GetAsync("/api/education/tracks/temeller/lessons")));
 
         lessons.Should().HaveCount(5);
-        lessons[0].GetProperty("status").GetString().Should().Be("Completed");
-        lessons[0].GetProperty("progressPercent").GetInt32().Should().Be(100);
+        lessons.Should().OnlyContain(l => l.GetProperty("status").GetString() == "NotStarted");
+        lessons.Should().OnlyContain(l => l.GetProperty("progressPercent").GetInt32() == 0);
         lessons[0].GetProperty("locked").GetBoolean().Should().BeFalse();
-        lessons[2].GetProperty("status").GetString().Should().Be("Completed");
-        lessons[3].GetProperty("status").GetString().Should().Be("InProgress");
-        lessons[3].GetProperty("locked").GetBoolean().Should().BeFalse();  // ders 3 tamam → 4 açık
-        lessons[4].GetProperty("status").GetString().Should().Be("NotStarted");
-        lessons[4].GetProperty("locked").GetBoolean().Should().BeTrue();   // ders 4 tamam değil → 5 kilitli
+        lessons[1].GetProperty("locked").GetBoolean().Should().BeTrue();
+        lessons[4].GetProperty("locked").GetBoolean().Should().BeTrue();
     }
 
     [Fact]
@@ -290,32 +289,95 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
         lessons[4].GetProperty("locked").GetBoolean().Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Update_progress_upserts_for_current_user_unlocks_next_and_stays_isolated()
+    /// <summary>Ders 1 testinin tüm doğru cevapları (skor 100 → geçer).</summary>
+    private static object AllCorrectAnswers() => new
     {
-        // Taze kullanıcı (ilerlemesi yok) → seed kullanıcılarını kirletmez.
+        answers = new[]
+        {
+            new { questionId = Q1, selectedOptionIds = new[] { Q1Correct } },
+            new { questionId = Q2, selectedOptionIds = new[] { Q2Correct } },
+            new { questionId = Q3, selectedOptionIds = new[] { Q3Correct } },
+        },
+    };
+
+    [Fact]
+    public async Task Lesson_with_quiz_cannot_be_completed_before_passing_it()
+    {
+        // ÖĞRENME KAPISI (karar 2026-07-19): testi olan ders, test geçilmeden
+        // tamamlanamaz. Kural SUNUCUDA; istemcide düğmeyi gizlemek yalnızca UX'tir.
         var learner = ClientAs(await NewLearnerAsync());
 
-        // Başta: ders 1 açık, ders 2 kilitli.
+        var resp = await learner.PutAsJsonAsync($"/api/education/lessons/{Lesson1}/progress",
+            new { status = "Completed", progressPercent = 100 });
+
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorCodeAsync(resp)).Should().Be("VALIDATION_ERROR");
+
+        // Ders tamamlanmadı → sonraki ders hâlâ kilitli (zincir kırılmadı).
+        var lessons = ByOrder(await JsonAsync(await learner.GetAsync("/api/education/tracks/temeller/lessons")));
+        lessons[0].GetProperty("status").GetString().Should().Be("NotStarted");
+        lessons[1].GetProperty("locked").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Failing_the_quiz_does_not_complete_the_lesson()
+    {
+        var learner = ClientAs(await NewLearnerAsync());
+
+        // Tek doğru → skor 33, geçme eşiği 60 → kalır.
+        var body = new
+        {
+            answers = new[]
+            {
+                new { questionId = Q1, selectedOptionIds = new[] { Q1Correct } },
+                new { questionId = Q3, selectedOptionIds = new[] { Q3Wrong } },
+            },
+        };
+        var attempt = await learner.PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", body);
+        (await JsonAsync(attempt)).GetProperty("passed").GetBoolean().Should().BeFalse();
+
+        var lessons = ByOrder(await JsonAsync(await learner.GetAsync("/api/education/tracks/temeller/lessons")));
+        lessons[0].GetProperty("status").GetString().Should().NotBe("Completed");
+        lessons[1].GetProperty("locked").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Passing_the_quiz_completes_the_lesson_and_unlocks_the_next()
+    {
+        // Testi geçmek dersi TAMAMLAR (ayrıca "Dersi tamamla"ya basmaya gerek yok)
+        // ve ön-koşul zinciri sayesinde sonraki ders açılır.
+        var learnerId = await NewLearnerAsync();
+        var learner = ClientAs(learnerId);
+
         var before = ByOrder(await JsonAsync(await learner.GetAsync("/api/education/tracks/temeller/lessons")));
-        before[0].GetProperty("locked").GetBoolean().Should().BeFalse();
         before[1].GetProperty("locked").GetBoolean().Should().BeTrue();
 
-        var put = await learner.PutAsJsonAsync($"/api/education/lessons/{Lesson1}/progress",
-            new { status = "Completed", progressPercent = 100 });
-        put.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await JsonAsync(put)).GetProperty("status").GetString().Should().Be("Completed");
+        var attempt = await learner.PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", AllCorrectAnswers());
+        (await JsonAsync(attempt)).GetProperty("passed").GetBoolean().Should().BeTrue();
 
-        // Ders 1 tamamlandı → ders 2 açıldı (bu kullanıcı için).
         var after = ByOrder(await JsonAsync(await learner.GetAsync("/api/education/tracks/temeller/lessons")));
         after[0].GetProperty("status").GetString().Should().Be("Completed");
-        after[1].GetProperty("locked").GetBoolean().Should().BeFalse();
+        after[0].GetProperty("progressPercent").GetInt32().Should().Be(100);
+        after[1].GetProperty("locked").GetBoolean().Should().BeFalse(); // sonraki açıldı
 
-        // İZOLASYON: taze kullanıcının yazımı Investor'ın verisine dokunmaz.
-        var invLessons = ByOrder(await JsonAsync(
+        // İZOLASYON: bu kullanıcının ilerlemesi Investor'a sızmaz.
+        var inv = ByOrder(await JsonAsync(
             await ClientAs(Investor).GetAsync("/api/education/tracks/temeller/lessons")));
-        invLessons[3].GetProperty("status").GetString().Should().Be("InProgress");
-        invLessons[4].GetProperty("locked").GetBoolean().Should().BeTrue();
+        inv[0].GetProperty("status").GetString().Should().Be("NotStarted");
+        inv[1].GetProperty("locked").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Progress_can_be_set_to_in_progress_without_passing_the_quiz()
+    {
+        // Kapı yalnız "Completed" içindir — okumaya başlamak serbest.
+        var learner = ClientAs(await NewLearnerAsync());
+
+        var resp = await learner.PutAsJsonAsync($"/api/education/lessons/{Lesson1}/progress",
+            new { status = "InProgress", progressPercent = 40 });
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await JsonAsync(resp)).GetProperty("status").GetString().Should().Be("InProgress");
     }
 
     [Fact]
@@ -349,7 +411,8 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
                 new { questionId = Q3, selectedOptionIds = new[] { Q3Correct } },
             },
         };
-        var resp = await ClientAs(Investor).PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", body);
+        var resp = await ClientAs(await NewLearnerAsync())
+            .PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", body);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result = await JsonAsync(resp);
@@ -375,7 +438,8 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
             },
         };
         var result = await JsonAsync(
-            await ClientAs(Investor).PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", body));
+            await ClientAs(await NewLearnerAsync())
+                .PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", body));
         result.GetProperty("score").GetInt32().Should().Be(67); // 2/3 → 66,67 → 67
         result.GetProperty("passed").GetBoolean().Should().BeTrue(); // 67 ≥ 60
     }
