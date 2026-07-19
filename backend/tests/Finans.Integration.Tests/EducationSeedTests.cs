@@ -261,9 +261,10 @@ public sealed class EducationSeedTests
         await SeedData.SeedAsync(db);
 
         var section = await db.LessonSections.FirstAsync(s => s.Kind == SectionKind.Trap);
-        var (id, original) = (section.Id, section.BodyMarkdown);
+        var (id, original, originalHeading) = (section.Id, section.BodyMarkdown, section.Heading);
 
-        // "Eski sürüm" simülasyonu: içerik bozulmuş/eskimiş.
+        // "Eski sürüm" simülasyonu: içeriğin HER alanı bozulmuş/eskimiş.
+        section.Heading = "eski başlık";
         section.BodyMarkdown = "eski metin";
         section.DepthTier = DepthTier.Deep;
         section.FigureKey = "eski-figur";
@@ -272,10 +273,34 @@ public sealed class EducationSeedTests
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         var after = await db.LessonSections.SingleAsync(s => s.Id == id);
+        // Heading de mutabakata dahil — karşılaştırma listesinden düşerse sessizce eskir.
+        after.Heading.Should().Be(originalHeading);
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
         (await db.LessonSections.CountAsync()).Should().Be(30); // çoğaltma yok
+    }
+
+    [Fact]
+    public async Task Every_section_has_a_heading_and_body_without_duplicate_title()
+    {
+        // T6.10 — yol haritası adım başlıklarını gösterir; başlık gövdeden AYRIŞTIRILIR
+        // ki aynı başlık hem adım başlığında hem metinde iki kez görünmesin.
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var sections = await db.LessonSections.ToListAsync();
+
+        sections.Should().OnlyContain(s => !string.IsNullOrWhiteSpace(s.Heading),
+            "her bölüm yol haritasında bir adım adı taşımalı");
+        sections.Should().OnlyContain(s => !s.BodyMarkdown.StartsWith("## "),
+            "başlık gövdeden düşürülmeli (çift gösterim olmaz)");
+        sections.Should().OnlyContain(s => s.Heading!.Length > 3 && s.Heading!.Length < 60,
+            "adım adı hem anlamlı hem tek satıra sığar olmalı");
+
+        // Ders içi başlıklar birbirinden ayırt edilebilir olmalı (yol haritası okunur kalsın).
+        foreach (var group in sections.GroupBy(s => s.LessonId))
+            group.Select(s => s.Heading).Should().OnlyHaveUniqueItems();
     }
 
     [Fact]

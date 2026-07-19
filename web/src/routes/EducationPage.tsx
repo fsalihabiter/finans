@@ -7,6 +7,7 @@ import type {
   LessonDetail,
   LessonListItem,
   LessonSection,
+  SectionKind,
   LessonStatus,
   Quiz,
 } from "@finans/shared";
@@ -331,69 +332,124 @@ function ContextBadge({ state, asOf }: { state: LessonContextState; asOf: string
 /** Derinlik katmanının sıra değeri — kullanıcının seviyesiyle karşılaştırmak için. */
 const TIER_RANK: Record<DepthTier, number> = { Core: 0, Context: 1, Deep: 2 };
 
-/** Kullanıcının seviyesi kaçıncı katmana kadar VARSAYILAN açık gelir (15 §2.2). */
+/** Kullanıcının seviyesi kaçıncı katmana kadar ANA YOLDA sayılır (15 §2.2). */
 const LEVEL_RANK: Record<LessonLevel, number> = { Beginner: 0, Intermediate: 1, Advanced: 2 };
 
-const TIER_LABEL: Record<DepthTier, string> = {
-  Core: "Özet",
-  Context: "Daha derine in",
-  Deep: "Uzman katmanı",
+/** Derinlik rozeti — yol haritasında "beni neler bekliyor" sinyali. */
+const TIER_BADGE: Record<DepthTier, string | null> = {
+  Core: null,
+  Context: "derinleşme",
+  Deep: "ileri",
+};
+
+/** Blok türü rozeti — adımın ne tür bir içerik olduğunu önceden belli eder. */
+const KIND_BADGE: Record<SectionKind, string | null> = {
+  Explain: null,
+  Example: "örnek",
+  Trap: "tuzak",
+  LiveContext: "senin verin",
+  Source: "kaynak",
+};
+
+/** Yol haritasındaki bir adım (bölümler + varsa kapanış testi). */
+type Step = {
+  key: string;
+  title: string;
+  badge: string | null;
+  optional: boolean;
+  section: LessonSection | null; // null = test adımı
 };
 
 /**
- * Tek bölüm. Kullanıcının seviyesinin ÜSTÜNDEKİ katmanlar katlanmış gelir —
- * ama **tavan kapatılmaz**: herkes açıp okuyabilir (15 §2.2).
+ * Ders adımlarını kurar (T6.10): her bölüm bir adım, test EN SONA ayrı adım olarak
+ * eklenir — böylece test "sayfanın devamı" değil, **ulaşılan bir hedef** olur.
  */
-function SectionBlock({
-  section,
-  folded,
-  children,
-}: {
-  section: LessonSection;
-  folded: boolean;
-  children: React.ReactNode;
-}) {
-  const cls = `lesson-section kind-${section.kind.toLowerCase()} tier-${section.depthTier.toLowerCase()}`;
+function buildSteps(lesson: LessonDetail, level: LessonLevel | null): Step[] {
+  const reach = LEVEL_RANK[level ?? "Beginner"];
 
-  if (!folded) return <section className={cls}>{children}</section>;
+  const steps: Step[] = lesson.sections.map((s) => ({
+    key: `s${s.order}`,
+    title: s.heading ?? `Bölüm ${s.order}`,
+    badge: KIND_BADGE[s.kind] ?? TIER_BADGE[s.depthTier],
+    // Seviyenin üstündeki katman ZORUNLU değil — atlanabilir ama gizlenmez (15 §2.2).
+    optional: TIER_RANK[s.depthTier] > reach,
+    section: s,
+  }));
 
-  return (
-    <details className={`${cls} is-folded`}>
-      <summary>
-        <span className="fold-label">{TIER_LABEL[section.depthTier]}</span>
-        <span className="fold-hint">isteğe bağlı</span>
-      </summary>
-      <div className="fold-body">{children}</div>
-    </details>
-  );
+  if (lesson.quiz) {
+    steps.push({
+      key: "quiz",
+      title: "Mini test",
+      badge: "kapanış",
+      optional: false,
+      section: null,
+    });
+  }
+
+  return steps;
 }
 
 /**
- * Ders gövdesi (T6.7). Katmanlı bölüm varsa onlar render edilir; yoksa
- * `bodyMarkdown`'a düşülür (geriye dönük uyum, 15 §2.1 / SC-E2).
+ * Yol haritası — dersin tüm adımlarını başlıklarıyla gösterir.
  *
- * Katlama kuralı: bölümün derinliği kullanıcının seviyesini AŞIYORSA `<details>`
- * içine alınır. Seviye ölçülmemişse (`null`) Başlangıç varsayılır — tanılama
- * atlanabilir olduğu için bu yol her zaman çalışır (T6.6).
+ * Tamamlananlar tıklanabilir (geri dönüş), sıradaki vurgulu, **ileridekiler
+ * başlığıyla görünür ama kilitli**: kullanıcı ne öğreneceğini bilir, ama detay
+ * için ilerlemesi gerekir (merak + ilerleme hissi).
  */
-function LessonBody({ lesson, level }: { lesson: LessonDetail; level: LessonLevel | null }) {
-  if (lesson.sections.length === 0)
-    return <MiniMarkdown className="markdown-body" markdown={lesson.bodyMarkdown} />;
-
-  const reach = LEVEL_RANK[level ?? "Beginner"];
-
+function LessonRoadmap({
+  steps,
+  current,
+  onJump,
+}: {
+  steps: Step[];
+  current: number;
+  onJump: (index: number) => void;
+}) {
   return (
-    <>
-      {lesson.sections.map((s: LessonSection) => (
-        <SectionBlock key={s.order} section={s} folded={TIER_RANK[s.depthTier] > reach}>
-          {s.kind === "LiveContext" && lesson.contextState && (
-            <ContextBadge state={lesson.contextState} asOf={lesson.contextAsOf} />
-          )}
-          <MiniMarkdown className="markdown-body" markdown={s.bodyMarkdown} />
-          <LessonFigure figureKey={s.figureKey} />
-        </SectionBlock>
-      ))}
-    </>
+    <nav className="lesson-roadmap" aria-label="Ders adımları">
+      <ol>
+        {steps.map((step, i) => {
+          const state = i < current ? "done" : i === current ? "current" : "upcoming";
+          const reachable = i <= current;
+          return (
+            <li key={step.key} className={`roadmap-step is-${state}`}>
+              <button
+                type="button"
+                onClick={() => reachable && onJump(i)}
+                disabled={!reachable}
+                aria-current={state === "current" ? "step" : undefined}
+              >
+                <span className="roadmap-mark" aria-hidden="true">
+                  {state === "done" ? "✓" : state === "current" ? "●" : "🔒"}
+                </span>
+                <span className="roadmap-title">{step.title}</span>
+                {step.badge && <span className="roadmap-badge">{step.badge}</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/** Tek adımın içeriği. */
+function StepContent({
+  step,
+  lesson,
+}: {
+  step: Step;
+  lesson: LessonDetail;
+}) {
+  const s = step.section!;
+  return (
+    <section className={`lesson-section kind-${s.kind.toLowerCase()} tier-${s.depthTier.toLowerCase()}`}>
+      {s.kind === "LiveContext" && lesson.contextState && (
+        <ContextBadge state={lesson.contextState} asOf={lesson.contextAsOf} />
+      )}
+      <MiniMarkdown className="markdown-body" markdown={s.bodyMarkdown} />
+      <LessonFigure figureKey={s.figureKey} />
+    </section>
   );
 }
 
@@ -410,6 +466,19 @@ function LessonReader({
   const complete = useUpdateLessonProgress(lesson.data?.id ?? "");
   const profile = useLiteracyProfile();
   const { notify } = useToast();
+  const [stepIndex, setStepIndex] = useState(0);
+
+  // Ders değişince baştan başla (sonraki derse geçişte adım sayacı sıfırlanmalı).
+  const [loadedSlug, setLoadedSlug] = useState(slug);
+  if (loadedSlug !== slug) {
+    setLoadedSlug(slug);
+    setStepIndex(0);
+  }
+
+  const steps = useMemo(
+    () => (lesson.data ? buildSteps(lesson.data, profile.data?.literacyLevel ?? null) : []),
+    [lesson.data, profile.data?.literacyLevel],
+  );
 
   const onComplete = () => {
     complete.mutate(
@@ -417,8 +486,6 @@ function LessonReader({
       {
         onSuccess: () => {
           const next = lesson.data?.nextLesson;
-          // İlerleme akışı (T6.2): tamamlanan ders sonraki dersin ön-koşuluydu →
-          // kilit açıldı. Kullanıcıya bunu SÖYLE, listeye dönüp aramasını bekleme.
           notify(
             next
               ? `Ders tamamlandı — "${next.title}" açıldı.`
@@ -429,6 +496,10 @@ function LessonReader({
       },
     );
   };
+
+  const step = steps[stepIndex];
+  const isLast = stepIndex === steps.length - 1;
+  const nextStep = steps[stepIndex + 1];
 
   return (
     <div className="lesson-reader">
@@ -472,57 +543,103 @@ function LessonReader({
             </div>
           )}
 
-          <LessonBody lesson={lesson.data} level={profile.data?.literacyLevel ?? null} />
+          {/* Bölümsüz ders (eski içerik / topluluk katkısı) → tek parça oku (SC-E2). */}
+          {steps.length === 0 ? (
+            <>
+              <MiniMarkdown className="markdown-body" markdown={lesson.data.bodyMarkdown} />
+              <div className="lesson-actions">
+                {lesson.data.status === "Completed" ? (
+                  <span className="lesson-done-badge">✓ Bu dersi tamamladın</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={onComplete}
+                    disabled={complete.isPending}
+                  >
+                    {complete.isPending ? "Kaydediliyor…" : "Dersi tamamla"}
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="lesson-progress">
+                <div className="lesson-progress-bar" role="img" aria-label={`${stepIndex + 1}/${steps.length} adım`}>
+                  {steps.map((st, i) => (
+                    <span key={st.key} className={`lesson-progress-seg${i <= stepIndex ? " done" : ""}`} />
+                  ))}
+                </div>
+                <span className="mini">
+                  Adım {stepIndex + 1}/{steps.length}
+                </span>
+              </div>
 
-          <div className="lesson-actions">
-            {lesson.data.status === "Completed" && (
-              <span className="lesson-done-badge">✓ Bu dersi tamamladın</span>
-            )}
+              <LessonRoadmap steps={steps} current={stepIndex} onJump={setStepIndex} />
 
-            {/* Öğrenme kapısı (backend zorunlu kılar): testi olan ders ancak test
-                geçilince tamamlanır. "Dersi tamamla" düğmesi bu yüzden yalnızca
-                TESTİ OLMAYAN derslerde çıkar — aksi hâlde kullanıcıyı 400'e sürerdi. */}
-            {lesson.data.status !== "Completed" && !lesson.data.quiz && (
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={onComplete}
-                disabled={complete.isPending}
-              >
-                {complete.isPending ? "Kaydediliyor…" : "Dersi tamamla"}
-              </button>
-            )}
+              <div className="lesson-step">
+                <div className="lesson-step-head">
+                  <h3>{step.title}</h3>
+                  {step.optional && (
+                    <span className="step-optional">ileri seviye — istersen atla</span>
+                  )}
+                </div>
 
-            {lesson.data.status !== "Completed" && lesson.data.quiz && (
-              <span className="lesson-gate-hint">
-                Bu dersi tamamlamak için aşağıdaki mini testi geç.
-              </span>
-            )}
+                {step.section ? (
+                  <StepContent step={step} lesson={lesson.data} />
+                ) : (
+                  <QuizPanel quiz={lesson.data.quiz!} />
+                )}
+              </div>
 
-            {/* İlerleme akışı (T6.2): ders tamamlandıysa sonrakine doğrudan geç.
-                Kilit ön-koşuldan türetildiği için tamamlama anında açılmış olur. */}
-            {lesson.data.status === "Completed" && lesson.data.nextLesson && (
-              <button
-                type="button"
-                className="btn-primary next-lesson"
-                onClick={() => onNavigate(lesson.data!.nextLesson!.slug)}
-                disabled={lesson.data.nextLesson.locked}
-                title={
-                  lesson.data.nextLesson.locked
-                    ? "Bu ders başka bir ön koşul bekliyor"
-                    : undefined
-                }
-              >
-                Sonraki ders: {lesson.data.nextLesson.title} →
-              </button>
-            )}
+              <div className="lesson-actions">
+                {stepIndex > 0 && (
+                  <button type="button" className="btn-ghost" onClick={() => setStepIndex(stepIndex - 1)}>
+                    ← Geri
+                  </button>
+                )}
 
-            {lesson.data.status === "Completed" && !lesson.data.nextLesson && (
-              <span className="lesson-done-badge">🎉 Seti tamamladın</span>
-            )}
-          </div>
+                {/* Son adımdan ÖNCE: sonraki adıma yönlendir. Test adımı da böyle
+                    ulaşılır — "sayfanın devamı" değil, varılan bir hedef. */}
+                {!isLast && (
+                  <button
+                    type="button"
+                    className="btn-primary next-lesson"
+                    onClick={() => setStepIndex(stepIndex + 1)}
+                  >
+                    {nextStep?.key === "quiz" ? "Mini teste geç →" : `Devam: ${nextStep?.title} →`}
+                  </button>
+                )}
 
-          {lesson.data.quiz && <QuizPanel quiz={lesson.data.quiz} />}
+                {/* Testi olmayan derste son adımda tamamlama düğmesi. */}
+                {isLast && !lesson.data.quiz && lesson.data.status !== "Completed" && (
+                  <button
+                    type="button"
+                    className="btn-primary next-lesson"
+                    onClick={onComplete}
+                    disabled={complete.isPending}
+                  >
+                    {complete.isPending ? "Kaydediliyor…" : "Dersi tamamla"}
+                  </button>
+                )}
+
+                {lesson.data.status === "Completed" && lesson.data.nextLesson && (
+                  <button
+                    type="button"
+                    className="btn-primary next-lesson"
+                    onClick={() => onNavigate(lesson.data!.nextLesson!.slug)}
+                    disabled={lesson.data.nextLesson.locked}
+                  >
+                    Sonraki ders: {lesson.data.nextLesson.title} →
+                  </button>
+                )}
+
+                {lesson.data.status === "Completed" && !lesson.data.nextLesson && (
+                  <span className="lesson-done-badge">🎉 Seti tamamladın</span>
+                )}
+              </div>
+            </>
+          )}
         </article>
       )}
     </div>

@@ -447,13 +447,18 @@ public static class SeedData
                 // (metin düzeltmesi, katman değişikliği, figür eklenmesi). Salt "ekle"
                 // yaklaşımı bu değişiklikleri çalışan kurulumlara indiremiyordu.
                 // LessonSections yazılı içeriktir — kullanıcı verisi DEĞİL, üzerine yazmak güvenli.
-                if (current.BodyMarkdown == section.BodyMarkdown
+                // ⚠ Bu liste İÇERİĞİN TÜM alanlarını kapsamalı. Eksik bırakılan alan
+                // sessizce eskimiş kalır — `Heading` böyle atlanmıştı (2026-07-20).
+                // Yeni bir içerik alanı eklenirse HEM karşılaştırmaya HEM kopyaya ekle.
+                if (current.Heading == section.Heading
+                    && current.BodyMarkdown == section.BodyMarkdown
                     && current.DepthTier == section.DepthTier
                     && current.Kind == section.Kind
                     && current.OrderIndex == section.OrderIndex
                     && current.FigureKey == section.FigureKey)
                     continue; // birebir aynı → dokunma
 
+                current.Heading = section.Heading;
                 current.BodyMarkdown = section.BodyMarkdown;
                 current.DepthTier = section.DepthTier;
                 current.Kind = section.Kind;

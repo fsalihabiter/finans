@@ -52,10 +52,16 @@ internal static class EducationContent
         };
 
         var order = 1;
-        foreach (var (body, tier, kind, fig) in parts)
+        foreach (var (rawBody, tier, kind, fig) in parts)
         {
+            // Başlık gövdeden AYRIŞTIRILIR (T6.10): adım gezgini/yol haritası bölüm
+            // adlarını gösterebilsin diye `Heading` alanına taşınır ve gövdeden düşer
+            // (aksi hâlde başlık iki kez görünürdü). Tek kaynak: içerik metninin kendisi.
+            var (heading, body) = SplitHeading(rawBody.Trim());
+
             yield return new LessonSection
             {
+                Heading = heading,
                 // DETERMİNİSTİK Id (kritik): seed "hiç bölüm var mı?" diye değil
                 // "BU bölüm var mı?" diye bakar → sonradan eklenen bloklar (örn. T6.2'nin
                 // LiveContext'i) mevcut kurulumlara da iner, var olanlar çoğaltılmaz.
@@ -63,12 +69,27 @@ internal static class EducationContent
                 Id = SeedData.Id($"section-{lessonId:N}-{order}"),
                 LessonId = lessonId,
                 OrderIndex = order++,
-                BodyMarkdown = body.Trim(),
+                BodyMarkdown = body,
                 DepthTier = tier,
                 Kind = kind,
                 FigureKey = fig,
             };
         }
+    }
+
+    /// <summary>
+    /// Gövdenin ilk satırı <c>## </c> veya <c>### </c> başlığıysa onu ayırır.
+    /// Başlık yoksa <c>null</c> döner ve gövde olduğu gibi kalır.
+    /// </summary>
+    private static (string? Heading, string Body) SplitHeading(string body)
+    {
+        var lines = body.Split('\n');
+        var first = lines[0].TrimStart();
+        var prefix = first.StartsWith("## ") ? 3 : first.StartsWith("### ") ? 4 : 0;
+        if (prefix == 0)
+            return (null, body);
+
+        return (first[prefix..].Trim(), string.Join('\n', lines.Skip(1)).Trim());
     }
 
     // ── Ders 1 — Enflasyon ve Reel Getiri ────────────────────────────────────
@@ -121,6 +142,8 @@ internal static class EducationContent
         olmadan kendini kandırmanın en kolay yoludur.
         """,
         deep: """
+        ## İşin matematiği ve sınırları
+
         ### Formülün arkasındaki mantık
 
         Nominal getiri paranın **miktarını**, enflasyon ise paranın **birim değerini**
@@ -243,6 +266,8 @@ internal static class EducationContent
         "ne kadar çok o kadar iyi" değil, **anlamlı farklılık** meselesidir.
         """,
         deep: """
+        ## Riskin hangi kısmı azalır?
+
         ### Neden riski azaltır?
 
         İki varlığın birlikte hareket etme eğilimine **korelasyon** denir. Tam
@@ -373,6 +398,8 @@ internal static class EducationContent
         eksik anlatır — bu yüzden PD/DD yüksek çıkar.
         """,
         deep: """
+        ## Oranların arkasındaki mekanik
+
         ### F/K aslında ne ölçer?
 
         F/K'yı tersine çevirirsen (K/F) **kazanç verimi** elde edersin. F/K'sı 10 olan
@@ -499,6 +526,8 @@ internal static class EducationContent
         risktir.
         """,
         deep: """
+        ## Risk primi ve kayıpların asimetrisi
+
         ### Risk primi
 
         Yatırımcılar belirsizliğe bedava katlanmaz. Daha belirsiz bir yatırımın,
@@ -628,6 +657,8 @@ internal static class EducationContent
         görmek için **reel** getiriyle düşünmek gerekir (bkz. birinci ders).
         """,
         deep: """
+        ## Süre, sıra ve süreklilik
+
         ### Düzenlilik, büyük tutarı yenebilir
 
         Tek seferlik büyük bir yatırım ile küçük ama düzenli katkılar

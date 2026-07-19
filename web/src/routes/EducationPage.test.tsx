@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { EducationPage } from "./EducationPage";
@@ -70,28 +70,38 @@ describe("EducationPage", () => {
     expect(screen.getByText("← Derslere dön")).toBeInTheDocument();
   });
 
-  // ── T6.1/T6.2: katmanlı bölümler + bağlam rozeti + ilerleme akışı ──────────
+  // ── T6.10: aşamalı adım akışı + yol haritası ──────────────────────────────
 
-  /** Bölümlü ders detayı; `contextState` ile bağlam rozeti senaryosu kurulur. */
-  function detailWithSections(over: Record<string, unknown> = {}) {
+  /** Başlıklı, üç derinlik katmanlı, figürlü ve testli ders. */
+  function steppedDetail(over: Record<string, unknown> = {}) {
     return {
       ...lessonDetail,
       sections: [
-        { order: 1, heading: null, bodyMarkdown: "Çekirdek anlatım.", depthTier: "Core", kind: "Explain" },
-        { order: 2, heading: null, bodyMarkdown: "Derin katman.", depthTier: "Deep", kind: "Explain" },
-        { order: 3, heading: null, bodyMarkdown: "Yoğunlaşman %80.", depthTier: "Core", kind: "LiveContext" },
+        { order: 1, heading: "Kavram nedir?", bodyMarkdown: "Çekirdek anlatım.", depthTier: "Core", kind: "Explain", figureKey: null },
+        { order: 2, heading: "Nasıl hesaplanır?", bodyMarkdown: "Bağlam katmanı.", depthTier: "Context", kind: "Explain", figureKey: null },
+        { order: 3, heading: "İşin matematiği", bodyMarkdown: "Uzman katmanı.", depthTier: "Deep", kind: "Explain", figureKey: null },
+        { order: 4, heading: "Örnek", bodyMarkdown: "Örnek metni.", depthTier: "Core", kind: "Example", figureKey: "real-vs-nominal" },
       ],
-      contextState: "Own",
+      quiz: {
+        id: "q1",
+        title: "Mini Test",
+        passingScore: 60,
+        questions: [
+          { id: "qq1", order: 1, type: "SingleChoice", prompt: "Soru?", options: [{ id: "o1", order: 1, text: "Şık" }] },
+        ],
+      },
+      contextState: null,
       contextAsOf: null,
       nextLesson: null,
       ...over,
     };
   }
 
-  function mockDetail(detail: unknown) {
+  function mockStepped(level: string, detail: unknown = steppedDetail()) {
     vi.stubGlobal(
       "fetch",
       vi.fn((url: string) => {
+        if (url.endsWith("/api/education/profile")) return ok({ literacyLevel: level, profiled: true });
         if (url.endsWith("/api/education/tracks")) return ok(tracks);
         if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
         if (url.includes("/api/education/lessons/")) return ok(detail);
@@ -100,127 +110,115 @@ describe("EducationPage", () => {
     );
   }
 
-  it("katmanlı bölümleri render eder (bodyMarkdown yerine)", async () => {
-    mockDetail(detailWithSections());
+  async function openLesson(level = "Beginner", detail: unknown = steppedDetail()) {
+    mockStepped(level, detail);
     renderWithProviders(<EducationPage />);
-
     fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+    return screen.findByText("Çekirdek anlatım.");
+  }
+
+  it("tek seferde tek adım gösterir (hepsini birden dökmez)", async () => {
+    await openLesson();
+
+    expect(screen.getByText("Çekirdek anlatım.")).toBeInTheDocument();
+    // Sonraki adımların GÖVDESİ henüz yok — yalnız başlıkları yol haritasında.
+    expect(screen.queryByText("Bağlam katmanı.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Uzman katmanı.")).not.toBeInTheDocument();
+    expect(screen.getByText("Adım 1/5")).toBeInTheDocument(); // 4 bölüm + test
+  });
+
+  it("yol haritasında ilerideki başlıklar GÖRÜNÜR ama kilitli", async () => {
+    await openLesson();
+
+    const roadmap = screen.getByRole("navigation", { name: "Ders adımları" });
+    // Başlıklar okunuyor → kullanıcı ne öğreneceğini biliyor.
+    expect(within(roadmap).getByText("Nasıl hesaplanır?")).toBeInTheDocument();
+    expect(within(roadmap).getByText("İşin matematiği")).toBeInTheDocument();
+    expect(within(roadmap).getByText("Mini test")).toBeInTheDocument();
+
+    // …ama detaya atlayamıyor (kilitli).
+    expect(within(roadmap).getByText("İşin matematiği").closest("button")).toBeDisabled();
+    expect(within(roadmap).getByText("Mini test").closest("button")).toBeDisabled();
+  });
+
+  it("devam düğmesi bir sonraki adımın adını söyler ve ilerletir", async () => {
+    await openLesson();
+
+    fireEvent.click(screen.getByRole("button", { name: /Devam: Nasıl hesaplanır\?/ }));
+
+    expect(await screen.findByText("Bağlam katmanı.")).toBeInTheDocument();
+    expect(screen.getByText("Adım 2/5")).toBeInTheDocument();
+    expect(screen.queryByText("Çekirdek anlatım.")).not.toBeInTheDocument();
+  });
+
+  it("tamamlanan adıma yol haritasından geri dönülebilir", async () => {
+    await openLesson();
+    fireEvent.click(screen.getByRole("button", { name: /Devam: Nasıl hesaplanır\?/ }));
+    await screen.findByText("Bağlam katmanı.");
+
+    const roadmap = screen.getByRole("navigation", { name: "Ders adımları" });
+    fireEvent.click(within(roadmap).getByText("Kavram nedir?"));
 
     expect(await screen.findByText("Çekirdek anlatım.")).toBeInTheDocument();
-    expect(screen.getByText("Derin katman.")).toBeInTheDocument();
-    expect(screen.getByText("Yoğunlaşman %80.")).toBeInTheDocument();
-    // Bölüm varken fallback gövde GÖSTERİLMEZ (çift içerik olmaz).
-    expect(screen.queryByText("Gövde metni burada.")).not.toBeInTheDocument();
   });
 
-  it("kendi verisinde bağlam rozeti göstermez, demo verisinde gösterir", async () => {
-    mockDetail(detailWithSections()); // contextState: "Own"
-    const own = renderWithProviders(<EducationPage />);
-    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
-    await screen.findByText("Yoğunlaşman %80.");
-    expect(screen.queryByText(/Örnek portföy/)).not.toBeInTheDocument();
-    own.unmount();
+  it("test AYRI ve SON adımdır — okuma sayfasının devamı değil", async () => {
+    await openLesson();
 
-    mockDetail(detailWithSections({ contextState: "Demo" }));
-    renderWithProviders(<EducationPage />);
-    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
-    expect(await screen.findByText(/Örnek portföy/)).toBeInTheDocument();
+    // Test içeriği hiçbir okuma adımında görünmez.
+    expect(screen.queryByText("Soru?")).not.toBeInTheDocument();
+
+    for (const name of [/Devam: Nasıl hesaplanır\?/, /Devam: İşin matematiği/, /Devam: Örnek/]) {
+      fireEvent.click(screen.getByRole("button", { name }));
+    }
+
+    // Son okuma adımından teste YÖNLENDİRME ile geçilir.
+    const toQuiz = screen.getByRole("button", { name: /Mini teste geç/ });
+    fireEvent.click(toQuiz);
+
+    expect(await screen.findByText("Soru?")).toBeInTheDocument();
+    expect(screen.getByText("Adım 5/5")).toBeInTheDocument();
   });
 
-  // ── T6.7: seviyeye göre katlama + figür ────────────────────────────────────
+  it("seviyenin üstündeki adım 'ileri seviye' olarak işaretlenir", async () => {
+    await openLesson("Beginner");
+    fireEvent.click(screen.getByRole("button", { name: /Devam: Nasıl hesaplanır\?/ }));
 
-  /** Üç derinlik katmanı + figürlü örnek bloğu taşıyan ders. */
-  function layeredDetail() {
-    return {
-      ...lessonDetail,
-      sections: [
-        { order: 1, heading: null, bodyMarkdown: "Çekirdek anlatım.", depthTier: "Core", kind: "Explain", figureKey: null },
-        { order: 2, heading: null, bodyMarkdown: "Bağlam katmanı.", depthTier: "Context", kind: "Explain", figureKey: null },
-        { order: 3, heading: null, bodyMarkdown: "Uzman katmanı.", depthTier: "Deep", kind: "Explain", figureKey: null },
-        { order: 4, heading: null, bodyMarkdown: "Örnek metni.", depthTier: "Core", kind: "Example", figureKey: "real-vs-nominal" },
-      ],
-      contextState: null,
-      contextAsOf: null,
-      nextLesson: null,
-    };
-  }
-
-  /** Profil ölçülmüş kullanıcı (onboarding atlanır) + katmanlı ders. */
-  function mockAtLevel(level: string) {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((url: string) => {
-        if (url.endsWith("/api/education/profile"))
-          return ok({ literacyLevel: level, profiled: true });
-        if (url.endsWith("/api/education/tracks")) return ok(tracks);
-        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
-        if (url.includes("/api/education/lessons/")) return ok(layeredDetail());
-        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
-      }),
-    );
-  }
-
-  it("başlangıç seviyesinde üst katmanları katlar, çekirdeği açık gösterir", async () => {
-    mockAtLevel("Beginner");
-    renderWithProviders(<EducationPage />);
-    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
-
-    // Core açık; Context/Deep <details> içinde (kapalı ama DOM'da).
-    expect(await screen.findByText("Çekirdek anlatım.")).toBeVisible();
-    expect(screen.getByText("Daha derine in")).toBeInTheDocument();
-    expect(screen.getByText("Uzman katmanı")).toBeInTheDocument();
-    expect(screen.getByText("Bağlam katmanı.").closest("details")).not.toHaveAttribute("open");
+    expect(await screen.findByText(/ileri seviye — istersen atla/)).toBeInTheDocument();
   });
 
-  it("ileri seviyede derin katman katlanmaz (tavan kapatılmaz)", async () => {
-    mockAtLevel("Advanced");
-    renderWithProviders(<EducationPage />);
-    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+  it("ileri seviyede hiçbir adım 'ileri seviye' işaretini taşımaz", async () => {
+    await openLesson("Advanced");
+    fireEvent.click(screen.getByRole("button", { name: /Devam: Nasıl hesaplanır\?/ }));
 
-    await screen.findByText("Çekirdek anlatım.");
-    // Hiçbir katman katlanmadı → "Daha derine in" başlığı yok.
-    expect(screen.queryByText("Daha derine in")).not.toBeInTheDocument();
-    expect(screen.getByText("Uzman katmanı.")).toBeVisible();
+    await screen.findByText("Bağlam katmanı.");
+    expect(screen.queryByText(/ileri seviye — istersen atla/)).not.toBeInTheDocument();
   });
 
-  it("katlanmış katman açılabilir — içerik kimseden gizlenmez", async () => {
-    mockAtLevel("Beginner");
-    renderWithProviders(<EducationPage />);
-    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
-
-    const details = (await screen.findByText("Bağlam katmanı.")).closest("details")!;
-    expect(details).not.toHaveAttribute("open");
-    fireEvent.click(screen.getByText("Daha derine in"));
-    expect(details).toHaveAttribute("open");
-  });
-
-  it("figür anahtarı olan bölümde erişilebilir görsel çizer", async () => {
-    mockAtLevel("Beginner");
-    renderWithProviders(<EducationPage />);
-    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+  it("figür kendi adımında erişilebilir görsel olarak çizilir", async () => {
+    await openLesson();
+    for (const name of [/Devam: Nasıl hesaplanır\?/, /Devam: İşin matematiği/, /Devam: Örnek/]) {
+      fireEvent.click(screen.getByRole("button", { name }));
+    }
 
     expect(await screen.findByRole("img", { name: /nominal ve reel getirisi/i })).toBeInTheDocument();
   });
 
-  it("bilinmeyen figür anahtarı içeriği bozmaz", async () => {
-    const detail = layeredDetail();
-    detail.sections[3].figureKey = "boyle-bir-figur-yok";
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((url: string) => {
-        if (url.endsWith("/api/education/profile")) return ok({ literacyLevel: "Beginner", profiled: true });
-        if (url.endsWith("/api/education/tracks")) return ok(tracks);
-        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
-        if (url.includes("/api/education/lessons/")) return ok(detail);
-        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
-      }),
-    );
+  it("bölümsüz ders tek parça okunur (geriye dönük uyum)", async () => {
+    mockStepped("Beginner", {
+      ...lessonDetail,
+      sections: [],
+      quiz: null,
+      contextState: null,
+      contextAsOf: null,
+      nextLesson: null,
+    });
     renderWithProviders(<EducationPage />);
     fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
 
-    // Metin yerinde, figür sessizce atlandı.
-    expect(await screen.findByText("Örnek metni.")).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: /getiri/i })).not.toBeInTheDocument();
+    expect(await screen.findByText("Gövde metni burada.")).toBeInTheDocument();
+    // Adım gezgini yok — tek parça okuma.
+    expect(screen.queryByRole("navigation", { name: "Ders adımları" })).not.toBeInTheDocument();
   });
 
   // ── T6.6: tanılama onboarding'i ────────────────────────────────────────────
@@ -302,21 +300,18 @@ describe("EducationPage", () => {
   });
 
   it("tamamlanmış derste sonraki derse geçiş sunar; set sonunda sunmaz", async () => {
-    mockDetail(
-      detailWithSections({
-        status: "Completed",
-        nextLesson: { id: "l2", slug: "cesit", title: "Çeşitlendirme", locked: false },
-      }),
-    );
+    mockStepped("Beginner", steppedDetail({
+      status: "Completed",
+      nextLesson: { id: "l2", slug: "cesit", title: "Çeşitlendirme", locked: false },
+    }));
     const withNext = renderWithProviders(<EducationPage />);
     fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
 
-    const nextBtn = await screen.findByRole("button", { name: /Sonraki ders: Çeşitlendirme/ });
-    expect(nextBtn).toBeEnabled();
+    expect(await screen.findByRole("button", { name: /Sonraki ders: Çeşitlendirme/ })).toBeEnabled();
     withNext.unmount();
 
     // Set sonu: sonraki ders yok → geçiş butonu yerine tamamlama rozeti.
-    mockDetail(detailWithSections({ status: "Completed", nextLesson: null }));
+    mockStepped("Beginner", steppedDetail({ status: "Completed", nextLesson: null }));
     renderWithProviders(<EducationPage />);
     fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
 

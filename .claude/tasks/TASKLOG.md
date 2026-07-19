@@ -20,6 +20,40 @@
 
 ---
 
+## 2026-07-19 · T6.10 — Aşamalı ders akışı (yol haritası + adım adım + test ayrı adım)
+- **Görev(ler):** T6.10 (kullanıcı isteği: aşamalı anlatım · testi sayfanın devamı olarak gösterme ·
+  ilerideki başlıklar görünsün ama kilitli olsun).
+- **Ne yapıldı:** Ders okuyucusu **tek uzun sayfadan aşamalı gezgine** dönüştü:
+  (1) **Adım akışı** — her bölüm bir adım, tek adım/ekran; üstte segmentli ilerleme + "Adım n/N";
+  (2) **Yol haritası** — dersin TÜM adımları başlığıyla listelenir: tamamlananlar ✓ ve tıklanabilir,
+  sıradaki vurgulu, **ilerideki başlıklar okunur ama düğmeleri kilitli** (ne öğreneceğini bil, detay
+  için ilerle); tür/derinlik rozetleri (*derinleşme · ileri · senin verin · örnek · tuzak · kapanış*)
+  neyin geldiğini önceden sezdirir; (3) **Mini test AYRI ve SON adım** — okuma adımlarında test
+  içeriği hiç render edilmez, "Mini teste geç →" yönlendirmesiyle ulaşılır; (4) devam düğmesi
+  **sonraki adımın adını** söyler; (5) seviyenin üstündeki adım "ileri seviye — istersen atla"
+  ile işaretlenir (T6.7 katlaması adım akışında bu forma dönüştü); (6) **bölüm başlığı gövdeden
+  ayrıştırılıp `Heading`'e** taşındı (`SplitHeading`) — yol haritası okunur, başlık iki kez
+  görünmez; derin bloklara kapsayıcı üst başlık eklendi.
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Seed/{EducationContent.cs,SeedData.cs}`,
+  `web/src/routes/EducationPage.tsx (+test)`, `web/src/App.css`,
+  `tests/Finans.Integration.Tests/EducationSeedTests.cs`, docs (08/09).
+- **Test:** **SC-E17** — 9 bileşen (tek adım gösterimi · yol haritası başlıkları görünür+kilitli ·
+  devam sonraki adı söyler · geri dönüş · **test ayrı ve son adım** · ileri-seviye işareti ·
+  İleri'de işaret yok · figür kendi adımında · bölümsüz ders tek parça) + 1 integration
+  (her bölümde başlık, gövdede çift başlık yok, ders içinde tekil). web **116/116**,
+  Application 291/291, Integration **167/171** (aynı 4 bilinen). **Canlıda ekran görüntüsüyle
+  teyit:** yol haritası 7 adım (6 bölüm + test), başlıklar okunur, ilerisi kilitli.
+- **Karar/Not:** ⚠ **Seed mutabakatı `Heading` alanını atlıyordu** — başlıklar canlıda "Bölüm 1,
+  Bölüm 2…" göründü. Aynı sınıf hatanın **dördüncüsü** (salt-ekle → blok-bazlı → mutabakat →
+  eksik alan). Karşılaştırma/kopya listesi eksiksizleştirildi + uyarı yorumu + testte tüm alanlar
+  bozulup geri geliyor mu diye kontrol. **Tarayıcı kontrolü olmasa fark edilmezdi** (testler
+  yeşildi, çünkü in-memory seed her seferinde sıfırdan kuruluyor — mutabakat yolu yalnız var olan
+  DB'de tetikleniyor). Katlama (`<details>`) adım akışında gereksizleşti; onun yerine adım
+  "isteğe bağlı" işareti taşıyor — içerik yine kimseden gizlenmiyor.
+- **Durum:** tamamlandı (yapısal iskelet).
+- **Sıradaki:** **İçerik turu** — bölüm/konu çeşitlendirme, her detaya örneklem, daha çok figür,
+  zorluk seviyeli test bankası (kullanıcı isteğinin ikinci yarısı).
+
 ## 2026-07-19 · T6.7 — Uyarlanabilir render (seviyeye göre katlama) + ders görselleştirme
 - **Görev(ler):** T6.7 (+ kullanıcı isteği: dersleri görselleştir, daha az sıkıcı/daha anlaşılır olsun).
 - **Ne yapıldı:** (1) **Katlama**: bölümün derinliği kullanıcının seviyesini aşıyorsa `<details>`
