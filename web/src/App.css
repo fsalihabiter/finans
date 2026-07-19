@@ -3454,7 +3454,10 @@ body.drawer-lock {
 }
 @media (min-width: 960px) {
   .lesson-layout {
-    grid-template-columns: 244px minmax(0, 1fr);
+    /* Sütun, en uzun adım başlığı TEK SATIRA sığacak kadar genişler ama
+       bölümün %35'ini geçmez — fit-content(%) tam olarak bu davranışı verir.
+       Sığmayan başlık son çare olarak "…" ile kısalır (.roadmap-title). */
+    grid-template-columns: fit-content(35%) minmax(0, 1fr);
     align-items: start;
   }
   .lesson-roadmap {
@@ -3511,12 +3514,15 @@ body.drawer-lock {
   text-align: center;
   font-size: 11px;
 }
-/* Başlık iki satıra sarabilir — kesmek yerine sarmak, adım adını okunur tutar.
-   Sabit yükseklik + ellipsis denendi; uzun başlıklar sütundan taşıyordu (2026-07-20). */
+/* Başlık TEK SATIR: sütun genişliği zaten en uzun başlığa göre ayarlanır
+   (fit-content(35%)). %35 tavanına takılan uzun başlık "…" ile kısalır —
+   tam metin `title` özniteliğinde kalır. */
 .roadmap-title {
   min-width: 0;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .roadmap-badge {
   grid-column: 2;

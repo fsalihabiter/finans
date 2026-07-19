@@ -148,9 +148,9 @@ public sealed class EducationSeedTests
         (await db.LessonConceptTags.CountAsync()).Should().Be(6);
         (await db.LessonPrerequisites.CountAsync()).Should().Be(4);
         (await db.Quizzes.CountAsync()).Should().Be(5);          // T6.1: 1 → 5 (her derse bir test)
-        (await db.QuizQuestions.CountAsync()).Should().Be(21);    // Ders1: 9 (3 zorluk) + 4×3
-        (await db.QuizOptions.CountAsync()).Should().Be(72);      // Ders1: 32 + 4×10
-        (await db.LessonSections.CountAsync()).Should().Be(37);   // Ders1: 13 (T6.11) + 4×6
+        (await db.QuizQuestions.CountAsync()).Should().Be(27);    // Ders1+2: 9+9 (3 zorluk) + 3×3
+        (await db.QuizOptions.CountAsync()).Should().Be(94);      // Ders1+2: 32+32 · 3×10
+        (await db.LessonSections.CountAsync()).Should().Be(44);   // Ders1+2: 13+13 + 3×6
         (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
 
@@ -231,7 +231,7 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(37);
+        (await db.LessonSections.CountAsync()).Should().Be(44);
         (await db.Quizzes.CountAsync()).Should().Be(5);
         (await db.Lessons.CountAsync()).Should().Be(5); // dersler çoğaltılmadı
     }
@@ -250,13 +250,13 @@ public sealed class EducationSeedTests
         live.Should().HaveCount(5);
         db.LessonSections.RemoveRange(live);
         await db.SaveChangesAsync();
-        (await db.LessonSections.CountAsync()).Should().Be(32); // diğer bloklar yerinde
+        (await db.LessonSections.CountAsync()).Should().Be(39); // diğer bloklar yerinde
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
         (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(5);
-        (await db.LessonSections.CountAsync()).Should().Be(37);
+        (await db.LessonSections.CountAsync()).Should().Be(44);
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public sealed class EducationSeedTests
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
-        (await db.LessonSections.CountAsync()).Should().Be(37); // çoğaltma yok
+        (await db.LessonSections.CountAsync()).Should().Be(44); // çoğaltma yok
     }
 
     [Fact]
@@ -321,9 +321,21 @@ public sealed class EducationSeedTests
 
         // Her dersin örnek bloğu bir figür anahtarı bildirir (T6.7 görselleştirme).
         var examples = sections.Where(s => s.Kind == SectionKind.Example).ToList();
-        examples.Should().HaveCountGreaterThanOrEqualTo(5); // her derste ≥1 (Ders 1'de birkaç)
-        examples.Should().OnlyContain(s => !string.IsNullOrWhiteSpace(s.FigureKey));
-        examples.Select(s => s.FigureKey).Should().OnlyHaveUniqueItems();
+        examples.Should().HaveCountGreaterThanOrEqualTo(5); // her derste ≥1 (zengin derslerde birkaç)
+
+        // Her DERS en az bir görsel taşımalı; ama metin-ağırlıklı bazı örneklerin
+        // figürü olmayabilir (görsel katkı sağlamıyorsa zorlamıyoruz).
+        var lessonIds = sections.Select(s => s.LessonId).Distinct();
+        foreach (var lessonId in lessonIds)
+        {
+            sections.Where(s => s.LessonId == lessonId)
+                .Should().Contain(s => !string.IsNullOrWhiteSpace(s.FigureKey),
+                    "her ders en az bir açıklayıcı görsel taşımalı");
+        }
+
+        // Figür anahtarları tekil — aynı görsel iki yerde çizilmemeli.
+        sections.Where(s => s.FigureKey != null).Select(s => s.FigureKey)
+            .Should().OnlyHaveUniqueItems();
 
         // Tuzak blokları Core katmanda → başlangıç seviyesinde KATLANMAZ.
         sections.Where(s => s.Kind == SectionKind.Trap)

@@ -376,131 +376,280 @@ internal static class EducationContent
 
     // ── Ders 2 — Çeşitlendirme ───────────────────────────────────────────────
 
-    public static IEnumerable<LessonSection> Lesson2(Guid id) => Blocks(id,
-        core: """
+    public static IEnumerable<LessonSection> Lesson2(Guid id) => Build(id,
+
+        // ── 1. Kavram ────────────────────────────────────────────────────────
+        Core("""
         ## Ağırlık nerede toplanıyor?
 
         Bir portföyün değeri tek bir varlığa bağlıysa, o varlık düştüğünde
-        portföyün tamamı birlikte düşer. Farklı davranan varlıkları bir arada
-        tutmak, biri kötü giderken diğerlerinin dengeleme ihtimalini artırır.
+        portföyün tamamı birlikte düşer. Kaderin tek bir habere bağlanmış olur.
 
         **Yoğunlaşma**, değerin az sayıda kalemde toplanmasıdır. Portföyünün
-        %84'ü iki varlıktaysa, o iki varlığın ortak kaderi senin de kaderin olur.
+        %84'ü iki varlıktaysa, o iki varlığın ortak kaderi senin de kaderindir.
 
         Çeşitlendirme riski **yok etmez** — farklı kaynaklara **yayar**. Amaç,
-        bütün varlıklarının aynı anda aynı yöne hareket etme ihtimalini azaltmaktır.
+        bütün varlıklarının aynı anda aynı yöne hareket etme ihtimalini azaltmak.
 
         Bu, "şu kadar varlık iyidir" diye bir kural değil, bir farkındalıktır:
-        ağırlığının nerede toplandığını bilmek.
-        """,
-        context: """
-        ## Çeşitlendirme nasıl ölçülür?
+        **ağırlığının nerede toplandığını bilmek.**
+        """),
 
-        En basit ölçü **ağırlıktır**: her varlığın güncel değerinin portföy toplamına
-        oranı. Yoğunlaşmayı görmenin pratik yolu, en büyük iki-üç kalemin toplam
-        ağırlığına bakmaktır.
-
-        > varlık ağırlığı = varlık güncel değeri / portföy toplam değeri
-
-        ### Kalem sayısı yanıltabilir
-
-        On farklı kalem tutuyor olman çeşitlendirdiğin anlamına gelmez. Onunun da
-        aynı sektörde, aynı para biriminde ya da aynı ekonomik hikâyeye bağlı olması
-        mümkündür. Bu durumda kalem sayısı çok, **gerçek çeşitlilik az**tır.
-
-        ### Asıl mesele: birlikte hareket
-
-        Çeşitlendirmenin işe yaraması için varlıkların **farklı sebeplerle** değer
-        kazanıp kaybetmesi gerekir. Aynı anda aynı yöne giden iki varlık, tek bir
-        varlık gibi davranır — sayıca iki, davranışça bir.
-
-        ### Sınırı da var
-
-        Aşırı dağılmak da bir maliyettir: takip etmesi zorlaşır, her kalem için işlem
-        maliyeti doğar ve hiçbiri portföyde anlamlı bir yer tutmaz. Çeşitlendirme
-        "ne kadar çok o kadar iyi" değil, **anlamlı farklılık** meselesidir.
-        """,
-        deep: """
-        ## Riskin hangi kısmı azalır?
-
-        ### Neden riski azaltır?
-
-        İki varlığın birlikte hareket etme eğilimine **korelasyon** denir. Tam
-        birlikte hareket eden iki varlığı yan yana koymak riski azaltmaz; farklı
-        sebeplerle hareket eden varlıklar ise birbirinin dalgalanmasını yumuşatır.
-
-        Sezgisel olarak: bir varlık kötü haberle düşerken diğeri o haberden
-        etkilenmiyorsa, portföyün toplam oynaklığı tek başına en oynak varlığından
-        daha düşük olur. Çeşitlendirmenin "bedava öğle yemeği" diye anılmasının
-        sebebi budur — getiriden ödün vermeden oynaklığı azaltabilir.
-
-        ### Ortadan kaldırılamayan risk
-
-        Çeşitlendirme **şirkete/varlığa özgü** riski azaltır: bir şirketin kötü
-        yönetilmesi, bir madenin kapanması. Ancak **sisteme özgü** riski —
-        genel ekonomik daralma, ülke çapında bir şok — azaltmaz, çünkü o risk
-        her şeyi aynı anda etkiler.
-
-        Bu ayrım önemlidir: hiçbir çeşitlendirme seviyesi seni "risksiz" yapmaz.
-
-        ### Türkiye'ye özgü bir katman: para birimi
-
-        Farklı varlık türlerine yayılmış görünen bir portföy, hepsi aynı para
-        birimine bağlıysa hâlâ tek bir riske açıktır. Para birimi, çeşitlendirmede
-        çoğu zaman gözden kaçan ama belirleyici bir eksendir.
-
-        ### Yeniden dengeleme kavramı
-
-        Zamanla iyi giden varlık büyür ve ağırlığı artar; portföy kendiliğinden
-        yoğunlaşır. Ağırlıkların zaman içinde nasıl kaydığını izlemek, çeşitlendirmenin
-        bir kerelik değil **süregelen** bir durum olduğunu gösterir.
-        """,
-        live: """
-        ## Senin portföyünde
-
-        En büyük iki varlığın portföyünün **{{concentration_top2}}**'sini oluşturuyor.
-        Toplam **{{holding_count}}** kalemin **{{asset_class_count}}** farklı varlık
-        türüne yayılmış durumda.
-
-        Bu dersteki **yoğunlaşma** kavramı tam olarak ilk sayıyı ölçer. Yüksek olması
-        kendiliğinden yanlış değildir; bilinmesi gereken bir durumdur.
-        """,
-        example: """
+        // ── 2. İlk somut örnek ───────────────────────────────────────────────
+        Ex("""
         ## Örnek: iki portföy, aynı kalem sayısı
 
         İki portföyün de beş kalemi var, ikisi de 100.000 ₺:
 
         **Birinci portföy** — ağırlıklar: %70, %10, %8, %7, %5.
-        En büyük kalem tek başına portföyün üçte ikisinden fazlası. Bu kalem %30
-        değer kaybederse portföy yaklaşık %21 küçülür.
+        En büyük kalem tek başına portföyün üçte ikisinden fazlası.
+        Bu kalem %30 değer kaybederse portföy yaklaşık **%21** küçülür.
 
         **İkinci portföy** — ağırlıklar: %25, %22, %20, %18, %15.
-        En büyük kalem aynı %30'u kaybederse portföy yaklaşık %7,5 küçülür.
+        En büyük kalem aynı %30'u kaybederse portföy yaklaşık **%7,5** küçülür.
 
-        İkisinin de "beş kalemi" var; ancak yoğunlaşmaları çok farklı. Kalem sayısı
-        değil, **ağırlık dağılımı** belirleyicidir.
+        İkisinin de "beş kalemi" var; aynı olay birinde üç kat daha sert vuruyor.
 
-        > Bu örnek belirli varlıkları karşılaştırmıyor; yalnızca aynı sayıda kalemin
-        > çok farklı yoğunlaşma üretebileceğini gösteriyor.
-        """,
-        trap: """
-        ## Sık yapılan hata
+        > Kalem **sayısı** değil, **ağırlık dağılımı** belirleyicidir.
+        """, "concentration"),
 
-        **"Çok kalemim var, o hâlde çeşitlendirdim."**
+        // ── 3. Ölçme ─────────────────────────────────────────────────────────
+        Ctx("""
+        ## Çeşitlendirme nasıl ölçülür?
 
-        Aynı sektörden on hisse, birbirinin yerine geçen on kalemdir. Çeşitlilik
-        sayıda değil, **farklı davranışta**dır.
+        En basit ölçü **ağırlıktır**: her varlığın güncel değerinin portföy
+        toplamına oranı.
 
-        İkinci yanılgı: **"Çeşitlendirirsem kaybetmem."** Çeşitlendirme kaybı
-        engellemez; tek bir kötü olayın seni orantısız vurmasını engeller. Piyasanın
-        tümü düştüğünde çeşitlendirilmiş portföy de düşer.
+        > varlık ağırlığı = varlık güncel değeri / portföy toplam değeri
 
-        Üçüncüsü ise sinsi olanı: **portföyün kendiliğinden yoğunlaşması.** En çok
-        değerlenen varlık zamanla en büyük ağırlığa ulaşır. Hiçbir işlem yapmasan
-        bile, iki yıl önce dengeli olan bir portföy bugün tek bir kaleme bağlı
-        hâle gelmiş olabilir.
-        """,
-        figure: "concentration");
+        Yoğunlaşmayı görmenin pratik yolu, **en büyük iki-üç kalemin toplam
+        ağırlığına** bakmaktır. Tek bir sayı, dağılımın ne kadar dengesiz
+        olduğunu hızlıca özetler.
+
+        ### Kaba bir okuma çerçevesi
+
+        - En büyük iki kalem toplamı **%60 altındaysa** dağılım görece dengeli sayılır.
+        - **%60-%80 arası** belirgin yoğunlaşma vardır.
+        - **%80 üzerinde** portföy fiilen birkaç kalemden ibarettir.
+
+        Bunlar kesin eşikler değil, **okuma alışkanlığı** için kaba işaretlerdir;
+        neyin "doğru" olduğunu değil, nerede durduğunu gösterirler.
+        """),
+
+        // ── 4. Kalem sayısı tuzağı ───────────────────────────────────────────
+        Trap("""
+        ## Tuzak: "on kalemim var, çeşitlendirdim"
+
+        On farklı kalem tutuyor olman çeşitlendirdiğin anlamına gelmez.
+        Onunun da aynı sektörde, aynı para biriminde ya da aynı ekonomik
+        hikâyeye bağlı olması mümkündür.
+
+        Böyle bir portföyde kalem sayısı çok, **gerçek çeşitlilik azdır**:
+        sektörü vuran tek bir haber onunu birden aşağı çeker. Sayıca on,
+        davranışça bir.
+
+        Kendine sorulacak soru "kaç kalemim var?" değil, şudur:
+        **bu kalemler farklı sebeplerle mi değer kazanıp kaybediyor?**
+        """, "same-sector"),
+
+        // ── 5. Birlikte hareket ──────────────────────────────────────────────
+        Ctx("""
+        ## Asıl mesele: birlikte hareket
+
+        Çeşitlendirmenin işe yaraması için varlıkların **farklı sebeplerle**
+        değer kazanıp kaybetmesi gerekir.
+
+        İki varlık her zaman aynı yöne gidiyorsa, portföyde ikisini birden
+        tutmak tek varlık tutmaktan farksızdır — riski bölmezsin, aynı riski
+        iki parçaya yazarsın.
+
+        Farklı sebeplerle hareket eden varlıklar ise birbirinin dalgalanmasını
+        **yumuşatır**: biri kötü haberle düşerken diğeri o haberden etkilenmez.
+        Portföyün toplam oynaklığı, tek tek kalemlerin oynaklığından düşük olur.
+        """),
+
+        // ── 6. Birlikte hareket örneği ───────────────────────────────────────
+        Ex("""
+        ## Örnek: aynı yöne mi, farklı yöne mi?
+
+        İki portföy düşün; ikisi de iki eşit parçadan oluşuyor (%50 / %50).
+        Dört çeyrekteki getiriler:
+
+        **Birlikte hareket eden çift**
+        - X: +%20, −%15, +%18, −%12
+        - Y: +%18, −%14, +%20, −%11
+        - Portföy: +%19, −%14,5, +%19, −%11,5 → **dalgalanma aynen sürüyor**
+
+        **Farklı hareket eden çift**
+        - X: +%20, −%15, +%18, −%12
+        - Z: −%6, +%11, −%4, +%9
+        - Portföy: +%7, −%2, +%7, −%1,5 → **dalgalanma belirgin şekilde azaldı**
+
+        İki portföyün de ortalama getirisi benzer; ama ikincisinin yolculuğu çok
+        daha sakin. Çeşitlendirmenin kazandırdığı şey budur: aynı yere daha az
+        sarsılarak gitmek.
+
+        > X, Y, Z birer hesaplama örneğidir; belirli varlıkları temsil etmez.
+        """, "correlation-paths"),
+
+        // ── 7. Para birimi ekseni ────────────────────────────────────────────
+        Ctx("""
+        ## Gözden kaçan eksen: para birimi
+
+        Farklı varlık türlerine yayılmış görünen bir portföy, hepsi aynı para
+        birimine bağlıysa hâlâ **tek bir riske** açıktır.
+
+        Türkiye'de bu özellikle önemlidir: mevduat, yerel hisse ve yerel fon
+        farklı "türler" gibi durur, ama üçü de aynı para biriminin alım gücüne
+        bağlıdır. Kur hareketi üçünü birden aynı yönde etkileyebilir.
+
+        Çeşitlendirmeyi düşünürken en az üç ekseni ayrı ayrı sormak gerekir:
+
+        - **Varlık türü** — altın, hisse, mevduat, fon…
+        - **Para birimi** — TL, USD, EUR…
+        - **Coğrafya / ekonomi** — yerel mi, dışa açık mı?
+
+        Üçünde de aynı yerde toplanmışsan, kalem sayın ne olursa olsun tek bir
+        bahis oynuyorsun demektir.
+        """),
+
+        // ── 8. Para birimi örneği ────────────────────────────────────────────
+        ExDeep("""
+        ## Örnek: dört kalem, tek eksen
+
+        Bir portföyde dört kalem var ve hepsi TL cinsinden: vadeli mevduat,
+        yerel bir hisse, yerel bir tahvil fonu, bir de TL cinsi likit fon.
+
+        Varlık türü ekseninde dört farklı kutu görünür — dağılım "çeşitli" gibi.
+        Ama **para birimi ekseninde tek kutu** vardır: dördü de TL.
+
+        TL'nin alım gücünü etkileyen bir gelişme dördünü birden aynı yönde
+        etkiler. Kalem sayısı 4, gerçek eksen sayısı 1.
+
+        Aynı portföye farklı para biriminde bir kalem eklemek, **kalem sayısını
+        1 artırırken eksen sayısını da 1 artırır** — ilkinden çok daha değerli
+        bir değişimdir.
+        """),
+
+        // ── 9. Derin: korelasyon ─────────────────────────────────────────────
+        Deep("""
+        ## Riskin hangi kısmı azalır?
+
+        İki varlığın birlikte hareket etme eğilimine **korelasyon** denir.
+        Kabaca −1 ile +1 arasında bir sayıdır:
+
+        - **+1'e yakın:** neredeyse hep birlikte hareket ederler — bir arada
+          tutmak riski azaltmaz.
+        - **0 civarı:** birbirinden bağımsız hareket ederler — bir arada tutmak
+          toplam oynaklığı belirgin şekilde düşürür.
+        - **−1'e yakın:** biri çıkarken diğeri düşer — teoride en güçlü
+          yumuşatma, pratikte nadir ve kalıcı değildir.
+
+        ### Ortadan kaldırılamayan risk
+
+        Çeşitlendirme **varlığa/şirkete özgü** riski azaltır: bir şirketin kötü
+        yönetilmesi, bir madenin kapanması, bir fonun yanlış konumlanması.
+
+        Ancak **sisteme özgü** riski azaltmaz — genel ekonomik daralma, ülke
+        çapında bir şok, küresel bir kriz. Bu tür olaylar her şeyi aynı anda
+        etkilediği için çeşitlendirmeyle kaçılamaz.
+
+        Bu ayrım önemlidir: **hiçbir çeşitlendirme seviyesi seni "risksiz"
+        yapmaz.** Yapabileceği, tek bir kötü olayın seni orantısız vurmasını
+        engellemektir.
+
+        ### Kriz anlarında korelasyonlar artar
+
+        Sakin dönemlerde bağımsız hareket eden varlıklar, sert düşüşlerde
+        birlikte düşme eğilimi gösterir. Yani çeşitlendirme, en çok ihtiyaç
+        duyulan anda beklenenden az koruyabilir. Bunu bilmek, ondan gereğinden
+        fazlasını beklememeyi sağlar.
+        """),
+
+        // ── 10. Derin: sınır ve yeniden dengeleme ────────────────────────────
+        Deep("""
+        ## Çeşitlendirmenin sınırı ve kayması
+
+        ### Aşırı dağılmak da bir maliyettir
+
+        Sonsuz çeşitlendirme diye bir hedef yoktur. Çok sayıda küçük kalem:
+
+        - takip etmeyi zorlaştırır (neyin neden değiştiğini bilemezsin),
+        - her kalem için işlem maliyeti doğurur,
+        - hiçbiri portföyde anlamlı bir yer tutmadığı için sonuca etki etmez.
+
+        Çeşitlendirme "ne kadar çok o kadar iyi" değil, **anlamlı farklılık**
+        meselesidir. Beş gerçekten farklı kalem, otuz benzer kalemden iyidir.
+
+        ### Portföy kendiliğinden yoğunlaşır
+
+        En sinsi kısım budur. Zamanla iyi giden varlık büyür ve ağırlığı artar;
+        hiçbir işlem yapmasan bile portföy **kendiliğinden** yoğunlaşır.
+
+        İki yıl önce dengeli kurduğun bir portföy, bugün tek bir kaleme bağlı
+        hâle gelmiş olabilir. Bu yüzden çeşitlendirme bir kerelik bir kurulum
+        değil, **süregelen bir durumdur**.
+
+        Ağırlıkların zaman içinde nasıl kaydığını izlemek — ve gerekirse
+        farkında olarak bir şey yapmak ya da yapmamak — kavramın pratik karşılığıdır.
+        """),
+
+        // ── 11. Senin portföyünde ────────────────────────────────────────────
+        Live("""
+        ## Senin portföyünde
+
+        En büyük iki varlığın portföyünün **{{concentration_top2}}**'sini
+        oluşturuyor. Toplam **{{holding_count}}** kalemin
+        **{{asset_class_count}}** farklı varlık türüne yayılmış durumda.
+
+        Nakit ağırlığın **{{cash_weight}}**.
+
+        Bu dersteki **yoğunlaşma** kavramı tam olarak ilk sayıyı ölçer. Yüksek
+        olması kendiliğinden yanlış değildir; **bilinmesi gereken** bir durumdur.
+        """),
+
+        // ── 12. Kayma örneği ─────────────────────────────────────────────────
+        Ex("""
+        ## Örnek: hiçbir şey yapmasan da değişir
+
+        Beş eşit kalemle (%20 × 5) başladığını düşün. Üç yıl boyunca hiç işlem
+        yapmadın; kalemler farklı büyüdü:
+
+        - Bir kalem üç yılda 3 katına çıktı.
+        - İkisi yaklaşık %40 büyüdü.
+        - İkisi yerinde saydı.
+
+        Yeni ağırlıklar yaklaşık: **%45, %21, %21, %6,5, %6,5**.
+
+        Hiçbir karar almadın; ama portföyün en büyük kalemi artık toplamın
+        neredeyse yarısı. Üç yıl önce "dengeli" dediğin portföy bugün yoğun.
+
+        > Bu, "satıp dengelemelisin" demek değildir — bu ders tavsiye vermez.
+        > Söylediği şu: **ağırlıklar sen fark etmeden değişir**, bu yüzden
+        > arada bir bakmak gerekir.
+        """, "concentration-drift"),
+
+        // ── 13. Kapanış tuzakları ────────────────────────────────────────────
+        Trap("""
+        ## Sık yapılan hatalar
+
+        **"Çeşitlendirirsem kaybetmem."**
+        Çeşitlendirme kaybı engellemez; tek bir kötü olayın seni orantısız
+        vurmasını engeller. Piyasanın tümü düştüğünde çeşitlendirilmiş portföy
+        de düşer.
+
+        **"Farklı isim = farklı risk."**
+        Aynı sektörden, aynı para biriminden, aynı ekonomiye bağlı kalemler
+        farklı isimler taşısa da tek bir bahistir.
+
+        **"Bir kez kurdum, tamamdır."**
+        Ağırlıklar kendiliğinden kayar. Çeşitlendirme bir durum değil, **süregelen
+        bir gözlemdir**.
+
+        **"Ne kadar çok kalem o kadar iyi."**
+        Otuz benzer kalem, beş gerçekten farklı kalemden daha iyi korumaz;
+        üstelik takibi ve maliyeti artırır.
+        """));
 
     // ── Ders 3 — F/K, PD/DD ──────────────────────────────────────────────────
 
@@ -900,6 +1049,7 @@ internal static class EducationContent
 
     internal sealed record SeedQuestion(
         QuizQuestionType Type,
+        QuizDifficulty Difficulty,
         string Prompt,
         string Explanation,
         (string Text, bool IsCorrect)[] Options);
@@ -909,36 +1059,92 @@ internal static class EducationContent
     {
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",
         [
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            // ── Kolay ────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "Bir portföyde en büyük iki varlık toplam ağırlığın %84'ünü oluşturuyor. Bu neyi gösterir?",
                 "Bu bir yoğunlaşma göstergesidir: portföyün kaderi ağırlıklı olarak iki kaleme bağlıdır. " +
                 "Yoğunlaşma tek başına \"yanlış\" demek değildir; farkında olunması gereken bir risk dağılımıdır.",
-                [
-                    ("Portföyün iyi çeşitlendirildiğini", false),
-                    ("Değerin az sayıda kalemde toplandığını — yüksek yoğunlaşma", true),
-                    ("Portföyün kesinlikle zarar edeceğini", false),
-                    ("Kalem sayısının yetersiz olduğunu", false),
-                ]),
-            new SeedQuestion(QuizQuestionType.TrueFalse,
+                [("Portföyün iyi çeşitlendirildiğini", false),
+                 ("Değerin az sayıda kalemde toplandığını — yüksek yoğunlaşma", true),
+                 ("Portföyün kesinlikle zarar edeceğini", false),
+                 ("Kalem sayısının yetersiz olduğunu", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
                 "Aynı sektörden on farklı hisse tutmak, portföyü iyi çeşitlendirilmiş yapar.",
                 "Kalem sayısı çeşitlendirme demek değildir. Aynı sektördeki şirketler benzer sebeplerle " +
                 "birlikte hareket etme eğilimindedir; sayıca on, davranışça bir olabilirler.",
                 [("Doğru", false), ("Yanlış", true)]),
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Çeşitlendirmenin temel amacı nedir?",
+                "Çeşitlendirme riski YOK ETMEZ, farklı kaynaklara YAYAR. Amaç, bütün varlıkların aynı anda " +
+                "aynı yöne hareket etme ihtimalini azaltmaktır — tek bir olayın seni orantısız vurmasını engellemek.",
+                [("Riski tamamen ortadan kaldırmak", false),
+                 ("Getiriyi garantilemek", false),
+                 ("Riski farklı kaynaklara yaymak", true),
+                 ("Mümkün olduğunca çok kalem toplamak", false)]),
+
+            // ── Orta ─────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "İki portföyün de beş kalemi var. Birincide ağırlıklar %70/10/8/7/5, ikincide %25/22/20/18/15. " +
+                "En büyük kalem %30 değer kaybederse ne olur?",
+                "Etki ağırlıkla orantılıdır: birincide 0,70 × %30 ≈ %21 kayıp, ikincide 0,25 × %30 ≈ %7,5. " +
+                "Aynı olay, aynı kalem sayısı — ama yoğunlaşma farkı etkiyi üç katına çıkarıyor.",
+                [("İkisi de yaklaşık aynı oranda düşer", false),
+                 ("Birinci ≈ %21, ikinci ≈ %7,5 düşer", true),
+                 ("Birinci ≈ %30, ikinci ≈ %30 düşer", false),
+                 ("Kalem sayıları eşit olduğu için fark olmaz", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
                 "Çeşitlendirme hangi riski azaltmaz?",
-                "Çeşitlendirme varlığa/şirkete özgü riski azaltır. Genel ekonomik daralma gibi sisteme özgü " +
+                "Çeşitlendirme varlığa/şirkete özgü riski azaltır. Genel ekonomik daralma gibi SİSTEME özgü " +
                 "riskler her şeyi aynı anda etkilediği için çeşitlendirmeyle ortadan kaldırılamaz.",
-                [
-                    ("Tek bir şirketin kötü yönetilmesi riskini", false),
-                    ("Tüm piyasayı aynı anda etkileyen genel ekonomik şok riskini", true),
-                    ("Tek bir varlığın değer kaybetmesi riskini", false),
-                    ("Belirli bir sektöre özgü sorun riskini", false),
-                ]),
+                [("Tek bir şirketin kötü yönetilmesi riskini", false),
+                 ("Tüm piyasayı aynı anda etkileyen genel ekonomik şok riskini", true),
+                 ("Tek bir varlığın değer kaybetmesi riskini", false),
+                 ("Belirli bir sektöre özgü sorun riskini", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Portföyünü bir kez dengeli kurduysan, işlem yapmadığın sürece dengeli kalır.",
+                "Kalmaz. İyi giden varlık büyür ve ağırlığı artar; hiçbir işlem yapmasan bile portföy " +
+                "KENDİLİĞİNDEN yoğunlaşır. Çeşitlendirme bir kerelik kurulum değil, süregelen bir durumdur.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor ──────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Bir portföyde dört kalem var: vadeli mevduat, yerel hisse, yerel tahvil fonu, TL likit fon. " +
+                "Bu portföyün en büyük çeşitlendirme zaafı nedir?",
+                "Varlık türü ekseninde dört kutu görünür ama PARA BİRİMİ ekseninde tek kutu vardır: dördü de TL. " +
+                "TL'nin alım gücünü etkileyen bir gelişme dördünü birden aynı yönde etkiler.",
+                [("Kalem sayısının az olması", false),
+                 ("Dördünün de aynı para birimine bağlı olması", true),
+                 ("Fon sayısının fazla olması", false),
+                 ("Mevduatın getirisinin düşük olması", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "İki varlığın korelasyonu +1'e çok yakınsa, ikisini birlikte tutmak ne sağlar?",
+                "+1'e yakın korelasyon \"neredeyse hep birlikte hareket ederler\" demektir. İkisini birlikte " +
+                "tutmak riski bölmez; aynı riski iki parçaya yazmış olursun. Yumuşatma için farklı sebeplerle " +
+                "hareket eden (korelasyonu düşük) varlıklar gerekir.",
+                [("Toplam oynaklığı belirgin şekilde düşürür", false),
+                 ("Neredeyse hiçbir yumuşatma sağlamaz — tek varlık gibi davranır", true),
+                 ("Getiriyi iki katına çıkarır", false),
+                 ("Sistematik riski ortadan kaldırır", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Aşağıdakilerden hangileri çeşitlendirmeyi gerçekten artırır? (birden fazla)",
+                "Gerçek çeşitlilik FARKLI SEBEPLERLE hareket etmekten gelir: farklı para birimi, farklı varlık " +
+                "türü, farklı ekonomiye bağlılık. Aynı sektörde kalem eklemek ya da aynı türden ikinci bir fon " +
+                "almak kalem sayısını artırır, ekseni artırmaz.",
+                [("Farklı para biriminde bir kalem eklemek", true),
+                 ("Farklı bir varlık türü eklemek (örn. yalnız hisse varken altın)", true),
+                 ("Aynı sektörden ikinci bir hisse eklemek", false),
+                 ("Farklı bir ekonomiye bağlı bir kalem eklemek", true)]),
         ]);
 
         yield return ("lesson-fk-pddd", "quiz-fk-pddd", "F/K ve PD/DD — Mini Test",
         [
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "Bir şirketin F/K oranı sektör ortalamasının belirgin şekilde altında. Bu tek başına ne söyler?",
                 "Düşük F/K iki zıt durumun işareti olabilir: piyasa şirketi gözden kaçırmış olabilir ya da " +
                 "kârın düşeceğini bekliyor olabilir. Oran hangisi olduğunu söylemez — yalnızca sorulacak soruyu gösterir.",
@@ -948,12 +1154,12 @@ internal static class EducationContent
                     ("Şirketin kesinlikle zarar ettiğini", false),
                     ("Hissenin alınması gerektiğini", false),
                 ]),
-            new SeedQuestion(QuizQuestionType.TrueFalse,
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
                 "F/K oranı şirketin borç yükünü de hesaba katar.",
                 "F/K yalnızca fiyat ve kârı karşılaştırır; borcu görmez. Aynı kârı üreten borçsuz bir şirketle " +
                 "ağır borçlu bir şirketin F/K'sı aynı görünebilir ama taşıdıkları risk çok farklıdır.",
                 [("Doğru", false), ("Yanlış", true)]),
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "PD/DD oranı neyi karşılaştırır?",
                 "PD/DD, şirketin borsadaki piyasa değerini muhasebe defterindeki öz kaynağına oranlar. " +
                 "1'in üzerinde olması piyasanın şirkete defter değerinden fazlasını biçtiğini gösterir.",
@@ -967,7 +1173,7 @@ internal static class EducationContent
 
         yield return ("lesson-risk-getiri", "quiz-risk-getiri", "Risk ve Getiri — Mini Test",
         [
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "Yatırımda \"risk\" en doğru nasıl tanımlanır?",
                 "Risk, sonucun ne kadar oynak ve belirsiz olduğudur — yalnızca \"para kaybetme\" değil, " +
                 "sonucun geniş bir aralığa yayılmasıdır. Bu yüzden yüksek beklenen getiri, yüksek belirsizlikle birlikte gelir.",
@@ -977,12 +1183,12 @@ internal static class EducationContent
                     ("Yatırımın süresi", false),
                     ("Komisyon oranı", false),
                 ]),
-            new SeedQuestion(QuizQuestionType.TrueFalse,
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
                 "Parayı enflasyonun altında getiri veren bir yerde tutmak risksizdir.",
                 "Risk almamak da bir risktir. Enflasyonun altında kalan getiri, rakam büyüse bile alım gücü " +
                 "kaybıdır — bu sessiz erime de bir risk türüdür.",
                 [("Doğru", false), ("Yanlış", true)]),
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "%50 değer kaybeden bir yatırımın başa dönmesi için ne kadar kazanması gerekir?",
                 "Kayıp ve kazanç simetrik değildir: 100'den 50'ye düşen bir değerin tekrar 100 olması için " +
                 "%100 artması gerekir. Bu asimetri, büyük düşüşlerden kaçınmayı matematiksel olarak değerli kılar.",
@@ -996,7 +1202,7 @@ internal static class EducationContent
 
         yield return ("lesson-bilesik", "quiz-bilesik", "Bileşik Getiri — Mini Test",
         [
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "100.000 ₺ yılda %20 büyürse ikinci yılın sonunda ne olur?",
                 "Birinci yıl 120.000 ₺, ikinci yıl bunun %20'si eklenir: 144.000 ₺. İkinci yılın artışı 20.000 değil " +
                 "24.000 ₺'dir — fark, önceki yılın kârının da çalışmasından gelir.",
@@ -1006,12 +1212,12 @@ internal static class EducationContent
                     ("120.000 ₺", false),
                     ("124.000 ₺", false),
                 ]),
-            new SeedQuestion(QuizQuestionType.TrueFalse,
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
                 "Bileşik etkiden yararlanmak için kazancın yeniden yatırılması gerekir.",
                 "Getiriyi her dönem dışarı çekersen bileşiklenecek bir şey kalmaz; büyüme doğrusal hâle gelir. " +
                 "Bileşik etkinin iki bileşeni süre ve kazancı yeniden yatırmaktır.",
                 [("Doğru", true), ("Yanlış", false)]),
-            new SeedQuestion(QuizQuestionType.SingleChoice,
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
                 "Bileşik büyümede en belirleyici değişken hangisidir?",
                 "Getiri oranı önemlidir ama bileşik etkide asıl çarpan süredir: son yıllar ilk yıllardan çok daha " +
                 "fazla katkı yapar, çünkü aynı oran daha büyük bir taban üzerinde çalışır.",

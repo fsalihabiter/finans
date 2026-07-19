@@ -311,6 +311,112 @@ function Concentration() {
   );
 }
 
+/** Ders 2 — aynı sektörde on kalem: sayıca çok, davranışça bir. */
+function SameSector() {
+  const cols = Array.from({ length: 10 }, (_, i) => i);
+  return (
+    <Figure
+      label="Aynı sektördeki on kalemin tek bir haberle birlikte düşmesi"
+      caption="Kalem sayısı on; ama hepsi aynı sebeple hareket ettiği için tek bir bahis gibi davranır."
+    >
+      <text x="6" y="20" className="fig-label">
+        Sektör haberi ↓
+      </text>
+      {cols.map((i) => (
+        <g key={i}>
+          <rect x={14 + i * 30} y="34" width="20" height="34" rx="3" className="fig-seg" />
+          <rect x={14 + i * 30} y="78" width="20" height="30" rx="3" className="fig-bar-neg" />
+          <text x={24 + i * 30} y="124" className="fig-value" textAnchor="middle">
+            ↓
+          </text>
+        </g>
+      ))}
+      <text x="6" y="142" className="fig-value">
+        Sayıca 10 · davranışça 1 — gerçek çeşitlilik yok.
+      </text>
+    </Figure>
+  );
+}
+
+/** Ders 2 — birlikte hareket vs bağımsız hareket: hangi çift dalgayı yumuşatır? */
+function CorrelationPaths() {
+  // Örnek bloğuyla aynı: birlikte hareket eden çift vs farklı hareket eden çift.
+  const together = [19, -14.5, 19, -11.5];
+  const mixed = [7, -2, 7, -1.5];
+  const toX = (i: number) => 60 + i * 72;
+  const toY = (v: number) => 60 - (v / 20) * 34;
+  const path = (vals: number[]) => vals.map((v, i) => `${i === 0 ? "M" : "L"}${toX(i)},${toY(v)}`).join(" ");
+
+  return (
+    <Figure
+      label="Birlikte hareket eden ve farklı hareket eden varlık çiftlerinin portföy dalgalanmasına etkisi"
+      caption="Üstteki çift birlikte hareket ediyor — dalga aynen sürüyor. Alttaki çift birbirini yumuşatıyor."
+      height={168}
+    >
+      <line x1="20" y1="60" x2="300" y2="60" className="fig-axis" />
+      <text x="6" y="18" className="fig-label">
+        Birlikte hareket eden çift
+      </text>
+      <path d={path(together)} className="fig-line-volatile" fill="none" />
+      {together.map((v, i) => (
+        <circle key={i} cx={toX(i)} cy={toY(v)} r="3" className="fig-dot-volatile" />
+      ))}
+
+      <g transform="translate(0, 90)">
+        <line x1="20" y1="60" x2="300" y2="60" className="fig-axis" />
+        <text x="6" y="18" className="fig-label">
+          Farklı hareket eden çift
+        </text>
+        <path d={path(mixed)} className="fig-line-steady" fill="none" />
+        {mixed.map((v, i) => (
+          <circle key={i} cx={toX(i)} cy={toY(v)} r="3" className="fig-dot-steady" />
+        ))}
+      </g>
+    </Figure>
+  );
+}
+
+/** Ders 2 — ağırlık kayması: hiçbir işlem yapmadan yoğunlaşmak. */
+function ConcentrationDrift() {
+  // Örnek bloğuyla aynı: %20×5 → %45, %21, %21, %6,5, %6,5.
+  const before = [20, 20, 20, 20, 20];
+  const after = [45, 21, 21, 6.5, 6.5];
+
+  const bar = (weights: number[], y: number) => {
+    let x = 10;
+    return weights.map((w, i) => {
+      const width = (w / 100) * 300;
+      const el = (
+        <rect key={i} x={x} y={y} width={width - 2} height="26" rx="3" className={i === 0 ? "fig-seg-lead" : "fig-seg"} />
+      );
+      x += width;
+      return el;
+    });
+  };
+
+  return (
+    <Figure
+      label="Üç yıl boyunca işlem yapılmadan ağırlıkların kendiliğinden yoğunlaşması"
+      caption="Hiçbir karar alınmadı; iyi giden kalem büyüdü ve portföy kendiliğinden yoğunlaştı."
+    >
+      <text x="10" y="22" className="fig-label">
+        Başlangıç · eşit
+      </text>
+      {bar(before, 28)}
+      <text x="10" y="88" className="fig-label">
+        Üç yıl sonra · işlem yok
+      </text>
+      {bar(after, 94)}
+      <text x="312" y="22" className="fig-value" textAnchor="end">
+        en büyük %20
+      </text>
+      <text x="312" y="88" className="fig-value" textAnchor="end">
+        en büyük %45
+      </text>
+    </Figure>
+  );
+}
+
 /** Ders 3 — aynı F/K, farklı hikâye: oran tek başına yetmez. */
 function RatioContext() {
   return (
@@ -426,6 +532,9 @@ const FIGURES: Record<string, () => React.JSX.Element> = {
   "subtraction-error": SubtractionError,
   "basket-difference": BasketDifference,
   "window-selection": WindowSelection,
+  "same-sector": SameSector,
+  "correlation-paths": CorrelationPaths,
+  "concentration-drift": ConcentrationDrift,
   concentration: Concentration,
   "ratio-context": RatioContext,
   "volatility-paths": VolatilityPaths,

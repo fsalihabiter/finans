@@ -573,6 +573,7 @@ public static class SeedData
                     QuizId = quiz.Id,
                     OrderIndex = qOrder,
                     Type = q.Type,
+                    Difficulty = q.Difficulty,
                     Prompt = q.Prompt,
                     Explanation = q.Explanation,
                 };

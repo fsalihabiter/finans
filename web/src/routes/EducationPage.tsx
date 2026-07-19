@@ -422,7 +422,9 @@ function LessonRoadmap({
                 <span className="roadmap-mark" aria-hidden="true">
                   {state === "done" ? "✓" : state === "current" ? "●" : "🔒"}
                 </span>
-                <span className="roadmap-title">{step.title}</span>
+                <span className="roadmap-title" title={step.title}>
+                  {step.title}
+                </span>
                 {step.badge && <span className="roadmap-badge">{step.badge}</span>}
               </button>
             </li>

@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-07-19 · T6.11b — Ders 2 içerik turu (13 aşama · 3 yeni figür · 9 soru) + yol haritası sütunu
+- **Görev(ler):** T6.11b (kullanıcı isteği: 2. derse geç; başlık sütunu tek satıra sığsın ama
+  bölümün %35'ini geçmesin).
+- **Ne yapıldı:** (1) **Yol haritası sütunu**: `grid-template-columns: fit-content(35%) minmax(0,1fr)`
+  — sütun en uzun başlık **tek satıra sığana kadar** genişler, **%35 tavanını geçmez**; başlık
+  `nowrap`, tavana takılırsa "…" ile kısalır ve tam metin `title` özniteliğinde kalır.
+  Canlıda ~%19'da kaldı, hiçbir başlık sarmıyor. (2) **Ders 2 zenginleştirildi: 6 → 13 aşama** —
+  Ders 1'de kurulan kalıpla (kavram→örnek→tuzak dönüşümü). Yeni içerik ekseni: **para birimi /
+  coğrafya** (TR'ye özgü: "dört kalem, tek eksen"), korelasyon sezgisi (+1/0/−1 okuması),
+  **kriz anında korelasyonların artması**, çeşitlendirmenin sınırı ve **ağırlık kayması**
+  (işlem yapmadan yoğunlaşma). (3) **3 yeni figür** (toplam 12): aynı-sektör (10 kalem birlikte
+  düşüyor) · korelasyon yolları (birlikte vs bağımsız çift) · ağırlık kayması (3 yılda %20→%45).
+  (4) **Test 3 → 9 soru** (3 zorluk); `SeedQuestion` kaydına `Difficulty` eklendi, 3-5. dersler
+  Easy'ye düştü (geriye dönük uyum).
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Seed/{EducationContent.cs,SeedData.cs}`,
+  `web/src/components/LessonFigure.tsx`, `web/src/routes/EducationPage.tsx`, `web/src/App.css`,
+  `tests/Finans.Integration.Tests/EducationSeedTests.cs`, docs (08).
+- **Test:** Application **291/291**, Integration **167/171** (aynı 4 bilinen), web **117/117**.
+  Test iddiası gevşetildi: **her örnek bloğu figür taşımak zorunda değil** (metin-ağırlıklı
+  örnekler var) ama **her DERS en az bir görsel** taşımalı + figür anahtarları tekil.
+  **Canlı teyit:** Ders 2 = 13 bölüm, 3 figür, bağlam `Own`; sütun tek satır + %35 altı.
+- **Karar/Not:** İçerik kalıbı Ders 1'den devralındı ve **iki noktada derinleştirildi**:
+  (a) TR'ye özgü **para birimi ekseni** — "dört farklı tür ama hepsi TL" tuzağı yerel okuyucu
+  için en pratik ders; (b) **kayma** kavramı — hiçbir işlem yapmadan portföyün yoğunlaşması,
+  "bir kez kurdum tamamdır" yanılgısını kırıyor. Kayma örneğinde bilinçli olarak
+  *"satıp dengelemelisin"* DENMEDİ — ders tavsiye vermez, yalnız olguyu gösterir (`CLAUDE.md` §2).
+  Korelasyon anlatımında "+1/0/−1" sezgisel verildi, formül yok (Deep katmanda bile matematik
+  yükü değil kavrayış hedeflendi).
+- **Durum:** tamamlandı (Ders 2).
+- **Sıradaki:** **T6.11c** — 3. ders (F/K, PD/DD) aynı zenginlikte; ardından 4-5.
+
 ## 2026-07-19 · T6.11a — Ders 1 içerik turu (13 aşama · 5 figür · 3 zorluklu test) + satır genişliği
 - **Görev(ler):** T6.11a (kullanıcı isteği: ders ders ilerle, 1'den başla; metin satırı yarıda kesiliyor).
 - **Ne yapıldı:** (1) **Satır genişliği düzeltildi** — metin `max-width: 72ch`'de sarıyor, kartın
