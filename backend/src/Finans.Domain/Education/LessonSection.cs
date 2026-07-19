@@ -26,5 +26,15 @@ public class LessonSection : Entity
     /// <summary>Blok türü — varsayılan <see cref="SectionKind.Explain"/> (anlatım).</summary>
     public SectionKind Kind { get; set; } = SectionKind.Explain;
 
+    /// <summary>
+    /// Bu bloğa eşlik eden açıklayıcı görselin anahtarı (T6.7). Arayüz bu anahtarı
+    /// kendi figür kayıt defterinden çözer; <c>null</c> = görsel yok.
+    /// </summary>
+    /// <remarks>
+    /// Görsel <b>içerik değil sunumdur</b>: SVG istemcide çizilir, veri buraya
+    /// gömülmez. Bilinmeyen anahtar sessizce yok sayılır (içerik bozulmaz).
+    /// </remarks>
+    public string? FigureKey { get; set; }
+
     public Lesson Lesson { get; set; } = null!;
 }

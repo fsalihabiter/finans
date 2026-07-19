@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import type {
+  DepthTier,
   DiagnosticOption,
   LessonContextState,
+  LessonLevel,
   LessonDetail,
   LessonListItem,
   LessonSection,
@@ -9,6 +11,7 @@ import type {
   Quiz,
 } from "@finans/shared";
 import { EmptyState } from "../components/EmptyState";
+import { LessonFigure } from "../components/LessonFigure";
 import { MiniMarkdown } from "../components/MiniMarkdown";
 import { Skeleton } from "../components/Skeleton";
 import { useToast } from "../components/Toast";
@@ -325,19 +328,70 @@ function ContextBadge({ state, asOf }: { state: LessonContextState; asOf: string
  * NOT: Şu an TÜM derinlik katmanları açık gösterilir. Seviyeye göre katlama +
  * "Daha derine in" T6.7'nin işi (tanılama testi T6.6'ya bağlı).
  */
-function LessonBody({ lesson }: { lesson: LessonDetail }) {
+/** Derinlik katmanının sıra değeri — kullanıcının seviyesiyle karşılaştırmak için. */
+const TIER_RANK: Record<DepthTier, number> = { Core: 0, Context: 1, Deep: 2 };
+
+/** Kullanıcının seviyesi kaçıncı katmana kadar VARSAYILAN açık gelir (15 §2.2). */
+const LEVEL_RANK: Record<LessonLevel, number> = { Beginner: 0, Intermediate: 1, Advanced: 2 };
+
+const TIER_LABEL: Record<DepthTier, string> = {
+  Core: "Özet",
+  Context: "Daha derine in",
+  Deep: "Uzman katmanı",
+};
+
+/**
+ * Tek bölüm. Kullanıcının seviyesinin ÜSTÜNDEKİ katmanlar katlanmış gelir —
+ * ama **tavan kapatılmaz**: herkes açıp okuyabilir (15 §2.2).
+ */
+function SectionBlock({
+  section,
+  folded,
+  children,
+}: {
+  section: LessonSection;
+  folded: boolean;
+  children: React.ReactNode;
+}) {
+  const cls = `lesson-section kind-${section.kind.toLowerCase()} tier-${section.depthTier.toLowerCase()}`;
+
+  if (!folded) return <section className={cls}>{children}</section>;
+
+  return (
+    <details className={`${cls} is-folded`}>
+      <summary>
+        <span className="fold-label">{TIER_LABEL[section.depthTier]}</span>
+        <span className="fold-hint">isteğe bağlı</span>
+      </summary>
+      <div className="fold-body">{children}</div>
+    </details>
+  );
+}
+
+/**
+ * Ders gövdesi (T6.7). Katmanlı bölüm varsa onlar render edilir; yoksa
+ * `bodyMarkdown`'a düşülür (geriye dönük uyum, 15 §2.1 / SC-E2).
+ *
+ * Katlama kuralı: bölümün derinliği kullanıcının seviyesini AŞIYORSA `<details>`
+ * içine alınır. Seviye ölçülmemişse (`null`) Başlangıç varsayılır — tanılama
+ * atlanabilir olduğu için bu yol her zaman çalışır (T6.6).
+ */
+function LessonBody({ lesson, level }: { lesson: LessonDetail; level: LessonLevel | null }) {
   if (lesson.sections.length === 0)
     return <MiniMarkdown className="markdown-body" markdown={lesson.bodyMarkdown} />;
+
+  const reach = LEVEL_RANK[level ?? "Beginner"];
 
   return (
     <>
       {lesson.sections.map((s: LessonSection) => (
-        <section key={s.order} className={`lesson-section kind-${s.kind.toLowerCase()}`}>
+        <SectionBlock key={s.order} section={s} folded={TIER_RANK[s.depthTier] > reach}>
           {s.kind === "LiveContext" && lesson.contextState && (
             <ContextBadge state={lesson.contextState} asOf={lesson.contextAsOf} />
           )}
           <MiniMarkdown className="markdown-body" markdown={s.bodyMarkdown} />
-        </section>
+          <LessonFigure figureKey={s.figureKey} />
+        </SectionBlock>
       ))}
     </>
   );
@@ -354,6 +408,7 @@ function LessonReader({
 }) {
   const lesson = useLesson(slug);
   const complete = useUpdateLessonProgress(lesson.data?.id ?? "");
+  const profile = useLiteracyProfile();
   const { notify } = useToast();
 
   const onComplete = () => {
@@ -417,7 +472,7 @@ function LessonReader({
             </div>
           )}
 
-          <LessonBody lesson={lesson.data} />
+          <LessonBody lesson={lesson.data} level={profile.data?.literacyLevel ?? null} />
 
           <div className="lesson-actions">
             {lesson.data.status === "Completed" && (

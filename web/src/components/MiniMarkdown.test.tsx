@@ -27,4 +27,24 @@ describe("MiniMarkdown", () => {
     expect(container.querySelector("img")).toBeNull();
     expect(container.textContent).toContain("<img src=x onerror=alert(1)> düz metin");
   });
+
+  it("ardışık alıntı satırlarını TEK blockquote'ta birleştirir", () => {
+    // REGRESYON (2026-07-20): her `> ` satırı ayrı <blockquote> üretiyordu →
+    // çok satırlı alıntı ekranda 4 ayrı kutuya bölünüyordu.
+    const { container } = render(
+      <MiniMarkdown markdown={["> Birinci satır", "> ikinci satır", "> üçüncü satır"].join("\n")} />,
+    );
+
+    const quotes = container.querySelectorAll("blockquote");
+    expect(quotes).toHaveLength(1);
+    expect(quotes[0].textContent).toBe("Birinci satır ikinci satır üçüncü satır");
+  });
+
+  it("boş satır alıntıyı sonlandırır (ayrı alıntılar birleşmez)", () => {
+    const { container } = render(
+      <MiniMarkdown markdown={["> ilk alıntı", "", "> ayrı alıntı"].join("\n")} />,
+    );
+
+    expect(container.querySelectorAll("blockquote")).toHaveLength(2);
+  });
 });

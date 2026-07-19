@@ -84,7 +84,7 @@ public sealed class EducationService(
         {
             if (s.Kind != SectionKind.LiveContext)
             {
-                sections.Add(new LessonSectionDto(s.OrderIndex, s.Heading, s.BodyMarkdown, s.DepthTier, s.Kind));
+                sections.Add(new LessonSectionDto(s.OrderIndex, s.Heading, s.BodyMarkdown, s.DepthTier, s.Kind, s.FigureKey));
                 continue;
             }
 
@@ -95,7 +95,7 @@ public sealed class EducationService(
 
             contextState = resolved.State;
             contextAsOf = resolved.AsOf;
-            sections.Add(new LessonSectionDto(s.OrderIndex, s.Heading, resolved.Body, s.DepthTier, s.Kind));
+            sections.Add(new LessonSectionDto(s.OrderIndex, s.Heading, resolved.Body, s.DepthTier, s.Kind, s.FigureKey));
         }
 
         var tags = lesson.ConceptTags

@@ -127,6 +127,102 @@ describe("EducationPage", () => {
     expect(await screen.findByText(/Örnek portföy/)).toBeInTheDocument();
   });
 
+  // ── T6.7: seviyeye göre katlama + figür ────────────────────────────────────
+
+  /** Üç derinlik katmanı + figürlü örnek bloğu taşıyan ders. */
+  function layeredDetail() {
+    return {
+      ...lessonDetail,
+      sections: [
+        { order: 1, heading: null, bodyMarkdown: "Çekirdek anlatım.", depthTier: "Core", kind: "Explain", figureKey: null },
+        { order: 2, heading: null, bodyMarkdown: "Bağlam katmanı.", depthTier: "Context", kind: "Explain", figureKey: null },
+        { order: 3, heading: null, bodyMarkdown: "Uzman katmanı.", depthTier: "Deep", kind: "Explain", figureKey: null },
+        { order: 4, heading: null, bodyMarkdown: "Örnek metni.", depthTier: "Core", kind: "Example", figureKey: "real-vs-nominal" },
+      ],
+      contextState: null,
+      contextAsOf: null,
+      nextLesson: null,
+    };
+  }
+
+  /** Profil ölçülmüş kullanıcı (onboarding atlanır) + katmanlı ders. */
+  function mockAtLevel(level: string) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.endsWith("/api/education/profile"))
+          return ok({ literacyLevel: level, profiled: true });
+        if (url.endsWith("/api/education/tracks")) return ok(tracks);
+        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
+        if (url.includes("/api/education/lessons/")) return ok(layeredDetail());
+        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
+      }),
+    );
+  }
+
+  it("başlangıç seviyesinde üst katmanları katlar, çekirdeği açık gösterir", async () => {
+    mockAtLevel("Beginner");
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    // Core açık; Context/Deep <details> içinde (kapalı ama DOM'da).
+    expect(await screen.findByText("Çekirdek anlatım.")).toBeVisible();
+    expect(screen.getByText("Daha derine in")).toBeInTheDocument();
+    expect(screen.getByText("Uzman katmanı")).toBeInTheDocument();
+    expect(screen.getByText("Bağlam katmanı.").closest("details")).not.toHaveAttribute("open");
+  });
+
+  it("ileri seviyede derin katman katlanmaz (tavan kapatılmaz)", async () => {
+    mockAtLevel("Advanced");
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    await screen.findByText("Çekirdek anlatım.");
+    // Hiçbir katman katlanmadı → "Daha derine in" başlığı yok.
+    expect(screen.queryByText("Daha derine in")).not.toBeInTheDocument();
+    expect(screen.getByText("Uzman katmanı.")).toBeVisible();
+  });
+
+  it("katlanmış katman açılabilir — içerik kimseden gizlenmez", async () => {
+    mockAtLevel("Beginner");
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    const details = (await screen.findByText("Bağlam katmanı.")).closest("details")!;
+    expect(details).not.toHaveAttribute("open");
+    fireEvent.click(screen.getByText("Daha derine in"));
+    expect(details).toHaveAttribute("open");
+  });
+
+  it("figür anahtarı olan bölümde erişilebilir görsel çizer", async () => {
+    mockAtLevel("Beginner");
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    expect(await screen.findByRole("img", { name: /nominal ve reel getirisi/i })).toBeInTheDocument();
+  });
+
+  it("bilinmeyen figür anahtarı içeriği bozmaz", async () => {
+    const detail = layeredDetail();
+    detail.sections[3].figureKey = "boyle-bir-figur-yok";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.endsWith("/api/education/profile")) return ok({ literacyLevel: "Beginner", profiled: true });
+        if (url.endsWith("/api/education/tracks")) return ok(tracks);
+        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
+        if (url.includes("/api/education/lessons/")) return ok(detail);
+        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
+      }),
+    );
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    // Metin yerinde, figür sessizce atlandı.
+    expect(await screen.findByText("Örnek metni.")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /getiri/i })).not.toBeInTheDocument();
+  });
+
   // ── T6.6: tanılama onboarding'i ────────────────────────────────────────────
 
   const diagnosticQuestions = [

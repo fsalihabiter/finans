@@ -49,6 +49,7 @@ internal sealed class LessonSectionConfiguration : IEntityTypeConfiguration<Less
             t.HasCheckConstraint("CK_LessonSections_Kind", Check.EnumIn<SectionKind>("Kind"));
         });
         b.HasIndex(x => new { x.LessonId, x.OrderIndex });
+        b.Property(x => x.FigureKey).HasMaxLength(40);
 
         // Seviyeye göre bölüm çekme (T6.7 uyarlanabilir render) sık sorgu → indeks.
         b.HasIndex(x => new { x.LessonId, x.DepthTier });

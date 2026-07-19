@@ -22,7 +22,9 @@ public sealed record LessonListItemDto(
 /// arkasında gösterir (T6.7).
 /// </summary>
 public sealed record LessonSectionDto(
-    int Order, string? Heading, string BodyMarkdown, DepthTier DepthTier, SectionKind Kind);
+    int Order, string? Heading, string BodyMarkdown, DepthTier DepthTier, SectionKind Kind,
+    /// <summary>Eşlik eden görselin anahtarı (T6.7); arayüz çözer, bilinmeyen anahtar yok sayılır.</summary>
+    string? FigureKey = null);
 
 public sealed record ConceptTagDto(string Key, string Label);
 

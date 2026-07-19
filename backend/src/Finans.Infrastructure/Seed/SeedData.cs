@@ -426,9 +426,8 @@ public static class SeedData
         };
 
         var existingLessons = await db.Lessons.Select(l => l.Id).ToListAsync(ct);
-        var existingSections = await db.LessonSections.Select(s => s.Id).ToListAsync(ct);
-        var known = existingSections.ToHashSet();
-        var added = 0;
+        var existing = await db.LessonSections.ToDictionaryAsync(s => s.Id, ct);
+        var changed = 0;
 
         foreach (var (lessonId, build) in builders)
         {
@@ -437,15 +436,34 @@ public static class SeedData
 
             foreach (var section in build(lessonId))
             {
-                if (known.Contains(section.Id))
-                    continue; // bu blok zaten var → çoğaltma
+                if (!existing.TryGetValue(section.Id, out var current))
+                {
+                    db.LessonSections.Add(section); // yeni blok
+                    changed++;
+                    continue;
+                }
 
-                db.LessonSections.Add(section);
-                added++;
+                // MUTABAKAT (T6.7): blok zaten var ama içeriği değişmiş olabilir
+                // (metin düzeltmesi, katman değişikliği, figür eklenmesi). Salt "ekle"
+                // yaklaşımı bu değişiklikleri çalışan kurulumlara indiremiyordu.
+                // LessonSections yazılı içeriktir — kullanıcı verisi DEĞİL, üzerine yazmak güvenli.
+                if (current.BodyMarkdown == section.BodyMarkdown
+                    && current.DepthTier == section.DepthTier
+                    && current.Kind == section.Kind
+                    && current.OrderIndex == section.OrderIndex
+                    && current.FigureKey == section.FigureKey)
+                    continue; // birebir aynı → dokunma
+
+                current.BodyMarkdown = section.BodyMarkdown;
+                current.DepthTier = section.DepthTier;
+                current.Kind = section.Kind;
+                current.OrderIndex = section.OrderIndex;
+                current.FigureKey = section.FigureKey;
+                changed++;
             }
         }
 
-        if (added > 0)
+        if (changed > 0)
             await db.SaveChangesAsync(ct);
     }
 

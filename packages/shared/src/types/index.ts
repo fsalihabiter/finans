@@ -368,6 +368,8 @@ export interface LessonSection {
   bodyMarkdown: string;
   depthTier: DepthTier;
   kind: SectionKind;
+  /** Eşlik eden görselin anahtarı (T6.7); arayüz çözer, bilinmeyen anahtar yok sayılır. */
+  figureKey: string | null;
 }
 
 export interface ConceptTag {

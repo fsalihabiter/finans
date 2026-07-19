@@ -23,6 +23,7 @@ export function MiniMarkdown({ markdown, className }: { markdown: string; classN
   const blocks: ReactNode[] = [];
   let paragraph: string[] = [];
   let list: string[] = [];
+  let quote: string[] = [];
 
   const flushParagraph = () => {
     if (paragraph.length > 0) {
@@ -43,9 +44,21 @@ export function MiniMarkdown({ markdown, className }: { markdown: string; classN
       list = [];
     }
   };
+  /**
+   * Ardışık `> ` satırlarını TEK alıntıda birleştirir. Önceden her satır ayrı
+   * <blockquote> üretiyordu: çok satırlı bir alıntı ekranda 4 ayrı kutuya
+   * bölünüyordu (2026-07-20'de tarayıcıda görüldü). Paragraf/liste ile aynı desen.
+   */
+  const flushQuote = () => {
+    if (quote.length > 0) {
+      blocks.push(<blockquote key={`q${blocks.length}`}>{renderInline(quote.join(" "))}</blockquote>);
+      quote = [];
+    }
+  };
   const flush = () => {
     flushParagraph();
     flushList();
+    flushQuote();
   };
 
   for (const raw of lines) {
@@ -59,13 +72,16 @@ export function MiniMarkdown({ markdown, className }: { markdown: string; classN
       flush();
       blocks.push(<h3 key={`h${blocks.length}`}>{renderInline(line.slice(3))}</h3>);
     } else if (line.startsWith("> ")) {
-      flush();
-      blocks.push(<blockquote key={`q${blocks.length}`}>{renderInline(line.slice(2))}</blockquote>);
+      flushParagraph();
+      flushList();
+      quote.push(line.slice(2));
     } else if (line.startsWith("- ") || line.startsWith("* ")) {
       flushParagraph();
+      flushQuote();
       list.push(line.slice(2));
     } else {
       flushList();
+      flushQuote();
       paragraph.push(line);
     }
   }

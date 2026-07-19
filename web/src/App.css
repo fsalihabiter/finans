@@ -3420,6 +3420,134 @@ body.drawer-lock {
 .lesson-actions .next-lesson {
   margin-left: auto;
 }
+/* Katlanmış derinlik katmanı (T6.7) — tavan kapatılmaz, isteğe bağlı açılır. */
+.lesson-section.is-folded {
+  margin-top: 16px;
+  padding: 0;
+  border-left: none;
+  border: 1px dashed var(--line, #26304f);
+  border-radius: 10px;
+}
+.lesson-section.is-folded > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent, #7aa2ff);
+  user-select: none;
+}
+.lesson-section.is-folded > summary::-webkit-details-marker {
+  display: none;
+}
+.lesson-section.is-folded > summary::before {
+  content: "▸";
+  transition: transform 0.18s ease;
+  display: inline-block;
+}
+.lesson-section.is-folded[open] > summary::before {
+  transform: rotate(90deg);
+}
+.lesson-section.is-folded > summary:hover {
+  background: color-mix(in srgb, var(--accent, #7aa2ff) 8%, transparent);
+  border-radius: 9px;
+}
+.lesson-section.is-folded .fold-hint {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted, #9aa6c4);
+}
+.lesson-section.is-folded .fold-body {
+  padding: 2px 14px 14px;
+}
+
+/* Ders figürleri (T6.7) — kütüphanesiz SVG, temaya uyumlu. */
+.lesson-figure {
+  margin: 16px 0 0;
+}
+.lesson-figure svg {
+  width: 100%;
+  max-width: 460px;  /* geniş ekranda gerilip kaybolmasın */
+  height: auto;
+  display: block;
+  /* Metin sütunuyla SOLA hizalı — ortalanınca geniş ekranda paragraflardan
+     kopuk, havada duran bir kutu gibi görünüyordu (2026-07-20 tarayıcı kontrolü). */
+  margin: 0;
+}
+.lesson-figure figcaption {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted, #9aa6c4);
+}
+.fig-axis {
+  stroke: var(--line, #26304f);
+  stroke-width: 1;
+}
+.fig-label {
+  fill: var(--text, #e8ecf8);
+  font-size: 11px;
+  font-weight: 600;
+}
+.fig-value {
+  fill: var(--muted, #9aa6c4);
+  font-size: 10px;
+}
+.fig-value.pos {
+  fill: var(--mint, #45d5a2);
+}
+.fig-value.neg {
+  fill: var(--coral, #ef7a72);
+}
+.fig-big {
+  fill: var(--text, #e8ecf8);
+  font-size: 17px;
+  font-weight: 700;
+}
+.fig-bar-muted {
+  fill: color-mix(in srgb, var(--accent, #7aa2ff) 30%, transparent);
+}
+.fig-bar-pos {
+  fill: var(--mint, #45d5a2);
+}
+.fig-bar-neg {
+  fill: var(--coral, #ef7a72);
+}
+.fig-seg {
+  fill: color-mix(in srgb, var(--accent, #7aa2ff) 32%, transparent);
+}
+.fig-seg-lead {
+  fill: var(--accent, #7aa2ff);
+}
+.fig-card {
+  fill: color-mix(in srgb, var(--accent, #7aa2ff) 8%, transparent);
+  stroke: var(--line, #26304f);
+}
+.fig-line-steady {
+  stroke: var(--mint, #45d5a2);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.fig-line-volatile {
+  stroke: var(--coral, #ef7a72);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.fig-line-flat {
+  stroke: var(--muted, #9aa6c4);
+  stroke-width: 1.5;
+}
+.fig-dot-steady {
+  fill: var(--mint, #45d5a2);
+}
+.fig-dot-volatile {
+  fill: var(--coral, #ef7a72);
+}
+
 /* Tanılama testi (T6.6) — onboarding */
 .diagnostic-progress {
   margin: 10px 0 0;

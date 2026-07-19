@@ -252,6 +252,56 @@ public sealed class EducationSeedTests
     }
 
     [Fact]
+    public async Task Section_seed_reconciles_edited_content()
+    {
+        // REGRESYON (T6.7): içerik DÜZELTİLDİĞİNDE (metin/katman/figür) çalışan
+        // kurulumlar da almalı. Salt "eksikse ekle" yaklaşımı bunu kaçırıyordu —
+        // aynı Id'li blok var sayılıp güncelleme atlanıyordu.
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var section = await db.LessonSections.FirstAsync(s => s.Kind == SectionKind.Trap);
+        var (id, original) = (section.Id, section.BodyMarkdown);
+
+        // "Eski sürüm" simülasyonu: içerik bozulmuş/eskimiş.
+        section.BodyMarkdown = "eski metin";
+        section.DepthTier = DepthTier.Deep;
+        section.FigureKey = "eski-figur";
+        await db.SaveChangesAsync();
+
+        await SeedData.SeedAsync(db); // "bir sonraki açılış"
+
+        var after = await db.LessonSections.SingleAsync(s => s.Id == id);
+        after.BodyMarkdown.Should().Be(original);
+        after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
+        after.FigureKey.Should().BeNull();
+        (await db.LessonSections.CountAsync()).Should().Be(30); // çoğaltma yok
+    }
+
+    [Fact]
+    public async Task Example_blocks_declare_a_figure_and_traps_stay_in_core_tier()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var sections = await db.LessonSections.ToListAsync();
+
+        // Her dersin örnek bloğu bir figür anahtarı bildirir (T6.7 görselleştirme).
+        var examples = sections.Where(s => s.Kind == SectionKind.Example).ToList();
+        examples.Should().HaveCount(5);
+        examples.Should().OnlyContain(s => !string.IsNullOrWhiteSpace(s.FigureKey));
+        examples.Select(s => s.FigureKey).Should().OnlyHaveUniqueItems();
+
+        // Tuzak blokları Core katmanda → başlangıç seviyesinde KATLANMAZ.
+        sections.Where(s => s.Kind == SectionKind.Trap)
+            .Should().OnlyContain(s => s.DepthTier == DepthTier.Core);
+
+        // Figür yalnız örnek bloklarında; anlatım blokları görselsiz.
+        sections.Where(s => s.Kind == SectionKind.Explain)
+            .Should().OnlyContain(s => s.FigureKey == null);
+    }
+
+    [Fact]
     public async Task Live_context_blocks_carry_resolvable_tokens()
     {
         // Bağlam şablonları {{anahtar}} token'ı taşımalı (T6.2) ve anahtarlar

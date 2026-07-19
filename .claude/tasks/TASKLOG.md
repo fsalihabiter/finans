@@ -20,6 +20,42 @@
 
 ---
 
+## 2026-07-19 · T6.7 — Uyarlanabilir render (seviyeye göre katlama) + ders görselleştirme
+- **Görev(ler):** T6.7 (+ kullanıcı isteği: dersleri görselleştir, daha az sıkıcı/daha anlaşılır olsun).
+- **Ne yapıldı:** (1) **Katlama**: bölümün derinliği kullanıcının seviyesini aşıyorsa `<details>`
+  içine alınır ("Daha derine in" / "Uzman katmanı" + *isteğe bağlı* ipucu). **Tavan kapatılmaz** —
+  herkes açıp okuyabilir; profil yoksa Başlangıç varsayılır (tanılama atlanabilir olduğu için bu yol
+  daima çalışır). (2) **Görselleştirme**: `LessonSection.FigureKey` (nullable, migration
+  `LessonSectionFigureKey`) + **`LessonFigure`** — 5 elle yazılmış SVG (nominal-vs-reel çubukları ·
+  yoğunlaşma şeritleri · aynı F/K iki kart · oynaklık yolları · bileşik eğri). **Kütüphane yok**,
+  tema değişkenleriyle çalışır, `role="img"`+`aria-label`; sayılar dersin *Örnek* bloğuyla birebir,
+  kullanıcı verisi girmez; bilinmeyen anahtar sessizce atlanır. (3) **Tuzak bloğu Core katmana
+  alındı** — yanılgıyı görmeye en çok ihtiyacı olan başlangıç seviyesinden gizlenmemeli.
+- **Dokunulan dosyalar:** `Finans.Domain/Education/LessonSection.cs`, `Finans.Infrastructure/
+  {Persistence/{Configurations/EducationConfigurations.cs,Migrations/*FigureKey*},Seed/
+  {EducationContent.cs,SeedData.cs}}`, `Finans.Application/Education/EducationDtos.cs`,
+  `Finans.Infrastructure/Services/EducationService.cs`, `packages/shared/src/types/index.ts`,
+  `web/src/components/{LessonFigure.tsx (yeni),MiniMarkdown.tsx (+test)}`,
+  `web/src/routes/EducationPage.tsx (+test)`, `web/src/App.css`, testler, docs (08/09).
+- **Test:** **SC-E16** — 5 bileşen (başlangıçta katlanır · ileride katlanmaz · katlanan açılabilir ·
+  figür erişilebilir çizilir · bilinmeyen anahtar bozmaz) + 2 integration (seed mutabakatı ·
+  figür/katman beyanı) + 2 unit (blockquote birleştirme). Application **291/291**,
+  Integration **166/170** (aynı 4 bilinen host testi), web **114/114**.
+  **Canlı tarayıcı kontrolü** (ekran görüntüsüyle): Başlangıç profilinde çekirdek açık,
+  "Daha derine in"/"Uzman katmanı" katlı; "Senin portföyünde" gerçek veriyle (%40,6 / %1,9);
+  figür çiziliyor ve metin sütunuyla hizalı.
+- **Karar/Not:** ⚠ **Seed artık MUTABAKAT yapıyor** (T6.7): aynı deterministik Id'li blok varsa
+  metin/katman/tür/figür farkını **günceller**. Salt-ekle yaklaşımı içerik DÜZELTMELERİNİ çalışan
+  kurulumlara indiremiyordu — bugün üçüncü kez aynı sınıf tuzak (T6.1 salt-ekle → T6.2 blok-bazlı
+  → T6.7 mutabakat). Regresyon testiyle sabitlendi. ⚠ **Tarayıcı kontrolü iki hata yakaladı
+  (testler yeşilken):** (a) `MiniMarkdown` ardışık `> ` satırlarını ayrı `<blockquote>` yapıyordu →
+  çok satırlı alıntı ekranda **4 kutuya bölünmüştü**; paragraf/liste desenine uygun `flushQuote`
+  eklendi + 2 regresyon testi. (b) Figür ortalanınca geniş ekranda metinden kopuk duruyordu →
+  sola, metin sütunuyla hizalandı. **Görsel = sunum**: SVG istemcide, veri DB'ye gömülmüyor.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T6.8 (`MiniMarkdown` tablo+link) — derin içerik için; ya da T6.9 (kavram ustalığı),
+  ya da Set 2 içerikleri (T6.11).
+
 ## 2026-07-19 · T6.6 — Tanılama testi + öğrenme kapısı (quiz geçmeden tamamlama YOK) + ilerleme sıfırlama
 - **Görev(ler):** T6.6 (+ kullanıcı isteği: ilerlemeyi sıfırla, testler çözülmeden ders tamamlanmasın).
 - **Ne yapıldı:** (1) **Öğrenme kapısı** — testi olan ders, test **geçilmeden** tamamlanamaz;

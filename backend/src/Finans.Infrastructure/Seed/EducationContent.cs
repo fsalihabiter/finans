@@ -32,33 +32,41 @@ internal static class EducationContent
     /// "Senin portföyünde" şablonu (T6.2). <c>{{anahtar}}</c> token'ları çalışma anında
     /// KODDA hesaplanmış metriklerle değişir; çözülemeyen token'ın satırı düşer.
     /// </param>
+    /// <param name="figure">
+    /// Örnek bloğuna eşlik eden görselin anahtarı (T6.7) — arayüz çizer, veri gömülmez.
+    /// </param>
     private static IEnumerable<LessonSection> Blocks(
-        Guid lessonId, string core, string context, string deep, string live, string example, string trap)
+        Guid lessonId, string core, string context, string deep, string live, string example,
+        string trap, string figure)
     {
-        var parts = new (string Body, DepthTier Tier, SectionKind Kind)[]
+        // NOT (T6.7): Tuzak bloğu **Core** katmandadır — yaygın yanılgıyı görmeye en çok
+        // ihtiyacı olan başlangıç seviyesidir; Context'te bırakılsaydı onlardan gizlenirdi.
+        var parts = new (string Body, DepthTier Tier, SectionKind Kind, string? Figure)[]
         {
-            (core, DepthTier.Core, SectionKind.Explain),
-            (context, DepthTier.Context, SectionKind.Explain),
-            (deep, DepthTier.Deep, SectionKind.Explain),
-            (live, DepthTier.Core, SectionKind.LiveContext),
-            (example, DepthTier.Core, SectionKind.Example),
-            (trap, DepthTier.Context, SectionKind.Trap),
+            (core, DepthTier.Core, SectionKind.Explain, null),
+            (context, DepthTier.Context, SectionKind.Explain, null),
+            (deep, DepthTier.Deep, SectionKind.Explain, null),
+            (live, DepthTier.Core, SectionKind.LiveContext, null),
+            (example, DepthTier.Core, SectionKind.Example, figure),
+            (trap, DepthTier.Core, SectionKind.Trap, null),
         };
 
         var order = 1;
-        foreach (var (body, tier, kind) in parts)
+        foreach (var (body, tier, kind, fig) in parts)
         {
             yield return new LessonSection
             {
                 // DETERMİNİSTİK Id (kritik): seed "hiç bölüm var mı?" diye değil
                 // "BU bölüm var mı?" diye bakar → sonradan eklenen bloklar (örn. T6.2'nin
                 // LiveContext'i) mevcut kurulumlara da iner, var olanlar çoğaltılmaz.
+                // Aynı Id sayesinde içerik DEĞİŞİKLİKLERİ de mutabık kılınabilir (T6.7).
                 Id = SeedData.Id($"section-{lessonId:N}-{order}"),
                 LessonId = lessonId,
                 OrderIndex = order++,
                 BodyMarkdown = body.Trim(),
                 DepthTier = tier,
                 Kind = kind,
+                FigureKey = fig,
             };
         }
     }
@@ -185,7 +193,8 @@ internal static class EducationContent
         bir düşman değil, bir **ölçüm çizgisidir**: getirini karşılaştıracağın taban.
         Bu çizgiyi bilmeden bir yatırımın iyi mi kötü mü gittiğini söylemek mümkün
         değildir.
-        """);
+        """,
+        figure: "real-vs-nominal");
 
     // ── Ders 2 — Çeşitlendirme ───────────────────────────────────────────────
 
@@ -310,7 +319,8 @@ internal static class EducationContent
         değerlenen varlık zamanla en büyük ağırlığa ulaşır. Hiçbir işlem yapmasan
         bile, iki yıl önce dengeli olan bir portföy bugün tek bir kaleme bağlı
         hâle gelmiş olabilir.
-        """);
+        """,
+        figure: "concentration");
 
     // ── Ders 3 — F/K, PD/DD ──────────────────────────────────────────────────
 
@@ -435,7 +445,8 @@ internal static class EducationContent
 
         Son olarak, bu oranlar **ne yapman gerektiğini söylemez.** Sana şirketin
         rakamlarının ne anlattığını gösterir; kararın ve sorumluluğun sana aittir.
-        """);
+        """,
+        figure: "ratio-context");
 
     // ── Ders 4 — Risk ve Getiri ──────────────────────────────────────────────
 
@@ -562,7 +573,8 @@ internal static class EducationContent
         Üçüncüsü: **kendi katlanma sınırını piyasa sakinken ölçmek.** Herkes
         düşüşte soğukkanlı kalacağını düşünür; gerçek sınav ancak düşüş
         yaşandığında olur.
-        """);
+        """,
+        figure: "volatility-paths");
 
     // ── Ders 5 — Bileşik Getiri ──────────────────────────────────────────────
 
@@ -693,7 +705,8 @@ internal static class EducationContent
         yıl aynı olduğunu varsayar; gerçekte getiriler dalgalanır, bazı yıllar
         negatif olur. Bileşik etki bir doğa kanunu değil, sürekliliğe bağlı
         bir **mekanizmadır**.
-        """);
+        """,
+        figure: "compound-curve");
 
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
