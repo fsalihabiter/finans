@@ -136,7 +136,10 @@ internal sealed class QuizQuestionConfiguration : IEntityTypeConfiguration<QuizQ
     public void Configure(EntityTypeBuilder<QuizQuestion> b)
     {
         b.ToTable("QuizQuestions", t =>
-            t.HasCheckConstraint("CK_QuizQuestions_Type", Check.EnumIn<QuizQuestionType>("Type")));
+        {
+            t.HasCheckConstraint("CK_QuizQuestions_Type", Check.EnumIn<QuizQuestionType>("Type"));
+            t.HasCheckConstraint("CK_QuizQuestions_Difficulty", Check.EnumIn<QuizDifficulty>("Difficulty"));
+        });
         b.HasIndex(x => new { x.QuizId, x.OrderIndex });
 
         b.HasOne(x => x.Quiz)

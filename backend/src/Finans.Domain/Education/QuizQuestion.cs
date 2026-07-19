@@ -11,6 +11,12 @@ public class QuizQuestion : Entity
     public QuizQuestionType Type { get; set; }
     public string Prompt { get; set; } = null!;
 
+    /// <summary>
+    /// Soru zorluğu (T6.11) — varsayılan <see cref="QuizDifficulty.Easy"/> (geriye dönük
+    /// uyum: eski sorular herkese görünmeye devam eder).
+    /// </summary>
+    public QuizDifficulty Difficulty { get; set; } = QuizDifficulty.Easy;
+
     /// <summary>Cevap sonrası gösterilen eğitici açıklama.</summary>
     public string Explanation { get; set; } = null!;
 

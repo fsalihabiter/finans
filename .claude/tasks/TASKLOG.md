@@ -20,6 +20,40 @@
 
 ---
 
+## 2026-07-19 · T6.11a — Ders 1 içerik turu (13 aşama · 5 figür · 3 zorluklu test) + satır genişliği
+- **Görev(ler):** T6.11a (kullanıcı isteği: ders ders ilerle, 1'den başla; metin satırı yarıda kesiliyor).
+- **Ne yapıldı:** (1) **Satır genişliği düzeltildi** — metin `max-width: 72ch`'de sarıyor, kartın
+  sağ yarısı boş kalıyordu. Ölçüyü bozmak yerine **iki sütun**: solda yapışkan yol haritası,
+  sağda adım içeriği (≥960px); dar ekranda alt alta. (2) **Ders 1 zenginleştirildi: 6 → 13 aşama** —
+  her kavramın hemen ardından **işlenmiş örnek** (ekmek/alım gücü · kişisel sepet · dönem penceresi),
+  anlatım→örnek→tuzak dönüşümlü ilerleyiş; içerik kurgusu için `Blk`/`Build` altyapısı eklendi
+  (blok sayısı artık derse göre serbest, 2-5. dersler eski 6'lı kalıpla çalışmayı sürdürüyor).
+  (3) **4 yeni figür** (toplam 9): alım gücü, çıkarma hatası, kişisel sepet, dönem penceresi.
+  (4) **Zorluk kademeli test**: `QuizQuestion.Difficulty` (Easy/Medium/Hard) + migration
+  (`defaultValue:'Easy'`) + **seviyeye göre filtre**; Ders 1 testi 3 → **9 soru**.
+- **Dokunulan dosyalar:** `Finans.Domain/{Enums.cs,Education/QuizQuestion.cs}`,
+  `Finans.Infrastructure/{Seed/{EducationContent.cs,SeedData.cs},Services/EducationService.cs,
+  Persistence/{FinansDbContext.cs,Configurations/EducationConfigurations.cs,Migrations/*Difficulty*}}`,
+  `web/src/components/{LessonFigure.tsx,MiniMarkdown.tsx (+test)}`,
+  `web/src/routes/EducationPage.tsx`, `web/src/App.css`, testler, docs (08/09).
+- **Test:** **SC-E18** — her testte ≥1 Easy soru (yoksa Başlangıç hiç soru görmez, öğrenme kapısı
+  hiç açılmaz) · çoktan seçmeli/tek seçim doğru sayısı · blok sayısı serbest · liste devam satırı
+  (unit). Application **291/291**, Integration **167/171** (aynı 4 bilinen), web **117/117**.
+  **Canlı teyit:** 13 aşama + 5 figür + yol haritası; API Başlangıç'a 3 soru servis ediyor.
+- **Karar/Not:** 🔑 **Puanlama gösterimle AYNI kümeden yapılmalı** — filtre yalnız gösterime
+  konsaydı Başlangıç, hiç görmediği zor sorulardan kalır ve ders kapısı hiç açılmazdı; her iki
+  yol da `AllowedDifficulties` kullanıyor. ⚠ **Migration yine `defaultValue: ""` üretti** (CHECK
+  ihlali) — bu sefer üretim anında yakalanıp `'Easy'` yapıldı; geriye dönük uyum da sağlıyor.
+  ⚠ **Tarayıcı kontrolü 3 hata yakaladı (testler yeşilken):** (a) uzun adım başlıkları yol
+  haritasından taşıyordu → grid + iki satıra sarma; (b) **çok satırlı liste öğesi ikiye
+  bölünüyordu** — MiniMarkdown devam satırını ayrı paragraf yapıyordu (blockquote ile aynı sınıf
+  hata) → `list`e ekleniyor + regresyon testi; (c) içerikte `*italik*` kullanmıştım, renderer
+  desteklemiyor → yıldızlar görünüyordu, tümü `**kalın**`a çevrildi.
+  **İçerik ilkesi:** her yeni kavramın ardından somut sayılı örnek; örneklerde enstrüman adı yok
+  (A/B/C), tavsiye/tahmin yok (`CLAUDE.md` §2).
+- **Durum:** tamamlandı (Ders 1).
+- **Sıradaki:** **T6.11b** — 2. ders (Çeşitlendirme) aynı zenginlikte; ardından 3-4-5.
+
 ## 2026-07-19 · T6.10 — Aşamalı ders akışı (yol haritası + adım adım + test ayrı adım)
 - **Görev(ler):** T6.10 (kullanıcı isteği: aşamalı anlatım · testi sayfanın devamı olarak gösterme ·
   ilerideki başlıklar görünsün ama kilitli olsun).

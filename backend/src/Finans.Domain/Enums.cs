@@ -96,6 +96,18 @@ public enum LessonStatus
     Completed,
 }
 
+/// <summary>
+/// Soru zorluğu (T6.11). Test, kullanıcının <see cref="LessonLevel"/>'ına göre
+/// filtrelenir: Başlangıç yalnız <c>Easy</c>, Gelişen <c>Easy+Medium</c>,
+/// İleri hepsini görür. Böylece aynı ders farklı seviyelere farklı sınav verir.
+/// </summary>
+public enum QuizDifficulty
+{
+    Easy,
+    Medium,
+    Hard,
+}
+
 public enum QuizQuestionType
 {
     SingleChoice,

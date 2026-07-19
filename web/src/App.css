@@ -3444,6 +3444,34 @@ body.drawer-lock {
   background: var(--mint, #45d5a2);
 }
 
+/* Geniş ekran düzeni: solda yol haritası, sağda adım içeriği.
+   Tek sütunda metin 72ch'de sarıyordu ve kartın sağ yarısı boş kalıyordu —
+   ölçüyü bozmak yerine boşluğu gezinmeyle doldurmak doğrusu (2026-07-20). */
+.lesson-layout {
+  display: grid;
+  gap: 22px;
+  margin-top: 14px;
+}
+@media (min-width: 960px) {
+  .lesson-layout {
+    grid-template-columns: 244px minmax(0, 1fr);
+    align-items: start;
+  }
+  .lesson-roadmap {
+    position: sticky;
+    top: 14px;
+    margin: 0;
+    padding: 10px 4px;
+    border: 1px solid var(--line, #26304f);
+    border-radius: 12px;
+  }
+  /* İki sütunda içerik kolonu ~640-720px → ölçü kolonu tam doldurur. */
+  .lesson-step .markdown-body p,
+  .lesson-step .markdown-body li {
+    max-width: none;
+  }
+}
+
 /* Yol haritası: ileriki adımlar başlığıyla görünür ama kilitli (merak + hedef). */
 .lesson-roadmap {
   margin: 14px 0 18px;
@@ -3459,9 +3487,10 @@ body.drawer-lock {
   gap: 2px;
 }
 .roadmap-step button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 10px;
   width: 100%;
   padding: 7px 10px;
   border: none;
@@ -3482,16 +3511,17 @@ body.drawer-lock {
   text-align: center;
   font-size: 11px;
 }
+/* Başlık iki satıra sarabilir — kesmek yerine sarmak, adım adını okunur tutar.
+   Sabit yükseklik + ellipsis denendi; uzun başlıklar sütundan taşıyordu (2026-07-20). */
 .roadmap-title {
-  flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 .roadmap-badge {
-  flex: none;
-  padding: 2px 8px;
+  grid-column: 2;
+  justify-self: start;
+  padding: 1px 8px;
   border-radius: 999px;
   font-size: 10.5px;
   background: color-mix(in srgb, var(--accent, #7aa2ff) 15%, transparent);

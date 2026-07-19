@@ -79,6 +79,11 @@ export function MiniMarkdown({ markdown, className }: { markdown: string; classN
       flushParagraph();
       flushQuote();
       list.push(line.slice(2));
+    } else if (list.length > 0 && paragraph.length === 0) {
+      // Liste öğesinin DEVAM satırı: kaynakta sarılmış uzun madde tek öğedir.
+      // Önceden ayrı paragraf oluyordu ve madde ortadan ikiye bölünüyordu
+      // (2026-07-20 tarayıcı kontrolü) — blockquote ile aynı sınıf hata.
+      list[list.length - 1] += ` ${line}`;
     } else {
       flushList();
       flushQuote();

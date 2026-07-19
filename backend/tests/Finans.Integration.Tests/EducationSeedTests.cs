@@ -99,14 +99,21 @@ public sealed class EducationSeedTests
 
         var questions = await db.QuizQuestions.Where(q => q.QuizId == quiz.Id)
             .OrderBy(q => q.OrderIndex).ToListAsync();
-        questions.Should().HaveCount(3);
+        // T6.11 — üç zorluk kademesinde üçer soru.
+        questions.Should().HaveCount(9);
+        questions.GroupBy(q => q.Difficulty).Should().HaveCount(3);
         questions.Should().OnlyContain(q => q.Explanation.Length > 0); // her soruda eğitici açıklama
 
         foreach (var question in questions)
         {
             var options = await db.QuizOptions.Where(o => o.QuestionId == question.Id).ToListAsync();
             options.Should().HaveCountGreaterThanOrEqualTo(2);
-            options.Count(o => o.IsCorrect).Should().Be(1); // tam bir doğru cevap
+            // Çoktan seçmelide birden çok doğru olabilir; tek seçimde tam bir doğru.
+            var correct = options.Count(o => o.IsCorrect);
+            if (question.Type == QuizQuestionType.MultipleChoice)
+                correct.Should().BeGreaterThan(1);
+            else
+                correct.Should().Be(1);
         }
 
         // Bağımsız (derse bağlı olmayan) test yok — her quiz bir derse bağlı.
@@ -141,9 +148,9 @@ public sealed class EducationSeedTests
         (await db.LessonConceptTags.CountAsync()).Should().Be(6);
         (await db.LessonPrerequisites.CountAsync()).Should().Be(4);
         (await db.Quizzes.CountAsync()).Should().Be(5);          // T6.1: 1 → 5 (her derse bir test)
-        (await db.QuizQuestions.CountAsync()).Should().Be(15);    // 5 × 3
-        (await db.QuizOptions.CountAsync()).Should().Be(50);      // 5 × (4+2+4)
-        (await db.LessonSections.CountAsync()).Should().Be(30);   // T6.1+T6.2: 5 ders × 6 blok
+        (await db.QuizQuestions.CountAsync()).Should().Be(21);    // Ders1: 9 (3 zorluk) + 4×3
+        (await db.QuizOptions.CountAsync()).Should().Be(72);      // Ders1: 32 + 4×10
+        (await db.LessonSections.CountAsync()).Should().Be(37);   // Ders1: 13 (T6.11) + 4×6
         (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
 
@@ -176,7 +183,8 @@ public sealed class EducationSeedTests
 
             own.Should().Contain(s => s.Kind == SectionKind.LiveContext,
                 $"'{lesson.Slug}' \"Senin portföyünde\" bağlam bloğu taşımalı (T6.2)");
-            own.Select(s => s.OrderIndex).Should().Equal(1, 2, 3, 4, 5, 6);
+            own.Select(s => s.OrderIndex).Should().BeInAscendingOrder();
+            own.Select(s => s.OrderIndex).Should().Equal(Enumerable.Range(1, own.Count));
             own.Should().OnlyContain(s => s.BodyMarkdown.Length > 100); // boş/yer tutucu içerik yok
         }
     }
@@ -223,7 +231,7 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(30);
+        (await db.LessonSections.CountAsync()).Should().Be(37);
         (await db.Quizzes.CountAsync()).Should().Be(5);
         (await db.Lessons.CountAsync()).Should().Be(5); // dersler çoğaltılmadı
     }
@@ -242,13 +250,13 @@ public sealed class EducationSeedTests
         live.Should().HaveCount(5);
         db.LessonSections.RemoveRange(live);
         await db.SaveChangesAsync();
-        (await db.LessonSections.CountAsync()).Should().Be(25); // diğer 5×5 blok yerinde
+        (await db.LessonSections.CountAsync()).Should().Be(32); // diğer bloklar yerinde
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
         (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(5);
-        (await db.LessonSections.CountAsync()).Should().Be(30);
+        (await db.LessonSections.CountAsync()).Should().Be(37);
     }
 
     [Fact]
@@ -278,7 +286,7 @@ public sealed class EducationSeedTests
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
-        (await db.LessonSections.CountAsync()).Should().Be(30); // çoğaltma yok
+        (await db.LessonSections.CountAsync()).Should().Be(37); // çoğaltma yok
     }
 
     [Fact]
@@ -313,7 +321,7 @@ public sealed class EducationSeedTests
 
         // Her dersin örnek bloğu bir figür anahtarı bildirir (T6.7 görselleştirme).
         var examples = sections.Where(s => s.Kind == SectionKind.Example).ToList();
-        examples.Should().HaveCount(5);
+        examples.Should().HaveCountGreaterThanOrEqualTo(5); // her derste ≥1 (Ders 1'de birkaç)
         examples.Should().OnlyContain(s => !string.IsNullOrWhiteSpace(s.FigureKey));
         examples.Select(s => s.FigureKey).Should().OnlyHaveUniqueItems();
 
@@ -373,15 +381,22 @@ public sealed class EducationSeedTests
             quiz.PassingScore.Should().Be(60);
 
             var own = questions.Where(q => q.QuizId == quiz.Id).OrderBy(q => q.OrderIndex).ToList();
-            own.Should().HaveCount(3);
-            own.Select(q => q.OrderIndex).Should().Equal(1, 2, 3);
+            own.Should().HaveCountGreaterThanOrEqualTo(3);
+            own.Select(q => q.OrderIndex).Should().BeInAscendingOrder();
+            // T6.11 — her testte en az bir KOLAY soru olmalı; aksi hâlde Başlangıç
+            // seviyesi hiç soru görmez ve öğrenme kapısı hiç açılmaz.
+            own.Should().Contain(q => q.Difficulty == QuizDifficulty.Easy);
 
             foreach (var q in own)
             {
                 q.Explanation.Should().NotBeNullOrWhiteSpace("her soru eğitici açıklama taşır");
                 var opts = options.Where(o => o.QuestionId == q.Id).ToList();
                 opts.Should().HaveCountGreaterThanOrEqualTo(2);
-                opts.Count(o => o.IsCorrect).Should().Be(1, "tek doğru şık (tam-eşleşme puanlaması)");
+                var correct = opts.Count(o => o.IsCorrect);
+                if (q.Type == QuizQuestionType.MultipleChoice)
+                    correct.Should().BeGreaterThan(1, "çoktan seçmelide birden çok doğru olur");
+                else
+                    correct.Should().Be(1, "tek seçimde tam bir doğru şık (tam-eşleşme puanlaması)");
             }
         }
     }

@@ -47,4 +47,21 @@ describe("MiniMarkdown", () => {
 
     expect(container.querySelectorAll("blockquote")).toHaveLength(2);
   });
+
+  it("sarılmış liste öğesinin devam satırını aynı maddeye ekler", () => {
+    // REGRESYON (2026-07-20): uzun madde kaynakta iki satıra sarıldığında
+    // ikinci satır ayrı paragraf oluyordu → madde ortadan ikiye bölünüyordu.
+    const { container } = render(
+      <MiniMarkdown
+        markdown={["- Birinci madde uzun", "  ve burada devam ediyor", "- İkinci madde"].join("\n")}
+      />,
+    );
+
+    const items = container.querySelectorAll("li");
+    expect(items).toHaveLength(2);
+    expect(items[0].textContent).toBe("Birinci madde uzun ve burada devam ediyor");
+    expect(items[1].textContent).toBe("İkinci madde");
+    // Devam satırı paragrafa kaçmamalı.
+    expect(container.querySelectorAll("p")).toHaveLength(0);
+  });
 });

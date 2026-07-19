@@ -106,8 +106,12 @@ public sealed class EducationService(
         if (lesson.Quiz is not null)
         {
             // Cevap-anahtarı (IsCorrect) ve Explanation BURADA döndürülmez — sızıntı yok.
+            // T6.11: sorular kullanıcının seviyesine göre FİLTRELENİR (zorluk kademesi).
+            var allowed = AllowedDifficulties(await GetLiteracyLevelAsync(ct));
             var questions = lesson.Quiz.Questions
-                .OrderBy(q => q.OrderIndex)
+                .Where(q => allowed.Contains(q.Difficulty))
+                .OrderBy(q => q.Difficulty)
+                .ThenBy(q => q.OrderIndex)
                 .Select(q => new QuizQuestionDto(q.Id, q.OrderIndex, q.Type, q.Prompt,
                     q.Options
                         .OrderBy(o => o.OrderIndex)
@@ -139,6 +143,30 @@ public sealed class EducationService(
             IsLocked(lesson.Id, prereqs, completed),
             sections, quiz, tags, contextState, contextAsOf, nextDto);
     }
+
+    /// <summary>
+    /// Kullanıcının okuryazarlık seviyesi; ölçülmemişse <see cref="LessonLevel.Beginner"/>
+    /// (tanılama atlanabilir — T6.6).
+    /// </summary>
+    private async Task<LessonLevel> GetLiteracyLevelAsync(CancellationToken ct)
+    {
+        var userId = currentUser.UserId;
+        return await db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.LiteracyLevel)
+            .FirstOrDefaultAsync(ct) ?? LessonLevel.Beginner;
+    }
+
+    /// <summary>
+    /// Seviyeye göre görünecek soru zorlukları (T6.11): Başlangıç kolay soruları,
+    /// Gelişen kolay+orta, İleri hepsini görür. Aynı ders farklı seviyeye farklı sınav.
+    /// </summary>
+    private static QuizDifficulty[] AllowedDifficulties(LessonLevel level) => level switch
+    {
+        LessonLevel.Advanced => [QuizDifficulty.Easy, QuizDifficulty.Medium, QuizDifficulty.Hard],
+        LessonLevel.Intermediate => [QuizDifficulty.Easy, QuizDifficulty.Medium],
+        _ => [QuizDifficulty.Easy],
+    };
 
     public async Task<LessonProgressDto> UpdateProgressAsync(
         Guid lessonId, UpdateLessonProgressRequest request, CancellationToken ct = default)
@@ -216,7 +244,14 @@ public sealed class EducationService(
                 g => g.Key,
                 g => g.SelectMany(a => a.SelectedOptionIds ?? []).ToHashSet());
 
-        var questions = quiz.Questions.OrderBy(q => q.OrderIndex).ToList();
+        // T6.11: puanlama, kullanıcıya GÖSTERİLEN soru kümesiyle aynı olmalı. Aksi hâlde
+        // Başlangıç seviyesi hiç görmediği zor sorulardan kalırdı (kapı hep kapalı olurdu).
+        var allowed = AllowedDifficulties(await GetLiteracyLevelAsync(ct));
+        var questions = quiz.Questions
+            .Where(q => allowed.Contains(q.Difficulty))
+            .OrderBy(q => q.Difficulty)
+            .ThenBy(q => q.OrderIndex)
+            .ToList();
         var results = new List<QuizQuestionResultDto>(questions.Count);
         var correctCount = 0;
 

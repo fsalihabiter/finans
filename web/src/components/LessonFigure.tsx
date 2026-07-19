@@ -16,15 +16,18 @@
 function Figure({
   label,
   caption,
+  height = 150,
   children,
 }: {
   label: string;
   caption: string;
+  /** Bazı figürler daha uzun; viewBox yüksekliği içeriğe göre ayarlanır. */
+  height?: number;
   children: React.ReactNode;
 }) {
   return (
     <figure className="lesson-figure">
-      <svg viewBox="0 0 320 150" role="img" aria-label={label} preserveAspectRatio="xMidYMid meet">
+      <svg viewBox={`0 0 320 ${height}`} role="img" aria-label={label} preserveAspectRatio="xMidYMid meet">
         {children}
       </svg>
       <figcaption>{caption}</figcaption>
@@ -82,6 +85,179 @@ function RealVsNominal() {
           </g>
         );
       })}
+    </Figure>
+  );
+}
+
+/** Ders 1 — alım gücü: aynı para, kaç ekmek? (lira değil mal cinsinden saymak) */
+function PurchasingPower() {
+  // Örnek bloğuyla aynı: 100.000/14,50 ≈ 6.897 → 140.000/20 = 7.000 ekmek.
+  const rows = [
+    { when: "Bir yıl önce", money: "100.000 ₺", unit: "14,50 ₺", loaves: 6897, w: 0.985 },
+    { when: "Bugün", money: "140.000 ₺", unit: "20,00 ₺", loaves: 7000, w: 1 },
+  ];
+
+  return (
+    <Figure
+      label="Aynı paranın bir yıl arayla kaç ekmek ettiğinin karşılaştırması"
+      caption="Lira %40 büyüdü; ekmek cinsinden zenginlik yalnızca %1,5 arttı."
+    >
+      {rows.map((r, i) => {
+        const y = 26 + i * 58;
+        return (
+          <g key={r.when}>
+            <text x="6" y={y} className="fig-label">
+              {r.when}
+            </text>
+            <text x="6" y={y + 15} className="fig-value">
+              {r.money} · ekmek {r.unit}
+            </text>
+            <rect x="150" y={y - 11} width={r.w * 150} height="16" rx="3" className={i === 1 ? "fig-bar-pos" : "fig-bar-muted"} />
+            <text x={150 + r.w * 150 + 6} y={y + 2} className="fig-value">
+              {r.loaves.toLocaleString("tr-TR")}
+            </text>
+          </g>
+        );
+      })}
+      <text x="6" y="140" className="fig-value">
+        Aynı para, mal cinsinden neredeyse yerinde saydı.
+      </text>
+    </Figure>
+  );
+}
+
+/** Ders 1 — çıkarma kısayolunun hatası enflasyonla büyür. */
+function SubtractionError() {
+  // Örnek bloğuyla aynı üç ortam; hepsinde nominal−enflasyon farkı benzer.
+  const rows = [
+    { label: "%12 / %10", naive: 2, real: 1.8 },
+    { label: "%45 / %35", naive: 10, real: 7.4 },
+    { label: "%85 / %75", naive: 10, real: 5.7 },
+  ];
+  const scale = (v: number) => (v / 10) * 150;
+
+  return (
+    <Figure
+      label="Çıkarma kısayolu ile gerçek reel getiri arasındaki farkın enflasyonla büyümesi"
+      caption="Açık çubuk çıkarma sonucu, koyu çubuk gerçek reel getiri. Enflasyon arttıkça makas açılıyor."
+    >
+      {rows.map((r, i) => {
+        const y = 24 + i * 40;
+        return (
+          <g key={r.label}>
+            <text x="6" y={y + 13} className="fig-label">
+              {r.label}
+            </text>
+            <rect x="96" y={y} width={scale(r.naive)} height="12" rx="3" className="fig-bar-muted" />
+            <rect x="96" y={y + 14} width={scale(r.real)} height="12" rx="3" className="fig-bar-pos" />
+            <text x={96 + scale(r.naive) + 6} y={y + 10} className="fig-value">
+              %{String(r.naive).replace(".", ",")}
+            </text>
+            <text x={96 + scale(r.real) + 6} y={y + 24} className="fig-value pos">
+              %{String(r.real).replace(".", ",")}
+            </text>
+          </g>
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** Ders 1 — kişisel sepet: aynı nominal getiri, iki farklı reel sonuç. */
+function BasketDifference() {
+  const people = [
+    { who: "Kiracı", basket: 62, real: -4.3 },
+    { who: "Ev sahibi", basket: 44, real: 7.6 },
+  ];
+
+  return (
+    <Figure
+      label="Aynı nominal getirinin farklı kişisel enflasyon sepetlerinde farklı reel sonuç vermesi"
+      caption="İkisinin de nominal getirisi %55; farkı yaratan kendi harcama sepetleri."
+    >
+      <line x1="150" y1="14" x2="150" y2="118" className="fig-axis" />
+      <text x="150" y="10" className="fig-value" textAnchor="middle">
+        TÜFE %50
+      </text>
+      {people.map((p, i) => {
+        const y = 34 + i * 48;
+        return (
+          <g key={p.who}>
+            <text x="6" y={y} className="fig-label">
+              {p.who}
+            </text>
+            <text x="6" y={y + 15} className="fig-value">
+              kendi enflasyonu %{p.basket}
+            </text>
+            <rect
+              x={p.real >= 0 ? 150 : 150 - Math.abs(p.real) * 9}
+              y={y - 11}
+              width={Math.abs(p.real) * 9}
+              height="16"
+              rx="3"
+              className={p.real >= 0 ? "fig-bar-pos" : "fig-bar-neg"}
+            />
+            <text
+              x={p.real >= 0 ? 150 + p.real * 9 + 6 : 150 - Math.abs(p.real) * 9 - 6}
+              y={y + 2}
+              className={p.real >= 0 ? "fig-value pos" : "fig-value neg"}
+              textAnchor={p.real >= 0 ? "start" : "end"}
+            >
+              {p.real > 0 ? "+" : ""}
+              {String(p.real).replace(".", ",")}%
+            </text>
+          </g>
+        );
+      })}
+      <text x="6" y="140" className="fig-value">
+        Aynı yatırım, aynı yıl — biri kaybetti, diğeri kazandı.
+      </text>
+    </Figure>
+  );
+}
+
+/** Ders 1 — dönem seçimi: aynı seri, üç farklı pencere, üç farklı hikâye. */
+function WindowSelection() {
+  const years = [18, -12, 6, -9, 21];
+  const toX = (i: number) => 34 + i * 60;
+  const toY = (v: number) => 74 - (v / 21) * 44;
+
+  return (
+    <Figure
+      label="Aynı yıllık getiri serisinin farklı zaman pencerelerinde farklı görünmesi"
+      caption="Üç rakam da doğru; hangi pencereden baktığın hikâyeyi değiştirir."
+      height={162}
+    >
+      <line x1="20" y1="74" x2="300" y2="74" className="fig-axis" />
+      {years.map((v, i) => (
+        <g key={i}>
+          <rect
+            x={toX(i) - 13}
+            y={v >= 0 ? toY(v) : 74}
+            width="26"
+            height={Math.max(Math.abs(74 - toY(v)), 2)}
+            rx="3"
+            className={v >= 0 ? "fig-bar-pos" : "fig-bar-neg"}
+          />
+          <text x={toX(i)} y={v >= 0 ? toY(v) - 5 : 74 + Math.abs(74 - toY(v)) + 12} className="fig-value" textAnchor="middle">
+            {v > 0 ? "+" : ""}
+            {v}
+          </text>
+        </g>
+      ))}
+      {/* Pencereler */}
+      <rect x={toX(4) - 20} y="100" width="40" height="14" rx="4" className="fig-card" />
+      <text x={toX(4)} y="110" className="fig-value" textAnchor="middle">
+        1 yıl
+      </text>
+      <rect x={toX(3) - 20} y="120" width="100" height="14" rx="4" className="fig-card" />
+      <text x={toX(3) + 30} y="130" className="fig-value" textAnchor="middle">
+        2 yıl · +%10
+      </text>
+      <rect x="14" y="140" width="286" height="12" rx="4" className="fig-card" />
+      <text x="157" y="149" className="fig-value" textAnchor="middle">
+        5 yıl · toplam +%21 (yılda ≈ +%3,9)
+      </text>
     </Figure>
   );
 }
@@ -246,6 +422,10 @@ function CompoundCurve() {
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   "real-vs-nominal": RealVsNominal,
+  "purchasing-power": PurchasingPower,
+  "subtraction-error": SubtractionError,
+  "basket-difference": BasketDifference,
+  "window-selection": WindowSelection,
   concentration: Concentration,
   "ratio-context": RatioContext,
   "volatility-paths": VolatilityPaths,

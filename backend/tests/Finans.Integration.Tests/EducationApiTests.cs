@@ -27,13 +27,15 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
 
     private static readonly Guid Lesson1 = SeedData.Id("lesson-enflasyon");
     private static readonly Guid Quiz = SeedData.Id("quiz-enflasyon");
+    // T6.11: Ders 1 testi 3 zorluk × 3 soru. Seed kullanıcısının seviyesi ölçülmemiş
+    // → Başlangıç sayılır → yalnız KOLAY üç soru servis edilir ve onlardan puanlanır.
     private static readonly Guid Q1 = SeedData.Id("quiz-enflasyon-q1");
-    private static readonly Guid Q1Correct = SeedData.Id("q1-o3");
+    private static readonly Guid Q1Correct = SeedData.Id("quiz-enflasyon-q1-o2");
     private static readonly Guid Q2 = SeedData.Id("quiz-enflasyon-q2");
-    private static readonly Guid Q2Correct = SeedData.Id("q2-o2");
+    private static readonly Guid Q2Correct = SeedData.Id("quiz-enflasyon-q2-o2");
     private static readonly Guid Q3 = SeedData.Id("quiz-enflasyon-q3");
-    private static readonly Guid Q3Correct = SeedData.Id("q3-o2");
-    private static readonly Guid Q3Wrong = SeedData.Id("q3-o1");
+    private static readonly Guid Q3Correct = SeedData.Id("quiz-enflasyon-q3-o2");
+    private static readonly Guid Q3Wrong = SeedData.Id("quiz-enflasyon-q3-o1");
 
     public EducationApiTests(SqliteWebApplicationFactory factory) => _factory = factory;
 

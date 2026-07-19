@@ -35,47 +35,66 @@ internal static class EducationContent
     /// <param name="figure">
     /// Örnek bloğuna eşlik eden görselin anahtarı (T6.7) — arayüz çizer, veri gömülmez.
     /// </param>
-    private static IEnumerable<LessonSection> Blocks(
-        Guid lessonId, string core, string context, string deep, string live, string example,
-        string trap, string figure)
-    {
-        // NOT (T6.7): Tuzak bloğu **Core** katmandadır — yaygın yanılgıyı görmeye en çok
-        // ihtiyacı olan başlangıç seviyesidir; Context'te bırakılsaydı onlardan gizlenirdi.
-        var parts = new (string Body, DepthTier Tier, SectionKind Kind, string? Figure)[]
-        {
-            (core, DepthTier.Core, SectionKind.Explain, null),
-            (context, DepthTier.Context, SectionKind.Explain, null),
-            (deep, DepthTier.Deep, SectionKind.Explain, null),
-            (live, DepthTier.Core, SectionKind.LiveContext, null),
-            (example, DepthTier.Core, SectionKind.Example, figure),
-            (trap, DepthTier.Core, SectionKind.Trap, null),
-        };
+    /// <summary>Tek içerik bloğunun tarifi — ders yazarının kullandığı birim.</summary>
+    /// <param name="Tier">Derinlik katmanı (kimin varsayılan yolunda).</param>
+    /// <param name="Kind">Blok türü (anlatım/örnek/tuzak/canlı bağlam).</param>
+    /// <param name="Body">Markdown gövde; ilk <c>##</c> satırı adım başlığı olur.</param>
+    /// <param name="Figure">Varsa eşlik eden görselin anahtarı (arayüz çizer).</param>
+    internal readonly record struct Blk(DepthTier Tier, SectionKind Kind, string Body, string? Figure = null);
 
+    // Kısa yazım yardımcıları — ders içeriği okunur kalsın.
+    private static Blk Core(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Explain, body, fig);
+    private static Blk Ctx(string body, string? fig = null) => new(DepthTier.Context, SectionKind.Explain, body, fig);
+    private static Blk Deep(string body, string? fig = null) => new(DepthTier.Deep, SectionKind.Explain, body, fig);
+    private static Blk Ex(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Example, body, fig);
+    private static Blk ExDeep(string body, string? fig = null) => new(DepthTier.Context, SectionKind.Example, body, fig);
+    private static Blk Trap(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Trap, body, fig);
+    private static Blk Live(string body) => new(DepthTier.Core, SectionKind.LiveContext, body, null);
+
+    /// <summary>
+    /// Blok tariflerini <see cref="LessonSection"/>'a çevirir. Blok SAYISI derse göre
+    /// değişebilir — ders ne kadar aşama gerektiriyorsa o kadar (T6.11).
+    /// </summary>
+    private static IEnumerable<LessonSection> Build(Guid lessonId, params Blk[] blocks)
+    {
         var order = 1;
-        foreach (var (rawBody, tier, kind, fig) in parts)
+        foreach (var b in blocks)
         {
-            // Başlık gövdeden AYRIŞTIRILIR (T6.10): adım gezgini/yol haritası bölüm
-            // adlarını gösterebilsin diye `Heading` alanına taşınır ve gövdeden düşer
-            // (aksi hâlde başlık iki kez görünürdü). Tek kaynak: içerik metninin kendisi.
-            var (heading, body) = SplitHeading(rawBody.Trim());
+            // Başlık gövdeden AYRIŞTIRILIR (T6.10): yol haritası adım adlarını gösterir,
+            // başlık metinde ikinci kez görünmez. Tek kaynak: içeriğin kendisi.
+            var (heading, body) = SplitHeading(b.Body.Trim());
 
             yield return new LessonSection
             {
-                Heading = heading,
-                // DETERMİNİSTİK Id (kritik): seed "hiç bölüm var mı?" diye değil
-                // "BU bölüm var mı?" diye bakar → sonradan eklenen bloklar (örn. T6.2'nin
-                // LiveContext'i) mevcut kurulumlara da iner, var olanlar çoğaltılmaz.
-                // Aynı Id sayesinde içerik DEĞİŞİKLİKLERİ de mutabık kılınabilir (T6.7).
+                // DETERMİNİSTİK Id: seed "BU blok var mı?" diye bakar → sonradan eklenen
+                // bloklar mevcut kurulumlara iner, var olanlar çoğaltılmaz, içerik
+                // düzeltmeleri mutabakatla güncellenir (SeedData §SeedEducationSectionsAsync).
                 Id = SeedData.Id($"section-{lessonId:N}-{order}"),
                 LessonId = lessonId,
                 OrderIndex = order++,
+                Heading = heading,
                 BodyMarkdown = body,
-                DepthTier = tier,
-                Kind = kind,
-                FigureKey = fig,
+                DepthTier = b.Tier,
+                Kind = b.Kind,
+                FigureKey = b.Figure,
             };
         }
     }
+
+    /// <summary>
+    /// Klasik 6 bloklu ders kalıbı (Set 1'in 2-5. dersleri hâlâ bunu kullanır).
+    /// Daha ayrıntılı dersler <see cref="Build"/> ile serbest sayıda blok tanımlar.
+    /// </summary>
+    private static IEnumerable<LessonSection> Blocks(
+        Guid lessonId, string core, string context, string deep, string live, string example,
+        string trap, string figure) =>
+        Build(lessonId,
+            Core(core),
+            Ctx(context),
+            Deep(deep),
+            Live(live),
+            Ex(example, figure),
+            Trap(trap));
 
     /// <summary>
     /// Gövdenin ilk satırı <c>## </c> veya <c>### </c> başlığıysa onu ayırır.
@@ -94,25 +113,53 @@ internal static class EducationContent
 
     // ── Ders 1 — Enflasyon ve Reel Getiri ────────────────────────────────────
 
-    public static IEnumerable<LessonSection> Lesson1(Guid id) => Blocks(id,
-        core: """
+    public static IEnumerable<LessonSection> Lesson1(Guid id) => Build(id,
+
+        // ── 1. Kavramın kendisi ──────────────────────────────────────────────
+        Core("""
         ## Rakam mı büyüdü, paran mı?
 
-        Bir yıl önce 100.000 ₺'n vardı, bugün 140.000 ₺. Kazandın mı? Cevap, aynı
-        dönemde fiyatların ne kadar arttığına bağlı.
+        Bir yıl önce 100.000 ₺'n vardı, bugün 140.000 ₺. Kazandın mı?
 
-        **Nominal getiri** cüzdanındaki rakamın değişimidir: burada %40.
+        Cevap tek başına bu iki sayıda değil. Çünkü bir yıl içinde **paranın
+        kendisi de değişti**: aynı ürün artık daha pahalı.
 
-        **Reel getiri** ise alım gücünün değişimidir — yani o parayla gerçekte
-        daha fazla şey alabiliyor musun?
+        İki farklı "getiri" vardır ve ikisi çok farklı şey söyler:
+
+        - **Nominal getiri** — cüzdanındaki rakamın değişimi. Burada %40.
+        - **Reel getiri** — **alım gücünün** değişimi. Yani o parayla gerçekte daha
+          fazla şey alabiliyor musun?
 
         Fiyatlar aynı dönemde %38 arttıysa, 140.000 ₺ ile bugün ancak bir yıl önce
-        100.000 ₺ ile aldıklarının biraz fazlasını alabilirsin. Rakam büyük ölçüde
-        büyüdü, alım gücün ise çok az.
+        100.000 ₺ ile aldıklarının **biraz fazlasını** alabilirsin. Rakam büyük
+        ölçüde büyüdü; alım gücün çok az.
 
         Yatırımda asıl soru şudur: **param büyüdü mü, yoksa sadece rakam mı?**
-        """,
-        context: """
+        """),
+
+        // ── 2. İlk somut örnek: tek kalem, adım adım ─────────────────────────
+        Ex("""
+        ## Adım adım: ekmek örneği
+
+        Soyut kalmasın. Diyelim bir ekmek bugün **20 ₺**.
+
+        **Bir yıl önce:** 100.000 ₺'n vardı, ekmek 14,50 ₺'ydi.
+        Paran 100.000 / 14,50 ≈ **6.897 ekmek** ediyordu.
+
+        **Bugün:** 140.000 ₺'n var, ekmek 20 ₺.
+        Paran 140.000 / 20 = **7.000 ekmek** ediyor.
+
+        Ekmek cinsinden zenginliğin: 6.897 → 7.000. Artış **%1,5 civarı**.
+
+        Oysa lira cinsinden %40 kazanmış görünüyorsun. Aradaki fark hayal değil —
+        biri lirayı, diğeri **alabildiğin şeyi** ölçüyor.
+
+        > Reel getiri tam olarak bu ikinci ölçüdür: paranı lira yerine
+        > **mal ve hizmet** cinsinden saymak.
+        """, "purchasing-power"),
+
+        // ── 3. Formül ────────────────────────────────────────────────────────
+        Ctx("""
         ## Nasıl hesaplanır?
 
         Reel getiri, nominal getiriyi enflasyona göre düzeltir:
@@ -121,72 +168,178 @@ internal static class EducationContent
 
         Örnekteki rakamlarla: (1,40 / 1,38) − 1 ≈ **%1,4**.
 
-        ### Neden çıkarma yetmez?
+        Ekmek hesabıyla bulduğumuz %1,5'e çok yakın — küçük fark yuvarlamadan.
+        İki yol aynı yere çıkar: formül, "kaç ekmek" hesabının kısayoludur.
 
-        Çoğu kişi %40 − %38 = %2 der. Bu kaba bir yaklaşımdır ve düşük enflasyonda
-        kabul edilebilir sonuç verir. Ama enflasyon yükseldikçe iki yöntem arasındaki
-        fark açılır, çünkü enflasyon getirinin **üzerine** değil, **içine** işler —
-        kazandığın paranın da alım gücü erir.
+        ### Formülü okuma biçimi
 
-        ### Hangi enflasyon?
+        - Payda **paranın** ne kadar büyüdüğü: 1,40 kat.
+        - Paydada **fiyatların** ne kadar büyüdüğü: 1,38 kat.
+        - Bölüm, ikisinin **yarışını** verir: para fiyatları geçebildi mi?
 
-        TÜFE (Tüketici Fiyat Endeksi) ortalama bir tüketim sepetini ölçer. Senin
-        harcama sepetin bu ortalamadan farklıysa — kirada mı oturuyorsun, araba mı
-        kullanıyorsun — hissettiğin enflasyon da farklı olur. Bu yüzden reel getiri
-        tek bir mutlak gerçek değil, **hangi sepete göre** sorusuna bağlı bir ölçüdür.
+        Bölüm 1'den büyükse alım gücün arttı, küçükse azaldı.
+        """),
 
-        ### Dönem seçimi
+        // ── 4. Çıkarma tuzağı + görsel ───────────────────────────────────────
+        Trap("""
+        ## Tuzak: "çıkarıver, olur biter"
+
+        Çoğu kişi %40 − %38 = **%2** der. Bu bir kısayoldur ve **düşük enflasyonda**
+        kabul edilebilir sonuç verir. Ama enflasyon yükseldikçe sapar.
+
+        Neden? Çünkü enflasyon yalnız ana paranı değil, **kazandığın getiriyi de**
+        eritir. Çıkarma bunu hesaba katmaz.
+
+        Aynı 10 puanlık farkın üç ortamda ne verdiğine bak:
+
+        - Nominal %12, enflasyon %10 → çıkarma %2 · **gerçek %1,8** (fark küçük)
+        - Nominal %45, enflasyon %35 → çıkarma %10 · **gerçek %7,4**
+        - Nominal %85, enflasyon %75 → çıkarma %10 · **gerçek %5,7**
+
+        Enflasyon yükseldikçe çıkarma seni **giderek daha fazla** yanıltır.
+        Türkiye gibi yüksek enflasyon görmüş ortamlarda bu fark önemsiz değildir.
+        """, "subtraction-error"),
+
+        // ── 5. Hangi enflasyon? ──────────────────────────────────────────────
+        Ctx("""
+        ## Hangi enflasyon? Senin sepetin
+
+        TÜFE (Tüketici Fiyat Endeksi) **ortalama bir tüketim sepetini** ölçer:
+        gıda, konut, ulaşım, giyim, sağlık… hepsi belli ağırlıklarla.
+
+        Ama kimse "ortalama" harcamaz. Senin sepetin bu ortalamadan farklıysa,
+        **hissettiğin enflasyon** da farklı olur.
+
+        - Kiracıysan ve kiralar hızlı arttıysa, senin enflasyonun TÜFE'nin üstündedir.
+        - Ev sahibiysen ve araba kullanmıyorsan, altında kalabilir.
+
+        Bu, TÜFE'nin "yanlış" olduğu anlamına gelmez — **ortalama** olduğu anlamına
+        gelir. Reel getiri de bu yüzden mutlak bir gerçek değil, **hangi sepete göre**
+        sorusuna bağlı bir ölçüdür.
+        """),
+
+        // ── 6. Sepet örneği ──────────────────────────────────────────────────
+        Ex("""
+        ## Örnek: aynı yıl, iki farklı "gerçek"
+
+        Yıl sonunda TÜFE **%50** açıklandı. İki kişinin de nominal getirisi **%55**.
+
+        **Birinci kişi:** kirada oturuyor, kirası %80 arttı; harcamasının büyük
+        kısmı kira. Kendi sepetinin enflasyonu ≈ **%62**.
+        Reel getirisi: (1,55 / 1,62) − 1 ≈ **−%4,3**.
+
+        **İkinci kişi:** kendi evinde, ulaşımı az; sepeti ağırlıkla gıda.
+        Kendi sepetinin enflasyonu ≈ **%44**.
+        Reel getirisi: (1,55 / 1,44) − 1 ≈ **+%7,6**.
+
+        Aynı yatırım, aynı yıl, aynı nominal getiri — ama biri alım gücü kaybetti,
+        diğeri kazandı.
+
+        > Bu hesaplar kişisel sepet farkını göstermek içindir; belirli bir yatırım
+        > aracını işaret etmez.
+        """, "basket-difference"),
+
+        // ── 7. Dönem seçimi ──────────────────────────────────────────────────
+        Ctx("""
+        ## Dönem seçimi: hangi tarihten bakıyorsun?
 
         Aynı yatırım, seçtiğin başlangıç tarihine göre çok farklı reel getiriler
-        gösterebilir. Bir dönemi öne çıkarıp diğerini görmezden gelmek, farkında
-        olmadan kendini kandırmanın en kolay yoludur.
-        """,
-        deep: """
-        ## İşin matematiği ve sınırları
+        gösterebilir. Bu, istatistiğin en sessiz tuzaklarından biridir.
 
-        ### Formülün arkasındaki mantık
+        Bir dönemi öne çıkarıp diğerini görmezden gelmek — özellikle kendi
+        kararını haklı çıkarmak için — farkında olmadan kendini kandırmanın en
+        kolay yoludur.
+
+        Pratik alışkanlık: bir getiri rakamı gördüğünde önce ***"hangi tarihten
+        hangi tarihe?"*** diye sor. Cevap yoksa rakam eksik demektir.
+        """),
+
+        // ── 8. Dönem örneği + görsel ─────────────────────────────────────────
+        ExDeep("""
+        ## Örnek: aynı varlık, üç farklı pencere
+
+        Bir varlığın beş yıllık seyrini düşün. Yıllık reel getirileri sırasıyla:
+        **+%18, −%12, +%6, −%9, +%21**.
+
+        - **Son 1 yıla** bakan: +%21 görür, "harika" der.
+        - **Son 2 yıla** bakan: −%9 ve +%21 → bileşik ≈ **+%10**, "iyi" der.
+        - **Beş yılın tamamına** bakan: bileşik ≈ **+%21**, yani yılda ≈ **+%3,9**.
+
+        Üçü de doğru rakam. Üçü de farklı hikâye anlatıyor.
+
+        En dürüst bakış, **elde tutmayı planladığın süreye** en yakın pencereyi
+        seçmek ve kısa pencereleri "kanıt" saymamaktır.
+        """, "window-selection"),
+
+        // ── 9. Derin: matematiği ─────────────────────────────────────────────
+        Deep("""
+        ## İşin matematiği: neden bölme?
 
         Nominal getiri paranın **miktarını**, enflasyon ise paranın **birim değerini**
-        değiştirir. İkisi aynı anda çalıştığı için etkileri toplanmaz, çarpılır.
+        değiştirir. İkisi aynı anda çalıştığı için etkileri toplanmaz, **çarpılır**.
 
         Elindeki para (1 + nominal) katına çıkarken, bir birim malın fiyatı
         (1 + enflasyon) katına çıkar. Alabileceğin mal miktarı bu ikisinin
-        **oranıdır** — bu yüzden formülde bölme vardır.
+        **oranıdır** — formüldeki bölme buradan gelir.
+
+        ### Çıkarmanın hatası ne kadar?
+
+        Gerçek reel getiri ile çıkarma arasındaki fark yaklaşık
+        **(nominal − reel) × enflasyon** kadardır. Enflasyon büyüdükçe hata da
+        büyür; bu yüzden düşük enflasyonda kimse fark etmez, yüksek enflasyonda
+        ise fark ciddileşir.
 
         ### Negatif reel getiri ne demek?
 
-        Reel getiri eksiyse, hesabındaki rakam artmış olsa bile daha az şey
-        alabiliyorsun demektir. Yüksek enflasyon dönemlerinde yüksek nominal
-        getiriler olağanlaşır; %45 getiri kulağa büyük gelir ama enflasyon %50 ise
+        Reel getiri eksiyse, hesabındaki rakam artmış olsa bile **daha az şey
+        alabiliyorsun** demektir. Yüksek enflasyon dönemlerinde yüksek nominal
+        getiriler olağanlaşır: %45 kulağa büyük gelir ama enflasyon %50 ise
         alım gücün gerilemiştir.
+        """),
 
-        ### Maliyetler de reel getiriyi düşürür
+        // ── 10. Derin: maliyetler ve vergi öncesi/sonrası ────────────────────
+        Deep("""
+        ## Getiriyi aşındıran diğer kalemler
 
-        İşlem komisyonları, alış-satış makası ve varsa fon gider oranı nominal
-        getiriden düşer. Reel getiriyi hesaplarken bunları göz ardı etmek, tabloyu
-        olduğundan iyi gösterir.
+        Reel getiri hesabı çoğu zaman "brüt" yapılır. Oysa cebine giren rakam
+        birkaç kalem daha eksilir:
+
+        - **İşlem komisyonu** — her alış ve satışta.
+        - **Alış-satış makası** — aldığın fiyat ile satabileceğin fiyat arasındaki
+          fark; özellikle az işlem gören varlıklarda geniştir.
+        - **Fon gider oranı** — fonlarda yıllık, otomatik kesilir.
+        - **Saklama/hesap ücretleri** — varsa.
+
+        Bu kalemler **nominal getiriden** düşer; sonra üstüne enflasyon işler.
+        Sırayı karıştırmamak gerekir: önce net nominal, sonra reel.
 
         ### Neden bu kavram her şeyin temeli?
 
-        Enflasyon, yatırımın "sıfır çizgisidir". Enflasyonun altında kalan her
+        Enflasyon, yatırımın **sıfır çizgisidir**. Enflasyonun altında kalan her
         getiri, matematiksel olarak alım gücü kaybıdır — rakam büyürken servetin
         küçülür. Bu yüzden bir portföyü değerlendirirken ilk bakılacak yer nominal
         kâr değil, enflasyona göre nerede durduğudur.
-        """,
-        live: """
+        """),
+
+        // ── 11. Senin portföyünde ────────────────────────────────────────────
+        Live("""
         ## Senin portföyünde
 
         Portföyünün nominal getirisi **{{return_ratio}}**; enflasyondan arındırılmış
         **reel** getirisi ise **{{real_return}}**.
 
-        Bu dersin anlattığı ayrım tam olarak bu iki sayının arasındaki farktır: birincisi
-        rakamın, ikincisi alım gücünün ne yaptığını söyler.
-        """,
-        example: """
-        ## Örnek: aynı yıl, üç farklı sonuç
+        Bu dersin anlattığı ayrım tam olarak bu iki sayının arasındaki farktır:
+        birincisi rakamın, ikincisi alım gücünün ne yaptığını söyler.
 
-        Diyelim ki bir yılda genel fiyat artışı **%50** oldu. Üç kişinin nominal
-        getirisi şöyle:
+        Toplam değerin **{{total_value}}** — ama bu rakamın bir yıl önceki
+        karşılığıyla aynı şeyleri alıp alamayacağını söyleyen, reel getiridir.
+        """),
+
+        // ── 12. Toparlayıcı örnek + ana görsel ───────────────────────────────
+        Ex("""
+        ## Toparlayalım: aynı yıl, üç farklı sonuç
+
+        Bir yılda genel fiyat artışı **%50** oldu. Üç kişinin nominal getirisi:
 
         - **A yatırımı:** %45 nominal → reel ≈ **−%3,3**
         - **B yatırımı:** %50 nominal → reel = **%0** (tam başa baş)
@@ -194,30 +347,32 @@ internal static class EducationContent
 
         Üçü de "kâr etti" diyebilir; ancak yalnızca C'nin alım gücü arttı. A, hesap
         özetinde artı bakiye görmesine rağmen bir yıl öncesine göre daha az şey
-        alabiliyor.
+        alabiliyor. B ise koştu ama yerinde saydı.
 
         > Buradaki A, B, C birer **hesaplama örneğidir** — belirli bir yatırım
-        > aracını işaret etmez ve hiçbiri diğerinden "iyi" ilan edilmiyor. Amaç
-        > yalnızca aynı enflasyon altında farklı nominal getirilerin nasıl farklı
-        > reel sonuçlar verdiğini göstermek.
-        """,
-        trap: """
-        ## Sık yapılan hata
+        > aracını işaret etmez ve hiçbiri diğerinden "iyi" ilan edilmiyor.
+        """, "real-vs-nominal"),
+
+        // ── 13. Kapanış tuzakları ────────────────────────────────────────────
+        Trap("""
+        ## Sık yapılan hatalar
 
         **"Yüksek nominal getiri = başarılı yatırım."**
-
         Yüksek enflasyon ortamında yüksek nominal getiriler olağandır — herkesin
         rakamı büyür. Bu ortamda %60 getiri, enflasyon %65 ise aslında bir kayıptır.
 
-        İkinci yaygın hata, **kâr/zararı sadece lira olarak okumaktır.** "50.000 ₺
-        kazandım" cümlesi, o 50.000 ₺'nin bugün ne aldığını söylemez.
+        **"Kâr/zararı lira olarak okumak."**
+        "50.000 ₺ kazandım" cümlesi, o 50.000 ₺'nin bugün ne aldığını söylemez.
 
-        Üçüncüsü ise **enflasyonu yalnızca kötü haber olarak görmektir.** Enflasyon
-        bir düşman değil, bir **ölçüm çizgisidir**: getirini karşılaştıracağın taban.
-        Bu çizgiyi bilmeden bir yatırımın iyi mi kötü mü gittiğini söylemek mümkün
-        değildir.
-        """,
-        figure: "real-vs-nominal");
+        **"Enflasyonu yalnızca kötü haber saymak."**
+        Enflasyon bir düşman değil, bir **ölçüm çizgisidir**: getirini
+        karşılaştıracağın taban. Bu çizgiyi bilmeden bir yatırımın iyi mi kötü mü
+        gittiğini söylemek mümkün değildir.
+
+        **"Tek bir yılın reel getirisine bakıp karar vermek."**
+        Bir yıl gürültüdür. Kavramın değeri, aynı ölçüyü **yıllar boyunca tutarlı**
+        biçimde uygulamakta.
+        """));
 
     // ── Ders 2 — Çeşitlendirme ───────────────────────────────────────────────
 
@@ -307,7 +462,7 @@ internal static class EducationContent
         Toplam **{{holding_count}}** kalemin **{{asset_class_count}}** farklı varlık
         türüne yayılmış durumda.
 
-        Bu dersteki *yoğunlaşma* kavramı tam olarak ilk sayıyı ölçer. Yüksek olması
+        Bu dersteki **yoğunlaşma** kavramı tam olarak ilk sayıyı ölçer. Yüksek olması
         kendiliğinden yanlış değildir; bilinmesi gereken bir durumdur.
         """,
         example: """
@@ -354,8 +509,8 @@ internal static class EducationContent
         ## Bir hisseyi okumanın rakamları
 
         **F/K (Fiyat / Kazanç)**, hisse fiyatının şirketin hisse başına kârına
-        oranıdır. Sorduğu şey basittir: *şirketin 1 liralık kârı için kaç lira
-        ödüyorum?*
+        oranıdır. Sorduğu şey basittir: **şirketin 1 liralık kârı için kaç lira
+        ödüyorum?**
 
         **PD/DD (Piyasa Değeri / Defter Değeri)**, şirketin borsadaki değerinin
         muhasebe defterindeki öz kaynağına oranıdır. 1'in üzerinde olması, piyasanın
@@ -461,7 +616,7 @@ internal static class EducationContent
 
         Düşük F/K çoğu zaman piyasanın bir sorun sezdiğinin işaretidir. "Ucuz"
         görünen şirket, kârı düşmek üzere olduğu için ucuz olabilir. Buna
-        *değer tuzağı* denir.
+        **değer tuzağı** denir.
 
         İkinci hata: **tek bir orana bakıp karar vermek.** F/K, PD/DD ve temettü
         verimi aynı şirketin farklı yüzleridir; biri güzel görünürken diğeri

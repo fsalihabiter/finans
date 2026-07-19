@@ -575,21 +575,25 @@ function LessonReader({
                 </span>
               </div>
 
-              <LessonRoadmap steps={steps} current={stepIndex} onJump={setStepIndex} />
+              {/* Geniş ekranda iki sütun: solda yol haritası (yapışkan), sağda adım.
+                  Böylece metin kendi okuma genişliğini korurken sayfa boş kalmaz. */}
+              <div className="lesson-layout">
+                <LessonRoadmap steps={steps} current={stepIndex} onJump={setStepIndex} />
 
-              <div className="lesson-step">
-                <div className="lesson-step-head">
-                  <h3>{step.title}</h3>
-                  {step.optional && (
-                    <span className="step-optional">ileri seviye — istersen atla</span>
+                <div className="lesson-step">
+                  <div className="lesson-step-head">
+                    <h3>{step.title}</h3>
+                    {step.optional && (
+                      <span className="step-optional">ileri seviye — istersen atla</span>
+                    )}
+                  </div>
+
+                  {step.section ? (
+                    <StepContent step={step} lesson={lesson.data} />
+                  ) : (
+                    <QuizPanel quiz={lesson.data.quiz!} />
                   )}
                 </div>
-
-                {step.section ? (
-                  <StepContent step={step} lesson={lesson.data} />
-                ) : (
-                  <QuizPanel quiz={lesson.data.quiz!} />
-                )}
               </div>
 
               <div className="lesson-actions">

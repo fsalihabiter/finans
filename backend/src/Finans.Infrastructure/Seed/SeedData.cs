@@ -330,7 +330,10 @@ public static class SeedData
             new LessonConceptTag { LessonId = lesson4.Id, ConceptTagId = tagRiskReturn.Id },
             new LessonConceptTag { LessonId = lesson5.Id, ConceptTagId = tagCompound.Id });
 
-        // ── Ders 1 mini testi (12.5) — 3 soru, her birinde eğitici Explanation ────
+        // ── Ders 1 mini testi — 3 ZORLUK × 3 soru (T6.11) ────────────────────────
+        // Kullanıcı yalnız seviyesine uygun soruları görür ve onlardan puanlanır
+        // (EducationService.AllowedDifficulties): Başlangıç Easy · Gelişen +Medium ·
+        // İleri hepsi. Her soruda eğitici `Explanation` — yanlışta da öğretir.
         var quiz = new Quiz
         {
             Id = Id("quiz-enflasyon"),
@@ -340,51 +343,116 @@ public static class SeedData
         };
         db.Quizzes.Add(quiz);
 
-        var q1 = new QuizQuestion
+        var l1Questions = new (string Key, QuizDifficulty Diff, QuizQuestionType Type, string Prompt, string Explanation, (string Text, bool Correct)[] Options)[]
         {
-            Id = Id("quiz-enflasyon-q1"),
-            QuizId = quiz.Id,
-            OrderIndex = 1,
-            Type = QuizQuestionType.SingleChoice,
-            Prompt = "Nominal getirin %40, enflasyon %38 ise reel getirin yaklaşık kaçtır?",
-            Explanation = "Reel getiri = (1 + nominal) / (1 + enflasyon) − 1. Basit çıkarma (%40 − %38) kaba bir tahmindir; " +
-                          "doğru formül (1,40 / 1,38) − 1 ≈ %1,4 verir. Enflasyon yükseldikçe iki yöntem arasındaki fark büyür.",
+            // ── Kolay: kavramı tanıyor mu? ───────────────────────────────────────
+            ("q1", QuizDifficulty.Easy, QuizQuestionType.SingleChoice,
+                "Reel getiri neyi ölçer?",
+                "Reel getiri kazancını enflasyona göre düzeltir; \"param gerçekte ne kadar değer kazandı ya da " +
+                "kaybetti?\" sorusunu yanıtlar. Ham lira artışı ise nominal getiridir.",
+                [("Paranın kaç lira arttığını", false),
+                 ("Enflasyondan arındırılmış, gerçek alım gücü değişimini", true),
+                 ("Bankanın uyguladığı faiz oranını", false),
+                 ("Döviz kurundaki değişimi", false)]),
+
+            ("q2", QuizDifficulty.Easy, QuizQuestionType.TrueFalse,
+                "Paran bir yılda %20 arttı ama enflasyon %25 olduysa, alım gücün artmıştır.",
+                "Nominal olarak paran büyüdü ama fiyatlar daha hızlı arttığı için aynı parayla daha az şey " +
+                "alabilirsin — reel getirin negatif. \"Rakam büyüdü\" her zaman \"zenginleştim\" anlamına gelmez.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            ("q3", QuizDifficulty.Easy, QuizQuestionType.SingleChoice,
+                "Nominal getirin %50, enflasyon da %50. Alım gücün ne oldu?",
+                "Para ve fiyatlar aynı oranda büyüdüğünde alım gücün değişmez: (1,50 / 1,50) − 1 = 0. " +
+                "Koştun ama yerinde saydın — bu ders boyunca \"B yatırımı\" durumu.",
+                [("Arttı", false), ("Aynı kaldı", true), ("Azaldı", false), ("Hesaplanamaz", false)]),
+
+            // ── Orta: hesabı yapabiliyor mu? ─────────────────────────────────────
+            ("q4", QuizDifficulty.Medium, QuizQuestionType.SingleChoice,
+                "Nominal getirin %40, enflasyon %38 ise reel getirin yaklaşık kaçtır?",
+                "Reel getiri = (1 + nominal) / (1 + enflasyon) − 1. Basit çıkarma (%40 − %38) kaba bir tahmindir; " +
+                "doğru formül (1,40 / 1,38) − 1 ≈ %1,4 verir. Enflasyon yükseldikçe iki yöntem arasındaki fark büyür.",
+                [("%78 — ikisini toplarsın", false),
+                 ("%2 — ikisini çıkarırsın", false),
+                 ("Yaklaşık %1,4 — (1 + 0,40) / (1 + 0,38) − 1", true),
+                 ("%40 — enflasyon getiriyi etkilemez", false)]),
+
+            ("q5", QuizDifficulty.Medium, QuizQuestionType.SingleChoice,
+                "Enflasyon %75, nominal getirin %85. Çıkarma yöntemi ile gerçek sonuç arasındaki fark ne kadardır?",
+                "Çıkarma %10 der; gerçek reel getiri (1,85 / 1,75) − 1 ≈ %5,7'dir. Aradaki ~4,3 puanlık sapma, " +
+                "enflasyon yükseldikçe çıkarmanın giderek daha çok yanılttığını gösterir.",
+                [("Fark yok, ikisi de %10", false),
+                 ("Çıkarma %10 der ama gerçek ≈ %5,7 — yaklaşık 4 puan sapma", true),
+                 ("Çıkarma %10 der ama gerçek ≈ %14 — çıkarma az gösterir", false),
+                 ("Gerçek sonuç negatiftir", false)]),
+
+            ("q6", QuizDifficulty.Medium, QuizQuestionType.TrueFalse,
+                "TÜFE herkesin hissettiği enflasyonu doğru ölçer.",
+                "TÜFE ortalama bir tüketim sepetini ölçer. Kendi sepetin ortalamadan farklıysa (örneğin kiracıysan " +
+                "ve kiralar hızlı arttıysa) hissettiğin enflasyon farklı olur. TÜFE yanlış değil, ORTALAMADIR.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor: kavramı başka bağlama taşıyabiliyor mu? ─────────────────────
+            ("q7", QuizDifficulty.Hard, QuizQuestionType.SingleChoice,
+                "İki kişinin de nominal getirisi %55. Kiracı olanın kendi sepet enflasyonu %62, ev sahibininki %44. " +
+                "Bu ne anlama gelir?",
+                "Reel getiri kişisel sepete bağlıdır: kiracı için (1,55/1,62) − 1 ≈ −%4,3 (alım gücü kaybı), " +
+                "ev sahibi için (1,55/1,44) − 1 ≈ +%7,6 (kazanç). Aynı yatırım, aynı yıl, iki farklı gerçek.",
+                [("İkisi de aynı reel getiriyi elde etti", false),
+                 ("Kiracı alım gücü kaybetti, ev sahibi kazandı", true),
+                 ("İkisi de alım gücü kazandı", false),
+                 ("Nominal getiri eşit olduğu için sepet fark etmez", false)]),
+
+            ("q8", QuizDifficulty.Hard, QuizQuestionType.SingleChoice,
+                "Bir varlığın yıllık reel getirileri: +%18, −%12, +%6, −%9, +%21. " +
+                "Yalnızca son yılı gösteren bir grafik neyi gizler?",
+                "Son yıl +%21 ile parlak görünür; beş yılın bileşiği ise ≈ +%21 TOPLAM, yani yılda ≈ +%3,9'dur. " +
+                "Kısa pencere, aradaki iki kayıp yılı ve gerçek ortalamayı gizler. \"Hangi tarihten hangi tarihe?\" " +
+                "sorusu bu yüzden önemlidir.",
+                [("Hiçbir şey; son yıl en güncel bilgidir", false),
+                 ("Kayıp yılları ve çok daha düşük olan uzun dönem ortalamasını", true),
+                 ("Enflasyon oranını", false),
+                 ("İşlem maliyetlerini", false)]),
+
+            ("q9", QuizDifficulty.Hard, QuizQuestionType.MultipleChoice,
+                "Reel getiriyi hesaplarken hangi kalemler nominal getiriden ÖNCE düşülmelidir? (birden fazla)",
+                "Komisyon, alış-satış makası ve fon gider oranı nominal getiriden düşer; enflasyon ise bu NET " +
+                "nominal getirinin üzerine işler. Sıra önemlidir: önce net nominal, sonra reel. Enflasyonun " +
+                "kendisi bir maliyet kalemi değil, ölçüm çizgisidir.",
+                [("İşlem komisyonu", true),
+                 ("Alış-satış makası", true),
+                 ("Fon gider oranı", true),
+                 ("Enflasyon oranı", false)]),
         };
-        var q2 = new QuizQuestion
+
+        var qOrder = 1;
+        foreach (var (key, diff, type, prompt, explanation, options) in l1Questions)
         {
-            Id = Id("quiz-enflasyon-q2"),
-            QuizId = quiz.Id,
-            OrderIndex = 2,
-            Type = QuizQuestionType.TrueFalse,
-            Prompt = "Paran bir yılda %20 arttı ama enflasyon %25 olduysa, alım gücün artmıştır.",
-            Explanation = "Nominal olarak paran büyüdü ama fiyatlar daha hızlı arttığı için aynı parayla daha az şey alabilirsin — " +
-                          "reel getirin negatif. \"Rakam büyüdü\" her zaman \"zenginleştim\" anlamına gelmez.",
-        };
-        var q3 = new QuizQuestion
-        {
-            Id = Id("quiz-enflasyon-q3"),
-            QuizId = quiz.Id,
-            OrderIndex = 3,
-            Type = QuizQuestionType.SingleChoice,
-            Prompt = "Reel getiri neyi ölçer?",
-            Explanation = "Reel getiri kazancını enflasyona göre düzeltir; \"param gerçekte ne kadar değer kazandı ya da kaybetti?\" " +
-                          "sorusunu yanıtlar. Ham lira artışı ise nominal getiridir.",
-        };
-        db.QuizQuestions.AddRange(q1, q2, q3);
+            var question = new QuizQuestion
+            {
+                Id = Id($"quiz-enflasyon-{key}"),
+                QuizId = quiz.Id,
+                OrderIndex = qOrder++,
+                Type = type,
+                Difficulty = diff,
+                Prompt = prompt,
+                Explanation = explanation,
+            };
+            db.QuizQuestions.Add(question);
 
-        db.QuizOptions.AddRange(
-            new QuizOption { Id = Id("q1-o1"), QuestionId = q1.Id, OrderIndex = 1, Text = "%78 — ikisini toplarsın", IsCorrect = false },
-            new QuizOption { Id = Id("q1-o2"), QuestionId = q1.Id, OrderIndex = 2, Text = "%2 — ikisini çıkarırsın", IsCorrect = false },
-            new QuizOption { Id = Id("q1-o3"), QuestionId = q1.Id, OrderIndex = 3, Text = "Yaklaşık %1,4 — (1 + 0,40) / (1 + 0,38) − 1", IsCorrect = true },
-            new QuizOption { Id = Id("q1-o4"), QuestionId = q1.Id, OrderIndex = 4, Text = "%40 — enflasyon getiriyi etkilemez", IsCorrect = false },
-
-            new QuizOption { Id = Id("q2-o1"), QuestionId = q2.Id, OrderIndex = 1, Text = "Doğru", IsCorrect = false },
-            new QuizOption { Id = Id("q2-o2"), QuestionId = q2.Id, OrderIndex = 2, Text = "Yanlış", IsCorrect = true },
-
-            new QuizOption { Id = Id("q3-o1"), QuestionId = q3.Id, OrderIndex = 1, Text = "Paranın kaç lira arttığını", IsCorrect = false },
-            new QuizOption { Id = Id("q3-o2"), QuestionId = q3.Id, OrderIndex = 2, Text = "Enflasyondan arındırılmış, gerçek alım gücü değişimini", IsCorrect = true },
-            new QuizOption { Id = Id("q3-o3"), QuestionId = q3.Id, OrderIndex = 3, Text = "Bankanın uyguladığı faiz oranını", IsCorrect = false },
-            new QuizOption { Id = Id("q3-o4"), QuestionId = q3.Id, OrderIndex = 4, Text = "Döviz kurundaki değişimi", IsCorrect = false });
+            var oOrder = 1;
+            foreach (var (text, correct) in options)
+            {
+                db.QuizOptions.Add(new QuizOption
+                {
+                    Id = Id($"quiz-enflasyon-{key}-o{oOrder}"),
+                    QuestionId = question.Id,
+                    OrderIndex = oOrder++,
+                    Text = text,
+                    IsCorrect = correct,
+                });
+            }
+        }
 
         // ── İlerleme: HİÇ KAYIT YOK (karar 2026-07-19) ───────────────────────────
         // Önceden 1-3 "Tamamlandı" seed'leniyordu; bu, kullanıcıya hiç okumadığı
