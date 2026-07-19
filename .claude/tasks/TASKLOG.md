@@ -20,6 +20,38 @@
 
 ---
 
+## 2026-07-19 · Kimlik analizi doğrulaması tamamlandı — `11` §2 kanıtla keskinleştirildi
+- **Görev(ler):** ad-hoc (aynı gün yazılan `11` §2 kararının doğrulanması).
+- **Ne yapıldı:** İlk turda oturum limitine takılan doğrulama aşaması cache'ten yeniden koşturuldu
+  (112 ajan, **0 hata**; 29 kaynak, 137 iddia → 25 doğrulandı: **22 onay / 3 çürütme**).
+  **`11` §2'ye yazılan 4 kritik iddianın DÖRDÜ DE yüksek güvenle onaylandı** — düzeltilecek karar
+  çıkmadı, aksine gerekçeler güçlendi:
+  (1) **MS Learn** (ms.date 2026-03-23) SPA'lar için cookie öneriyor (birebir alıntı);
+  (2) **`MapIdentityApi`** — Microsoft "tam özellikli kimlik sağlayıcısı değil" diyor, token'lar
+  standart JWT bile değil; (3) **rotasyon yok** — `dotnet/aspnetcore#52815` GitHub API ile
+  2026-07-19'da *açık* teyit edildi, milestone `.NET 11 Planning` (**triage kovası**, sevkiyat
+  taahhüdü değil); yapısal neden: token'lar sunucu deposu olmayan opak `AuthenticationTicket`'lar;
+  (4) **IETF `draft-ietf-oauth-browser-based-apps-27`** (2026-07-06, BCP) BFF'i en güvenli desen
+  sıralıyor ve *"sensitive applications... that handle personal data"* için birebir öneriyor.
+  (5) **OWASP Argon2id** min 19 MiB/t=2/p=1 onaylandı — nüans: bu, OWASP'ın eşdeğer saydığı
+  birkaç ayardan biri (§2 buna göre düzeltildi); PBKDF2 esasen FIPS-140 yolu.
+  **KVKK cephesi beklenenden güçlü çıktı** (ilk turda hiç doğrulanamamıştı): Kurul **bugüne dek
+  hiçbir ülke için yeterlilik kararı ilan etmedi** (KVKK sitesi canlı fetch); sürekli çalışan SaaS
+  entegrasyonu **"arızi" sayılamaz** → açık rıza yolu kapalı; tek pratik yol standart sözleşme +
+  **5 iş günü içinde Kuruma bildirim ZORUNLU**, ihmali m.18/1-(d) idari para cezası.
+- **Dokunulan dosyalar:** `.claude/docs/11-SECURITY.md` (§2), `.claude/tasks/TASKLOG.md`.
+- **Test:** yok (doküman); doğrulama kanıtı = 22 onaylı iddia, 3 çürütme.
+- **Karar/Not:** Karar değişmedi, **kanıt eklendi** — §2'deki ilgili kalemler "✅ kaynak-doğrulandı"
+  işaretlendi. **Çürütülen 3 iddia** yalnız SaaS fiyat detayı (Clerk MFA katmanı, Google Identity
+  ücretsiz eşiği, SMS birim fiyatı) → kararı etkilemez, çünkü SaaS **fiyat değil KVKK** gerekçesiyle
+  elenmişti. ⚠️ **Doğrulanamayan alan dürüstçe işaretlendi:** self-host IdP kaynak tüketimi ve
+  Zitadel AGPL lisans iddiası teyit EDİLEMEDİ → §2'de "mühendislik yargısıdır" notu düşüldü;
+  ayrıca TR SMS OTP maliyetleri ve BDDK bilgi sistemleri yönetmeliğinin bir portföy takip
+  uygulamasını kapsayıp kapsamadığı **hâlâ açık** (T7.2 öncesi netleşmeli; transactional e-posta
+  sağlayıcı seçimi de aynı sepette).
+- **Durum:** tamamlandı.
+- **Sıradaki:** değişmedi — T5E.4b → T6.5 → T6.1 → T6.6.
+
 ## 2026-07-19 · Planlama — `15-EDUCATION-PLAN.md` (eğitim derinliği + tanılama + canlı veri)
 - **Görev(ler):** ad-hoc (planlama; önerilen kırılım T6.1–T6.11).
 - **Ne yapıldı:** Eğitim modülünün MVP iskeletinden uyarlanabilir müfredata evrimi için tasarım

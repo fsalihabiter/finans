@@ -41,24 +41,61 @@ sırların durduğu yer, container imajı, bağımlılıklar.
 
 - **Mekanizma:** JWT (kısa ömürlü **access** ~15 dk + **refresh** token).
   Stateless → yatay ölçeklenmeyle uyumlu (`10` §5).
-- **Parola saklama:** **Argon2id** (karar netleşti 2026-07-19: OWASP birinci
-  tercih, asgari **m=19 MiB / t=2 / p=1**; ASP.NET Identity varsayılan
-  PBKDF2'si OWASP eşiğinin altında → alternatif DEĞİL). **Asla** düz/zayıf
-  hash. Salt otomatik. Hash fonksiyonu birim testli (NFR-1 disiplini).
+- **Parola saklama:** **Argon2id** (karar 2026-07-19, ✅ kaynak-doğrulandı:
+  OWASP Password Storage Cheat Sheet birinci tercih — "minimum configuration of
+  19 MiB of memory, an iteration count of 2, and 1 degree of parallelism").
+  Bu, OWASP'ın eşdeğer saydığı birkaç ayardan biridir; bellek/iterasyon takası
+  yapılabilir ama **19 MiB tabanının altına inilmez**. PBKDF2 OWASP sıralamasında
+  Argon2id→scrypt→bcrypt'ten sonra, esasen **FIPS-140 gereksinimi** için
+  konumlanmıştır (o da ≥600.000 iterasyon HMAC-SHA256 ile) → ASP.NET Identity
+  varsayılanı alternatif DEĞİL. **Asla** düz/zayıf hash. Salt otomatik.
+  Hash fonksiyonu birim testli (NFR-1 disiplini).
 - **Refresh token:** sunucuda **hash'i** saklanır/iptal edilebilir, her
   kullanımda **rotasyon** + iptal edilmiş token yeniden gelirse **aile iptali**
   (çalınma tespiti) + mutlak ömür sınırı (IETF browser-based-apps BCP şartı).
-- **Hazır yapı NOTU (2026-07-19):** `MapIdentityApi` **kullanılmaz** — refresh
-  rotasyonu yok (dotnet/aspnetcore#52815, .NET 11 öncesi gelmiyor) ve Microsoft
-  kendisi "basit senaryolar" ile sınırlıyor. Mevcut `Users`/`RefreshTokens`/
-  `Roles` şeması (`03` §B) + `ICurrentUser` takası üzerine kendin-yap.
-  Harici IdP (Keycloak/Zitadel) ve SaaS (Auth0/Clerk) değerlendirildi ve
-  reddedildi (tek-VPS yükü / KVKK m.9 yurt dışı aktarım) — analiz: TASKLOG
-  2026-07-19. Sosyal giriş gerekirse yükseltme yolu: OpenIddict (in-app).
+- **Hazır yapı NOTU (2026-07-19, ✅ kaynak-doğrulandı):** `MapIdentityApi`
+  **kullanılmaz.** Gerekçe birincil kaynaklarla teyitli:
+  (a) **Refresh rotasyonu yok** — token süresi dolana dek defalarca kullanılabilir;
+  `dotnet/aspnetcore#52815` 2026-07-19 itibarıyla hâlâ **açık**, milestone
+  `.NET 11 Planning` (bu bir *triage kovası*, sevkiyat taahhüdü değil → yakın
+  vadede gelmesine güvenilmez). Yapısal neden: token'lar sunucu tarafı deposu
+  olmayan, data-protector ile korunan **opak `AuthenticationTicket`**'lardır —
+  "kullanıldı" işaretlemek mimari olarak mümkün değildir.
+  (b) Microsoft birebir: *"The token option isn't intended to be a full-featured
+  identity service provider or token server"*; ürettiği token'lar **standart JWT
+  bile değil**.
+  → Mevcut `Users`/`RefreshTokens`/`Roles` şeması (`03` §B) + `ICurrentUser`
+  takası üzerine **kendin-yap**. Sosyal giriş gerekirse yükseltme yolu:
+  OpenIddict (in-app). Analiz: TASKLOG 2026-07-19.
+- **SaaS kimlik sağlayıcısı (Auth0/Clerk/Cognito) REDDEDİLDİ — KVKK gerekçesi
+  ✅ kaynak-doğrulandı (2026-07-19):** ücretsiz katmanlar nominal olarak bedava
+  (Clerk 50.000 MRU'ya kadar 0 $) ama hukuki bedeli var:
+  1. **Kurul bugüne dek hiçbir ülke için yeterlilik kararı ilan etmedi** (KVKK
+     sitesi, Temmuz 2026: *"Bu konuda Kurul tarafından henüz bir belirleme
+     yapılmamıştır."*) → aktarım yeterlilik kararına dayandırılamaz.
+  2. Her kayıt/girişte veri akan bir entegrasyon **"arızi" sayılamaz** → m.9/6
+     istisnaları ve açık rıza yolu **kapalı**.
+  3. Kalan tek pratik yol **Kurul standart sözleşmesi** + imzaların
+     tamamlanmasından itibaren **5 iş günü içinde Kuruma bildirim ZORUNLU**;
+     ihmali KVKK m.18/1-(d) uyarınca **idari para cezası**.
+  Tek kişilik bir ürün için bu, üstlenilecek değil kaçınılacak bir yüktür.
+  Veri yurt içinde/kendi sunucumuzda kalınca sorun tamamen ortadan kalkar.
+- **Self-host harici IdP (Keycloak/Zitadel/Authentik) reddedildi** — tek-VPS
+  işletme yükü ve ikinci bir ürünü bakma maliyeti gerekçesiyle. ⚠️ *Bu kalem
+  mühendislik yargısıdır; kaynak tüketimi ve lisans-değişikliği (Zitadel AGPL)
+  iddiaları doğrulama turunda teyit edilemedi — B2B SSO ihtiyacı doğarsa
+  yeniden değerlendirilmeli.*
 - **Brute-force:** başarısız giriş sayacı + geçici lockout + rate limit (§5).
-- **Token taşıma (web) — KARAR 2026-07-19, cookie/BFF:** tarayıcıda token
-  **JavaScript'in erişebildiği hiçbir yerde durmaz** (localStorage/
-  sessionStorage/memory YASAK — IETF BCP + MS Learn aynı yönde). JWT'ler
+- **Token taşıma (web) — KARAR 2026-07-19, cookie/BFF (✅ kaynak-doğrulandı):**
+  tarayıcıda token **JavaScript'in erişebildiği hiçbir yerde durmaz**
+  (localStorage/sessionStorage/memory YASAK). İki bağımsız birincil kaynak aynı
+  yönde: **MS Learn** (ms.date 2026-03-23) *"We recommend using cookies for
+  browser-based applications... without exposing them to JavaScript"*; **IETF
+  `draft-ietf-oauth-browser-based-apps-27`** (2026-07-06, BCP): desenler
+  *"in decreasing order of security"* → **BFF > token-mediating backend >
+  browser-only**, ve BFF için birebir *"strongly recommended for business
+  applications, sensitive applications, and applications that handle personal
+  data"* — bu proje tam olarak o tanıma girer. JWT'ler
   **`httpOnly + Secure + SameSite` cookie** ile taşınır + **CSRF koruması**
   (antiforgery veya SameSite=Strict + özel header şartı). Caddy SPA'yı ve
   `/api`'yi aynı origin'den sunduğu için ayrı BFF süreci GEREKMEZ — desenin
