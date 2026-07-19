@@ -291,6 +291,37 @@ olmadan ürünleşme/lansman başlamaz.**
 
 ---
 
+## FAZ 9 — Nakit Akışı & Harcama Bilinci (ekstre yükleme; karar 2026-07-19)
+
+> **Gerekçe (ürün sahibi):** "Harcama yönetimi olmadan yatırım yapmak zor —
+> bu da yatırımın bir adımı kabul edilmelidir." Konumlandırmayla uyumlu
+> (`14` §1: bağlamsal öğrenme — kişinin kendi verisi); T8.1 davranış aynasına
+> veri zemini sağlar. **Açık bankacılık/ÖHVPS entegrasyonu DEĞİL** — kullanıcı
+> kendi indirdiği ekstreyi yükler (araştırma: TASKLOG 2026-07-19; lisans
+> gerektirmez, `01` §5 netleştirmesi).
+> **Kapı:** T7.2 (kimlik) yeşil olmadan bu faz canlıya çıkmaz — harcama verisi
+> `X-User-Id` başlığıyla korunamayacak kadar hassastır. ⚠ KVKK yükü portföyden
+> ağır: ekstre satırları özel nitelikli veri (sağlık/inanç izi) sızdırabilir →
+> T9.8 tasarım kısıtıdır, "sonra" değil.
+
+| ID | Görev | Bağımlılık | Doküman | Durum |
+|----|-------|-----------|---------|-------|
+| T9.1 | **Nakit akışı veri modeli:** `CashAccount`, `CashTransaction` (Income/Expense/Transfer), `ExpenseCategory`, `CategoryRule`, `StatementImport` — portföy `Transaction`'ından AYRI domain (Buy/Sell modeline sıkıştırılmaz); migration + KVKK kaskadları | T7.2 | `03` (yeni bölüm) | [ ] |
+| T9.2 | **Ekstre içe aktarma:** CSV/Excel yükleme + sütun eşleme sihirbazı (banka başına parser YOK; eşleme profili kaydedilir) + **idempotent tekrar-yükleme** (satır hash'i; çakışan dönem çift sayılmaz — NFR-1, birim test zorunlu); ham dosya ayrıştırma sonrası SAKLANMAZ | T9.1 | `11` §4 | [ ] |
+| T9.3 | **Kategorileştirme kural motoru (deterministik, KODDA):** kural eşleşmesi + kullanıcı düzeltmesi kurala dönüşür; LLM'e toplam/hesap YAPTIRILMAZ (`CLAUDE.md` §3.1) | T9.2 | `07` | [ ] |
+| T9.4 | **Nakit akışı panosu:** gelir/gider/birikim oranı, kategori dağılımı, aylık trend — pano tasarım diliyle | T9.3 | `13`, `04` | [ ] |
+| T9.5 | **LLM kategori önerisi:** yalnız eşleşmeyen satırlar için öneri, kullanıcı onaylı → onay kurala dönüşür; yapılandırılmış çıktı + fallback | T9.3 | `07` | [ ] |
+| T9.6 | **Birikim senaryosu (geçmişe dönük):** "bu kategoriden ayda X ayırsaydın, gerçekleşmiş enflasyon/kurla bugün Y olurdu" — Senaryo v1 deseni, TAHMİN YOK (`CLAUDE.md` §2); harcama→yatırım köprüsü çerçeve/eğitim diliyle | T9.4, T5.4 | `14` §4-C1 | [ ] |
+| T9.7 | **Eğitim entegrasyonu:** bütçe/birikim dersleri + "Senin bütçende" bölümü (A1 deseninin nakit akışı karşılığı) | T9.4, Faz 6 | `14` §4-A1 | [ ] |
+| T9.8 | **KVKK sertleştirme (tasarım kısıtı):** ham ekstre saklanmaz; hassas kategori alanları şifreli; "verimi sil" nakit akışı tablolarını kapsar; log'a işlem açıklaması yazılmaz (PII) | T9.1 | `11` §7, `12` §3 | [ ] |
+
+**Faz 9 DoD:** Kullanıcı ekstresini yükleyip 5 dakikada kategorize edilmiş
+gelir-gider panosunu görür; aynı ekstreyi ikinci kez yüklemek rakamları
+değiştirmez; birikim senaryosu geçmişe dönük çalışır; IDOR + KVKK silme
+testleri yeşil. **Sıralama:** Faz 6 içerik → T7.2 kimlik → Faz 9.
+
+---
+
 ## Çapraz-kesen (her faz)
 
 - [ ] **Her görev = senaryo (09 §5) + test (birim + olaylara yönelik), yeşil olmadan kapanmaz** (`CLAUDE.md` §12).

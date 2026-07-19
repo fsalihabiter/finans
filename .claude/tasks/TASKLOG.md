@@ -20,6 +20,33 @@
 
 ---
 
+## 2026-07-19 · Planlama — Faz 9 (nakit akışı/ekstre) + açık bankacılık & kimlik araştırması
+- **Görev(ler):** ad-hoc (planlama; yeni faz: T9.1–T9.8).
+- **Ne yapıldı:** (1) **Açık bankacılık araştırması** (deep-research, 20 kaynak, 25 iddia
+  adversaryal doğrulandı): "BDDK hesap API'si" diye bir şey yok — düzenleyici TCMB (6493 m.12/1-g,
+  RG 31676), tek geçit BKM ÖHVPS; lisans ≥1,5M TL + tüzel kişilik; kapsam ödeme hesaplarıyla
+  sınırlı (yatırım/kredi/BES YOK) → **projeye uygulanamaz**. (2) Karar: yerine **ekstre yükleme**
+  (lisanssız, kullanıcının kendi dosyası) → **Faz 9** backlog'a eklendi (T9.1–T9.8: ayrı nakit
+  akışı domain'i, sütun-eşleme sihirbazı, idempotent import, deterministik kategorileştirme +
+  LLM önerisi, geçmişe dönük birikim senaryosu, KVKK sertleştirme; kapı: T7.2 kimlik).
+  (3) `01` §5 kapsam netleştirmesi: canlı banka API'si kapsam dışı KALDI, ekstre yükleme içeri.
+  (4) **Üyelik/kimlik analizi** (ikinci deep-research; doğrulama aşaması oturum limitine takıldı —
+  kaynak iddiaları etiketli kullanıldı): `11` §2 kararı (JWT+refresh+Argon2id, self-host) teyit;
+  öneriler: web'de httpOnly cookie taşıma (IETF BFF BCP), MapIdentityApi KULLANMA (rotasyon yok,
+  dotnet/aspnetcore#52815), Argon2id OWASP min m=19MiB/t=2/p=1; SaaS (Auth0/Clerk) KVKK m.9 yurt
+  dışı aktarım yükü nedeniyle reddedildi; Keycloak/Zitadel tek-VPS'e ağır (Zitadel core AGPL'e
+  geçti 2025-03). Karar sahibi onaylarsa `11` §2'ye cookie/BFF notu işlenecek.
+- **Dokunulan dosyalar:** `.claude/docs/08-BACKLOG.md` (FAZ 9 bölümü), `.claude/docs/01-NEEDS-ANALYSIS.md`
+  (§5), `.claude/tasks/TASKLOG.md`, `.claude/tasks/ACTIVE.md`.
+- **Test:** yok (yalnız doküman/plan değişikliği).
+- **Karar/Not:** (a) Açık bankacılık/ÖHVPS **reddedildi** (maliyet+kapsam+tüzel kişilik);
+  (b) ekstre yükleme = kapsam İÇİ, canlı banka API = kapsam DIŞI (`01` §5);
+  (c) Faz 9 sıralaması: Faz 6 → T7.2 → Faz 9; (d) harcama verisi kimliksiz canlıya çıkmaz;
+  (e) kimlik: satın alma değil kendin-yap (mevcut `Users/RefreshTokens/Roles` şeması +
+  `ICurrentUser` soyutlaması zaten buna göre kurulmuş — `HttpCurrentUser` → `JwtCurrentUser` takası).
+- **Durum:** tamamlandı (planlama); Faz 9 implementasyonu başlamadı.
+- **Sıradaki:** değişmedi — T5E.4b (kavram derin bağlantı) / T6.1; kimlik tasarım detayı T7.2'de.
+
 ## 2026-07-17 · T5E.4 — Web Eğitim sayfası (ComingSoon → gerçek liste/okuma/quiz)
 - **Görev(ler):** T5E.4 (Faz 6 — Eğitim MVP; 13 §4, 04 §7.5).
 - **Ne yapıldı:** (1) **Shared** (`@finans/shared`, kaynaktan tüketilir): eğitim tipleri (types) +

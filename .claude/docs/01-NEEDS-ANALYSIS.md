@@ -115,8 +115,12 @@ Her gereksinim bir faza bağlanmıştır (bkz. `ROADMAP.md`). `MUST` = o faz iç
 
 ## 5. Kapsam Dışı (Out of Scope) — Şimdilik
 
-- Gerçek para hareketi / banka entegrasyonu / emir iletimi. **Yok.** Bu bir
-  takip ve eğitim aracıdır, aracı kurum değil.
+- Gerçek para hareketi / **canlı banka API entegrasyonu** (açık bankacılık/
+  ÖHVPS, otomatik hesap bağlama) / emir iletimi. **Yok.** Bu bir takip ve
+  eğitim aracıdır, aracı kurum değil. *(Netleştirme 2026-07-19: kullanıcının
+  kendi indirdiği banka ekstresini dosya olarak yüklemesi banka entegrasyonu
+  DEĞİLDİR ve kapsam içine alındı → Faz 9, `08-BACKLOG.md`. Gerekçe ve ÖHVPS
+  araştırması: `.claude/tasks/TASKLOG.md` 2026-07-19.)*
 - Gelecek tahmini / fiyat öngörüsü. **Yok** (yasal + felsefi sınır).
 - Çok kullanıcılı sosyal/topluluk özellikleri (Faz 5+).
 - BIST canlı verisi (maliyet nedeniyle Faz 4'te değerlendirilir; önce ABD).
