@@ -24,15 +24,23 @@ namespace Finans.Infrastructure.Seed;
 /// </remarks>
 internal static class EducationContent
 {
-    /// <summary>Bir dersin katmanlı bloklarını üretir (sıra: Core→Context→Deep→Example→Trap).</summary>
+    /// <summary>
+    /// Bir dersin katmanlı bloklarını üretir
+    /// (sıra: Core→Context→Deep→<b>LiveContext</b>→Example→Trap).
+    /// </summary>
+    /// <param name="live">
+    /// "Senin portföyünde" şablonu (T6.2). <c>{{anahtar}}</c> token'ları çalışma anında
+    /// KODDA hesaplanmış metriklerle değişir; çözülemeyen token'ın satırı düşer.
+    /// </param>
     private static IEnumerable<LessonSection> Blocks(
-        Guid lessonId, string core, string context, string deep, string example, string trap)
+        Guid lessonId, string core, string context, string deep, string live, string example, string trap)
     {
         var parts = new (string Body, DepthTier Tier, SectionKind Kind)[]
         {
             (core, DepthTier.Core, SectionKind.Explain),
             (context, DepthTier.Context, SectionKind.Explain),
             (deep, DepthTier.Deep, SectionKind.Explain),
+            (live, DepthTier.Core, SectionKind.LiveContext),
             (example, DepthTier.Core, SectionKind.Example),
             (trap, DepthTier.Context, SectionKind.Trap),
         };
@@ -42,6 +50,10 @@ internal static class EducationContent
         {
             yield return new LessonSection
             {
+                // DETERMİNİSTİK Id (kritik): seed "hiç bölüm var mı?" diye değil
+                // "BU bölüm var mı?" diye bakar → sonradan eklenen bloklar (örn. T6.2'nin
+                // LiveContext'i) mevcut kurulumlara da iner, var olanlar çoğaltılmaz.
+                Id = SeedData.Id($"section-{lessonId:N}-{order}"),
                 LessonId = lessonId,
                 OrderIndex = order++,
                 BodyMarkdown = body.Trim(),
@@ -129,6 +141,15 @@ internal static class EducationContent
         getiri, matematiksel olarak alım gücü kaybıdır — rakam büyürken servetin
         küçülür. Bu yüzden bir portföyü değerlendirirken ilk bakılacak yer nominal
         kâr değil, enflasyona göre nerede durduğudur.
+        """,
+        live: """
+        ## Senin portföyünde
+
+        Portföyünün nominal getirisi **{{return_ratio}}**; enflasyondan arındırılmış
+        **reel** getirisi ise **{{real_return}}**.
+
+        Bu dersin anlattığı ayrım tam olarak bu iki sayının arasındaki farktır: birincisi
+        rakamın, ikincisi alım gücünün ne yaptığını söyler.
         """,
         example: """
         ## Örnek: aynı yıl, üç farklı sonuç
@@ -244,6 +265,16 @@ internal static class EducationContent
         Zamanla iyi giden varlık büyür ve ağırlığı artar; portföy kendiliğinden
         yoğunlaşır. Ağırlıkların zaman içinde nasıl kaydığını izlemek, çeşitlendirmenin
         bir kerelik değil **süregelen** bir durum olduğunu gösterir.
+        """,
+        live: """
+        ## Senin portföyünde
+
+        En büyük iki varlığın portföyünün **{{concentration_top2}}**'sini oluşturuyor.
+        Toplam **{{holding_count}}** kalemin **{{asset_class_count}}** farklı varlık
+        türüne yayılmış durumda.
+
+        Bu dersteki *yoğunlaşma* kavramı tam olarak ilk sayıyı ölçer. Yüksek olması
+        kendiliğinden yanlış değildir; bilinmesi gereken bir durumdur.
         """,
         example: """
         ## Örnek: iki portföy, aynı kalem sayısı
@@ -361,6 +392,14 @@ internal static class EducationContent
         Bir şirketin hikâyesini — rekabeti, yönetimi, sektör dinamiğini — bir orana
         sığdırmak mümkün değildir. Oranlar, araştırmanın **başladığı** yerdir,
         bittiği yer değil.
+        """,
+        live: """
+        ## Senin portföyünde
+
+        Portföyünün **{{stock_weight}}**'i hisse senedinde.
+
+        Bu dersteki oranları kendi hisselerin üzerinde görmek için **Hisse** sekmesini
+        kullanabilirsin; oradaki kartlar aynı rakamların ne anlattığını açıklar.
         """,
         example: """
         ## Örnek: aynı F/K, farklı hikâye
@@ -480,6 +519,16 @@ internal static class EducationContent
         > Bu ders bir risk profili çıkarmaz ve sana hangi varlığı tutman gerektiğini
         > söylemez. Amacı, riskin ne anlama geldiğini kendi başına değerlendirebilmen.
         """,
+        live: """
+        ## Senin portföyünde
+
+        Portföyünün **{{concentration_top2}}**'si en büyük iki kalemde toplanmış;
+        **{{cash_weight}}**'i nakitte duruyor.
+
+        Bu iki sayı, dersin anlattığı iki farklı riski gösterir: yoğunlaşma tek bir
+        olayın seni orantısız etkileme ihtimalini, nakit oranı ise paraya ihtiyaç
+        duyduğunda ne kadar esnek olduğunu anlatır.
+        """,
         example: """
         ## Örnek: aynı ortalama, farklı yolculuk
 
@@ -597,6 +646,15 @@ internal static class EducationContent
 
         > Bu hesaplar geçmişe ve varsayıma dayalı örneklerdir; gelecekteki bir
         > getiriyi öngörmez veya vaat etmez.
+        """,
+        live: """
+        ## Senin portföyünde
+
+        Portföyünün bugünkü toplam değeri **{{total_value}}**; maliyetinin üzerine
+        eklenen nominal getirin **{{return_ratio}}**.
+
+        Bileşik etkinin bu tabloda görünmeyen kısmı **süredir**: bu getirinin kaç yıla
+        yayıldığı, aynı oranın gelecekte ne üreteceğini belirleyen asıl değişkendir.
         """,
         example: """
         ## Örnek: erken başlamanın farkı

@@ -403,16 +403,18 @@ public static class SeedData
     /// topluluk katkısına açılabilsin — 14 §4-D2).
     /// </summary>
     /// <remarks>
-    /// <b>KENDİ kapısı var</b> (<c>LessonSections.Any()</c>): <see cref="SeedEducationAsync"/>
-    /// "track var mı?" ile korunduğu için eğitimi zaten almış DB'ler oradan bölüm alamaz.
-    /// Bu ayrım sayesinde çalışan kurulumlar re-migrate gerekmeden katmanlı içeriğe geçer.
+    /// <b>BLOK BAZINDA idempotent</b> — "hiç bölüm var mı?" değil, <b>"bu bölüm var mı?"</b>
+    /// diye bakar (bölüm Id'leri deterministik). İki sebep:
+    /// <list type="number">
+    /// <item><see cref="SeedEducationAsync"/> "track var mı?" ile korunduğu için eğitimi
+    ///   zaten almış DB'ler oradan hiç bölüm alamaz.</item>
+    /// <item>İçeriğe <b>sonradan blok eklenebilir</b> (T6.2'nin <c>LiveContext</c>'i gibi);
+    ///   kaba "hiç bölüm var mı?" kapısı bu eklemeleri mevcut kurulumlara indiremezdi.</item>
+    /// </list>
     /// Ders bulunamazsa (özel/eksik kurulum) sessizce atlanır — seed hiçbir zaman çökmez.
     /// </remarks>
     private static async Task SeedEducationSectionsAsync(FinansDbContext db, CancellationToken ct)
     {
-        if (await db.LessonSections.AnyAsync(ct))
-            return; // katmanlı içerik zaten seed'lenmiş
-
         // Ders kimlikleri deterministik (Id(...)) — slug'a değil kimliğe bağlanmak,
         // içerik ile ders eşleşmesini yeniden adlandırmalara karşı korur.
         var builders = new (Guid LessonId, Func<Guid, IEnumerable<LessonSection>> Build)[]
@@ -424,16 +426,28 @@ public static class SeedData
             (Id("lesson-bilesik"), EducationContent.Lesson5),
         };
 
-        var existing = await db.Lessons.Select(l => l.Id).ToListAsync(ct);
+        var existingLessons = await db.Lessons.Select(l => l.Id).ToListAsync(ct);
+        var existingSections = await db.LessonSections.Select(s => s.Id).ToListAsync(ct);
+        var known = existingSections.ToHashSet();
+        var added = 0;
+
         foreach (var (lessonId, build) in builders)
         {
-            if (!existing.Contains(lessonId))
+            if (!existingLessons.Contains(lessonId))
                 continue; // beklenmedik kurulum — bu dersi atla, seed'i çökertme
 
-            db.LessonSections.AddRange(build(lessonId));
+            foreach (var section in build(lessonId))
+            {
+                if (known.Contains(section.Id))
+                    continue; // bu blok zaten var → çoğaltma
+
+                db.LessonSections.Add(section);
+                added++;
+            }
         }
 
-        await db.SaveChangesAsync(ct);
+        if (added > 0)
+            await db.SaveChangesAsync(ct);
     }
 
     /// <summary>

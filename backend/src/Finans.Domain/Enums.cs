@@ -124,6 +124,25 @@ public enum DepthTier
 }
 
 /// <summary>
+/// "Senin portföyünde" bağlam bloğunun veri durumu (15 §3.2, T6.2).
+/// Üç durum da birinci sınıf: hiçbiri hata değildir, ders asla kilitlenmez.
+/// </summary>
+public enum LessonContextState
+{
+    /// <summary>Kullanıcının gerçek metrikleri kullanıldı.</summary>
+    Own,
+
+    /// <summary>
+    /// Portföy yok/yetersiz → <b>etiketli demo</b> değerler kullanıldı (onboarding kararı 1c).
+    /// Demo sayı kullanıcının pano/özet ekranına ASLA sızmaz.
+    /// </summary>
+    Demo,
+
+    /// <summary>Kendi verisi var ama fiyatlar bayat — sayı "şu tarihe ait" damgasıyla sunulur.</summary>
+    Stale,
+}
+
+/// <summary>
 /// Ders bölümünün türü (15 §2.3) — derinlik katmanından DİK bir eksendir.
 /// </summary>
 public enum SectionKind

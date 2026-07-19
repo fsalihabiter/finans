@@ -60,6 +60,8 @@ public static class DependencyInjection
         services.AddScoped<ISettingsService, SettingsService>();
         // T5E.3: Eğitim modülü — içerik açık, ders durumu/ilerleme + quiz denemesi UserId kapsamlı.
         services.AddScoped<IEducationService, EducationService>();
+        // T6.2 — "Senin portföyünde" bağlamı; portföy özetini okur, sayıları KODDA biçimler.
+        services.AddScoped<ILessonContextService, LessonContextService>();
 
         // Arka plan job (T-BES.6b ileri): aktif BES planlarını periyodik ilerletir. Konfig
         // `Bes:PlanCatchUp:Enabled` (varsayılan true; test fixture'ı false yapar).

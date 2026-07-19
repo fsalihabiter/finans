@@ -36,10 +36,23 @@ public sealed record QuizQuestionDto(
 public sealed record QuizDto(Guid Id, string Title, int PassingScore, IReadOnlyList<QuizQuestionDto> Questions);
 
 /// <summary>Tek ders detayı — gövde + bölümler + (varsa) mini test + kavram etiketleri + kullanıcı durumu.</summary>
+/// <summary>
+/// Settaki bir sonraki ders (T6.2 ilerleme akışı). <paramref name="Locked"/> ön-koşuldan
+/// TÜRETİLİR: bu ders tamamlanınca sonraki kilit açılır ve doğrudan geçilebilir.
+/// Set sonundaysa <c>null</c>.
+/// </summary>
+public sealed record NextLessonDto(Guid Id, string Slug, string Title, bool Locked);
+
 public sealed record LessonDetailDto(
     Guid Id, string Slug, int Order, string Title, string Summary, string BodyMarkdown,
     int EstimatedMinutes, LessonLevel Level, LessonStatus Status, int ProgressPercent, bool Locked,
-    IReadOnlyList<LessonSectionDto> Sections, QuizDto? Quiz, IReadOnlyList<ConceptTagDto> ConceptTags);
+    IReadOnlyList<LessonSectionDto> Sections, QuizDto? Quiz, IReadOnlyList<ConceptTagDto> ConceptTags,
+    /// <summary>"Senin portföyünde" bloğunun veri kaynağı; bağlam bloğu yoksa null (15 §3.2).</summary>
+    LessonContextState? ContextState = null,
+    /// <summary>Bağlam verisinin ait olduğu an — yalnız <c>Stale</c> durumunda anlamlı.</summary>
+    DateTime? ContextAsOf = null,
+    /// <summary>Settaki bir sonraki ders (ilerleme akışı); set sonundaysa null.</summary>
+    NextLessonDto? NextLesson = null);
 
 /// <summary>Ders ilerleme güncelleme isteği (upsert; UserId kapsamlı).</summary>
 public sealed record UpdateLessonProgressRequest(LessonStatus Status, int ProgressPercent);

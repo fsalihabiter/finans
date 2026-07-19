@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import type { LessonListItem, LessonStatus, Quiz } from "@finans/shared";
+import type {
+  LessonContextState,
+  LessonDetail,
+  LessonListItem,
+  LessonSection,
+  LessonStatus,
+  Quiz,
+} from "@finans/shared";
 import { EmptyState } from "../components/EmptyState";
 import { MiniMarkdown } from "../components/MiniMarkdown";
 import { Skeleton } from "../components/Skeleton";
@@ -45,7 +52,11 @@ export function EducationPage() {
       </header>
 
       {selectedSlug ? (
-        <LessonReader slug={selectedSlug} onBack={() => setSelectedSlug(null)} />
+        <LessonReader
+          slug={selectedSlug}
+          onBack={() => setSelectedSlug(null)}
+          onNavigate={setSelectedSlug}
+        />
       ) : (
         <LessonList
           loading={tracks.isLoading || lessons.isLoading}
@@ -163,7 +174,62 @@ function LessonList({
 
 // ── Ders okuma + tamamla + quiz ─────────────────────────────────────────────
 
-function LessonReader({ slug, onBack }: { slug: string; onBack: () => void }) {
+/** "Senin portföyünde" bloğunun veri kaynağı rozeti (15 §3.2). Own'da rozet YOK. */
+function ContextBadge({ state, asOf }: { state: LessonContextState; asOf: string | null }) {
+  if (state === "Own") return null;
+
+  if (state === "Demo") {
+    return (
+      <p className="context-badge demo">
+        <strong>Örnek portföy.</strong> Henüz kendi varlığın olmadığı için bu bölümdeki
+        sayılar örnek bir portföye ait — kendi rakamların değil.
+      </p>
+    );
+  }
+
+  const stamp = asOf ? new Date(asOf).toLocaleDateString("tr-TR") : null;
+  return (
+    <p className="context-badge stale">
+      Bu bölümdeki sayılar {stamp ? `${stamp} tarihine` : "eski bir tarihe"} ait —
+      fiyatlar o günden beri güncellenmedi.
+    </p>
+  );
+}
+
+/**
+ * Ders gövdesi. Katmanlı bölüm varsa onlar render edilir; yoksa `bodyMarkdown`'a
+ * düşülür (geriye dönük uyum, 15 §2.1 / SC-E2).
+ *
+ * NOT: Şu an TÜM derinlik katmanları açık gösterilir. Seviyeye göre katlama +
+ * "Daha derine in" T6.7'nin işi (tanılama testi T6.6'ya bağlı).
+ */
+function LessonBody({ lesson }: { lesson: LessonDetail }) {
+  if (lesson.sections.length === 0)
+    return <MiniMarkdown className="markdown-body" markdown={lesson.bodyMarkdown} />;
+
+  return (
+    <>
+      {lesson.sections.map((s: LessonSection) => (
+        <section key={s.order} className={`lesson-section kind-${s.kind.toLowerCase()}`}>
+          {s.kind === "LiveContext" && lesson.contextState && (
+            <ContextBadge state={lesson.contextState} asOf={lesson.contextAsOf} />
+          )}
+          <MiniMarkdown className="markdown-body" markdown={s.bodyMarkdown} />
+        </section>
+      ))}
+    </>
+  );
+}
+
+function LessonReader({
+  slug,
+  onBack,
+  onNavigate,
+}: {
+  slug: string;
+  onBack: () => void;
+  onNavigate: (slug: string) => void;
+}) {
   const lesson = useLesson(slug);
   const complete = useUpdateLessonProgress(lesson.data?.id ?? "");
   const { notify } = useToast();
@@ -171,7 +237,19 @@ function LessonReader({ slug, onBack }: { slug: string; onBack: () => void }) {
   const onComplete = () => {
     complete.mutate(
       { status: "Completed", progressPercent: 100 },
-      { onSuccess: () => notify("Ders tamamlandı olarak işaretlendi.", "success") },
+      {
+        onSuccess: () => {
+          const next = lesson.data?.nextLesson;
+          // İlerleme akışı (T6.2): tamamlanan ders sonraki dersin ön-koşuluydu →
+          // kilit açıldı. Kullanıcıya bunu SÖYLE, listeye dönüp aramasını bekleme.
+          notify(
+            next
+              ? `Ders tamamlandı — "${next.title}" açıldı.`
+              : "Ders tamamlandı. Seti bitirdin 🎉",
+            "success",
+          );
+        },
+      },
     );
   };
 
@@ -217,7 +295,7 @@ function LessonReader({ slug, onBack }: { slug: string; onBack: () => void }) {
             </div>
           )}
 
-          <MiniMarkdown className="markdown-body" markdown={lesson.data.bodyMarkdown} />
+          <LessonBody lesson={lesson.data} />
 
           <div className="lesson-actions">
             {lesson.data.status === "Completed" ? (
@@ -231,6 +309,28 @@ function LessonReader({ slug, onBack }: { slug: string; onBack: () => void }) {
               >
                 {complete.isPending ? "Kaydediliyor…" : "Dersi tamamla"}
               </button>
+            )}
+
+            {/* İlerleme akışı (T6.2): ders tamamlandıysa sonrakine doğrudan geç.
+                Kilit ön-koşuldan türetildiği için tamamlama anında açılmış olur. */}
+            {lesson.data.status === "Completed" && lesson.data.nextLesson && (
+              <button
+                type="button"
+                className="btn-primary next-lesson"
+                onClick={() => onNavigate(lesson.data!.nextLesson!.slug)}
+                disabled={lesson.data.nextLesson.locked}
+                title={
+                  lesson.data.nextLesson.locked
+                    ? "Bu ders başka bir ön koşul bekliyor"
+                    : undefined
+                }
+              >
+                Sonraki ders: {lesson.data.nextLesson.title} →
+              </button>
+            )}
+
+            {lesson.data.status === "Completed" && !lesson.data.nextLesson && (
+              <span className="lesson-done-badge">🎉 Seti tamamladın</span>
             )}
           </div>
 

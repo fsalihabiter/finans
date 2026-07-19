@@ -13,7 +13,10 @@ namespace Finans.Infrastructure.Services;
 /// Kilit türetilir: bir dersin ön-koşullarından biri kullanıcı tarafından tamamlanmadıysa
 /// ders kilitlidir (03 §C). Quiz cevap-anahtarı yalnız deneme SONUCUNDA açılır (sızıntı yok).
 /// </summary>
-public sealed class EducationService(FinansDbContext db, ICurrentUser currentUser) : IEducationService
+public sealed class EducationService(
+    FinansDbContext db,
+    ICurrentUser currentUser,
+    ILessonContextService lessonContext) : IEducationService
 {
     public async Task<IReadOnlyList<LearningTrackDto>> GetTracksAsync(CancellationToken ct = default) =>
         await db.LearningTracks
@@ -69,10 +72,31 @@ public sealed class EducationService(FinansDbContext db, ICurrentUser currentUse
         // Katmanlı içerik (T6.5): derinlik + tür DİK eksenler; sıralama OrderIndex'e
         // sadık kalır (yazar hangi sırada kurguladıysa). Filtreleme YOK — istemci
         // seviyeye göre katlar (T6.7). Bölüm yoksa istemci BodyMarkdown'a düşer (SC-E2).
-        var sections = lesson.Sections
-            .OrderBy(s => s.OrderIndex)
-            .Select(s => new LessonSectionDto(s.OrderIndex, s.Heading, s.BodyMarkdown, s.DepthTier, s.Kind))
-            .ToList();
+        //
+        // T6.2: LiveContext blokları burada çözümlenir — {{anahtar}} token'ları KODDA
+        // hesaplanmış portföy metrikleriyle değişir (CLAUDE.md §3.1). Portföy yoksa
+        // etiketli demo değerlere düşer; hiçbir durumda ders kilitlenmez.
+        LessonContextState? contextState = null;
+        DateTime? contextAsOf = null;
+        var sections = new List<LessonSectionDto>();
+
+        foreach (var s in lesson.Sections.OrderBy(s => s.OrderIndex))
+        {
+            if (s.Kind != SectionKind.LiveContext)
+            {
+                sections.Add(new LessonSectionDto(s.OrderIndex, s.Heading, s.BodyMarkdown, s.DepthTier, s.Kind));
+                continue;
+            }
+
+            var resolved = await lessonContext.ResolveAsync(s.BodyMarkdown, ct);
+            // Tüm token'lar çözülemediyse blok boşalır → hiç gösterme (yarım cümle yok).
+            if (string.IsNullOrWhiteSpace(resolved.Body))
+                continue;
+
+            contextState = resolved.State;
+            contextAsOf = resolved.AsOf;
+            sections.Add(new LessonSectionDto(s.OrderIndex, s.Heading, resolved.Body, s.DepthTier, s.Kind));
+        }
 
         var tags = lesson.ConceptTags
             .Select(lt => new ConceptTagDto(lt.ConceptTag.Key, lt.ConceptTag.Label))
@@ -93,12 +117,27 @@ public sealed class EducationService(FinansDbContext db, ICurrentUser currentUse
             quiz = new QuizDto(lesson.Quiz.Id, lesson.Quiz.Title, lesson.Quiz.PassingScore, questions);
         }
 
+        // İlerleme akışı (T6.2): settaki bir sonraki ders. Kilidi ön-koşuldan TÜRETİLİR —
+        // bu ders tamamlanınca sonraki kendiliğinden açılır ve okuyucudan doğrudan geçilir.
+        var next = await db.Lessons
+            .Where(l => l.TrackId == lesson.TrackId && l.IsPublished && l.OrderIndex > lesson.OrderIndex)
+            .OrderBy(l => l.OrderIndex)
+            .Select(l => new { l.Id, l.Slug, l.Title })
+            .FirstOrDefaultAsync(ct);
+
+        NextLessonDto? nextDto = null;
+        if (next is not null)
+        {
+            var nextPrereqs = await LoadPrereqsAsync([next.Id], ct);
+            nextDto = new NextLessonDto(next.Id, next.Slug, next.Title, IsLocked(next.Id, nextPrereqs, completed));
+        }
+
         return new LessonDetailDto(
             lesson.Id, lesson.Slug, lesson.OrderIndex, lesson.Title, lesson.Summary, lesson.BodyMarkdown,
             lesson.EstimatedMinutes, lesson.Level,
             progress?.Status ?? LessonStatus.NotStarted, progress?.ProgressPercent ?? 0,
             IsLocked(lesson.Id, prereqs, completed),
-            sections, quiz, tags);
+            sections, quiz, tags, contextState, contextAsOf, nextDto);
     }
 
     public async Task<LessonProgressDto> UpdateProgressAsync(

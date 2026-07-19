@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Finans.Application.Education;
 using Finans.Domain.Enums;
 using Finans.Infrastructure.Persistence;
 using Finans.Infrastructure.Seed;
@@ -157,7 +158,7 @@ public sealed class EducationSeedTests
         (await db.Quizzes.CountAsync()).Should().Be(5);          // T6.1: 1 → 5 (her derse bir test)
         (await db.QuizQuestions.CountAsync()).Should().Be(15);    // 5 × 3
         (await db.QuizOptions.CountAsync()).Should().Be(50);      // 5 × (4+2+4)
-        (await db.LessonSections.CountAsync()).Should().Be(25);   // T6.1: 5 ders × 5 blok
+        (await db.LessonSections.CountAsync()).Should().Be(30);   // T6.1+T6.2: 5 ders × 6 blok
         (await db.UserLessonProgress.CountAsync()).Should().Be(4);
     }
 
@@ -188,7 +189,9 @@ public sealed class EducationSeedTests
             own.Should().Contain(s => s.Kind == SectionKind.Example, $"'{lesson.Slug}' jenerik örnek taşımalı");
             own.Should().Contain(s => s.Kind == SectionKind.Trap, $"'{lesson.Slug}' tuzak bloğu taşımalı");
 
-            own.Select(s => s.OrderIndex).Should().Equal(1, 2, 3, 4, 5);
+            own.Should().Contain(s => s.Kind == SectionKind.LiveContext,
+                $"'{lesson.Slug}' \"Senin portföyünde\" bağlam bloğu taşımalı (T6.2)");
+            own.Select(s => s.OrderIndex).Should().Equal(1, 2, 3, 4, 5, 6);
             own.Should().OnlyContain(s => s.BodyMarkdown.Length > 100); // boş/yer tutucu içerik yok
         }
     }
@@ -235,9 +238,62 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(25);
+        (await db.LessonSections.CountAsync()).Should().Be(30);
         (await db.Quizzes.CountAsync()).Should().Be(5);
         (await db.Lessons.CountAsync()).Should().Be(5); // dersler çoğaltılmadı
+    }
+
+    [Fact]
+    public async Task Section_seed_backfills_a_newly_added_block_type()
+    {
+        // REGRESYON (T6.2): içeriğe sonradan blok eklenince (LiveContext gibi) mevcut
+        // kurulumlar da almalı. Kaba "hiç bölüm var mı?" kapısı bunu KAÇIRIRDI —
+        // kapı blok bazında (deterministik Id) olduğu için yakalanıyor.
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        // "Eski sürüm" simülasyonu: LiveContext blokları henüz yokmuş gibi sil.
+        var live = await db.LessonSections.Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
+        live.Should().HaveCount(5);
+        db.LessonSections.RemoveRange(live);
+        await db.SaveChangesAsync();
+        (await db.LessonSections.CountAsync()).Should().Be(25); // diğer 5×5 blok yerinde
+
+        await SeedData.SeedAsync(db); // "bir sonraki açılış"
+
+        // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
+        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(5);
+        (await db.LessonSections.CountAsync()).Should().Be(30);
+    }
+
+    [Fact]
+    public async Task Live_context_blocks_carry_resolvable_tokens()
+    {
+        // Bağlam şablonları {{anahtar}} token'ı taşımalı (T6.2) ve anahtarlar
+        // ContextKeys'te TANIMLI olmalı — yazım hatası sessizce satır düşürürdü.
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var known = typeof(ContextKeys)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Select(f => (string)f.GetRawConstantValue()!)
+            .ToHashSet();
+
+        var live = await db.LessonSections
+            .Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
+
+        live.Should().HaveCount(5);
+        foreach (var s in live)
+        {
+            var tokens = System.Text.RegularExpressions.Regex
+                .Matches(s.BodyMarkdown, @"\{\{\s*(?<key>[a-z0-9_]+)\s*\}\}")
+                .Select(m => m.Groups["key"].Value)
+                .ToList();
+
+            tokens.Should().NotBeEmpty("her bağlam bloğu en az bir metrik göstermeli");
+            tokens.Should().OnlyContain(t => known.Contains(t),
+                "bilinmeyen token satırı sessizce düşürür (yazım hatası riski)");
+        }
     }
 
     [Fact]

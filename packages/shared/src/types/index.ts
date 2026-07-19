@@ -413,6 +413,23 @@ export interface LessonDetail {
   sections: LessonSection[];
   quiz: Quiz | null;
   conceptTags: ConceptTag[];
+  /** "Senin portföyünde" bloğunun veri kaynağı; bağlam bloğu yoksa null (15 §3.2). */
+  contextState: LessonContextState | null;
+  /** Bağlam verisinin ait olduğu an — yalnız `Stale` durumunda anlamlı. */
+  contextAsOf: string | null;
+  /** Settaki bir sonraki ders (ilerleme akışı); set sonundaysa null. */
+  nextLesson: NextLesson | null;
+}
+
+/** "Senin portföyünde" bloğunun veri durumu (15 §3.2, T6.2). */
+export type LessonContextState = "Own" | "Demo" | "Stale";
+
+/** Settaki bir sonraki ders; `locked` ön-koşuldan türetilir (T6.2 ilerleme akışı). */
+export interface NextLesson {
+  id: string;
+  slug: string;
+  title: string;
+  locked: boolean;
 }
 
 /** PUT /api/education/lessons/{id}/progress — ilerleme upsert. */

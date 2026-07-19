@@ -3407,11 +3407,67 @@ body.drawer-lock {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--line, #26304f);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
 }
 .lesson-done-badge {
   color: var(--mint, #45d5a2);
   font-weight: 600;
   font-size: 13.5px;
+}
+.lesson-actions .next-lesson {
+  margin-left: auto;
+}
+@media (max-width: 560px) {
+  /* Dar ekranda buton alta tam genişlik — yan yana sıkışma yok (memory: alana sığan layout). */
+  .lesson-actions .next-lesson {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Katmanlı ders bölümleri (T6.1/T6.2) */
+.lesson-section + .lesson-section {
+  margin-top: 8px;
+}
+/* "Senin portföyünde" — kullanıcının kendi verisi: aksanla ayrılır. */
+.lesson-section.kind-livecontext {
+  margin-top: 18px;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid var(--mint, #45d5a2);
+}
+/* Tuzak bloğu — uyarı tonu, ama alarm değil (eğitici). */
+.lesson-section.kind-trap {
+  margin-top: 18px;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid var(--coral, #ef7a72);
+}
+/* Jenerik örnek — nötr, hafif geri planda. */
+.lesson-section.kind-example {
+  margin-top: 18px;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid var(--line, #26304f);
+}
+
+/* Bağlam veri kaynağı rozeti — demo/bayat ayrımı görünür olmalı (SC-E3). */
+.context-badge {
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.context-badge.demo {
+  background: color-mix(in srgb, var(--accent, #7aa2ff) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #7aa2ff) 35%, transparent);
+  color: var(--text, #e8ecf8);
+}
+.context-badge.stale {
+  background: color-mix(in srgb, var(--warn, #e3b341) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warn, #e3b341) 35%, transparent);
+  color: var(--text, #e8ecf8);
 }
 
 /* Mini test */

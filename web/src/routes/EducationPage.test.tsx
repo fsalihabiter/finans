@@ -69,4 +69,84 @@ describe("EducationPage", () => {
     expect(screen.getByText("Reel Getiri")).toBeInTheDocument(); // kavram etiketi
     expect(screen.getByText("← Derslere dön")).toBeInTheDocument();
   });
+
+  // ── T6.1/T6.2: katmanlı bölümler + bağlam rozeti + ilerleme akışı ──────────
+
+  /** Bölümlü ders detayı; `contextState` ile bağlam rozeti senaryosu kurulur. */
+  function detailWithSections(over: Record<string, unknown> = {}) {
+    return {
+      ...lessonDetail,
+      sections: [
+        { order: 1, heading: null, bodyMarkdown: "Çekirdek anlatım.", depthTier: "Core", kind: "Explain" },
+        { order: 2, heading: null, bodyMarkdown: "Derin katman.", depthTier: "Deep", kind: "Explain" },
+        { order: 3, heading: null, bodyMarkdown: "Yoğunlaşman %80.", depthTier: "Core", kind: "LiveContext" },
+      ],
+      contextState: "Own",
+      contextAsOf: null,
+      nextLesson: null,
+      ...over,
+    };
+  }
+
+  function mockDetail(detail: unknown) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.endsWith("/api/education/tracks")) return ok(tracks);
+        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
+        if (url.includes("/api/education/lessons/")) return ok(detail);
+        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
+      }),
+    );
+  }
+
+  it("katmanlı bölümleri render eder (bodyMarkdown yerine)", async () => {
+    mockDetail(detailWithSections());
+    renderWithProviders(<EducationPage />);
+
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    expect(await screen.findByText("Çekirdek anlatım.")).toBeInTheDocument();
+    expect(screen.getByText("Derin katman.")).toBeInTheDocument();
+    expect(screen.getByText("Yoğunlaşman %80.")).toBeInTheDocument();
+    // Bölüm varken fallback gövde GÖSTERİLMEZ (çift içerik olmaz).
+    expect(screen.queryByText("Gövde metni burada.")).not.toBeInTheDocument();
+  });
+
+  it("kendi verisinde bağlam rozeti göstermez, demo verisinde gösterir", async () => {
+    mockDetail(detailWithSections()); // contextState: "Own"
+    const own = renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+    await screen.findByText("Yoğunlaşman %80.");
+    expect(screen.queryByText(/Örnek portföy/)).not.toBeInTheDocument();
+    own.unmount();
+
+    mockDetail(detailWithSections({ contextState: "Demo" }));
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+    expect(await screen.findByText(/Örnek portföy/)).toBeInTheDocument();
+  });
+
+  it("tamamlanmış derste sonraki derse geçiş sunar; set sonunda sunmaz", async () => {
+    mockDetail(
+      detailWithSections({
+        status: "Completed",
+        nextLesson: { id: "l2", slug: "cesit", title: "Çeşitlendirme", locked: false },
+      }),
+    );
+    const withNext = renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    const nextBtn = await screen.findByRole("button", { name: /Sonraki ders: Çeşitlendirme/ });
+    expect(nextBtn).toBeEnabled();
+    withNext.unmount();
+
+    // Set sonu: sonraki ders yok → geçiş butonu yerine tamamlama rozeti.
+    mockDetail(detailWithSections({ status: "Completed", nextLesson: null }));
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    expect(await screen.findByText("🎉 Seti tamamladın")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Sonraki ders/ })).not.toBeInTheDocument();
+  });
 });

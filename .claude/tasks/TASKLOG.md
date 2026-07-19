@@ -20,6 +20,44 @@
 
 ---
 
+## 2026-07-19 · T6.2 — "Senin portföyünde" bağlamı + ders ilerleme akışı
+- **Görev(ler):** T6.2 (+ kullanıcı isteği: tamamlanan ders sonrakini açsın ve geçilebilsin).
+- **Ne yapıldı:** (1) **`ILessonContextService` + `ContextKeys`** (9 anahtar) — içerik yazarı
+  `{{anahtar}}` token'ı yazar, servis KODDA hesaplanmış metrikle değiştirir (`CLAUDE.md` §3.1;
+  yeni hesap YOK, mevcut `PortfolioSummary` çıktısı). Ayrı "gereksinim tablosu" kurmadım —
+  token'ın kendisi bildirimdir. **Application katmanında** (DbContext'siz saf mantık → birim
+  testli; Infrastructure'a koymuştum, taşındı); (2) **3 durum**: `Own` · `Demo` (portföy yok /
+  <2 kalem / servis çöktü → etiketli örnek, NFR-5) · `Stale` (>24s, `AsOf` damgalı);
+  (3) 5 derse **`LiveContext` bloğu** (blok 5→6); (4) **web**: `LessonBody` artık bölümleri
+  render ediyor (T6.1 içeriği görünür hâle geldi — daha önce yalnız `bodyMarkdown` çiziliyordu),
+  bağlam rozeti (demo/bayat), blok türüne göre kenarlık; (5) **ilerleme akışı**: `NextLessonDto`
+  (kilit ön-koşuldan türetilir) + "Sonraki ders →" geçişi + tamamlamada *"X açıldı"* bildirimi +
+  set sonunda kutlama.
+- **Dokunulan dosyalar:** `Finans.Domain/Enums.cs`, `Finans.Application/Education/{LessonContext.cs,
+  LessonContextService.cs,EducationDtos.cs}`, `Finans.Infrastructure/{Services/EducationService.cs,
+  DependencyInjection.cs,Seed/{EducationContent.cs,SeedData.cs}}`, `packages/shared/src/types/index.ts`,
+  `web/src/routes/EducationPage.tsx` (+test), `web/src/App.css`, testler, docs (08/09).
+- **Test:** **SC-E13** — 10 birim (token çözümü · TR biçim · demo/stale/own · satır düşürme ·
+  tür ağırlığı toplama · servis çökmesi · determinizm · **kültür bağımsızlığı**) + 3 bileşen
+  (bölüm render · rozet · sonraki ders) + 2 seed regresyon. Application **277/277**,
+  Integration **155/159** (aynı 4 bilinen host testi), web **104/104**.
+  **Canlı Postgres uçtan uca:** gerçek portföyde `Own` (%85,4 yoğunlaşma, 647.482,9 ₺),
+  hissesiz derste `{{stock_weight}}` satırı düştü, `nextLesson` zinciri doğru, set sonunda null.
+- **Karar/Not:** ⚠ **Canlı doğrulama iki hata yakaladı (testler yeşilken):**
+  (a) üretim imajı **globalization-invariant** modda → `CultureInfo.GetCultureInfo("tr-TR")`
+  `CultureNotFoundException` → **500**. Windows'ta ICU tam olduğu için testler geçiyordu.
+  Açık `NumberFormatInfo`'ya geçildi + *ortam kültüründen bağımsızlık* regresyon testi eklendi.
+  (b) Seed kapısı yine kaba idi: T6.1'in "hiç bölüm var mı?" kapısı, sonradan eklenen
+  `LiveContext` bloğunu mevcut DB'lere **indiremedi**. Kapı **blok bazına** çevrildi
+  (deterministik `Id($"section-{lessonId}-{order}")`) → yeni blok tipleri geriye dönük iner,
+  var olanlar çoğaltılmaz; regresyon testiyle sabitlendi. Bu değişiklik canlıda 25 eski
+  (rastgele Id'li) satırı artık kalıntı yaptı → `LessonSections` temizlenip seed yeniden
+  kuruldu (30 blok; **kullanıcı verisine dokunulmadı** — 7 holding sağlam).
+  **T6.10 büyük ölçüde karşılandı** (Demo durumu + rozet); kalanı zenginleştirilmiş demo portföy.
+- **Durum:** tamamlandı.
+- **Sıradaki:** T6.7 (seviyeye göre katlama + "Daha derine in") — şu an TÜM katmanlar açık
+  gösteriliyor; ya da T6.6 (tanılama testi, T6.7'nin girdisi).
+
 ## 2026-07-19 · T6.1 — Katmanlı ders içeriği (5 ders × L1/L2/L3 + örnek + tuzak) + 4 yeni test
 - **Görev(ler):** T6.1 (Faz 6 — müfredat içeriği; `15` §2/§6).
 - **Ne yapıldı:** (1) **Yeni dosya `EducationContent.cs`** — 5 dersin **25 bloğu** (her ders:
