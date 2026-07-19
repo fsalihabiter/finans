@@ -20,6 +20,36 @@
 
 ---
 
+## 2026-07-19 · Planlama — `15-EDUCATION-PLAN.md` (eğitim derinliği + tanılama + canlı veri)
+- **Görev(ler):** ad-hoc (planlama; önerilen kırılım T6.1–T6.11).
+- **Ne yapıldı:** Eğitim modülünün MVP iskeletinden uyarlanabilir müfredata evrimi için tasarım
+  dokümanı yazıldı (`15-EDUCATION-PLAN.md`, docs README indeksine eklendi). Çekirdek karar:
+  **derinliği risk değil BİLGİ seviyesi belirler** — ürün sahibinin "risk seviyesi → derinlik"
+  isteği ters çalışırdı (risk iştahı yüksek + bilgisi sıfır = en kırılgan profil, en ağır içeriği
+  alırdı). Yerine **üç dik eksen**: bilgi→derinlik, risk tutumu→vurgu/sıra, portföy→örnek.
+  Ayrıca: (a) katmanlı içerik L1/L2/L3 — **mevcut ama kullanılmayan `LessonSection` tablosu**
+  `DepthTier`+`SectionKind` ile canlandırılır, `BodyMarkdown` fallback kalır; (b) `ContextKey`
+  sözleşmesi — 8 metrik, hepsi **zaten hesaplanıyor** (`PortfolioAnonymizer`/`PortfolioService`),
+  yeni hesap yok; üç durumlu render (`Sufficient/Insufficient/Stale`), boş portföy birinci sınıf
+  vatandaş; (c) 8 soruluk tanılama (4 bilgi + 4 senaryo), atlanabilir, utandırmayan;
+  (d) `UserConceptMastery` ile öğrenen profil + aralıklı tekrar; (e) 4 set / 18 ders müfredatı;
+  (f) 10 test senaryosu (SC-E1…E10).
+- **Dokunulan dosyalar:** `.claude/docs/15-EDUCATION-PLAN.md` (yeni), `.claude/docs/README.md`
+  (indeks), `.claude/tasks/TASKLOG.md`.
+- **Test:** yok (yalnız doküman); planlanan senaryolar SC-E1–E10 olarak `15` §7'de, onay sonrası
+  `09` §5 kataloğuna işlenecek.
+- **Karar/Not:** ⚠ **SPK sınırı:** `RiskAttitude` yerindelik/uygunluk testini TAKLİT ETMEZ —
+  çıktısı asla dağılım yüzdesi/portföy yargısı üretmez, yalnız ders sırası+metin varyantı seçer
+  (SC-E4 bunu teste bağlar). Canlı veri karşılaştırmasında **enstrüman sıralaması yasak**
+  ("altın dolardan iyi performans gösterdi" = zımni yönlendirme) → `CommentaryOutputGuard`'a yeni
+  kural gerekir (SC-E5). Ders 18 (vergi) mali müşavirlik alanına temas ediyor → `14` §6 hukuk
+  merceğine eklenmeli. **Plan etkisi önerisi:** T7.1 (okuryazarlık profili) → T6.4 olarak Faz 6'ya
+  çekilir (uyarlanabilir derinliğin ön koşulu). Backlog'a HENÜZ işlenmedi — onay + §9'daki 3 açık
+  soru bekliyor.
+- **Durum:** tamamlandı (tasarım dokümanı); backlog girişi ve implementasyon onay bekliyor.
+- **Sıradaki:** §9 açık soruları (onboarding sırası · RiskAttitude görünürlüğü · vergi dersi) →
+  karar sonrası T6.x satırlarının `08-BACKLOG.md`'ye işlenmesi.
+
 ## 2026-07-19 · Planlama — Faz 9 (nakit akışı/ekstre) + açık bankacılık & kimlik araştırması
 - **Görev(ler):** ad-hoc (planlama; yeni faz: T9.1–T9.8).
 - **Ne yapıldı:** (1) **Açık bankacılık araştırması** (deep-research, 20 kaynak, 25 iddia

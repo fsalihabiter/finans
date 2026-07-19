@@ -41,6 +41,7 @@ Her geliştirme oturumunun başında:
 | 12 | [Observability / Gözlemlenebilirlik](12-OBSERVABILITY.md) | Loglama (Serilog+Seq), metrik/trace (OTel+Prometheus+Grafana), health check, audit log, alarm. İzleme kurarken. |
 | 13 | [Web Frontend / Web Arayüz](13-WEB-FRONTEND.md) | **Birincil yüzey:** ReactJS+Vite SPA, monorepo + paylaşılan paket, web düzen uyarlaması. Web yazarken. |
 | 14 | [Product Strategy / Ürün Stratejisi](14-PRODUCT-STRATEGY.md) | Finansal okuryazarlık vizyonu, rekabet boşluğu, öne çıkaracak özellik katmanları (A-D), dalga planı, gelir modeli. Yol haritası/öncelik tartışırken. |
+| 15 | [Education Plan / Eğitim Planı](15-EDUCATION-PLAN.md) | Katmanlı içerik derinliği (L1/L2/L3), tanılama testi (bilgi + risk tutumu, üç dik eksen), "Senin portföyünde" canlı veri sözleşmesi, 18 derslik müfredat, SPK sınırları. Eğitim içeriği/kişiselleştirme yazarken. |
 
 > **Frontend sırası:** **Web öncelikli** (ReactJS+Vite, `13`). Mobil (React
 > Native, `05`) aynı API ve `@finans/shared` paketi üzerine **sonradan** eklenen
