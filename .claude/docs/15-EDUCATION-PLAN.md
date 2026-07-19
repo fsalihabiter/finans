@@ -1,6 +1,7 @@
 # 15 — Eğitim Derinliği, Kişiselleştirme ve Canlı Veri Planı
 
-> **Tarih:** 2026-07-19 · **Durum:** taslak (onay bekliyor)
+> **Tarih:** 2026-07-19 · **Durum:** ✅ Onaylandı ve `08-BACKLOG.md` Faz 6'ya
+> işlendi (kararlar §9)
 > **Kapsam:** Eğitim modülünün MVP iskeletinden (T5E.1–T5E.4) *uyarlanabilir,
 > örneklendirilmiş ve gerçek veriyle bağlanmış* bir müfredata evrimi.
 > **Bağlam:** `14` §4-A1/A2/A4 vizyonu · mevcut şema `03` §E · uçlar `04` §7.5
@@ -26,7 +27,7 @@ Bu yüzden profil **tek eksen değil, üç dik eksen** olarak modellenir:
 | Eksen | Ölçer | Neyi belirler | Yasal durum |
 |---|---|---|---|
 | **Bilgi seviyesi** (`LiteracyLevel`) | 4 nesnel tanılama sorusu | İçerik **derinliği** (L1/L2/L3) | ✅ Tamamen güvenli |
-| **Risk tutumu** (`RiskAttitude`) | 4 senaryo sorusu (doğru cevap yok) | İçerik **vurgusu ve sırası** (hangi davranış dersi öne çıkar) | ⚠️ Sınırlı — §1.1 |
+| **Risk tutumu** (`RiskAttitude`) | 4 senaryo sorusu (doğru cevap yok) | İçerik **vurgusu ve sırası** (hangi davranış dersi öne çıkar) — **kullanıcıya görünmez** | ⚠️ Sınırlı — §1.1 |
 | **Portföy gerçekliği** | Mevcut hesaplanmış metrikler | **Örnekler** ("Senin portföyünde") | ✅ Olgu |
 
 ### 1.1 Risk tutumu için SPK sınırı — kırmızı çizgi
@@ -50,6 +51,14 @@ Yalnızca şu forma girer:
 dersi metin varyantı seçiminde kullanılır; portföy ekranlarına, LLM
 prompt'larının sayısal bağlamına veya herhangi bir dağılım çıktısına **girmez.**
 Bu kısıt teste bağlanır (bkz. §7 SC-E4).
+
+**KARAR (2026-07-19): `RiskAttitude` kullanıcıya hiç gösterilmez.** Etiket
+("Temkinli/Dengeli/Atılgan") ne profil ekranında ne ders başlığında görünür;
+yalnızca içeriğin sırasını ve metin varyantını sessizce etkiler. Gerekçe:
+görünür bir risk etiketi, kullanıcı tarafından bir *yatırımcı sınıflandırması*
+olarak okunur ve yerindelik testi çağrışımı yapar. Görünmez tutmak hem SPK
+sınırından uzaklaştırır hem de kullanıcının kendini bir kutuya yerleştirip
+öğrenmeyi bırakmasını engeller.
 
 ---
 
@@ -121,14 +130,23 @@ Lesson += RequiredContextKeys : ContextKey[]
 
 ### 3.2 Üç durumlu render (zorunlu)
 
+**KARAR (2026-07-19): onboarding sırası = (c) demo portföyle eğitim → sonra
+kendi verisine geçiş.** Yeni kullanıcı eğitime portföy girmeden başlar; canlı
+bağlam blokları **açıkça etiketlenmiş demo portföy** üzerinden çalışır.
+
 | Durum | Koşul | Davranış |
 |---|---|---|
-| `Sufficient` | Gerekli metrikler mevcut | Gerçek sayılarla kişisel blok |
-| `Insufficient` | Portföy boş / <2 kalem / metrik yok | Jenerik örnek + nazik "varlık ekle" yönlendirmesi. **Ders kilitlenmez.** |
-| `Stale` | Fiyat bayat | Sayı + "şu tarihe ait" damgası |
+| `Own` | Kullanıcının gerçek metrikleri mevcut | Gerçek sayılarla kişisel blok |
+| `Demo` | Portföy boş / <2 kalem / metrik yok | **Demo portföy** sayılarıyla aynı blok + belirgin "örnek portföy" rozeti + "kendi verinle gör" yönlendirmesi. **Ders kilitlenmez.** |
+| `Stale` | Kendi verisi var ama fiyat bayat | Sayı + "şu tarihe ait" damgası |
 
-`Insufficient` durumu tasarımın **birinci sınıf vatandaşıdır**: yeni kullanıcı
-eğitime portföyü olmadan başlayabilmelidir (bkz. §6 açık soru).
+**Demo modu tasarımın birinci sınıf vatandaşıdır** — dersin pedagojik değeri
+(kavramı somut sayıyla görmek) portföyü olmayan kullanıcıda da korunur.
+
+⚠️ **Güven kısıtı:** Demo veri gerçek veriyle **asla karıştırılamaz** olmalıdır
+— blok kenarlığı/rozeti farklı, metin "örnek bir portföyde" diye açar, hiçbir
+demo sayı kullanıcının kendi özet/pano ekranına sızmaz. Bu, `Demo` durumunun
+testidir (SC-E3).
 
 ### 3.3 Şablon deseni
 
@@ -193,7 +211,9 @@ Senaryo tabanlı, **doğru cevap yok**, puanlanmaz:
 4. "Değeri yarıya inen bir varlığı elde tutma sebebin ne olurdu?"
 
 Çıktı: `Temkinli` · `Dengeli` · `Atılgan` — **yalnızca ders vurgusu için**
-(§1.1 kısıtı). Kullanıcıya gösterilen metin nötr ve öğretici tondadır.
+(§1.1 kısıtı) ve **kullanıcıya hiç gösterilmez** (karar 2026-07-19). Test
+sonunda kullanıcı yalnızca "şu dersle başlayalım" yönlendirmesi görür; hangi
+tutum sınıfına düştüğü bilgisi arayüze çıkmaz.
 
 ### 4.3 Şema
 
@@ -228,7 +248,7 @@ dönüştürür — "haritayı okumayı öğretir" konumlandırmasıyla tutarlı
 
 ---
 
-## 6. Müfredat: 4 set, 18 ders
+## 6. Müfredat: 4 set, 17 ders
 
 Mevcut 5 ders korunur, üzerine inşa edilir. (`14` §4-A1'deki 8 derslik ilk
 liste bu yapıya dağıtıldı.)
@@ -247,14 +267,16 @@ liste bu yapıya dağıtıldı.)
 10. Kayıptan kaçınma · 11. FOMO ve sürü davranışı ·
 12. Çıpalama ve maliyet takıntısı · 13. Aşırı işlem ve gizli maliyetler
 
-### Set 4 — Türkiye Gerçekleri (5 ders · Gelişen→İleri)
+### Set 4 — Türkiye Gerçekleri (4 ders · Gelişen→İleri)
 14. BES'i doğru kullanmak *(`bes_state_share`)*
 15. Altın kültürü — gram/çeyrek/22 ayar, düğün altını
 16. Enflasyon ortamında birikim *(`inflation_12m`)*
 17. Fon okuma — TEFAS, gider oranı *(T7.5 bağımlı)*
-18. Maliyet ve vergi farkındalığı ⚠️ **yalnızca "hangi kalemler var" düzeyinde;
-    vergi planlaması tavsiyesi YOK** (mali müşavirlik alanı — `14` §6 hukuk
-    merceğine dahil edilmeli)
+
+> **KARAR (2026-07-19): vergi dersi kapsam DIŞI.** Taslakta 18. ders olarak
+> önerilen "Maliyet ve vergi farkındalığı" çıkarıldı — mali müşavirlik alanına
+> temas ediyor ve `CLAUDE.md` §2'nin savunduğu net sınırı bulanıklaştırıyor.
+> İleride gündeme gelirse `14` §6 hukuk merceğinden geçmesi şarttır.
 
 ---
 
@@ -264,8 +286,8 @@ liste bu yapıya dağıtıldı.)
 |---|---|
 | SC-E1 | Başlangıç kullanıcı ders açar → yalnız L1 render; "Daha derine in" ile L2 açılır |
 | SC-E2 | İleri kullanıcı aynı dersi açar → L1 katlanmış, L2+L3 açık |
-| SC-E3 | Portföyü boş kullanıcı → `Insufficient`: jenerik örnek + ekleme yönlendirmesi; ders kilitlenmez, hata yok |
-| SC-E4 | **`RiskAttitude` hiçbir dağılım/portföy çıktısına sızmaz** (kod + çıktı taraması) |
+| SC-E3 | Portföyü boş kullanıcı → `Demo`: demo portföy sayıları + belirgin "örnek portföy" rozeti; ders kilitlenmez; **demo sayı kullanıcının pano/özet ekranına sızmaz** |
+| SC-E4 | **`RiskAttitude` hiçbir dağılım/portföy çıktısına sızmaz VE hiçbir API yanıtında/arayüzde görünmez** (kod + çıktı taraması) |
 | SC-E5 | LLM ders yorumu enstrüman sıralaması üretirse guard kartı düşürür |
 | SC-E6 | Quiz geçilince ilgili `ConceptTag` `MasteryScore` artar; L1 katlanır |
 | SC-E7 | Tanılama atlanır → `LiteracyLevel=null` → Başlangıç gibi davranılır, hata yok |
@@ -275,40 +297,41 @@ liste bu yapıya dağıtıldı.)
 
 ---
 
-## 8. Görev Kırılımı (öneri — `08-BACKLOG.md` Faz 6'ya)
+## 8. Görev Kırılımı (`08-BACKLOG.md` Faz 6'ya işlendi)
+
+Mevcut T6.1–T6.4 korunmuş, yeni işler T6.5'ten devam etmiştir.
 
 | ID | Görev | Bağımlılık |
 |---|---|---|
-| T6.1 | *(mevcut, genişletildi)* 5 dersin L1/L2/L3 gövdeleri + jenerik örnek + tuzak blokları | — |
-| T6.2 | Katmanlı içerik şeması: `LessonSection.DepthTier/SectionKind` + migration + geriye dönük `BodyMarkdown` fallback | — |
-| T6.3 | **`LessonContextService`**: `ContextKey` → deterministik değer; 3 durum (`Sufficient/Insufficient/Stale`); mevcut `PortfolioAnonymizer` çıktısına bağlanır | T6.2 |
-| T6.4 | **Tanılama testi** (8 soru) + `Users.LiteracyLevel/RiskAttitude/ProfiledAtUtc` — ⚠ **T7.1 ile birleşir, Faz 6'ya çekilir** | T6.2 |
-| T6.5 | Uyarlanabilir render (web): seviyeye göre katman + "Daha derine in" | T6.2, T6.4 |
-| T6.6 | `MiniMarkdown` genişletme: **tablo + link** (hâlâ `dangerouslySetInnerHTML` YOK) — derin içerik için gerekli | — |
-| T6.7 | `UserConceptMastery` + quiz→ustalık akışı + aralıklı tekrar | T6.4 |
-| T6.8 | Set 2 içerikleri (4 ders) | T6.1 |
-| T6.9 | Set 3 içerikleri (4 ders) + `RiskAttitude` sıralaması | T6.4 |
-| T6.10 | Set 4 içerikleri (5 ders) | T6.8 |
-| T6.11 | LLM ders yorumu katmanı (opsiyonel) + **enstrüman-sıralama guard'ı** | T6.3 |
+| T6.1 | *(mevcut, genişletildi)* İlk 5 dersin **L1/L2/L3** gövdeleri + jenerik örnek + tuzak blokları | T5E.2 |
+| T6.2 | *(mevcut, genişletildi)* "Senin portföyünde" bağlam API'si → **`LessonContextService`**: `ContextKey` → deterministik değer, **3 durum** (`Own/Demo/Stale`) | T5E.3, T1.7 |
+| T6.3 | *(mevcut)* Kavram sözlüğü | T5E.4 |
+| T6.4 | *(mevcut)* İlerleme mekaniği: rozet + streak | T5E.4 |
+| T6.5 | **Katmanlı içerik şeması:** `LessonSection.DepthTier/SectionKind` + migration + geriye dönük `BodyMarkdown` fallback | T5E.1 |
+| T6.6 | **Tanılama testi** (8 soru: 4 bilgi + 4 senaryo) + `Users.LiteracyLevel/RiskAttitude/ProfiledAtUtc`; atlanabilir; `RiskAttitude` **arayüze çıkmaz** — ⚠ **eski T7.1'i devralır** | T6.5 |
+| T6.7 | **Uyarlanabilir render** (web): seviyeye göre katman + "Daha derine in" (tavan kapatılmaz) | T6.5, T6.6 |
+| T6.8 | `MiniMarkdown` genişletme: **tablo + link** (hâlâ `dangerouslySetInnerHTML` YOK) | — |
+| T6.9 | `UserConceptMastery` + quiz→ustalık akışı + aralıklı tekrar | T6.6 |
+| T6.10 | **Eğitim demo bağlam portföyü** (karar 1c): salt-okunur örnek portföy + belirgin rozet; demo sayı kendi pano/özetine sızmaz | T6.2 |
+| T6.11 | Set 2 içerikleri — Portföyünü Okumak (4 ders) | T6.1 |
+| T6.12 | Set 3 içerikleri — Davranış (4 ders) + `RiskAttitude` sıralaması | T6.6 |
+| T6.13 | Set 4 içerikleri — Türkiye Gerçekleri (4 ders; vergi hariç) | T6.11 |
+| T6.14 | LLM ders yorumu katmanı (opsiyonel) + **enstrüman-sıralama guard'ı** | T6.2 |
 
-**Plan etkisi:** T7.1 (okuryazarlık profili) → **T6.4 olarak Faz 6'ya taşınır**,
-çünkü uyarlanabilir derinliğin ön koşuludur. Faz 7'de yerine bir referans satırı
-bırakılır.
+**Plan etkisi:** T7.1 (okuryazarlık profili) → **T6.6 olarak Faz 6'ya taşındı**,
+çünkü uyarlanabilir derinliğin ön koşuludur. Faz 7'de yerine referans satırı
+bırakıldı. T7.7 (demo/misafir modu) Faz 7'de kalır; T6.10 onun eğitim-içi
+dar dilimidir.
 
 ---
 
-## 9. Açık Sorular
+## 9. Kararlar (2026-07-19 · ürün sahibi)
 
-1. **Onboarding sırası:** Yeni kullanıcı önce portföy mü girer, önce eğitime mi
-   başlar? Eğitim canlı veriyle güçleniyor ama boş portföy `Insufficient`
-   moduna düşürüyor. Seçenekler: (a) eğitim önce, jenerik örneklerle;
-   (b) portföy önce, sonra kişiselleşmiş eğitim; (c) demo portföy (T7.7) ile
-   eğitim, sonra kendi verisine geçiş.
-2. **`RiskAttitude` görünürlüğü:** Kullanıcıya etiket gösterilsin mi
-   ("Temkinli") yoksa tamamen görünmez mi kalsın (yalnız sıralamayı etkilesin)?
-   Görünür etiket motive eder ama SPK sınırına yaklaşır.
-3. **Ders 18 (vergi):** Kapsama alınsın mı? Mali müşavirlik alanına temas eder;
-   `14` §6 hukuk merceğine eklenmesi gerekir.
+| # | Soru | Karar | Gerekçe |
+|---|---|---|---|
+| 1 | Onboarding sırası | **(c) Demo portföyle eğitim → sonra kendi verisi** | Ders pedagojik değerini portföysüz kullanıcıda da korur; portföy girişi ön koşul olmaz |
+| 2 | `RiskAttitude` görünürlüğü | **Görünmesin** | Görünür etiket "yatırımcı sınıflandırması" olarak okunur (yerindelik çağrışımı); ayrıca kullanıcıyı kutuya hapseder |
+| 3 | Vergi dersi (18) | **Alınmasın** | Mali müşavirlik alanına temas ediyor; §2 sınırını bulanıklaştırır |
 
 ---
 

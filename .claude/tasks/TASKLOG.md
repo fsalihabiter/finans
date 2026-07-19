@@ -46,9 +46,17 @@
   merceğine eklenmeli. **Plan etkisi önerisi:** T7.1 (okuryazarlık profili) → T6.4 olarak Faz 6'ya
   çekilir (uyarlanabilir derinliğin ön koşulu). Backlog'a HENÜZ işlenmedi — onay + §9'daki 3 açık
   soru bekliyor.
-- **Durum:** tamamlandı (tasarım dokümanı); backlog girişi ve implementasyon onay bekliyor.
-- **Sıradaki:** §9 açık soruları (onboarding sırası · RiskAttitude görünürlüğü · vergi dersi) →
-  karar sonrası T6.x satırlarının `08-BACKLOG.md`'ye işlenmesi.
+- **Durum:** tamamlandı — **§9 kararları alındı ve plana işlendi (aynı gün).**
+- **Kararlar (ürün sahibi, 2026-07-19):** (1) **onboarding = (c)** demo portföyle eğitim → sonra
+  kendi verisi ⇒ `Insufficient` durumu **`Demo`** olarak yeniden tanımlandı (etiketli örnek
+  portföy; demo sayı kendi panosuna sızmaz, SC-E3) + yeni görev T6.10; (2) **`RiskAttitude`
+  görünmez** ⇒ etiket hiçbir API yanıtına/arayüze çıkmaz (SC-E4 sızıntı taraması); (3) **vergi
+  dersi kapsam dışı** ⇒ müfredat 18→**17 ders** (Set 4: 5→4).
+- **Backlog'a işlendi:** Faz 6'ya **T6.5–T6.14** eklendi (mevcut T6.1–T6.4 numaraları korundu,
+  T6.1/T6.2 kapsamı genişletildi: katmanlı gövde + `LessonContextService`/3 durum); Faz 6 DoD
+  yenilendi. **T7.1 → T6.6'ya taşındı** (uyarlanabilir derinliğin ön koşulu); Faz 7'de referans
+  satırı bırakıldı. `09` §5'e **SC-E1–SC-E10** eklendi (ikisi 🔒 SPK sınır testi).
+- **Sıradaki:** T5E.4b → **T6.5** (katmanlı şema, T6.1/T6.7'nin ön koşulu) → T6.1 → T6.6.
 
 ## 2026-07-19 · Planlama — Faz 9 (nakit akışı/ekstre) + açık bankacılık & kimlik araştırması
 - **Görev(ler):** ad-hoc (planlama; yeni faz: T9.1–T9.8).

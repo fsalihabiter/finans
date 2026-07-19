@@ -241,13 +241,26 @@ hesabı birim testli (SC-32/36); tahmin/yönlendirme yok (kalıcı disclaimer).
 | T5E.2 | Eğitim seed'i (5 ders "Temeller" track'i + 1 quiz + örnek ilerleme) | T5E.1 | `03` §12.5 | [x] (2026-07-16; SC-43; "Temeller" + 5 ders + ön-koşul zinciri + 6 kavram etiketi + Ders 1'e 3 soruluk quiz + örnek ilerleme (1-3 Tamamlandı·4 Devam·5 türetilmiş Kilitli); portföyden bağımsız idempotent → mevcut DB'ler de alır; içerik kısa/eğitici, derinleştirme T6.1) |
 | T5E.3 | Eğitim endpoint'leri (tracks/lessons/progress/quiz) — ilerleme `UserId` kapsamlı + IDOR testi | T5E.1 | `04` §7.5, `11` §3 | [x] (2026-07-16; SC-44; `EducationController`+`IEducationService`/`EducationService` — 6 uç: tracks·track-lessons·lesson-detay·progress-upsert·quiz-attempt·by-concept; kilit ön-koşuldan türetilir; içerik açık, durum/ilerleme+deneme `UserId` kapsamlı; quiz cevap-anahtarı yalnız deneme sonucunda açılır; integration 12 (per-user izolasyon + grading + 400/404)) |
 | T5E.4 | **Web** Eğitim sayfası: track + ders listesi + ilerleme çubuğu + kilit; ders okuma + mini test; analiz/hisse kartından `ConceptTag` derin bağlantı | T5E.3 | `13` §4 | [~] (2026-07-17; SC-45; ComingSoon→gerçek: shared tipler+istemci+hook'lar; ilerleme çubuğu + kilitli/tamamlandı rozetleri; sayfa-içi ders okuma + **`MiniMarkdown`** (güvenli, lib'siz) + mini test (tam-eşleşme, sonuçta doğru+açıklama açılır); web 101/101. **Kalan:** ConceptTag derin bağlantı (Analiz/Hisse kartından `/lessons/by-concept`) — T5E.4b) |
-| T6.1 | **İlk müfredat içeriği (5 ders):** enflasyon & reel getiri · risk-getiri · çeşitlendirme/yoğunlaşma · maliyet ortalaması · BES'i doğru kullanmak. Her derste "Senin portföyünde" bağlam bloğu şablonu + 2-3 soruluk quiz. İçerik repo'da (topluluk katkısına açık, `14` §4-D2) | T5E.2 | `14` §4-A1 | [ ] |
-| T6.2 | **"Senin portföyünde" bağlam API'si:** ders başına portföyden türetilen bağlam değerleri (örn. çeşitlendirme dersi → kullanıcının yoğunlaşma oranı) — hesap KODDA, deterministik; LLM yok | T5E.3, T1.7 | `14` §4-A1, `CLAUDE.md` §3.1 | [ ] |
+| T6.1 | **İlk müfredat içeriği (5 ders):** enflasyon & reel getiri · risk-getiri · çeşitlendirme/yoğunlaşma · maliyet ortalaması · BES'i doğru kullanmak. Her derste "Senin portföyünde" bağlam bloğu şablonu + 2-3 soruluk quiz. İçerik repo'da (topluluk katkısına açık, `14` §4-D2). **Genişletildi (`15` §2):** gövdeler **L1 Core / L2 Context / L3 Deep** katmanlı yazılır + jenerik örnek + tuzak bloğu | T5E.2 | `14` §4-A1, `15` §2 | [ ] |
+| T6.2 | **"Senin portföyünde" bağlam API'si:** ders başına portföyden türetilen bağlam değerleri (örn. çeşitlendirme dersi → kullanıcının yoğunlaşma oranı) — hesap KODDA, deterministik; LLM yok. **Genişletildi (`15` §3):** `LessonContextService` + `ContextKey` sözleşmesi (8 metrik, hepsi mevcut `PortfolioAnonymizer`/`PortfolioService` çıktısından) + **3 durum** (`Own`/`Demo`/`Stale`) | T5E.3, T1.7 | `14` §4-A1, `15` §3, `CLAUDE.md` §3.1 | [ ] |
 | T6.3 | **Kavram sözlüğü:** InfoTip içeriklerinin aranabilir indeksi (`/egitim/sozluk`) + derslere ve kullanım yerlerine çapraz bağlantı | T5E.4 | `14` §4-A4 | [ ] |
 | T6.4 | İlerleme mekaniği: ders tamamlama rozetleri + haftalık "portföy check-in" serisi (streak) — ölçüm `14` §8 metrikleriyle uyumlu | T5E.4 | `14` §8 | [ ] |
+| T6.5 | **Katmanlı içerik şeması:** `LessonSection.DepthTier {Core,Context,Deep}` + `SectionKind {Explain,Example,Trap,LiveContext,Source}` + migration; **geriye dönük `BodyMarkdown` fallback** (mevcut 5 ders kırılmaz) | T5E.1 | `15` §2 | [ ] |
+| T6.6 | **Tanılama testi (8 soru):** 4 bilgi (nesnel → `LiteracyLevel`) + 4 senaryo (puansız → `RiskAttitude`); atlanabilir, utandırmayan; `Users.LiteracyLevel/RiskAttitude/ProfiledAtUtc`. ⚠ **`RiskAttitude` arayüze/API yanıtına ÇIKMAZ** (SC-E4) — **eski T7.1'i devralır** | T6.5 | `15` §4, `14` §4-A2 | [ ] |
+| T6.7 | **Uyarlanabilir render (web):** seviyeye göre L1/L2/L3 katmanı + **"Daha derine in"** (tavan kapatılmaz — alt seviye kullanıcı isteğe bağlı derinleşebilir) | T6.5, T6.6 | `15` §2.2, `13` | [ ] |
+| T6.8 | **`MiniMarkdown` genişletme:** tablo + link desteği (derin içerik için gerekli) — **`dangerouslySetInnerHTML` YİNE YOK** (XSS-güvenli, topluluk içeriği `14` §4-D2) | — | `15` §2, `13` | [ ] |
+| T6.9 | **`UserConceptMastery`** (UserId, ConceptTagId, MasteryScore, LastSeenAtUtc): quiz→ustalık akışı; ustalık yüksekse L1 katlanır; `LastSeenAtUtc` ile **aralıklı tekrar** | T6.6 | `15` §5 | [ ] |
+| T6.10 | **Eğitim demo bağlam portföyü** (onboarding kararı 1c): salt-okunur örnek portföy → `Demo` durumunda bağlam blokları çalışır; **belirgin "örnek portföy" rozeti**; demo sayı kullanıcının pano/özet ekranına **sızmaz** (SC-E3) | T6.2 | `15` §3.2 | [ ] |
+| T6.11 | **Set 2 içerikleri — Portföyünü Okumak (4 ders):** ağırlık/yoğunlaşma · maliyet ortalaması · kur etkisi · getiriyi doğru ölçmek | T6.1 | `15` §6 | [ ] |
+| T6.12 | **Set 3 içerikleri — Davranış (4 ders):** kayıptan kaçınma · FOMO/sürü · çıpalama · aşırı işlem. `RiskAttitude` yalnız **sırayı** belirler | T6.6 | `15` §6, §1.1 | [ ] |
+| T6.13 | **Set 4 içerikleri — Türkiye Gerçekleri (4 ders):** BES · altın kültürü · enflasyonda birikim · fon okuma (T7.5 bağımlı). **Vergi dersi kapsam dışı** (karar `15` §9) | T6.11 | `15` §6 | [ ] |
+| T6.14 | **LLM ders yorumu katmanı (opsiyonel):** mevcut `CommentaryPrompts` deseni + tüm guard hattı; ⚠ **yeni `CommentaryOutputGuard` kuralı: enstrüman sıralaması** ("X, Y'den iyi performans gösterdi" → zımni yönlendirme, kart düşer, SC-E5) | T6.2 | `15` §3.4, `07` | [ ] |
 
-**Faz 6 DoD:** 5 ders gerçek portföy bağlamıyla okunabiliyor; quiz + ilerleme
-kaydediliyor; sözlük aranabilir; Eğitim sekmesinde ComingSoon kalmadı.
+**Faz 6 DoD:** 17 ders **seviyeye uyarlanmış derinlikte** (L1/L2/L3) okunabiliyor;
+"Senin portföyünde" bloğu gerçek veriyle (yoksa etiketli demo ile) çalışıyor;
+tanılama testi seviyeyi belirliyor ve `RiskAttitude` hiçbir yerde görünmüyor;
+quiz + ilerleme + kavram ustalığı kaydediliyor; sözlük aranabilir;
+SC-E1–E10 yeşil. Detaylı tasarım: [`15-EDUCATION-PLAN.md`](15-EDUCATION-PLAN.md).
 
 ---
 
@@ -258,7 +271,7 @@ kaydediliyor; sözlük aranabilir; Eğitim sekmesinde ComingSoon kalmadı.
 
 | ID | Görev | Bağımlılık | Doküman | Durum |
 |----|-------|-----------|---------|-------|
-| T7.1 | **Okuryazarlık profili + onboarding (A2):** ilk açılışta 6-8 soruluk seviye ölçümü ("haritada neredesin" tonunda) → `Users.LiteracyLevel`; InfoTip/açıklama derinliği ve LLM prompt tonu seviyeye bağlanır | Faz 6 | `14` §4-A2, `07` | [ ] |
+| T7.1 | ~~Okuryazarlık profili + onboarding (A2)~~ → **T6.6'ya taşındı** (2026-07-19): uyarlanabilir içerik derinliğinin ön koşulu olduğu için Faz 6'ya çekildi. Kalan Faz 7 işi: InfoTip/LLM prompt tonunun `LiteracyLevel`'a bağlanması (T6.6 sonrası) | T6.6 | `15` §4, `14` §4-A2 | [→ T6.6] |
 | T7.2 | **Kimlik/çok kullanıcı (C2):** JWT (access+refresh) + Argon2id + kayıt/giriş; KVKK "verimi sil"; IDOR (SC-13) + AuthZ + rate-limit testleri yeşil; audit log tam | Faz 1 | `11` §2-3, `03` §B | [ ] |
 | T7.3 | **PWA (C3):** manifest + service worker + yüklenebilirlik (mobil erişim, RN öncesi ara adım) | Faz 5 | `14` §4-C3, `13` | [ ] |
 | T7.4 | **Bildirim v1 (C4):** haftalık portföy özeti + ders hatırlatması (bilgi, tavsiye değil — ⚠ hukuk merceği `14` §6) | T7.2, T7.3 | `14` §4-C4 | [ ] |
