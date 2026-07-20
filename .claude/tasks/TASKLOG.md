@@ -20,6 +20,29 @@
 
 ---
 
+## 2026-07-20 · ad-hoc — Hisse eklerken para birimi seçimi (BIST=TL / ABD=USD)
+- **Görev(ler):** ad-hoc (kullanıcı isteği: hisse alım/satımda para birimi seçilebilsin —
+  Türk hisseleri TL, ABD hisseleri USD).
+- **Ne yapıldı:** `AddHoldingDialog`'a **hisse için para birimi seçici chip'i** eklendi
+  (🇹🇷 TL / 🇺🇸 USD; Fx seçici kalıbında). Daha önce hisse para birimi yalnız Finnhub'dan
+  otomatik türetiliyordu (BIST'te çalışmaz, hep USD varsayılan). Artık: kullanıcı elle seçer;
+  `stockCcyTouched` bayrağı sayesinde **sembol otomatiği (Finnhub) manuel seçimi EZMEZ**;
+  tür değişince sıfırlanır. "Alış birim fiyatı (₺/$)" etiketi seçime göre değişir. Detay
+  sayfası modalları ("Fiyatı güncelle", "İşlemi düzenle") zaten `h.currency` dinamik →
+  TL hisse otomatik ₺ gösterir (değişiklik gerekmedi).
+- **Dokunulan dosyalar:** `web/src/components/AddHoldingDialog.tsx`,
+  `web/src/components/AddHoldingDialog.test.tsx`.
+- **Test:** 2 yeni senaryo — (a) TL seçilince POST `currency:"TRY"` + etiket ₺;
+  (b) elle TL seçilip sembol aranınca (Finnhub USD döner) seçim korunur. Web **119/119**
+  (33 dosya), `pnpm build` yeşil. Backend değişmedi — `CreateHoldingRequest.Currency` zaten
+  `PricingCurrency`'ye yazılıyor, hisse=USD zorunluluğu yok (doğrulandı).
+- **Karar/Not:** Seçenekler **TL + USD** ile sınırlı (hedef borsalar BIST + ABD, CLAUDE.md §3.3).
+  Finnhub EUR dönerse chip'te vurgu olmaz ama değer yine set edilir (kenar durum, kapsam dışı).
+  Yerelde pnpm yok → testler tek-seferlik `node:22-alpine` konteynerinde koşuldu; canlı için
+  `docker compose up -d --build caddy`.
+- **Durum:** tamamlandı.
+- **Sıradaki:** Faz 6 içerik turu — T6.11c (3. ders F/K, PD/DD).
+
 ## 2026-07-19 · T6.11b — Ders 2 içerik turu (13 aşama · 3 yeni figür · 9 soru) + yol haritası sütunu
 - **Görev(ler):** T6.11b (kullanıcı isteği: 2. derse geç; başlık sütunu tek satıra sığsın ama
   bölümün %35'ini geçmesin).

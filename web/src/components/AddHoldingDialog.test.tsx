@@ -121,6 +121,51 @@ describe("AddHoldingDialog", () => {
     });
   });
 
+  it("hisse: TL seçilirse BIST hissesi TRY para birimiyle gönderilir + fiyat etiketi ₺ olur", async () => {
+    const fetchMock = mockFetch();
+    renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /Hisse/ }));
+    // Varsayılan USD; kullanıcı TL'ye geçer (Türk hissesi).
+    fireEvent.click(screen.getByRole("radio", { name: /🇹🇷 TL/ }));
+    expect(screen.getByLabelText(/Alış birim fiyatı \(₺\)/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Sembol"), { target: { value: "THYAO" } });
+    fireEvent.change(screen.getByLabelText("Ad"), { target: { value: "Türk Hava Yolları" } });
+    fireEvent.change(screen.getByLabelText("Adet"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText(/Alış birim fiyatı/), { target: { value: "352,25" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
+
+    await waitFor(() => expect(postCall(fetchMock, "/api/holdings")).toBeTruthy());
+    const body = JSON.parse(postCall(fetchMock, "/api/holdings")![1].body as string);
+    expect(body).toMatchObject({
+      assetType: "Stock",
+      symbol: "THYAO",
+      currency: "TRY",
+      unit: "adet",
+      transaction: { type: "Buy", quantity: 10, unitPrice: 352.25 },
+    });
+  });
+
+  it("hisse: elle TL seçilince sembol otomatiği (USD) bunu EZMEZ", async () => {
+    const fetchMock = mockFetch();
+    renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /Hisse/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /🇹🇷 TL/ }));
+    // Sembol terk → Finnhub USD döner ama kullanıcı seçimi korunur.
+    fireEvent.change(screen.getByLabelText("Sembol"), { target: { value: "aapl" } });
+    fireEvent.blur(screen.getByLabelText("Sembol"));
+    await waitFor(() => expect(screen.getByLabelText("Ad")).toHaveValue("Apple Inc"));
+
+    fireEvent.change(screen.getByLabelText("Adet"), { target: { value: "5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ekle" }));
+
+    await waitFor(() => expect(postCall(fetchMock, "/api/holdings")).toBeTruthy());
+    const body = JSON.parse(postCall(fetchMock, "/api/holdings")![1].body as string);
+    expect(body).toMatchObject({ assetType: "Stock", currency: "TRY" });
+  });
+
   it("döviz: USD/EUR seçimi ad ve birimi otomatik ayarlar", () => {
     mockFetch();
     renderWithProviders(<AddHoldingDialog open onClose={() => {}} />);
