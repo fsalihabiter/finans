@@ -11,17 +11,46 @@
 finansal okuryazarlık vizyonu fazlara işlendi (Faz 5-8 = Dalga 1-3, backlog'da kırılımlı).
 Konumlandırma: *"Nirengi sana ne alacağını söylemez; haritayı okumayı öğretir."*
 
+## 🔵 YÖN DEĞİŞİKLİĞİ (2026-07-21) — müfredat sıfır bilgiden başlıyor
+Ürün sahibi tespiti: **ilk basamak fazla yüksekti.** "Enflasyon ve Reel Getiri"
+dersi; yatırımın ne olduğunu, varlık türlerini ve getirinin nereden geldiğini
+bilinen sayıyordu (`CLAUDE.md` §1 sıfır bilgi ilkesiyle çelişki).
+→ **Set 0 "İlk Adımlar" (8 ders)** eklendi; eski "Temeller" → **"Yatırım Kavramları"**.
+Anlatım çıtası yükseldi: **6-10 figür/ders**, **çok panelli anlatı figürleri**,
+**set başına 1 etkileşimli araç**. Kararlar: [`15` §6, §6.1-6.3, §9.1](../docs/15-EDUCATION-PLAN.md).
+⚠ Set 1, Set 0'a **kilitlenmez** — yönlendirme öneri rozetiyle (tavan kapatılmaz).
+
+## 📘 MÜFREDAT HAZIR (2026-07-22) — [`16-CURRICULUM.md`](../docs/16-CURRICULUM.md)
+Ders yazmadan önce **künye oradan okunur.** 25 dersin tamamı ders bazında:
+öğrenme çıktıları (Bloom fiilleriyle) · **64 kavramlık harita** (her kavramın tek
+tanıtım dersi) · aşama planları · figür planları · 9 soruluk test tasarımı ·
+**kaynak ve doğruluk politikası** · yapısal sözleşme (M1-M9 makine, İ1-İ5 insan).
+⚠ **Bulgu:** `SectionKind.Source` enum'da var, seed'de **hiç kullanılmamış** →
+T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
+
 ## Sıradaki (öncelik sırası)
-1. **T5E.4b** — Kavram derin bağlantı: Analiz/Hisse kartından `ConceptTag` → `/egitim` ilgili ders
-   (`getLessonsByConcept` istemcisi hazır; kartlardan tetikleme kaldı)
-2. 🔴 **T6.11c — İÇERİK TURU (ders ders):** 3. ders (F/K, PD/DD); ardından 4-5.
-   **Kalıp hazır:** her kavramın ardından işlenmiş örnek, anlatım→örnek→tuzak
-   dönüşümü, ders başına 2-4 figür, 3 zorluklu 9 soruluk test.
-3. **T6.8** — `MiniMarkdown` genişletme: tablo + link (derin içerik için;
-   `dangerouslySetInnerHTML` YİNE YOK)
-4. **T6.9** — `UserConceptMastery` + aralıklı tekrar
-5. **T6.11** — Set 2 içerikleri (Portföyünü Okumak, 4 ders)
-6. OSS kalanı — README ekran görüntüleri tazeleme (pano + Eğitim artık canlı)
+1. 🔴 **T6.8 — `MiniMarkdown` link + tablo** *(öne alındı)*: kaynak bloğundaki
+   kurumsal referansların tıklanabilir olmasının önkoşulu (`16` §6.1).
+   `dangerouslySetInnerHTML` YİNE YOK.
+2. 🔴 **T6.19 — Kaynak bloğu + açılış bloğu (tüm dersler):** her derse
+   "Bu bilgiler nereden geliyor?" (`Source`) **ve** ilk aşamaya "Bu derste ne
+   öğreneceksin?" — mevcut 5 derse geriye dönük (seed mutabakatı destekliyor).
+3. 🔴 **T6.20 — Yapısal sözleşme testleri:** `16` §9.1 M1-M9 → `EducationSeedTests`.
+   ⚠ **İçerikten SONRA** (T6.19), kırmızı test bırakılmaz.
+4. **T6.15 — Çok set desteği (web):** `EducationPage` şu an `tracks.data[0]` ile
+   **tek track** varsayıyor (satır 45) → set listesi + set başına ilerleme +
+   seviyeye göre **"Buradan başla"** rozeti. Set 0'ın ön koşulu.
+5. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + 8 ders + track içi
+   ön-koşul zinciri + "Temeller" → **"Yatırım Kavramları"** (slug korunur).
+6. **T6.17a-h — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre.
+   ⚠ İş yükü gerçekçi tahmin: **~62 figür + 72 soru** → önce `16` §8.3'teki
+   **paylaşılan SVG öğeleri** yazılır, figürler onlardan kurulur.
+7. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4; istemcide saf hesap, tahmin dili yok)
+8. **T6.11c** — Set 1 Ders 3-5 (yeni çıtaya yükseltme; `16` S1-L3/L4/L5 künyeleri hazır)
+9. **T5E.4b** — Kavram derin bağlantı: Analiz/Hisse kartından `ConceptTag` → ilgili ders
+10. **T6.9** — `UserConceptMastery` + aralıklı tekrar
+11. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası)*
+12. OSS kalanı — README ekran görüntüleri tazeleme
 
 > ✅ **T6.11b bitti (2026-07-19):** **Ders 2 (Çeşitlendirme) 6 → 13 aşama** — TR'ye özgü
 > **para birimi ekseni** ("dört kalem, tek eksen"), korelasyon sezgisi, kriz anında

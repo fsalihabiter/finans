@@ -20,6 +20,93 @@
 
 ---
 
+## 2026-07-22 · `16-CURRICULUM.md` — 25 derslik müfredat + kaynak politikası (doküman)
+- **Görev(ler):** planlama/müfredat → yeni **T6.19 · T6.20**; **T6.8 öne alındı**.
+- **Ne yapıldı:** Ürün sahibinin tespiti: *"derinlemesine ve ciddi bilgiler içeren
+  bir eğitim olduğu için müfredat hazırlanmalı."* İçerik ders ders doğaçlama
+  yazılıyordu (T6.11a/b) — 25 derslik bir müfredatta bu sürdürülemez.
+  **Yeni doküman `16-CURRICULUM.md`** (içerik sözleşmesi; `15` tasarım dokümanı
+  olarak kalır):
+  (1) **Pedagojik çerçeve** — öğrenme çıktısı yazım kuralı (ölçülebilir fiil;
+  "anlar/bilir" yasak), Bloom ↔ derinlik katmanı eşlemesi (L1 Anla · L2 Uygula ·
+  L3 Analiz), **spiral tasarım** (aynı kavram üç kez: Set 0 *sezgi* → Set 1
+  *formül* → Set 2 *kendi verisi*), aşama kalıbı.
+  (2) **64 kavramlık kavram haritası** — her kavramın **tek** tanıtım dersi +
+  pekiştirme dersleri. Bugün seed'de yalnız **6** `ConceptTag` var; bu tablo
+  hem seed'in hem T6.3 sözlüğünün kaynağı olacak.
+  (3) **25 ders künyesi** — ön bilgi · çıktılar · aşama planı (blok blok, figür
+  anahtarlarıyla) · işlenmiş örnekler · tuzaklar · figür planı · `LiveContext` ·
+  9 soruluk test tasarımı · kaynaklar · ⚠ yasal not.
+  (4) **Kaynak ve doğruluk politikası** — kabul edilen kurumlar (TÜİK·TCMB·SPK·
+  BDDK·TMSF·SEDDK·TEFAS·KAP·BİST), hangi iddianın kaynak istediği, tarih damgası,
+  **yıllık gözden geçirme** (Set 4 + tüm ⟨doğrulanacak⟩ işaretleri).
+  (5) **Yapısal sözleşme** — M1-M9 makineyle, İ1-İ5 insan gözden geçirmesiyle;
+  ayrım **kasıtlı** ("test yeşil = içerik doğru" yanılsaması yaratılmıyor).
+- **Dokunulan dosyalar:** `.claude/docs/16-CURRICULUM.md` (**yeni**),
+  `.claude/docs/{README.md,15-EDUCATION-PLAN.md,08-BACKLOG.md,09-TESTING-STRATEGY.md}`,
+  `.claude/tasks/ACTIVE.md`.
+- **Test:** yok (doküman). Yeni senaryolar **SC-E19–E23** `09` §5'e eklendi
+  (hepsi `[ ]`); `15` §7'deki numaralandırma çakışması `09` kanonik kabul
+  edilerek düzeltildi. **Kapsam denetimi yapıldı:** 64 kavram ↔ 25 künye çapraz
+  kontrolünde **8 uyumsuzluk** bulundu ve düzeltildi (pekiştirme sütunu künyelerle
+  ayrışmıştı). **Basamak denetimi:** her dersin "ön bilgi" alanı yalnız daha
+  önceki derslerde tanıtılmış kavramları içeriyor; **S0-L1'in ön bilgisi boş**
+  (sıfır bilgi kapısı).
+- **Karar/Not:** ⚠ **Kritik bulgu:** `SectionKind.Source` enum'da tanımlı
+  (`Enums.cs:188`) ama **seed'de sıfır kullanımı var** — oysa `14` §B1 zaten
+  *"kaynak daima görünür"* diyor. "Ciddi bilgi" iddiasının karşılığı tam olarak
+  bu boşluk → **T6.19** devreye alıyor.
+  ⚠ **Bağımlılık:** `MiniMarkdown` **link desteklemiyor** (`renderInline` yalnız
+  `**kalın**`) → tıklanabilir kurumsal referans için **T6.8 öne alındı**.
+  ⚠ **Sıralama kısıtı:** M1/M2 bugünkü seed'de karşılanmıyor → önce içerik
+  (T6.19), sonra test (T6.20). **Kırmızı test bırakılmaz** (`CLAUDE.md` §12).
+  ⚠ **İş yükü şeffaflığı:** Set 0 ≈ **62 yeni figür + 72 soru** → §8.3'te
+  **paylaşılan SVG öğeleri** (Panel/Coin/Basket/PersonGlyph/Arrow/Bar) önce
+  yazılacak; figürler onlardan kurulacak.
+  **Kaynak uydurulmadı:** künyelerdeki kurumsal referanslar kurum + belge türü
+  düzeyinde yazıldı ve **⟨doğrulanacak⟩** ile işaretlendi; İ2 kuralı gereği bu
+  işaret kalkmadan ders yayımlanmaz.
+  **9 ders 🔴 işaretlendi** (SPK/kişisel finans sınırına yakın): S0-L3 (borç) ·
+  S0-L7 (dolandırıcılık kalıbı) · S1-L3 (hisse oranları) · S2-L1 (yoğunlaşma) ·
+  S3-L1/L3 (davranış) · S4-L1 (BES) · S4-L3 (mevduat) · S4-L4 (fon).
+- **Durum:** müfredat tamamlandı; uygulama T6.8 → T6.19 → T6.20 ile başlıyor.
+- **Sıradaki:** **T6.8** — `MiniMarkdown` link + tablo desteği (`Source` bloğunun önkoşulu).
+
+## 2026-07-21 · Müfredat revizyonu — Set 0 "İlk Adımlar" (planlama, kod yok)
+- **Görev(ler):** planlama → yeni **T6.15 · T6.16 · T6.17a-h · T6.18** (`08-BACKLOG.md` Faz 6).
+- **Ne yapıldı:** Ürün sahibi tespiti üzerine müfredatın **giriş basamağı** yeniden
+  tasarlandı. Mevcut merdiven "Enflasyon ve Reel Getiri" ile başlıyordu; bu ders
+  yatırımın ne olduğunu, varlık türlerini ve getirinin kaynağını **bilinen sayıyor** →
+  `CLAUDE.md` §1'in *sıfır bilgi varsayımı* ilkesiyle çelişiyor.
+  (1) **Set 0 — "İlk Adımlar" (8 ders)** tanımlandı: yatırım nedir · paranın haritası ·
+  acil durum fonu ve borç · bekleyen para neden erir (enflasyon **sezgisi**, formülsüz) ·
+  varlık türleri turu · getiri nereden gelir · risk ne demek · vade-hedef-portföy.
+  (2) Eski **"Temeller" → "Yatırım Kavramları"** (ad çakışması: "temel" artık Set 0).
+  (3) **Anlatım çıtası yükseltildi** (`15` §6.1): ders başına **6-10 figür**
+  (2-4 değil), **çok panelli anlatı figürleri** (tek SVG'de önce→sonra), **set başına
+  1 etkileşimli araç** (Set 0: enflasyon kaydırıcısı, `15` §6.2).
+  (4) Yeni test senaryoları **SC-E19–E22**.
+- **Dokunulan dosyalar:** `.claude/docs/15-EDUCATION-PLAN.md` (§6 yeniden yazıldı +
+  §6.1/6.2/6.3 + SC-E19–E22 + §8 tablosu + §9.1), `.claude/docs/08-BACKLOG.md`
+  (T6.15–T6.18 + Faz 6 DoD 17→25 ders), `.claude/tasks/ACTIVE.md`.
+- **Test:** yok (yalnız doküman/karar; kod değişmedi).
+- **Karar/Not:** Üç seçenek **bilinçli olarak reddedildi**:
+  (a) **Tekrarlayan karakter/hikâye ekseni** — yeni `SectionKind=Story` + migration
+  gerektiriyor **ve** dersler arası sıralı okuma zorunluluğu doğuruyor; kullanıcı bir
+  dersi atlayınca anlatı kopuyor. Yerine **ders-içi kapalı somut sahne**.
+  (b) **Set 1'i Set 0'a kilitlemek** — tanılama testi zaten seviye ölçüyor; "İleri"
+  kullanıcıyı 8 giriş dersinden geçirmek `15` §2.2 **"tavan kapatılmaz"** ilkesine
+  aykırı. Yönlendirme **öneri rozetiyle** ("Buradan başla"), kilitle değil.
+  (c) **Set 0'ı mevcut track'in başına eklemek** — OrderIndex kaydırma + ön-koşul
+  zincirinin yeniden kurulması, ayrıca 11 derslik tek ilerleme çubuğu.
+  ⚠ **Bulunan engel:** `EducationPage.tsx:45` → `tracks.data?.[0]` ile **tek track**
+  varsayıyor. İkinci set eklemeden önce **T6.15 (çok set desteği)** yapılmalı; bu
+  yüzden T6.16'nın ön koşulu oldu. ⚠ Bütçe/borç dersinin dili **çerçeve** kalacak —
+  "şunu yap" formu `CLAUDE.md` §2 ihlali (kişisel finansal yönlendirme).
+- **Durum:** planlama tamamlandı; uygulama T6.15 ile başlıyor.
+- **Sıradaki:** **T6.15** — web çok set desteği (set listesi + set başına ilerleme +
+  seviyeye göre "Buradan başla" rozeti; kilit yok).
+
 ## 2026-07-19 · T6.11b — Ders 2 içerik turu (13 aşama · 3 yeni figür · 9 soru) + yol haritası sütunu
 - **Görev(ler):** T6.11b (kullanıcı isteği: 2. derse geç; başlık sütunu tek satıra sığsın ama
   bölümün %35'ini geçmesin).

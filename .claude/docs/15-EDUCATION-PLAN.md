@@ -1,7 +1,8 @@
 # 15 — Eğitim Derinliği, Kişiselleştirme ve Canlı Veri Planı
 
-> **Tarih:** 2026-07-19 · **Durum:** ✅ Onaylandı ve `08-BACKLOG.md` Faz 6'ya
-> işlendi (kararlar §9)
+> **Tarih:** 2026-07-19 · **Revizyon:** 2026-07-21 (**Set 0 "İlk Adımlar"** —
+> müfredat sıfır bilgiden başlıyor; §6, §6.1-6.3, §9.1) · **Durum:** ✅ Onaylandı
+> ve `08-BACKLOG.md` Faz 6'ya işlendi (kararlar §9 + §9.1)
 > **Kapsam:** Eğitim modülünün MVP iskeletinden (T5E.1–T5E.4) *uyarlanabilir,
 > örneklendirilmiş ve gerçek veriyle bağlanmış* bir müfredata evrimi.
 > **Bağlam:** `14` §4-A1/A2/A4 vizyonu · mevcut şema `03` §E · uçlar `04` §7.5
@@ -248,35 +249,118 @@ dönüştürür — "haritayı okumayı öğretir" konumlandırmasıyla tutarlı
 
 ---
 
-## 6. Müfredat: 4 set, 17 ders
+## 6. Müfredat: 5 set, 25 ders
+
+> 📘 **Ders bazında detay [`16-CURRICULUM.md`](16-CURRICULUM.md)'dedir** (2026-07-22):
+> öğrenme çıktıları, kavram haritası (64 kavram), aşama planları, figür planları,
+> değerlendirme tasarımı, **kaynak politikası** ve yapısal sözleşme. Bu bölüm
+> yalnız **set yapısını** verir; ders yazmadan önce `16`'daki künye okunur.
 
 Mevcut 5 ders korunur, üzerine inşa edilir. (`14` §4-A1'deki 8 derslik ilk
 liste bu yapıya dağıtıldı.)
 
-### Set 1 — Temeller (5 ders · mevcut · Başlangıç)
-1. Enflasyon ve Reel Getiri · 2. Çeşitlendirme · 3. F/K, PD/DD ·
-4. Risk ve Getiri · 5. Bileşik Getiri
+> **REVİZYON (2026-07-21): Set 0 eklendi — müfredatın ilk basamağı fazla
+> yüksekti.** Set 1'in ilk dersi ("Enflasyon ve Reel Getiri") okuyucunun
+> *yatırımın ne olduğunu, varlık türlerini ve getirinin nereden geldiğini*
+> zaten bildiğini varsayıyordu. `CLAUDE.md` §1'in "sıfır bilgi varsayımı"
+> ilkesiyle çelişiyor. Set 0 bu boşluğu doldurur; Set 1 böylece *kavram*
+> seti hâline gelir ve **"Yatırım Kavramları"** olarak yeniden adlandırılır.
+
+### Set 0 — İlk Adımlar (8 ders · sıfır bilgi · Başlangıç)
+Sıfırdan başlayan okuyucu için giriş basamağı. Jargon yok, formül yok;
+her kavram somut bir sahneyle ve görselle anlatılır (§6.1).
+
+1. **Yatırım nedir, ne değildir?** — saklamak / biriktirmek / yatırmak farkı;
+   "parayı çalıştırmak" ne demek; yatırım ≠ şans oyunu
+2. **Paranın haritası — gelir, gider, birikim** — birikim oranı; yatırılacak
+   para nereden çıkar
+3. **Acil durum fonu ve borç** — yatırımdan önceki basamak; borç faizi ile
+   beklenen getirinin *matematiği* (⚠ çerçeve dili — "şunu yap" yok)
+4. **Bekleyen para neden erir?** — enflasyon **sezgisi**, formülsüz (aynı sepet
+   dün/bugün) → Set 1 Ders 1'in zeminini kurar
+5. **Nereye yatırılır? — varlık türleri turu** — mevduat · altın · döviz · hisse ·
+   fon · BES: her birinde "neyin parçasına sahip oluyorsun"
+6. **Getiri nereden gelir?** — iki kaynak: fiyat değişimi + nakit akışı
+   (faiz/temettü/kira); bedava getiri yok, karşılığında ne veriyorsun
+7. **Risk ne demek?** — belirsizlik ≠ kayıp, ama kayıp ihtimali gerçek;
+   *"garantili yüksek getiri"* neden bir çelişki (TR dolandırıcılık sezgisi)
+8. **Vade, hedef ve portföy** — parayı ne zaman kullanacaksın; portföy nedir
+   (kalem/miktar/maliyet/değer/ağırlık) → Nirengi ekranını okuma köprüsü
+
+### Set 1 — Yatırım Kavramları (5 ders · mevcut · Başlangıç)
+*(eski adı "Temeller" — Set 0 eklenince ad çakışması oluştu)*
+9. Enflasyon ve Reel Getiri · 10. Çeşitlendirme · 11. F/K, PD/DD ·
+12. Risk ve Getiri · 13. Bileşik Getiri
 
 ### Set 2 — Portföyünü Okumak (4 ders · Başlangıç→Gelişen)
-6. Ağırlık ve yoğunlaşma *(`concentration_top2`)*
-7. Maliyet ortalaması / kademeli alım *(`cost_basis`)*
-8. Kur etkisi ve çoklu para birimi *(`asset_class_weights`)*
-9. Getiriyi doğru ölçmek — nominal vs reel, dönem seçimi *(`real_return_12m`)*
+14. Ağırlık ve yoğunlaşma *(`concentration_top2`)*
+15. Maliyet ortalaması / kademeli alım *(`cost_basis`)*
+16. Kur etkisi ve çoklu para birimi *(`asset_class_weights`)*
+17. Getiriyi doğru ölçmek — nominal vs reel, dönem seçimi *(`real_return_12m`)*
 
 ### Set 3 — Davranış (4 ders · `RiskAttitude` sırayı belirler)
-10. Kayıptan kaçınma · 11. FOMO ve sürü davranışı ·
-12. Çıpalama ve maliyet takıntısı · 13. Aşırı işlem ve gizli maliyetler
+18. Kayıptan kaçınma · 19. FOMO ve sürü davranışı ·
+20. Çıpalama ve maliyet takıntısı · 21. Aşırı işlem ve gizli maliyetler
 
 ### Set 4 — Türkiye Gerçekleri (4 ders · Gelişen→İleri)
-14. BES'i doğru kullanmak *(`bes_state_share`)*
-15. Altın kültürü — gram/çeyrek/22 ayar, düğün altını
-16. Enflasyon ortamında birikim *(`inflation_12m`)*
-17. Fon okuma — TEFAS, gider oranı *(T7.5 bağımlı)*
+22. BES'i doğru kullanmak *(`bes_state_share`)*
+23. Altın kültürü — gram/çeyrek/22 ayar, düğün altını
+24. Enflasyon ortamında birikim *(`inflation_12m`)*
+25. Fon okuma — TEFAS, gider oranı *(T7.5 bağımlı)*
 
 > **KARAR (2026-07-19): vergi dersi kapsam DIŞI.** Taslakta 18. ders olarak
 > önerilen "Maliyet ve vergi farkındalığı" çıkarıldı — mali müşavirlik alanına
 > temas ediyor ve `CLAUDE.md` §2'nin savunduğu net sınırı bulanıklaştırıyor.
 > İleride gündeme gelirse `14` §6 hukuk merceğinden geçmesi şarttır.
+
+### 6.1 Anlatım kalıbı — görsel ve somut (karar 2026-07-21)
+
+T6.11a/b'de Set 1 Ders 1-2 için oturan kalıp **Set 0'da zorunludur** ve iki
+noktada güçlendirilir:
+
+| Boyut | Set 1 (mevcut) | **Set 0 (yeni çıta)** |
+|---|---|---|
+| Aşama sayısı | ~13 | ~13 |
+| Kalıp | kavram → işlenmiş örnek → tuzak | aynı |
+| **Figür yoğunluğu** | ders başına 2-4 | **6-10 — neredeyse her anlatım aşamasında** |
+| **Figür türü** | tek sahne | **çok panelli anlatı** (tek SVG içinde 3-4 panel: önce → sonra) |
+| **Etkileşim** | yok | **set başına 1 mini araç** (§6.2) |
+| Test | 9 soru / 3 zorluk | aynı |
+
+**Reddedilen seçenek:** *tekrarlayan karakter/hikâye ekseni* (set boyunca aynı
+kişinin birikim öyküsü). Gerekçe: yeni `SectionKind = Story` + migration
+gerektiriyordu ve dersler arası **sıralı okuma zorunluluğu** yaratıyordu
+(kullanıcı bir dersi atlarsa anlatı kopar). Yerine: her ders **kendi içinde
+kapalı somut bir sahne** kullanır — anlatı gücü korunur, bağımlılık doğmaz.
+
+**Teknik kısıt:** figürler `LessonFigure.tsx` içinde **elle yazılmış SVG**
+olarak kalır — kütüphane yok, tema değişkenlerine uyumlu, `role="img"` +
+erişilebilir etiket. Bilinmeyen `FigureKey` sessizce atlanır (mevcut davranış).
+
+### 6.2 Etkileşimli mini araç (set başına 1)
+
+Set 0'ın aracı: **enflasyon kaydırıcısı** (Ders 4 "Bekleyen para neden erir?").
+Kullanıcı yıllık oranı ve süreyi kaydırır, aynı sepetin alım gücünün nasıl
+eridiğini canlı görür.
+
+Kurallar:
+- Hesap **istemcide deterministik** ve saf (`(1+i)^n` erime) — LLM yok, sunucu
+  çağrısı yok. `CLAUDE.md` §3.1 ile tutarlı.
+- **Gelecek tahmini değildir:** araç "şu oranda ne olur" der, "şu oran olacak"
+  demez. Varlık adı geçmez, enstrüman karşılaştırması yapmaz (§3.4 yasak listesi).
+- Erişilebilirlik: kaydırıcı klavyeyle sürülebilir, değer metin olarak da okunur.
+- Araç yüklenemezse ders **statik figürle** çalışmaya devam eder (fallback).
+
+### 6.3 Set kilidi — sert zincir YOK (karar 2026-07-21)
+
+Set 1, Set 0'ın tamamlanmasını **ön koşul olarak istemez.** Ön-koşul zinciri
+her track'in **kendi içinde** kalır.
+
+Gerekçe: tanılama testi (§4) zaten `LiteracyLevel` üretiyor; "İleri" çıkan
+kullanıcıyı 8 giriş dersinden geçmeye zorlamak `15` §2.2'nin **"tavan
+kapatılmaz"** ilkesinin tersidir. Yönlendirme **kilitle değil öneriyle** yapılır:
+seviyeye göre bir set **"Buradan başla"** rozeti alır (Başlangıç/ölçülmemiş →
+Set 0, Gelişen+ → Set 1).
 
 ---
 
@@ -294,6 +378,13 @@ liste bu yapıya dağıtıldı.)
 | SC-E8 | `LiveContext` sayıları deterministik: aynı portföy → aynı çıktı (LLM'siz) |
 | SC-E9 | Bayat fiyat → `Stale` damgası görünür |
 | SC-E10 | IDOR: A kullanıcısının `MasteryScore`/profili B'ye sızmaz |
+| SC-E19 | **Çok set:** eğitim sayfası birden fazla track listeler; her set kendi ilerlemesini gösterir; ilk set'e sabitlenmiş varsayım kalmaz |
+| SC-E20 | **"Buradan başla" önerisi:** Başlangıç/ölçülmemiş kullanıcı → Set 0 önerilir; Gelişen+ → Set 1. **Hiçbir set kilitli değil** (§6.3) |
+| SC-E21 | **Kaynak + açılış bloğu** (`16` §6.1): her ders ≥1 `Source` bloğu **ve** öğrenme çıktılarını listeleyen açılış bloğu taşır |
+| SC-E22 | **Müfredat–seed yapısal sözleşmesi** (`16` §9.1): set bazlı figür eşiği (Set 0 ≥6) · figür anahtarı ↔ `LessonFigure` kayıt defteri mutabakatı · 9 soru/3 zorluk · boşta kavram yok |
+| SC-E23 | **Enflasyon kaydırıcısı:** saf/deterministik (aynı girdi → aynı çıktı), klavyeyle sürülebilir, varlık adı/tahmin cümlesi üretmez; bileşen düşerse ders statik figürle çalışır |
+
+> Kanonik senaryo kataloğu [`09-TESTING-STRATEGY.md`](09-TESTING-STRATEGY.md) §5'tir.
 
 ---
 
@@ -317,6 +408,10 @@ Mevcut T6.1–T6.4 korunmuş, yeni işler T6.5'ten devam etmiştir.
 | T6.12 | Set 3 içerikleri — Davranış (4 ders) + `RiskAttitude` sıralaması | T6.6 |
 | T6.13 | Set 4 içerikleri — Türkiye Gerçekleri (4 ders; vergi hariç) | T6.11 |
 | T6.14 | LLM ders yorumu katmanı (opsiyonel) + **enstrüman-sıralama guard'ı** | T6.2 |
+| **T6.15** | **Çok set desteği (web):** tek track varsayımı kalkar; set listesi + set başına ilerleme + **"Buradan başla" rozeti** (seviyeye göre öneri, kilit YOK) | T5E.4 |
+| **T6.16** | **Set 0 iskeleti:** "İlk Adımlar" track'i (OrderIndex 0) + 8 ders + track içi ön-koşul zinciri; **"Temeller" → "Yatırım Kavramları"** yeniden adlandırma | T6.15 |
+| **T6.17a-h** | **Set 0 içerik turu (ders ders):** ~13 aşama, **6-10 figür** (≥1 çok panelli), 9 soruluk 3 zorluklu test | T6.16 |
+| **T6.18** | **Enflasyon kaydırıcısı** (Set 0 Ders 4): saf/deterministik istemci hesabı, klavye erişilebilir, tahmin/enstrüman dili yok, fallback statik figür | T6.17d |
 
 **Plan etkisi:** T7.1 (okuryazarlık profili) → **T6.6 olarak Faz 6'ya taşındı**,
 çünkü uyarlanabilir derinliğin ön koşuludur. Faz 7'de yerine referans satırı
@@ -332,6 +427,17 @@ dar dilimidir.
 | 1 | Onboarding sırası | **(c) Demo portföyle eğitim → sonra kendi verisi** | Ders pedagojik değerini portföysüz kullanıcıda da korur; portföy girişi ön koşul olmaz |
 | 2 | `RiskAttitude` görünürlüğü | **Görünmesin** | Görünür etiket "yatırımcı sınıflandırması" olarak okunur (yerindelik çağrışımı); ayrıca kullanıcıyı kutuya hapseder |
 | 3 | Vergi dersi (18) | **Alınmasın** | Mali müşavirlik alanına temas ediyor; §2 sınırını bulanıklaştırır |
+
+### 9.1 Kararlar (2026-07-21 · ürün sahibi) — Set 0 revizyonu
+
+| # | Soru | Karar | Gerekçe |
+|---|---|---|---|
+| 4 | Müfredat sıfır bilgiden mi başlasın? | **Evet — Set 0 "İlk Adımlar" eklendi (8 ders)** | Set 1'in ilk dersi (enflasyon/reel getiri) yatırım, varlık türü ve getiri kavramlarını bilinen sayıyordu; `CLAUDE.md` §1 sıfır bilgi ilkesiyle çelişiyordu |
+| 5 | Nereye yerleşsin? | **Ayrı track + Set 1 yeniden adlandırılsın** ("Temeller" → **"Yatırım Kavramları"**) | Set = track modeli Set 2-4 için zaten geçerli; ayrıca "Temeller" adı artık Set 0'ı tarif ediyordu (ad çakışması) |
+| 6 | Kapsam | **Genişletilsin: para/bütçe basamağı da girsin** (6 → **8 ders**) | Birikim, acil durum fonu ve vade/hedef yatırımdan önce gelen basamaklar; Faz 9 (gelir-gider) ile de aynı ekseni besler. ⚠ Dili **çerçeve** kalır — "şunu yap" yok (`CLAUDE.md` §2) |
+| 7 | Anlatım biçimi | **Figür yoğunluğu ↑ + çok panelli anlatı figürleri + set başına 1 etkileşimli araç** (§6.1-6.2) | Sıfır bilgi okuyucusunda görsel yük metinden daha fazla iş görür |
+| 8 | Tekrarlayan karakter/hikâye ekseni | **Alınmasın** | Yeni `SectionKind=Story` + migration gerektiriyor ve dersler arası sıralı okuma zorunluluğu doğuruyor; ders atlanınca anlatı kopuyor. Yerine ders-içi kapalı somut sahne (§6.1) |
+| 9 | Set 1, Set 0'a kilitlensin mi? | **Hayır — sert zincir yok** (§6.3) | Tanılama testi zaten seviye ölçüyor; "İleri" kullanıcıyı 8 giriş dersinden geçirmek §2.2'nin "tavan kapatılmaz" ilkesine aykırı. Yönlendirme **öneri rozetiyle** yapılır |
 
 ---
 
