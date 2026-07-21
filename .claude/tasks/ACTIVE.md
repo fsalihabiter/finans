@@ -38,23 +38,36 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > ⚠ Tarayıcı doğrulaması yapılamadı (Chrome sekmesi localhost'u açamadı) — görsel
 > teyit **T6.19'da** gerçek kaynak bloklarıyla yapılacak.
 
+> ✅ **T6.19 bitti (2026-07-22):** her ders artık **açılış bloğuyla başlıyor**
+> ("Bu derste ne öğreneceksin?" — öğrenme çıktıları) ve **kaynak bloğuyla kapanıyor**
+> ("Bu bilgiler nereden geliyor?"). Kullanılmayan `SectionKind.Source` nihayet devrede.
+> Kaynak bloğu dördü birden söyler: **kurum** (TÜİK/KAP/SPK, tıklanabilir bağlantı),
+> **örnek sayıların kurgusal olduğu beyanı**, hesapların kodda yapıldığı, ve
+> **"yatırım tavsiyesi değildir"** çerçevesi. 5 derse 10 blok → **44→54 bölüm**,
+> mutabakatla canlı Postgres'e indi. SC-E21; Education 16/16, web 130/130;
+> **tarayıcıda ekran görüntüsüyle teyit** (T6.8'in ertelenen görsel doğrulaması da
+> böylece kapandı — `tuik.gov.tr` bağlantısı canlıda `rel="noopener noreferrer"` ile).
+> ⚠ İki hata yakalandı: Ders 2'de açılış bloğu atlanmıştı (sabit bölüm sayısı testi
+> yakaladı); kaynak bloğunun **görsel ayrımı yoktu** (canlıda görüldü → kesikli çizgi).
+> 🔴 **Yeni bulgu → T6.21:** `InflationRate` seed'i `Source="TÜİK"` etiketiyle
+> **sabit %38** yazıyor. Eğitim artık "kaynak daima görünür" iddiası taşıdığı için
+> TÜİK etiketli uydurma oran bu iddiayı çürütür.
+
 ## Sıradaki (öncelik sırası)
-1. 🔴 **T6.19 — Kaynak bloğu + açılış bloğu (tüm dersler):** her derse
-   "Bu bilgiler nereden geliyor?" (`Source`) **ve** ilk aşamaya "Bu derste ne
-   öğreneceksin?" — mevcut 5 derse geriye dönük (seed mutabakatı destekliyor).
-2. 🔴 **T6.20 — Yapısal sözleşme testleri:** `16` §9.1 M1-M9 → `EducationSeedTests`.
-   ⚠ **İçerikten SONRA** (T6.19), kırmızı test bırakılmaz.
-3. **T6.15 — Çok set desteği (web):** `EducationPage` şu an `tracks.data[0]` ile
-   **tek track** varsayıyor (satır 45) → set listesi + set başına ilerleme +
-   seviyeye göre **"Buradan başla"** rozeti. Set 0'ın ön koşulu.
-4. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + 8 ders + track içi
-   ön-koşul zinciri + "Temeller" → **"Yatırım Kavramları"** (slug korunur).
+1. 🔴 **T6.20 — Yapısal sözleşme testleri:** `16` §9.1 M3-M9 → `EducationSeedTests`
+   (M1/M2 T6.19 ile yeşil). Figür eşiği · **figür anahtarı ↔ `LessonFigure` kayıt
+   defteri mutabakatı** · 9 soru/3 zorluk · boşta kavram yok.
+2. 🔴 **T6.21 — Enflasyon verisi:** TÜİK etiketli sabit %38 ya gerçek veriyle
+   değişmeli ya da açıkça "örnek" etiketlenmeli (güven kritik).
+3. **T6.15 — Çok set desteği (web):** `EducationPage` `tracks.data[0]` ile **tek
+   track** varsayıyor → set listesi + set başına ilerleme + "Buradan başla" rozeti.
+4. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + 8 ders + ön-koşul zinciri +
+   "Temeller" → **"Yatırım Kavramları"** (slug korunur).
 5. **T6.17a-h — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre.
-   ⚠ İş yükü gerçekçi tahmin: **~62 figür + 72 soru** → önce `16` §8.3'teki
-   **paylaşılan SVG öğeleri** yazılır, figürler onlardan kurulur.
-6. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4; istemcide saf hesap, tahmin dili yok)
-7. **T6.11c** — Set 1 Ders 3-5 (yeni çıtaya yükseltme; `16` S1-L3/L4/L5 künyeleri hazır)
-8. **T5E.4b** — Kavram derin bağlantı: Analiz/Hisse kartından `ConceptTag` → ilgili ders
+   ⚠ İş yükü: **~62 figür + 72 soru** → önce `16` §8.3 paylaşılan SVG öğeleri.
+6. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4)
+7. **T6.11c** — Set 1 Ders 3-5 (`16` S1-L3/L4/L5 künyeleri hazır)
+8. **T5E.4b** — Kavram derin bağlantı: `ConceptTag` → ilgili ders
 9. **T6.9** — `UserConceptMastery` + aralıklı tekrar
 10. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası)*
 11. OSS kalanı — README ekran görüntüleri tazeleme

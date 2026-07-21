@@ -3833,6 +3833,20 @@ body.drawer-lock {
   padding: 2px 0 2px 16px;
   border-left: 3px solid var(--line, #26304f);
 }
+/* Kaynak bloğu (T6.19) — ders METNİ değil, künye. Kesikli çizgi ve sönük ton
+   onu anlatımdan ayırır: okunur ama gövdeyle karışmaz. */
+.lesson-section.kind-source {
+  margin-top: 18px;
+  padding: 2px 0 2px 16px;
+  border-left: 3px dashed var(--line, #26304f);
+}
+.lesson-section.kind-source .markdown-body {
+  font-size: 13px;
+  color: var(--muted, #97a3c9);
+}
+.lesson-section.kind-source .markdown-body strong {
+  color: var(--text-soft, #cbd5f0);
+}
 
 /* Bağlam veri kaynağı rozeti — demo/bayat ayrımı görünür olmalı (SC-E3). */
 .context-badge {

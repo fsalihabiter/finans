@@ -55,6 +55,22 @@ internal static class EducationContent
     private static Blk Live(string body) => new(DepthTier.Core, SectionKind.LiveContext, body, null);
 
     /// <summary>
+    /// Dersin AÇILIŞ bloğu — "Bu derste ne öğreneceksin?" (T6.19, <c>16</c> §2.5).
+    /// Her dersin <b>ilk</b> aşamasıdır: öğrenme çıktıları madde madde okunur, böylece
+    /// hem kullanıcı ne kazanacağını bilir hem de çıktılar testle denetlenebilir olur.
+    /// Ayrı bir <see cref="SectionKind"/> gerekmez — konum ve başlık yeterli.
+    /// </summary>
+    private static Blk Intro(string body) => new(DepthTier.Core, SectionKind.Explain, body, null);
+
+    /// <summary>
+    /// Dersin KAPANIŞ bloğu — "Bu bilgiler nereden geliyor?" (T6.19, <c>16</c> §6.1).
+    /// Üç şeyi söyler: (1) kurumsal kaynaklar, (2) örnek sayıların <b>kurgusal</b> olduğu
+    /// beyanı, (3) hesapların kodda yapıldığı — dil modeli sayı üretmez (<c>CLAUDE.md</c> §3.1).
+    /// Ayrıca "yatırım tavsiyesi değildir" çerçevesini taşır (<c>CLAUDE.md</c> §2).
+    /// </summary>
+    private static Blk Src(string body) => new(DepthTier.Core, SectionKind.Source, body, null);
+
+    /// <summary>
     /// Blok tariflerini <see cref="LessonSection"/>'a çevirir. Blok SAYISI derse göre
     /// değişebilir — ders ne kadar aşama gerektiriyorsa o kadar (T6.11).
     /// </summary>
@@ -85,19 +101,22 @@ internal static class EducationContent
     }
 
     /// <summary>
-    /// Klasik 6 bloklu ders kalıbı (Set 1'in 2-5. dersleri hâlâ bunu kullanır).
-    /// Daha ayrıntılı dersler <see cref="Build"/> ile serbest sayıda blok tanımlar.
+    /// Klasik ders kalıbı (Set 1'in 3-5. dersleri hâlâ bunu kullanır; içerik turu
+    /// T6.11c'de gelecek). Daha ayrıntılı dersler <see cref="Build"/> ile serbest
+    /// sayıda blok tanımlar. <b>Açılış ve kaynak blokları zorunludur</b> (T6.19).
     /// </summary>
     private static IEnumerable<LessonSection> Blocks(
-        Guid lessonId, string core, string context, string deep, string live, string example,
-        string trap, string figure) =>
+        Guid lessonId, string intro, string core, string context, string deep, string live,
+        string example, string trap, string figure, string source) =>
         Build(lessonId,
+            Intro(intro),
             Core(core),
             Ctx(context),
             Deep(deep),
             Live(live),
             Ex(example, figure),
-            Trap(trap));
+            Trap(trap),
+            Src(source));
 
     /// <summary>
     /// Gövdenin ilk satırı <c>## </c> veya <c>### </c> başlığıysa onu ayırır.
@@ -117,6 +136,24 @@ internal static class EducationContent
     // ── Ders 1 — Enflasyon ve Reel Getiri ────────────────────────────────────
 
     public static IEnumerable<LessonSection> Lesson1(Guid id) => Build(id,
+
+        // ── 0. Açılış: ne öğreneceksin (T6.19) ───────────────────────────────
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - Cüzdanındaki **rakamın** büyümesi ile **alım gücünün** büyümesini birbirinden
+          ayırmak
+        - Reel getiriyi formülüyle hesaplamak
+        - "%40 kazandım, enflasyon %38, demek ki %2 kârdayım" kısayolunun neden
+          yalnızca kaba bir yaklaşım olduğunu göstermek
+        - Resmî enflasyon oranının neden **senin** harcama sepetinden farklı
+          olabileceğini açıklamak
+        - Ölçtüğün **dönemin** sonucu nasıl değiştirdiğini fark etmek
+
+        Dersin sonunda kısa bir test var; testi geçince bir sonraki ders açılır.
+        """),
 
         // ── 1. Kavramın kendisi ──────────────────────────────────────────────
         Core("""
@@ -375,11 +412,51 @@ internal static class EducationContent
         **"Tek bir yılın reel getirisine bakıp karar vermek."**
         Bir yıl gürültüdür. Kavramın değeri, aynı ölçüyü **yıllar boyunca tutarlı**
         biçimde uygulamakta.
+        """),
+
+        // ── Kapanış: kaynaklar (T6.19) ───────────────────────────────────────
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Enflasyon ölçümü.** Türkiye'de fiyat değişiminin resmî ölçüsü **TÜİK**'in
+        Tüketici Fiyat Endeksi'dir (TÜFE) — [tuik.gov.tr](https://www.tuik.gov.tr).
+        Bir enflasyon oranı gördüğünde **hangi döneme ait olduğuna** bak: dönem
+        değişince oran da değişir, bu yüzden uygulamada oranlar dönem damgasıyla
+        birlikte gösterilir.
+
+        **Örnek sayılar kurgusaldır.** Bu dersteki 100.000 ₺, %40, ekmek fiyatı gibi
+        rakamların tamamı anlatımı somutlaştırmak için **seçilmiş örneklerdir** —
+        gerçek piyasa verisi değildir. Gerçek veri yalnızca "Senin portföyünde"
+        bölümünde, kendi kayıtlarından gelir.
+
+        **Hesaplar kodda yapılır.** Reel getiri ve benzeri tüm sayılar uygulamada
+        sabit formüllerle hesaplanır; bir yapay zekâ modeli bu rakamları **üretmez**,
+        yalnızca hazır sonuçları sade dille anlatır.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders bir kavramı açıklar; hangi varlığı
+        alıp satacağına dair yönlendirme yapmaz.
         """));
 
     // ── Ders 2 — Çeşitlendirme ───────────────────────────────────────────────
 
     public static IEnumerable<LessonSection> Lesson2(Guid id) => Build(id,
+
+        // ── 0. Açılış: ne öğreneceksin (T6.19) ───────────────────────────────
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - Çeşitlendirmeyi "riski **farklı kaynaklara yayma**" olarak tanımlamak
+        - İki varlığın birlikte mi bağımsız mı hareket ettiğini sezmek
+        - Farklı isimler taşıyan kalemlerin neden **tek bir bahis** olabileceğini
+          göstermek
+        - Türkiye'ye özgü tuzağı fark etmek: dört farklı kalem, ama hepsi tek bir
+          para biriminde
+        - Ağırlıkların sen işlem yapmadan nasıl kaydığını görmek
+
+        Dersin sonunda kısa bir test var.
+        """),
 
         // ── 1. Kavram ────────────────────────────────────────────────────────
         Core("""
@@ -652,11 +729,46 @@ internal static class EducationContent
         **"Ne kadar çok kalem o kadar iyi."**
         Otuz benzer kalem, beş gerçekten farklı kalemden daha iyi korumaz;
         üstelik takibi ve maliyeti artırır.
+        """),
+
+        // ── Kapanış: kaynaklar (T6.19) ───────────────────────────────────────
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Kavramlar.** Çeşitlendirme, korelasyon ve yoğunlaşma finans literatürünün
+        yerleşik kavramlarıdır. Bu derste bilinçli olarak **formül verilmedi**:
+        korelasyon "+1 / 0 / −1" sezgisiyle anlatıldı, çünkü amaç hesap yapmak değil
+        ağırlığın nerede toplandığını görebilmek.
+
+        **Örnek sayılar kurgusaldır.** Portföy dağılımları, yüzdeler ve "A/B varlığı"
+        gibi etiketlerin tamamı **seçilmiş örneklerdir**. Örneklerde bilerek gerçek
+        varlık adı kullanılmaz — bir varlığı diğerinin önüne koymuş olmamak için.
+
+        **Hesaplar kodda yapılır.** "Senin portföyünde" bölümündeki ağırlık ve
+        yoğunlaşma oranları senin kendi kayıtlarından, sabit formüllerle hesaplanır;
+        bir yapay zekâ modeli bu rakamları **üretmez**.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders "şu kadar varlığa dağıt" demez;
+        yalnızca ağırlığın nerede toplandığını görmeyi öğretir.
         """));
 
     // ── Ders 3 — F/K, PD/DD ──────────────────────────────────────────────────
 
     public static IEnumerable<LessonSection> Lesson3(Guid id) => Blocks(id,
+        intro: """
+        ## Bu derste ne öğreneceksin?
+
+        Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - F/K oranını "şirketin 1 liralık kârı için kaç lira ödüyorum" sorusu olarak
+          okumak
+        - PD/DD'yi şirketin defter değeriyle ilişkilendirerek yorumlamak
+        - Temettü verimini hesaplamak
+        - Bir oranın **tek başına** değil, ancak **benzer şirketlerle birlikte**
+          anlam taşıdığını göstermek
+
+        Dersin sonunda kısa bir test var.
+        """,
         core: """
         ## Bir hisseyi okumanın rakamları
 
@@ -780,11 +892,43 @@ internal static class EducationContent
         Son olarak, bu oranlar **ne yapman gerektiğini söylemez.** Sana şirketin
         rakamlarının ne anlattığını gösterir; kararın ve sorumluluğun sana aittir.
         """,
-        figure: "ratio-context");
+        figure: "ratio-context",
+        source: """
+        ## Bu bilgiler nereden geliyor?
+
+        **Şirket verileri.** Hisse başına kâr, öz kaynak ve kâr payı gibi kalemler
+        şirketlerin **KAP**'ta (Kamuyu Aydınlatma Platformu) yayımladığı finansal
+        tablolardan okunur — [kap.org.tr](https://www.kap.org.tr). Sermaye piyasası
+        tanımları ve raporlama kuralları **SPK** mevzuatında yer alır —
+        [spk.gov.tr](https://www.spk.gov.tr).
+
+        **Örnek sayılar kurgusaldır.** Bu dersteki oranlar ve "A şirketi" gibi
+        etiketler **seçilmiş örneklerdir**. Gerçek şirket adı, sembolü veya güncel
+        oranı bilinçli olarak kullanılmaz — bir hisseyi işaret etmiş olmamak için.
+
+        **Eşik verilmez.** "Şu değerin altındaki F/K ucuzdur" türü bir sınır bu derste
+        yoktur; böyle bir eşik sektöre, döneme ve şirketin durumuna göre değişir.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders oranların ne anlama geldiğini
+        anlatır; hangi hissenin alınıp satılacağına dair yönlendirme yapmaz.
+        """);
 
     // ── Ders 4 — Risk ve Getiri ──────────────────────────────────────────────
 
     public static IEnumerable<LessonSection> Lesson4(Guid id) => Blocks(id,
+        intro: """
+        ## Bu derste ne öğreneceksin?
+
+        Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - Riski "kaybetmek" değil **sonucun belirsizliği** olarak tanımlamak
+        - Oynaklığı bir örnek üzerinde okumak
+        - Yüksek getiri vaadinin neden yüksek belirsizlikle geldiğini açıklamak
+        - "Garantili yüksek getiri" ifadesinin neden kendi içinde çeliştiğini
+          göstermek
+
+        Dersin sonunda kısa bir test var.
+        """,
         core: """
         ## Yüksek getiri, yüksek belirsizlik
 
@@ -910,11 +1054,40 @@ internal static class EducationContent
         düşüşte soğukkanlı kalacağını düşünür; gerçek sınav ancak düşüş
         yaşandığında olur.
         """,
-        figure: "volatility-paths");
+        figure: "volatility-paths",
+        source: """
+        ## Bu bilgiler nereden geliyor?
+
+        **Kavramlar.** Risk ve getirinin birlikte hareket etmesi finans literatürünün
+        yerleşik gözlemidir. Burada matematiksel tanım yerine **sezgi** verildi:
+        oynaklık, sonucun ne kadar geniş bir aralıkta savrulabildiğidir.
+
+        **Örnek sayılar kurgusaldır.** Dersteki getiri ve dalgalanma rakamları
+        anlatımı somutlaştırmak için **seçilmiştir**; geçmiş bir dönemin gerçek verisi
+        ya da gelecek için bir beklenti değildir.
+
+        **Geçmiş getiri geleceği göstermez.** Bu ders bilinçli olarak hiçbir varlığın
+        gelecekteki getirisi hakkında bir şey söylemez — böyle bir cümle kurulamaz.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders riskin ne olduğunu anlatır; ne
+        kadar risk alman gerektiğini söylemez.
+        """);
 
     // ── Ders 5 — Bileşik Getiri ──────────────────────────────────────────────
 
     public static IEnumerable<LessonSection> Lesson5(Guid id) => Blocks(id,
+        intro: """
+        ## Bu derste ne öğreneceksin?
+
+        Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - Bileşik getiriyi "getirinin de getiri getirmesi" olarak tanımlamak
+        - Çok yıllı büyümeyi hesaplamak
+        - Kazancı yeniden yatırmanın (çekmemenin) etkisini göstermek
+        - Neden en güçlü değişkenin **süre** olduğunu fark etmek
+
+        Dersin sonunda kısa bir test var.
+        """,
         core: """
         ## Kazancın da kazanması
 
@@ -1044,7 +1217,25 @@ internal static class EducationContent
         negatif olur. Bileşik etki bir doğa kanunu değil, sürekliliğe bağlı
         bir **mekanizmadır**.
         """,
-        figure: "compound-curve");
+        figure: "compound-curve",
+        source: """
+        ## Bu bilgiler nereden geliyor?
+
+        **Hesap yöntemi.** Bileşik büyüme sabit bir formülle hesaplanır; uygulamadaki
+        tüm parasal hesaplar **kodda**, tam hassasiyetle yapılır. Bir yapay zekâ modeli
+        bu rakamları **üretmez**, yalnızca hazır sonuçları anlatır.
+
+        **Örnek sayılar kurgusaldır.** Dersteki yıllık oranlar (%20 gibi) mekanizmayı
+        göstermek için **seçilmiş yuvarlak sayılardır** — bir beklenti, hedef ya da
+        gerçekleşmiş getiri değildir.
+
+        **Enflasyon aynı mekanizmayla çalışır.** Bileşik etki paranın erimesinde de
+        geçerlidir; resmî fiyat ölçümü **TÜİK** TÜFE'dir —
+        [tuik.gov.tr](https://www.tuik.gov.tr).
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders zamanın etkisini anlatır; ne kadar
+        süre yatırımda kalman gerektiğini söylemez.
+        """);
 
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
