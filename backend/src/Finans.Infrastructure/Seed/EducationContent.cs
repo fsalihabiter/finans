@@ -14,9 +14,12 @@ namespace Finans.Infrastructure.Seed;
 /// <item><b>Tavsiye YOK</b> (CLAUDE.md §2): "al/sat/yükselir" yok, gelecek tahmini yok.
 ///   Enstrüman sıralaması da yok — örnekler "A/B yatırımı" gibi soyut etiketler kullanır,
 ///   "altın dolardan iyiydi" demez (zımni yönlendirme, 15 §3.4).</item>
-/// <item><b>MiniMarkdown alt kümesi</b>: yalnız <c>##</c>/<c>###</c> başlık, <c>- </c> liste,
-///   <c>&gt; </c> alıntı, <c>**kalın**</c>, düz paragraf. <b>Tablo/link/kod YOK</b> —
-///   renderer desteklemiyor (tablo+link T6.8'de gelir).</item>
+/// <item><b>MiniMarkdown alt kümesi</b>: <c>##</c>/<c>###</c> başlık, <c>- </c> liste,
+///   <c>&gt; </c> alıntı, <c>**kalın**</c>, düz paragraf, <b>[metin](hedef) bağlantı</b> ve
+///   <b>boru işaretli tablo</b> (T6.8). <b>Kod bloğu YOK</b> — renderer desteklemiyor.
+///   Bağlantı hedefi <c>https://</c>, <c>http://</c>, <c>mailto:</c> ya da uygulama içi
+///   <c>/yol</c> olmalı; başka şema bağlantıya çevrilmez (ham metin görünür). Tablo
+///   <b>hizalama satırı</b> ister: <c>| --- | --- |</c>, yoksa düz paragrafa düşer.</item>
 /// <item><b>TR biçim</b>: binlik nokta, ondalık virgül (422.970,50 ₺).</item>
 /// <item>Sayılar <b>statik ve güvenli</b>; kullanıcının gerçek verisi buraya girmez —
 ///   o iş <see cref="SectionKind.LiveContext"/> bloğunda ve T6.2'de.</item>

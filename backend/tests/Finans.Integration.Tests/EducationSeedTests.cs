@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Finans.Application.Education;
 using Finans.Domain.Enums;
@@ -199,14 +200,36 @@ public sealed class EducationSeedTests
 
         foreach (var body in bodies)
         {
-            // MiniMarkdown alt kümesi: tablo/link/kod bloğu render EDİLMEZ (T6.8'e kadar).
-            body.Should().NotContain("|", "tablo MiniMarkdown'da desteklenmiyor");
-            body.Should().NotContain("](", "link MiniMarkdown'da desteklenmiyor");
+            // MiniMarkdown alt kümesi (T6.8 ile tablo + link EKLENDİ; kod bloğu hâlâ yok).
             body.Should().NotContain("```", "kod bloğu MiniMarkdown'da desteklenmiyor");
 
             // Başlıklar yalnız ## / ### (h1/h2 yok).
             foreach (var line in body.Split('\n').Where(l => l.TrimStart().StartsWith('#')))
                 line.TrimStart().Should().MatchRegex("^#{2,3} ");
+
+            // 🔒 Bağlantı hedefi güvenli şema olmalı. Renderer güvensiz hedefi zaten
+            // bağlantıya çevirmez (safeHref) ama o durumda içerikte ham "[metin](...)"
+            // görünür — yani bu aslında bir İÇERİK hatasıdır, burada yakalanır.
+            foreach (Match link in Regex.Matches(body, @"\]\(([^)\s]+)\)"))
+            {
+                var target = link.Groups[1].Value;
+                target.Should().MatchRegex(
+                    @"^(?:https?://|mailto:|/(?!/))",
+                    $"bağlantı hedefi güvenli şema kullanmalı (bulunan: {target})");
+            }
+
+            // Tablo yazıldıysa hizalama satırı ŞART — yoksa MiniMarkdown onu tablo
+            // saymaz ve içerik ekranda düz paragraf olarak bozulur (sessiz hata).
+            var lines = body.Split('\n').Select(l => l.Trim()).ToList();
+            if (lines.Any(l => l.StartsWith('|')))
+            {
+                lines.Should().Contain(
+                    l => Regex.IsMatch(l, @"^\|(?:\s*:?-+:?\s*\|)+$"),
+                    "boru işaretli tablo hizalama satırı (| --- | --- |) olmadan render edilmez");
+                lines[0].Should().NotMatchRegex(
+                    @"^\|(?:\s*:?-+:?\s*\|)+$",
+                    "hizalama satırı başlık satırından SONRA gelir");
+            }
         }
 
         // CLAUDE.md §2 — yönlendirme fiilleri içerikte geçmemeli (tavsiye YOK).

@@ -3403,6 +3403,54 @@ body.drawer-lock {
   margin: 4px 0;
   max-width: 70ch;
 }
+/* ── T6.8: bağlantı ve tablo ─────────────────────────────────────────────── */
+.markdown-body a {
+  color: var(--accent, #8a94dc);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  border-radius: 3px;
+  transition: color 0.15s ease;
+}
+.markdown-body a:hover {
+  color: var(--text, #eef2ff);
+}
+.markdown-body a:focus-visible {
+  outline: 2px solid var(--accent, #8a94dc);
+  outline-offset: 2px;
+}
+/* Tabloyu SAYFA değil kendi kabı kaydırır — dar ekranda yatay taşma olmaz. */
+.md-table-wrap {
+  margin: 0 0 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border, rgba(138, 148, 220, 0.22));
+  border-radius: 12px;
+  background: rgba(138, 148, 220, 0.04);
+}
+.md-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  /* Sütunlar sıkışıp okunmaz olmasın; taşarsa kap kaydırır. */
+  min-width: max-content;
+}
+.md-table-wrap th,
+.md-table-wrap td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border, rgba(138, 148, 220, 0.16));
+}
+.md-table-wrap thead th {
+  color: var(--text, #eef2ff);
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(138, 148, 220, 0.09);
+}
+.md-table-wrap tbody tr:last-child th,
+.md-table-wrap tbody tr:last-child td {
+  border-bottom: none;
+}
 .lesson-actions {
   margin-top: 20px;
   padding-top: 16px;

@@ -28,29 +28,36 @@ tanıtım dersi) · aşama planları · figür planları · 9 soruluk test tasar
 ⚠ **Bulgu:** `SectionKind.Source` enum'da var, seed'de **hiç kullanılmamış** →
 T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 
+> ✅ **T6.8 bitti (2026-07-22):** `MiniMarkdown` artık **bağlantı + tablo** işliyor.
+> **Şema beyaz-listesi** (`safeHref`): `https/http/mailto` + uygulama içi `/yol`;
+> güvensiz hedef (`javascript:`, `data:`, `vbscript:`, protokole göreli `//host`,
+> **kontrol karakteriyle gizlenmiş şema**) **bağlantıya çevrilmez** — ham metin kalır.
+> Dış bağlantı `rel="noopener noreferrer"`. Tablo **yalnız hizalama satırı varsa**
+> tablodur (yoksa düz paragraf — geriye dönük), sütun sayısı başlıktan gelir,
+> kendi kabında yatay kaydırılır. SC-E24; web **130/130**.
+> ⚠ Tarayıcı doğrulaması yapılamadı (Chrome sekmesi localhost'u açamadı) — görsel
+> teyit **T6.19'da** gerçek kaynak bloklarıyla yapılacak.
+
 ## Sıradaki (öncelik sırası)
-1. 🔴 **T6.8 — `MiniMarkdown` link + tablo** *(öne alındı)*: kaynak bloğundaki
-   kurumsal referansların tıklanabilir olmasının önkoşulu (`16` §6.1).
-   `dangerouslySetInnerHTML` YİNE YOK.
-2. 🔴 **T6.19 — Kaynak bloğu + açılış bloğu (tüm dersler):** her derse
+1. 🔴 **T6.19 — Kaynak bloğu + açılış bloğu (tüm dersler):** her derse
    "Bu bilgiler nereden geliyor?" (`Source`) **ve** ilk aşamaya "Bu derste ne
    öğreneceksin?" — mevcut 5 derse geriye dönük (seed mutabakatı destekliyor).
-3. 🔴 **T6.20 — Yapısal sözleşme testleri:** `16` §9.1 M1-M9 → `EducationSeedTests`.
+2. 🔴 **T6.20 — Yapısal sözleşme testleri:** `16` §9.1 M1-M9 → `EducationSeedTests`.
    ⚠ **İçerikten SONRA** (T6.19), kırmızı test bırakılmaz.
-4. **T6.15 — Çok set desteği (web):** `EducationPage` şu an `tracks.data[0]` ile
+3. **T6.15 — Çok set desteği (web):** `EducationPage` şu an `tracks.data[0]` ile
    **tek track** varsayıyor (satır 45) → set listesi + set başına ilerleme +
    seviyeye göre **"Buradan başla"** rozeti. Set 0'ın ön koşulu.
-5. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + 8 ders + track içi
+4. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + 8 ders + track içi
    ön-koşul zinciri + "Temeller" → **"Yatırım Kavramları"** (slug korunur).
-6. **T6.17a-h — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre.
+5. **T6.17a-h — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre.
    ⚠ İş yükü gerçekçi tahmin: **~62 figür + 72 soru** → önce `16` §8.3'teki
    **paylaşılan SVG öğeleri** yazılır, figürler onlardan kurulur.
-7. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4; istemcide saf hesap, tahmin dili yok)
-8. **T6.11c** — Set 1 Ders 3-5 (yeni çıtaya yükseltme; `16` S1-L3/L4/L5 künyeleri hazır)
-9. **T5E.4b** — Kavram derin bağlantı: Analiz/Hisse kartından `ConceptTag` → ilgili ders
-10. **T6.9** — `UserConceptMastery` + aralıklı tekrar
-11. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası)*
-12. OSS kalanı — README ekran görüntüleri tazeleme
+6. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4; istemcide saf hesap, tahmin dili yok)
+7. **T6.11c** — Set 1 Ders 3-5 (yeni çıtaya yükseltme; `16` S1-L3/L4/L5 künyeleri hazır)
+8. **T5E.4b** — Kavram derin bağlantı: Analiz/Hisse kartından `ConceptTag` → ilgili ders
+9. **T6.9** — `UserConceptMastery` + aralıklı tekrar
+10. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası)*
+11. OSS kalanı — README ekran görüntüleri tazeleme
 
 > ✅ **T6.11b bitti (2026-07-19):** **Ders 2 (Çeşitlendirme) 6 → 13 aşama** — TR'ye özgü
 > **para birimi ekseni** ("dört kalem, tek eksen"), korelasyon sezgisi, kriz anında
