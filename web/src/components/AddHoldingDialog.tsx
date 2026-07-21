@@ -20,6 +20,12 @@ const ASSET_TYPES: { value: AssetType; label: string }[] = [
 const CURRENCIES: CurrencyCode[] = ["TRY", "USD", "EUR"];
 type FxCcy = "USD" | "EUR";
 
+/** Hisse işlem para birimi seçenekleri — hedef borsalar BIST (TL) + ABD (USD). */
+const STOCK_CURRENCIES: { value: CurrencyCode; label: string }[] = [
+  { value: "TRY", label: "🇹🇷 TL" },
+  { value: "USD", label: "🇺🇸 USD" },
+];
+
 /** Tür-varsayılan ad — kullanıcı elle değiştirmediyse tür/döviz değişince tazelenir. */
 const defaultNameFor = (type: AssetType, fxCcy: FxCcy): string => {
   switch (type) {
@@ -93,6 +99,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
   const [form, setForm] = useState<FormState>(INITIAL);
   const [fxCcy, setFxCcy] = useState<FxCcy>("USD");
   const [stockCcy, setStockCcy] = useState<CurrencyCode>("USD");
+  const [stockCcyTouched, setStockCcyTouched] = useState(false); // kullanıcı elle pb seçti mi (Finnhub ezmesin)
   const [touched, setTouched] = useState(false);      // kullanıcı eliyle bir şey girdi mi (overlay kapatma)
   const [nameTouched, setNameTouched] = useState(false);
   const [priceTouched, setPriceTouched] = useState(false);
@@ -178,7 +185,16 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
     setNameTouched(false);
     setPriceTouched(false);
     setAutoPrice(null);
+    setStockCcy("USD");
+    setStockCcyTouched(false);
     setStockLookup({ loading: false, error: null, last: "" });
+  };
+
+  // ── Hisse: kullanıcı para birimini elle seçer (TL/USD). Elle seçilince
+  // sembol otomatiğinin (Finnhub) bunu ezmesi engellenir. ──
+  const onStockCcyChange = (ccy: CurrencyCode) => {
+    setStockCcyTouched(true);
+    setStockCcy(ccy);
   };
 
   const onFxCcyChange = (ccy: FxCcy) => {
@@ -204,7 +220,7 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
         unitPrice: !priceTouched && m.price != null ? toInput(m.price) : f.unitPrice,
       }));
       if (m.price != null && !priceTouched) setAutoPrice({ value: m.price, stale: false });
-      if (CURRENCIES.includes(m.currency as CurrencyCode)) setStockCcy(m.currency as CurrencyCode);
+      if (!stockCcyTouched && CURRENCIES.includes(m.currency as CurrencyCode)) setStockCcy(m.currency as CurrencyCode);
       setStockLookup({ loading: false, error: null, last: sym });
     } catch {
       setStockLookup({
@@ -383,6 +399,30 @@ export function AddHoldingDialog({ open, onClose }: { open: boolean; onClose: ()
           )}
           {type === "Stock" && stockLookup.error && (
             <p className="form-hint">{stockLookup.error}</p>
+          )}
+
+          {type === "Stock" && (
+            <div className="field-group">
+              <span className="field-label">Para birimi</span>
+              <div className="type-chips" role="radiogroup" aria-label="İşlem para birimi">
+                {STOCK_CURRENCIES.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={stockCcy === c.value}
+                    className={stockCcy === c.value ? "sel" : ""}
+                    onClick={() => onStockCcyChange(c.value)}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              <p className="form-hint">
+                Türk (BIST) hisseleri için <b>TL</b>, ABD hisseleri için <b>USD</b> seçin — sembol
+                bilgisi otomatik gelirse para birimi de güncellenir.
+              </p>
+            </div>
           )}
 
           <label>
