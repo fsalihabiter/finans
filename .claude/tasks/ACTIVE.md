@@ -66,35 +66,45 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > **sabit %38** yazıyor. Eğitim artık "kaynak daima görünür" iddiası taşıdığı için
 > TÜİK etiketli uydurma oran bu iddiayı çürütür.
 
+> ✅ **T6.20 + T6.21 bitti (2026-07-26):** **T6.21** — canlı TÜFE yok → veri
+> **"örnek"** etiketlendi: `InflationRate.Source` `"TÜİK"` → **`"örnek"`** (domain
+> + seed), S1-L1 "Senin portföyünde" bloğuna reel getirinin **örnek enflasyona**
+> göre hesaplandığı uyarısı. Nominal=gerçek, reel=örnek. **T6.20** — 5 yeni test:
+> **M4** figür anahtarı ↔ `LessonFigure.tsx` kayıt defteri mutabakatı (TSX regex),
+> **M6** boşta kavram yok, **M7** enstrüman-sıralama/tahmin taraması (`Source`
+> dahil), **M3/M5 değişmezleri** (9+ soruluk quiz dengeli + Ders 1-2 guard'ı).
+> ⚠ **M3/M5 sayısal set eşikleri** bugün global uygulanamaz (Ders 3-5 = 1 figür/
+> 3 soru, T6.11c bekliyor); §9.3 gereği kırmızı bırakılmadı, içerik indikçe açılacak.
+> EducationSeed **21/21**, Application **291/291**. (4 kırmızı = bilinen
+> `WebApplicationFactory` ortam hatası, değişiklikten bağımsız — stash'le teyitli.)
+
 ## Sıradaki (öncelik sırası)
-1. 🔴 **T6.20 — Yapısal sözleşme testleri:** `16` §9.1 M3-M9 → `EducationSeedTests`
-   (M1/M2 T6.19 ile yeşil). Figür eşiği · **figür anahtarı ↔ `LessonFigure` kayıt
-   defteri mutabakatı** · 9 soru/3 zorluk · boşta kavram yok.
-2. 🔴 **T6.21 — Enflasyon verisi:** TÜİK etiketli sabit %38 ya gerçek veriyle
-   değişmeli ya da açıkça "örnek" etiketlenmeli (güven kritik).
-3. **T6.15 — Çok set desteği (web):** `EducationPage` `tracks.data[0]` ile **tek
+1. **T6.15 — Çok set desteği (web):** `EducationPage` `tracks.data[0]` ile **tek
    track** varsayıyor → set listesi + set başına ilerleme + "Buradan başla" rozeti.
-4. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + **10 ders** + ön-koşul
+   ⚠ Artık **6 set** listelenecek (Set 0-5).
+2. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + **10 ders** + ön-koşul
    zinciri + "Temeller" → **"Yatırım Kavramları"** (slug korunur).
-5. **T6.17a-j — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre
+3. **T6.17a-j — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre
    (**9 ve 10 yeni**: fiyat nasıl oluşur · bir alım nasıl gerçekleşir).
    ⚠ İş yükü: **~80 figür + 90 soru** → önce `16` §8.3 paylaşılan SVG öğeleri.
-6. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4)
-7. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
+4. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4)
+5. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.
-8. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek
+6. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek
    parametreli** · `SeriesPath` · `Candle`/`CandleSeries` · `VolumeBars` ·
    `BookLadder` · `RangeBrush`. **İçerikten önce** — 75 figürün omurgası.
-9. 🆕 **T6.24a-h — Set 2 içerik turu:** grafik okuma → ölçek → **mum** → zaman
+7. 🆕 **T6.24a-h — Set 2 içerik turu:** grafik okuma → ölçek → **mum** → zaman
    dilimi → hacim → **"grafik geleceği söylemez"** 🔴 → endeks → **kalemini
    piyasaya göre okumak** 🔴. Dil kuralı `16` §6.6.
-10. 🆕 **T6.25** — Ölçek oynatıcısı · 🆕 **T6.26** — ölçüt (endeks) serisi ·
-    🆕 **T6.27** — grafik dili guard'ları (M7a/M7b).
-11. **T6.11c** — Set 1 Ders 3-5 (`16` S1-L3/L4/L5 künyeleri hazır)
-12. **T5E.4b** — Kavram derin bağlantı: `ConceptTag` → ilgili ders
-13. **T6.9** — `UserConceptMastery` + aralıklı tekrar
-14. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası — artık 103 kavram)*
-15. OSS kalanı — README ekran görüntüleri tazeleme
+8. 🆕 **T6.25** — Ölçek oynatıcısı · 🆕 **T6.26** — ölçüt (endeks) serisi ·
+   🆕 **T6.27** — grafik dili guard'ları (M7a/M7b).
+9. **T6.11c** — Set 1 Ders 3-5 (`16` S1-L3/L4/L5 künyeleri hazır). ⚠ Bu iş
+   Ders 3-5'i **≥2 figür + 9 soru**a çıkarır → T6.20'nin M3/M5 sayısal eşikleri
+   burada aktive edilir (`EducationSeedTests`'e set eşiği eklenir).
+10. **T5E.4b** — Kavram derin bağlantı: `ConceptTag` → ilgili ders
+11. **T6.9** — `UserConceptMastery` + aralıklı tekrar
+12. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası — artık 103 kavram)*
+13. OSS kalanı — README ekran görüntüleri tazeleme
 
 > ✅ **T6.11b bitti (2026-07-19):** **Ders 2 (Çeşitlendirme) 6 → 13 aşama** — TR'ye özgü
 > **para birimi ekseni** ("dört kalem, tek eksen"), korelasyon sezgisi, kriz anında

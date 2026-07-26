@@ -20,6 +20,49 @@
 
 ---
 
+## 2026-07-26 · T6.20 + T6.21 — Yapısal sözleşme testleri + enflasyon verisi dürüstlüğü
+- **Görev(ler):** T6.20 (`16` §9.1 M-kuralları) · T6.21 (`16` §6.4 kaynak dürüstlüğü). fable-mode.
+- **Ne yapıldı:**
+  **T6.21 (önce · güven kritik):** Canlı TÜFE beslemesi olmadığından **"örnek"
+  etiketi** yolu seçildi. `InflationRate.Source` varsayılanı ve `SeedData` seed
+  satırı **`"TÜİK"` → `"örnek"`** (domain XML doc + seed yorumu, placeholder olduğu
+  açıkça yazıldı). S1-L1 "Senin portföyünde" bloğuna dürüst uyarı: nominal getiri
+  **gerçek** (kendi kaydından), reel getiri ise **örnek** bir enflasyon oranına
+  göre hesaplanıyor (henüz canlı TÜİK'e bağlı değil). Kök sorun: kullanıcının
+  gördüğü `real_return` LiveContext değeri sahte %38'den türüyordu — §6.3 LiveContext'i
+  "gerçek, kaynaklı veri" sayar. ⚠ `Source` alanı bugün hiçbir API/DTO'da
+  kullanıcıya DÖNMÜYORDU (yalnız `AnnualRate` okunuyor) ama stored yanlış iddia +
+  türetilen çıktı düzeltildi. İçerikteki TÜİK atıfları (S1-L1/S1-L5 kaynak blokları)
+  zaten doğruydu — "TÜİK enflasyonun resmî ölçüsüdür" kurumsal TANIM + "örnek
+  sayılar kurgusaldır" beyanı; dokunulmadı.
+  **T6.20:** `16` §9.3 gereği testler mevcut seed'e karşı yeşil. 5 yeni test:
+  (M4) **figür anahtarı ↔ `LessonFigure.tsx` kayıt defteri mutabakatı** — TSX'ten
+  regex ile `FIGURES` anahtarları okunur (tırnaklı + düz tanımlayıcı), repo kökü
+  test bin'inden yukarı yürünerek bulunur; seed'deki 11 anahtar ∈ 12'lik kayıt
+  defteri. (M6) boşta kavram yok + her ders ≥1 kavram. (M7) tavsiye/tahmin/
+  **enstrüman-sıralama** taraması `Source` blokları DAHİL (regex + kelime listesi).
+  (M3/M5 değişmezleri) 9+ soruluk quiz her zorluktan ≥3 + Ders 1-2 zenginlik
+  regresyon guard'ı. (T6.21 guard) seed'lenen oran kurumsal kaynakla etiketlenemez.
+- **Dokunulan dosyalar:** `Finans.Domain/Portfolio/InflationRate.cs`,
+  `Finans.Infrastructure/Seed/SeedData.cs`, `Finans.Infrastructure/Seed/EducationContent.cs`,
+  `tests/Finans.Integration.Tests/EducationSeedTests.cs`, docs (08, 09), ACTIVE.
+- **Test:** **SC-E22** [~] (M4/M6/M5 + guard yeşil) · **SC-E29** [x] (enflasyon
+  dürüstlüğü). `EducationSeedTests` **16 → 21** (5 yeni), **21/21**.
+  **Application 291/291.** Integration'daki **4 kırmızı** (`HealthEndpointTests` +
+  3 `ObservabilitySecurityTests`) `WebApplicationFactory<Program>` bu ortamda
+  ayağa kalkmadığı için — **değişiklik STASH'liyken temiz main'de de kırmızı**
+  (teyit edildi), görev dışı bilinen hata.
+- **Karar/Not:** ⚠ **Kapsam sınırı (dürüst raporlama):** M3'ün "diğer set ≥2" ve
+  M5'in "9 soru/ders" **SAYISAL** eşikleri bugün **global uygulanamaz** — Ders 3-5
+  hâlâ **1 figür + 3 soru** taşıyor (T6.11c içerik turunu bekliyor). §9.3 "kırmızı
+  test bırakılmaz" gereği bu eşikler yazılmadı; onun yerine bugün yeşil olan
+  DEĞİŞMEZLER kondu ve set eşiklerinin her setin içeriği indikçe (T6.11c/T6.16/
+  T6.22) açılacağı hem test dosyasında hem backlog'da belgelendi. **Silent cap yok.**
+  M1/M2 T6.19'da, M8/M9 mevcut testlerde zaten yeşildi — T6.20 M4/M6/M7'yi ekledi.
+  Gerçek TÜFE çekme (T6.21'in "ya gerçek veri" kolu) ayrı iş olarak açık kalır.
+- **Durum:** tamamlandı.
+- **Sıradaki:** **T6.15** — çok set desteği (web); artık 6 set (Set 0-5) listelenecek.
+
 ## 2026-07-24 · Müfredat genişletme — Grafik ve Piyasa Okuryazarlığı (25 → 35 ders)
 - **Görev(ler):** ad-hoc planlama (ürün sahibi yön değişikliği) → yeni **T6.22,
   T6.23, T6.24a-h, T6.25, T6.26, T6.27**; T6.16/T6.17 kapsam güncellemesi.

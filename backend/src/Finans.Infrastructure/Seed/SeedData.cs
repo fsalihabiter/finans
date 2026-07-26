@@ -82,8 +82,12 @@ public static class SeedData
             Id = Id("inflation-2024"),
             PeriodStartUtc = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             PeriodEndUtc = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            AnnualRate = 0.380000m, // örnek/placeholder — TÜİK, prod'da gerçek veri
-            Source = "TÜİK",
+            // ⚠ T6.21: Bu bir PLACEHOLDER orandır, gerçek TÜİK verisi DEĞİL. Eğitim
+            // "kaynak daima görünür" der (16 §6.4); uydurma bir oranı "TÜİK" diye
+            // etiketlemek o iddiayı çürütür. Gerçek TÜFE beslemesi bağlanana kadar
+            // açıkça "örnek" — reel getiri çıktısı da bu orana göre örnek sayılır.
+            AnnualRate = 0.380000m,
+            Source = "örnek",
             CreatedAtUtc = now,
         });
 

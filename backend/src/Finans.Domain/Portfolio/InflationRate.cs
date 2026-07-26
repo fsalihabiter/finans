@@ -14,8 +14,13 @@ public class InflationRate : Entity
     /// <summary>Yıllık oran (ondalık), örn. 0,380000 = %38. numeric(9,6).</summary>
     public decimal AnnualRate { get; set; }
 
-    /// <summary>TÜİK (resmi). Seed'de örnek; prod'da gerçek veri.</summary>
-    public string Source { get; set; } = "TÜİK";
+    /// <summary>
+    /// Verinin kaynağı. Gerçek TÜFE beslemesi bağlanana kadar seed <b>"örnek"</b>
+    /// yazar — placeholder bir oranı <c>"TÜİK"</c> ile etiketlemek, eğitimin
+    /// "kaynak daima görünür" iddiasını (16 §6.4 · 14 §B1) çürütürdü (T6.21).
+    /// Gerçek veri geldiğinde kurum adı + veri tarihiyle yazılır.
+    /// </summary>
+    public string Source { get; set; } = "örnek";
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Finans.Application.Education;
@@ -481,6 +482,206 @@ public sealed class EducationSeedTests
                 else
                     correct.Should().Be(1, "tek seçimde tam bir doğru şık (tam-eşleşme puanlaması)");
             }
+        }
+    }
+
+    // ── T6.20: yapısal sözleşme (16 §9.1) ─────────────────────────────────────
+    // NOT (16 §9.3): testler İÇERİKTEN SONRA yazılır, kırmızı bırakılmaz. Mevcut
+    // seed'de yalnız "Temeller" (Set 1) var; Ders 3-5 içerik turunu (T6.11c)
+    // bekliyor → 1'er figür, 3'er soru. Bu yüzden M3'ün "diğer set ≥2" ve M5'in
+    // "9 soru" SAYISAL eşikleri bugün GLOBAL uygulanamaz (kırmızıya düşerdi).
+    // T6.20 bu turda: M4 (figür kayıt defteri mutabakatı) · M6 (boşta kavram yok) ·
+    // M7 (tavsiye/tahmin/enstrüman-sıralama, Source dahil) + M3/M5'in bugün
+    // yeşil olan DEĞİŞMEZLERİ. Set bazlı sayısal eşikler, her setin içeriği
+    // indikçe (T6.11c/T6.16/T6.22) bu dosyada açılır.
+
+    /// <summary>Repo kökü — testler bin/ altından koşar; web dosyalarını bulmak için yukarı yürünür.</summary>
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null &&
+               !File.Exists(Path.Combine(dir.FullName, "web", "src", "components", "LessonFigure.tsx")))
+            dir = dir.Parent;
+        dir.Should().NotBeNull("repo kökü (web/src/components/LessonFigure.tsx içeren) bulunmalı");
+        return dir!.FullName;
+    }
+
+    /// <summary>
+    /// <c>LessonFigure.tsx</c> içindeki <c>FIGURES</c> kayıt defterinin anahtarları.
+    /// Anahtar ya tırnaklı (<c>"real-vs-nominal":</c>) ya düz tanımlayıcıdır
+    /// (<c>concentration:</c>) — ikisi de okunur.
+    /// </summary>
+    private static IReadOnlySet<string> WebFigureRegistryKeys()
+    {
+        var path = Path.Combine(RepoRoot(), "web", "src", "components", "LessonFigure.tsx");
+        var tsx = File.ReadAllText(path);
+
+        // `const FIGURES ... = { ... };` — tip ek açıklamasındaki `=>` oku değil,
+        // gerçek `= {` yakalanır (lazy `.*?` + `=\s*\{`).
+        var block = Regex.Match(tsx, @"const FIGURES\b.*?=\s*\{(?<body>.*?)\n\};",
+            RegexOptions.Singleline);
+        block.Success.Should().BeTrue("LessonFigure.tsx içinde FIGURES kayıt defteri bulunmalı");
+
+        var keys = Regex.Matches(block.Groups["body"].Value,
+                @"(?:""(?<q>[a-z0-9-]+)""|(?<b>[A-Za-z_][A-Za-z0-9_]*))\s*:")
+            .Select(m => m.Groups["q"].Success ? m.Groups["q"].Value : m.Groups["b"].Value)
+            .ToHashSet();
+        keys.Should().NotBeEmpty("kayıt defteri en az bir figür tanımlamalı");
+        return keys;
+    }
+
+    /// <summary>
+    /// M4 — <b>figür anahtarı ↔ LessonFigure kayıt defteri mutabakatı.</b> Seed'de
+    /// kullanılan her <c>FigureKey</c>, web'deki kayıt defterinde TANIMLI olmalı;
+    /// aksi hâlde figür ekranda <b>sessizce düşer</b> (bilinmeyen anahtar → null)
+    /// ve ders görselsiz kalır — testler yeşilken içerik bozulur.
+    /// </summary>
+    [Fact]
+    public async Task Every_seed_figure_key_is_defined_in_the_web_registry()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var registry = WebFigureRegistryKeys();
+        var used = await db.LessonSections
+            .Where(s => s.FigureKey != null)
+            .Select(s => s.FigureKey!)
+            .Distinct()
+            .ToListAsync();
+
+        used.Should().NotBeEmpty();
+        var missing = used.Where(k => !registry.Contains(k)).ToList();
+        missing.Should().BeEmpty(
+            "seed'deki figür anahtarları LessonFigure.tsx'te tanımlı olmalı (yoksa görsel sessizce düşer)");
+    }
+
+    /// <summary>
+    /// M6 — <b>boşta kavram yok.</b> Her ders en az bir <c>ConceptTag</c> taşır ve
+    /// her <c>ConceptTag</c> en az bir derste kullanılır. Kavram haritası (16 §3)
+    /// sözlüğün (T6.3) omurgasıdır; bağsız kavram ölü tanım demektir.
+    /// </summary>
+    [Fact]
+    public async Task Every_lesson_is_tagged_and_no_concept_is_orphaned()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var lessonIds = await db.Lessons.Select(l => l.Id).ToListAsync();
+        var tags = await db.ConceptTags.ToListAsync();
+        var links = await db.LessonConceptTags.ToListAsync();
+
+        // Her ders ≥1 kavrama bağlı.
+        foreach (var lessonId in lessonIds)
+            links.Should().Contain(l => l.LessonId == lessonId,
+                "her ders en az bir kavram etiketi taşımalı (16 §9.1-M6)");
+
+        // Her kavram ≥1 derste kullanılır (boşta kavram yok).
+        foreach (var tag in tags)
+            links.Should().Contain(l => l.ConceptTagId == tag.Id,
+                $"'{tag.Key}' kavramı en az bir derste tanıtılmalı (boşta kavram yok)");
+    }
+
+    /// <summary>
+    /// M7 — <b>tavsiye/tahmin/enstrüman-sıralama taraması, Source blokları DAHİL.</b>
+    /// Kaynak bloğu da kullanıcıya görünür; oraya kaçan bir yönlendirme de tavsiye
+    /// sayılır (CLAUDE.md §2). Enstrüman sıralaması ("X, Y'den iyi getirdi") zımni
+    /// yönlendirmedir (15 §3.4).
+    /// </summary>
+    [Fact]
+    public async Task No_block_including_sources_predicts_or_ranks_instruments()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var sections = await db.LessonSections.ToListAsync();
+
+        // Kaynak blokları gerçekten taranıyor (regresyon güvencesi).
+        sections.Should().Contain(s => s.Kind == SectionKind.Source);
+
+        // Gelecek/tahmin ve garanti kalıpları hiçbir blokta olmamalı.
+        string[] predictions =
+        {
+            "yükselecek", "düşecek", "artacak", "kazandıracak", "getirecek",
+            "garanti getiri", "garantili getiri", "kesin kâr",
+        };
+        // Enstrüman sıralaması: "…'den/dan daha iyi/çok getiri/performans".
+        var ranking = new Regex(
+            @"(?:'?d[ae]n)\s+(?:daha\s+)?(?:iyi|çok|yüksek)\s+(?:getiri|performans|kazan)",
+            RegexOptions.IgnoreCase);
+
+        foreach (var s in sections)
+        {
+            foreach (var banned in predictions)
+                s.BodyMarkdown.Should().NotContainEquivalentOf(banned,
+                    $"'{s.Kind}' bloğu tahmin/garanti içermez (yasak: {banned})");
+
+            ranking.IsMatch(s.BodyMarkdown).Should().BeFalse(
+                $"'{s.Kind}' bloğu enstrüman sıralaması yapmamalı (15 §3.4)");
+        }
+    }
+
+    /// <summary>
+    /// M3/M5 değişmezleri (bugün yeşil olan kısım). Sayısal set eşikleri içerik
+    /// indikçe açılır; bu test şimdiden iki şeyi kilitler: (a) 9 soruluk bir quiz
+    /// varsa zorluklar DENGELİ olmalı (bozuk zengin quiz yakalanır); (b) içerik
+    /// turundan geçmiş dersler (1-2) zenginliğini KAYBETMEMELİ (regresyon guard'ı).
+    /// </summary>
+    [Fact]
+    public async Task Rich_quizzes_stay_balanced_and_toured_lessons_keep_their_richness()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var quizzes = await db.Quizzes.ToListAsync();
+        var questions = await db.QuizQuestions.ToListAsync();
+
+        // (a) M5 değişmezi: 9+ soruluk her quiz her zorluktan ≥3 taşır.
+        foreach (var quiz in quizzes)
+        {
+            var own = questions.Where(q => q.QuizId == quiz.Id).ToList();
+            if (own.Count < 9) continue;
+            foreach (var diff in new[] { QuizDifficulty.Easy, QuizDifficulty.Medium, QuizDifficulty.Hard })
+                own.Count(q => q.Difficulty == diff).Should().BeGreaterThanOrEqualTo(3,
+                    $"9+ soruluk quiz '{diff}' zorluğundan en az 3 taşımalı (16 §9.1-M5)");
+        }
+
+        // (b) İçerik turundan geçmiş dersler (T6.11a/b) zenginliğini korumalı.
+        async Task AssertToured(string slug, int minQuestions, int minFigures)
+        {
+            var lesson = await db.Lessons.SingleAsync(l => l.Slug == slug);
+            var quiz = quizzes.Single(q => q.LessonId == lesson.Id);
+            questions.Count(q => q.QuizId == quiz.Id).Should().BeGreaterThanOrEqualTo(minQuestions,
+                $"'{slug}' içerik turundan geçti — {minQuestions} soru zenginliğini korumalı");
+            (await db.LessonSections.CountAsync(s => s.LessonId == lesson.Id && s.FigureKey != null))
+                .Should().BeGreaterThanOrEqualTo(minFigures,
+                    $"'{slug}' en az {minFigures} figür taşımalı (regresyon guard'ı)");
+        }
+
+        await AssertToured("enflasyon-ve-reel-getiri", 9, 5);
+        await AssertToured("cesitlendirme-neden-onemli", 9, 3);
+    }
+
+    /// <summary>
+    /// T6.21 — <b>güven kritik:</b> seed'lenen enflasyon oranı PLACEHOLDER'dır;
+    /// gerçek TÜFE beslenmesi bağlanana dek kurumsal bir kaynakla (TÜİK/TCMB…)
+    /// etiketlenemez. Uydurma bir oranı "TÜİK" diye göstermek eğitimin
+    /// "kaynak daima görünür" iddiasını (16 §6.4) çürütür.
+    /// </summary>
+    [Fact]
+    public async Task Seeded_inflation_is_labeled_example_not_an_institution()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var rates = await db.InflationRates.ToListAsync();
+        rates.Should().NotBeEmpty();
+
+        string[] institutions = { "TÜİK", "TUIK", "TCMB", "SPK", "BDDK" };
+        foreach (var rate in rates)
+        {
+            rate.Source.Should().NotBeNullOrWhiteSpace();
+            institutions.Should().NotContain(rate.Source,
+                "placeholder oran kurumsal kaynakla etiketlenemez (gerçek veri gelene dek 'örnek')");
         }
     }
 }

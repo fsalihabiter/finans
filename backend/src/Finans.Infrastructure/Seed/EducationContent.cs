@@ -368,6 +368,11 @@ internal static class EducationContent
         Portföyünün nominal getirisi **{{return_ratio}}**; enflasyondan arındırılmış
         **reel** getirisi ise **{{real_return}}**.
 
+        > ℹ️ Nominal getiri kendi kayıtlarından gelir (gerçek). Reel getiri ise bir
+        > enflasyon oranına göre hesaplanır; uygulama şu an **örnek** bir oran
+        > kullanıyor (henüz canlı TÜİK verisine bağlı değil), bu yüzden reel rakamı
+        > da bir **örnek** olarak oku.
+
         Bu dersin anlattığı ayrım tam olarak bu iki sayının arasındaki farktır:
         birincisi rakamın, ikincisi alım gücünün ne yaptığını söyler.
 
