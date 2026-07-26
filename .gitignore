@@ -94,3 +94,8 @@ compose/certs/
 .claude/skills/emil-design-eng/
 .claude/skills/impeccable/
 .claude/skills/taste-skill/
+
+# Ajan araç zinciri dosyalari (Claude Code / Codex — yerel gelistirme araclari, urune ait degil, repoya girmez)
+.agents/
+.codex/
+AGENTS.md
