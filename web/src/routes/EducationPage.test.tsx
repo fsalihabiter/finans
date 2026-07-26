@@ -4,7 +4,7 @@ import { renderWithProviders } from "../test/renderWithProviders";
 import { EducationPage } from "./EducationPage";
 
 const tracks = [
-  { id: "t1", slug: "temeller", title: "Temeller", description: null, level: "Beginner", lessonCount: 3 },
+  { id: "t1", slug: "temeller", title: "Temeller", description: null, level: "Beginner", lessonCount: 3, orderIndex: 1, completedCount: 1 },
 ];
 
 const lessons = [
@@ -48,6 +48,73 @@ describe("EducationPage", () => {
     expect(screen.getByText("✓ Tamamlandı")).toBeInTheDocument();
     expect(screen.getByText("🔒 Kilitli")).toBeInTheDocument();
     expect(screen.getByText("1/3 ders tamamlandı")).toBeInTheDocument();
+  });
+
+  it("tek set doğrudan derslere açılır (tek öğeli set menüsü gösterilmez)", async () => {
+    mockApi();
+    renderWithProviders(<EducationPage />);
+
+    // Ders listesi geldi ama "Setlere dön" yok — tek set, seçici atlanır.
+    await screen.findByText("Enflasyon ve Reel Getiri");
+    expect(screen.queryByText("← Setlere dön")).not.toBeInTheDocument();
+    expect(screen.queryByText("⭐ Buradan başla")).not.toBeInTheDocument();
+  });
+
+  // ── T6.15: çok set (set seçici + "Buradan başla" + ilerleme + kilit YOK) ────
+
+  it("birden çok set: seçici + ilerleme + 'Buradan başla' rozeti gösterir", async () => {
+    const multi = [
+      { id: "t0", slug: "ilk-adimlar", title: "İlk Adımlar", description: "Sıfırdan başla", level: "Beginner", lessonCount: 8, orderIndex: 0, completedCount: 2 },
+      { id: "t1", slug: "temeller", title: "Yatırım Kavramları", description: "Kavramlar", level: "Beginner", lessonCount: 5, orderIndex: 1, completedCount: 0 },
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.endsWith("/api/education/profile")) return ok({ literacyLevel: "Beginner", profiled: true });
+        if (url.endsWith("/api/education/tracks")) return ok(multi);
+        if (url.includes("/tracks/ilk-adimlar/lessons")) return ok(lessons);
+        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
+      }),
+    );
+    renderWithProviders(<EducationPage />);
+
+    // İki set kartı da listelenir (ders listesi HENÜZ değil — önce seçim).
+    expect(await screen.findByText("İlk Adımlar")).toBeInTheDocument();
+    expect(screen.getByText("Yatırım Kavramları")).toBeInTheDocument();
+    expect(screen.queryByText("Enflasyon ve Reel Getiri")).not.toBeInTheDocument();
+
+    // Başlangıç seviyesi → giriş seti (orderIndex 0) "Buradan başla" alır; tek rozet.
+    const badges = screen.getAllByText("⭐ Buradan başla");
+    expect(badges).toHaveLength(1);
+    expect(badges[0].closest("button")).toHaveTextContent("İlk Adımlar");
+
+    // Set başına ilerleme okunur (2/8).
+    expect(screen.getByText(/2\/8 ders/)).toBeInTheDocument();
+  });
+
+  it("çok sette bir set seçilince dersleri açılır ve setlere dönülebilir (kilit yok)", async () => {
+    const multi = [
+      { id: "t0", slug: "ilk-adimlar", title: "İlk Adımlar", description: "Sıfırdan başla", level: "Beginner", lessonCount: 8, orderIndex: 0, completedCount: 2 },
+      { id: "t1", slug: "temeller", title: "Yatırım Kavramları", description: "Kavramlar", level: "Beginner", lessonCount: 5, orderIndex: 1, completedCount: 0 },
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.endsWith("/api/education/profile")) return ok({ literacyLevel: "Beginner", profiled: true });
+        if (url.endsWith("/api/education/tracks")) return ok(multi);
+        if (url.includes("/tracks/temeller/lessons")) return ok(lessons);
+        return Promise.reject(new Error(`beklenmeyen istek: ${url}`));
+      }),
+    );
+    renderWithProviders(<EducationPage />);
+
+    // Önerilmeyen seti seçmek de serbest (setler arası kilit YOK, 15 §6.3).
+    fireEvent.click(await screen.findByText("Yatırım Kavramları"));
+
+    expect(await screen.findByText("Enflasyon ve Reel Getiri")).toBeInTheDocument();
+    // Setlere dönüş açık.
+    fireEvent.click(screen.getByText("← Setlere dön"));
+    expect(await screen.findByText("İlk Adımlar")).toBeInTheDocument();
   });
 
   it("kilitli ders tıklanamaz (disabled)", async () => {

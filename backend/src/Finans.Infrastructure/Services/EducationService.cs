@@ -18,14 +18,23 @@ public sealed class EducationService(
     ICurrentUser currentUser,
     ILessonContextService lessonContext) : IEducationService
 {
-    public async Task<IReadOnlyList<LearningTrackDto>> GetTracksAsync(CancellationToken ct = default) =>
-        await db.LearningTracks
+    public async Task<IReadOnlyList<LearningTrackDto>> GetTracksAsync(CancellationToken ct = default)
+    {
+        // Set başına ilerleme (T6.15): kullanıcının tamamladığı ders id'leri tek
+        // sorguda çekilir, sonra her sette kaç tanesi tamamlanmış SAYILIR (IN).
+        // Kilit değil ilerleme sayısı — setler arası sert zincir yok (15 §6.3).
+        var completedIds = (await LoadCompletedSetAsync(ct)).ToList();
+
+        return await db.LearningTracks
             .Where(t => t.IsPublished)
             .OrderBy(t => t.OrderIndex)
             .Select(t => new LearningTrackDto(
                 t.Id, t.Slug, t.Title, t.Description, t.Level,
-                t.Lessons.Count(l => l.IsPublished)))
+                t.Lessons.Count(l => l.IsPublished),
+                t.OrderIndex,
+                t.Lessons.Count(l => l.IsPublished && completedIds.Contains(l.Id))))
             .ToListAsync(ct);
+    }
 
     public async Task<IReadOnlyList<LessonListItemDto>> GetTrackLessonsAsync(
         string trackSlug, CancellationToken ct = default)

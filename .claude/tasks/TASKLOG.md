@@ -20,6 +20,49 @@
 
 ---
 
+## 2026-07-26 · T6.15 — Çok set desteği (web + backend)
+- **Görev(ler):** T6.15 (`15` §6.3 · `16` set yapısı). fable-mode.
+- **Ne yapıldı:** Eğitim sayfası `tracks.data[0]` **tek set** varsayımından
+  kurtarıldı — Set 0/2 indiğinde (T6.16/T6.22) sayfa hazır olsun diye önce yapıldı.
+  **Backend:** `LearningTrackDto`'ya iki alan — `OrderIndex` (set sırası, "Buradan
+  başla" önerisinin temeli) + `CompletedCount` (geçerli kullanıcının o sette
+  tamamladığı ders sayısı, set başına ilerleme). `GetTracksAsync` tamamlanan ders
+  id'lerini tek sorguda çekip her sette `IN` ile sayıyor (N+1 yok); ilerleme
+  `UserId`'ye kapsanır (11 §3). Shared `LearningTrack` tipi güncellendi.
+  **Web (`EducationPage`):** akış yeniden kuruldu — **tek set → doğrudan derslere
+  açılır** (tek öğeli set menüsü gösterilmez, gereksiz tıklama yok); **≥2 set →
+  `TrackList` seçici**: her kart seviye çipi + ilerleme çubuğu (`edu-track`
+  yeniden kullanıldı) + "Buradan başla" rozeti. Öneri `recommendedTrackId`:
+  Başlangıç/ölçülmemiş → en düşük `OrderIndex` (giriş seti), Gelişen+ → sonraki
+  set. **Hiçbir set kilitli değil** (§6.3) — önerilmeyen set de tıklanır;
+  "← Setlere dön" ile seçiciye dönülür (yalnız çok-set modunda). CSS: `.track-card`
+  tema değişkenli, `fade-up` girişi, hover/focus (memory: animasyon hep açık,
+  tema-uyumlu).
+- **Dokunulan dosyalar:** `Finans.Application/Education/EducationDtos.cs`,
+  `Finans.Infrastructure/Services/EducationService.cs`,
+  `packages/shared/src/types/index.ts`, `web/src/routes/EducationPage.tsx`,
+  `web/src/routes/EducationPage.test.tsx`, `web/src/App.css`,
+  `tests/Finans.Integration.Tests/EducationApiTests.cs`, docs (08, 09), ACTIVE.
+- **Test:** **SC-E19** (çok set + kilit yok) · **SC-E20** ("Buradan başla" önerisi)
+  yeşil. Backend: `Tracks_lists...` OrderIndex+CompletedCount asserti +
+  **yeni** `Track_completed_count_reflects_the_current_users_progress` (tamamlama →
+  sayaç artar, izolasyon: başka kullanıcıya sızmaz). EducationApi **19/19**.
+  Web: 4 yeni test (tek set doğrudan açılır · çok set seçici + rozet + ilerleme ·
+  set seçip derse gir + geri dön), web **135/135**, **web build (tsc) temiz**.
+  Application **291/291**. (Integration'daki 4 kırmızı = bilinen
+  `WebApplicationFactory` ortam hatası, değişiklikten bağımsız.)
+- **Karar/Not:** ⚖ **Tasarım kararı — tek öğeli menü yok:** Bugün seed'de tek
+  track var; her zaman set seçici göstermek (a) tek set için gereksiz bir tıklama
+  ekler, (b) mevcut ~10 web testini kırardı. Onun yerine **tek set doğrudan
+  açılır, seçici ≥2 sette görünür** — hem daha iyi IA hem mevcut tek-set UX'i
+  korunur, Set 0/2 indiğinde otomatik devreye girer. **Öneri = rozet, kilit değil**
+  (§6.3 "tavan kapatılmaz"): `LiteracyLevel` yalnız hangi setin öne çıkacağını
+  belirler, hiçbir seti erişime kapatmaz. **DTO alanları sona eklendi** (pozisyonel
+  record) → mevcut çağrılar kırılmadı (tek yapıcı `GetTracksAsync`).
+- **Durum:** tamamlandı.
+- **Sıradaki:** **T6.16** — Set 0 iskeleti (10 ders + "Temeller"→"Yatırım
+  Kavramları"); bu iş ikinci track'i getirince T6.15 seçicisi ilk kez görünür olur.
+
 ## 2026-07-26 · T6.20 + T6.21 — Yapısal sözleşme testleri + enflasyon verisi dürüstlüğü
 - **Görev(ler):** T6.20 (`16` §9.1 M-kuralları) · T6.21 (`16` §6.4 kaynak dürüstlüğü). fable-mode.
 - **Ne yapıldı:**

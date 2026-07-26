@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type {
   DepthTier,
   DiagnosticOption,
+  LearningTrack,
   LessonContextState,
   LessonLevel,
   LessonDetail,
@@ -42,14 +43,23 @@ function statusMeta(status: LessonStatus, locked: boolean): { text: string; cls:
  */
 export function EducationPage() {
   const tracks = useEducationTracks();
-  const track = tracks.data?.[0]; // MVP: tek set ("Temeller")
-  const trackSlug = track?.slug ?? "";
-  const lessons = useTrackLessons(trackSlug);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const list = tracks.data ?? [];
 
   // Onboarding (T6.6): profil ölçülmemişse önce tanılama. Kullanıcı "Atla" derse
   // veya bitirirse bu tur için kapanır; profil yazıldığı için tekrar sorulmaz.
   const profile = useLiteracyProfile();
+
+  const [chosenSlug, setChosenSlug] = useState<string | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+
+  // Çok set desteği (T6.15): tek set → doğrudan derslere aç (tek öğeli set menüsü
+  // gösterme); ≥2 set → önce set seçici (ilerleme + "Buradan başla" rozeti).
+  // Setler arası SERT KİLİT YOK — öneri bir rozettir, erişimi engellemez (15 §6.3).
+  const multiTrack = list.length > 1;
+  const openTrackSlug = multiTrack ? chosenSlug : list[0]?.slug ?? null;
+  const lessons = useTrackLessons(openTrackSlug ?? "");
+  const openTrack = list.find((t) => t.slug === openTrackSlug);
+
   const [skippedDiagnostic, setSkippedDiagnostic] = useState(false);
   const showDiagnostic = !skippedDiagnostic && profile.data?.profiled === false;
 
@@ -73,17 +83,147 @@ export function EducationPage() {
           onBack={() => setSelectedSlug(null)}
           onNavigate={setSelectedSlug}
         />
-      ) : (
+      ) : openTrackSlug ? (
         <LessonList
           loading={tracks.isLoading || lessons.isLoading}
           error={tracks.isError || lessons.isError}
-          trackTitle={track?.title}
+          trackTitle={openTrack?.title}
           lessons={lessons.data ?? []}
           onOpen={setSelectedSlug}
           onRetry={() => void lessons.refetch()}
+          onBackToTracks={multiTrack ? () => setChosenSlug(null) : undefined}
+        />
+      ) : (
+        <TrackList
+          loading={tracks.isLoading}
+          error={tracks.isError}
+          tracks={list}
+          recommendedId={recommendedTrackId(list, profile.data?.literacyLevel ?? null)}
+          onOpen={setChosenSlug}
+          onRetry={() => void tracks.refetch()}
         />
       )}
     </section>
+  );
+}
+
+// ── Set listesi (çok set — T6.15) ───────────────────────────────────────────
+
+const LEVEL_LABEL: Record<LessonLevel, string> = {
+  Beginner: "Başlangıç",
+  Intermediate: "Gelişen",
+  Advanced: "İleri",
+};
+
+/**
+ * "Buradan başla" önerisi (15 §6.3): Başlangıç/ölçülmemiş → giriş seti (en düşük
+ * `orderIndex`); Gelişen+ → bir sonraki set. Öneri yalnız SIRALAMA sinyali —
+ * hiçbir seti kilitlemez. Tek set varsa öneriye gerek yok.
+ */
+function recommendedTrackId(tracks: LearningTrack[], level: LessonLevel | null): string | null {
+  if (tracks.length < 2) return null;
+  const sorted = [...tracks].sort((a, b) => a.orderIndex - b.orderIndex);
+  const advanced = level === "Intermediate" || level === "Advanced";
+  return advanced ? sorted[1]!.id : sorted[0]!.id;
+}
+
+function TrackList({
+  loading,
+  error,
+  tracks,
+  recommendedId,
+  onOpen,
+  onRetry,
+}: {
+  loading: boolean;
+  error: boolean;
+  tracks: LearningTrack[];
+  recommendedId: string | null;
+  onOpen: (slug: string) => void;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return (
+      <div className="card">
+        <Skeleton width="40%" height={18} />
+        <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} height={72} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card empty-state" role="alert">
+        <h3>Setler yüklenemedi</h3>
+        <p>Bağlantını kontrol edip tekrar dene.</p>
+        <button type="button" className="btn-primary" onClick={onRetry}>
+          Tekrar dene
+        </button>
+      </div>
+    );
+  }
+
+  if (tracks.length === 0) {
+    return (
+      <EmptyState
+        icon="🎓"
+        title="Ders içeriği hazırlanıyor"
+        description="Yakında burada kısa, portföyüne bağlı dersler göreceksin."
+      />
+    );
+  }
+
+  return (
+    <div className="track-list">
+      {tracks.map((t) => {
+        const recommended = t.id === recommendedId;
+        const done = Math.min(t.completedCount, t.lessonCount);
+        const pct = t.lessonCount > 0 ? Math.round((done / t.lessonCount) * 100) : 0;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            className={`card track-card${recommended ? " is-recommended" : ""}`}
+            onClick={() => onOpen(t.slug)}
+          >
+            <div className="track-card-head">
+              <span className={`track-level lvl-${t.level.toLowerCase()}`}>
+                {LEVEL_LABEL[t.level]}
+              </span>
+              {recommended && <span className="start-here-badge">⭐ Buradan başla</span>}
+            </div>
+
+            <h3 className="track-ti">{t.title}</h3>
+            {t.description && <p className="track-de">{t.description}</p>}
+
+            <div className="track-foot">
+              <div
+                className="edu-track"
+                role="img"
+                aria-label={`${done}/${t.lessonCount} ders tamamlandı`}
+              >
+                {Array.from({ length: t.lessonCount }, (_, i) => (
+                  <span key={i} className={`edu-seg${i < done ? " done" : ""}`} />
+                ))}
+              </div>
+              <span className="mini">
+                {done === t.lessonCount && t.lessonCount > 0
+                  ? "Tamamlandı ✓"
+                  : `${done}/${t.lessonCount} ders${pct > 0 ? ` · %${pct}` : ""}`}
+              </span>
+            </div>
+
+            <span className="track-chev" aria-hidden="true">
+              →
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -96,6 +236,7 @@ function LessonList({
   lessons,
   onOpen,
   onRetry,
+  onBackToTracks,
 }: {
   loading: boolean;
   error: boolean;
@@ -103,8 +244,16 @@ function LessonList({
   lessons: LessonListItem[];
   onOpen: (slug: string) => void;
   onRetry: () => void;
+  /** Çok set varsa set seçicisine dönüş (T6.15); tek set modunda verilmez. */
+  onBackToTracks?: () => void;
 }) {
   const completed = lessons.filter((l) => l.status === "Completed").length;
+
+  const backButton = onBackToTracks ? (
+    <button type="button" className="btn-ghost" onClick={onBackToTracks}>
+      ← Setlere dön
+    </button>
+  ) : null;
 
   if (loading) {
     return (
@@ -121,30 +270,38 @@ function LessonList({
 
   if (error) {
     return (
-      <div className="card empty-state" role="alert">
-        <h3>Dersler yüklenemedi</h3>
-        <p>Bağlantını kontrol edip tekrar dene.</p>
-        <button type="button" className="btn-primary" onClick={onRetry}>
-          Tekrar dene
-        </button>
-      </div>
+      <>
+        {backButton}
+        <div className="card empty-state" role="alert">
+          <h3>Dersler yüklenemedi</h3>
+          <p>Bağlantını kontrol edip tekrar dene.</p>
+          <button type="button" className="btn-primary" onClick={onRetry}>
+            Tekrar dene
+          </button>
+        </div>
+      </>
     );
   }
 
   if (lessons.length === 0) {
     return (
-      <EmptyState
-        icon="🎓"
-        title="Ders içeriği hazırlanıyor"
-        description="Yakında burada kısa, portföyüne bağlı dersler göreceksin."
-      />
+      <>
+        {backButton}
+        <EmptyState
+          icon="🎓"
+          title="Ders içeriği hazırlanıyor"
+          description="Yakında burada kısa, portföyüne bağlı dersler göreceksin."
+        />
+      </>
     );
   }
 
   return (
-    <div className="card">
-      <div className="card-head">
-        <h3>{trackTitle ?? "Temeller"}</h3>
+    <>
+      {backButton}
+      <div className="card">
+        <div className="card-head">
+          <h3>{trackTitle ?? "Temeller"}</h3>
         <span className="mini">
           {completed}/{lessons.length} ders tamamlandı
         </span>
@@ -183,8 +340,9 @@ function LessonList({
             </li>
           );
         })}
-      </ul>
-    </div>
+        </ul>
+      </div>
+    </>
   );
 }
 

@@ -6,9 +6,15 @@ namespace Finans.Application.Education;
 // geçerli kullanıcıya kapsanır (UserId, 11 §3). Enum'lar tel üzerinde string (global
 // JsonStringEnumConverter): Level="Beginner", Status="Completed" vb.
 
-/// <summary>Ders seti kartı — `lessonCount` yayındaki ders sayısı.</summary>
+/// <summary>
+/// Ders seti kartı. <paramref name="LessonCount"/> yayındaki ders sayısı;
+/// <paramref name="CompletedCount"/> geçerli kullanıcının o sette tamamladığı
+/// ders sayısı (set başına ilerleme, T6.15); <paramref name="OrderIndex"/> set
+/// sırası (istemci "Buradan başla" önerisini buna göre kurar, 15 §6.3).
+/// </summary>
 public sealed record LearningTrackDto(
-    Guid Id, string Slug, string Title, string? Description, LessonLevel Level, int LessonCount);
+    Guid Id, string Slug, string Title, string? Description, LessonLevel Level,
+    int LessonCount, int OrderIndex, int CompletedCount);
 
 /// <summary>Ders listesi öğesi — `status`/`progressPercent` kullanıcının; `locked` ön-koşuldan türetilir.</summary>
 public sealed record LessonListItemDto(

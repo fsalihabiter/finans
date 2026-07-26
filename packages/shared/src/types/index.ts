@@ -336,6 +336,10 @@ export interface LearningTrack {
   description: string | null;
   level: LessonLevel;
   lessonCount: number;
+  /** Set sırası — istemci "Buradan başla" önerisini buna göre kurar (15 §6.3). */
+  orderIndex: number;
+  /** Geçerli kullanıcının bu sette tamamladığı ders sayısı (set başına ilerleme, T6.15). */
+  completedCount: number;
 }
 
 /** Ders listesi öğesi — status/progressPercent kullanıcının; locked ön-koşuldan türetilir. */

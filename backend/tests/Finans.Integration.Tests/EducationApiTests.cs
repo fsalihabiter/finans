@@ -99,6 +99,31 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
         arr[0].GetProperty("slug").GetString().Should().Be("temeller");
         arr[0].GetProperty("level").GetString().Should().Be("Beginner");
         arr[0].GetProperty("lessonCount").GetInt32().Should().Be(5);
+        // T6.15 — set kartı sıra + kullanıcı ilerlemesini taşır (çok set desteği).
+        arr[0].GetProperty("orderIndex").GetInt32().Should().Be(1);
+        arr[0].GetProperty("completedCount").GetInt32().Should().Be(0); // yeni kullanıcı sıfırdan
+    }
+
+    [Fact]
+    public async Task Track_completed_count_reflects_the_current_users_progress()
+    {
+        // T6.15 — "set başına ilerleme" kullanıcıya kapsanır: A dersi bitirince
+        // A'nın sayacı artar, B'ninki (Investor) etkilenmez (11 §3 izolasyon).
+        var learnerId = await NewLearnerAsync();
+        var learner = ClientAs(learnerId);
+
+        (await JsonAsync(await learner.GetAsync("/api/education/tracks")))[0]
+            .GetProperty("completedCount").GetInt32().Should().Be(0);
+
+        var attempt = await learner.PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", AllCorrectAnswers());
+        (await JsonAsync(attempt)).GetProperty("passed").GetBoolean().Should().BeTrue();
+
+        (await JsonAsync(await learner.GetAsync("/api/education/tracks")))[0]
+            .GetProperty("completedCount").GetInt32().Should().Be(1);
+
+        // İZOLASYON: bu ilerleme başka kullanıcıya sızmaz.
+        (await JsonAsync(await ClientAs(Investor).GetAsync("/api/education/tracks")))[0]
+            .GetProperty("completedCount").GetInt32().Should().Be(0);
     }
 
     [Fact]
