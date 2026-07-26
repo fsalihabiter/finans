@@ -249,15 +249,27 @@ dönüştürür — "haritayı okumayı öğretir" konumlandırmasıyla tutarlı
 
 ---
 
-## 6. Müfredat: 5 set, 25 ders
+## 6. Müfredat: 6 set, 35 ders
 
-> 📘 **Ders bazında detay [`16-CURRICULUM.md`](16-CURRICULUM.md)'dedir** (2026-07-22):
-> öğrenme çıktıları, kavram haritası (64 kavram), aşama planları, figür planları,
-> değerlendirme tasarımı, **kaynak politikası** ve yapısal sözleşme. Bu bölüm
-> yalnız **set yapısını** verir; ders yazmadan önce `16`'daki künye okunur.
+> 📘 **Ders bazında detay [`16-CURRICULUM.md`](16-CURRICULUM.md)'dedir** (2026-07-22,
+> rev. 2026-07-24): öğrenme çıktıları, kavram haritası (**103 kavram**), aşama
+> planları, figür planları, değerlendirme tasarımı, **kaynak politikası** ve
+> yapısal sözleşme. Bu bölüm yalnız **set yapısını** verir; ders yazmadan önce
+> `16`'daki künye okunur.
 
 Mevcut 5 ders korunur, üzerine inşa edilir. (`14` §4-A1'deki 8 derslik ilk
 liste bu yapıya dağıtıldı.)
+
+> **REVİZYON (2026-07-24): Set 2 "Grafik ve Piyasa Okuryazarlığı" eklendi —
+> müfredatın üst ucu eksikti.** Ürün sahibi tespiti: eğitim *"yatırım nedir"den
+> başlayıp **grafik okuma · mum grafiği · piyasaya göre kalem yorumlama**ya
+> kadar gitmeli.* Oysa 25 derslik plan bir fiyat grafiğinin nasıl okunduğunu,
+> mum grafiğini, endeksi ve göreli performansı **hiç** anlatmıyordu — kullanıcı
+> portföyünü okuyabilen ama ekranındaki grafiği okuyamayan bir noktada
+> bırakılıyordu. Ayrıca **fiyatın nasıl oluştuğu** ve **bir alımın nasıl
+> gerçekleştiği** de eksikti → Set 0'a 2 ders. Müfredat **25 → 35 ders**;
+> eski Set 2/3/4 → **3/4/5**. Kararlar ve gerekçeler: [`16` §12](16-CURRICULUM.md).
+> ⚠ **Kod etkisi yok** — yeni set aynı şema, aynı enum'lar, migration gerekmez.
 
 > **REVİZYON (2026-07-21): Set 0 eklendi — müfredatın ilk basamağı fazla
 > yüksekti.** Set 1'in ilk dersi ("Enflasyon ve Reel Getiri") okuyucunun
@@ -266,7 +278,7 @@ liste bu yapıya dağıtıldı.)
 > ilkesiyle çelişiyor. Set 0 bu boşluğu doldurur; Set 1 böylece *kavram*
 > seti hâline gelir ve **"Yatırım Kavramları"** olarak yeniden adlandırılır.
 
-### Set 0 — İlk Adımlar (8 ders · sıfır bilgi · Başlangıç)
+### Set 0 — İlk Adımlar (10 ders · sıfır bilgi · Başlangıç)
 Sıfırdan başlayan okuyucu için giriş basamağı. Jargon yok, formül yok;
 her kavram somut bir sahneyle ve görselle anlatılır (§6.1).
 
@@ -287,26 +299,46 @@ her kavram somut bir sahneyle ve görselle anlatılır (§6.1).
 8. **Vade, hedef ve portföy** — parayı ne zaman kullanacaksın; portföy nedir
    (kalem/miktar/maliyet/değer/ağırlık) → Nirengi ekranını okuma köprüsü
 
+9. **Fiyat nereden çıkıyor?** 🆕 — alıcı, satıcı, pazarlık; son işlem fiyatı ↔
+   alabileceğin fiyat; makas; arz-talep *(2026-07-24, `16` §12-K1)*
+10. **Bir alım nasıl gerçekleşir?** 🆕 — borsa · aracı kurum · emir türleri ·
+    takas/valör · komisyon; ⚠ "Nirengi aracı kurum değildir" dersin içinde
+
 ### Set 1 — Yatırım Kavramları (5 ders · mevcut · Başlangıç)
 *(eski adı "Temeller" — Set 0 eklenince ad çakışması oluştu)*
-9. Enflasyon ve Reel Getiri · 10. Çeşitlendirme · 11. F/K, PD/DD ·
-12. Risk ve Getiri · 13. Bileşik Getiri
+11. Enflasyon ve Reel Getiri · 12. Çeşitlendirme · 13. F/K, PD/DD ·
+14. Risk ve Getiri · 15. Bileşik Getiri
 
-### Set 2 — Portföyünü Okumak (4 ders · Başlangıç→Gelişen)
-14. Ağırlık ve yoğunlaşma *(`concentration_top2`)*
-15. Maliyet ortalaması / kademeli alım *(`cost_basis`)*
-16. Kur etkisi ve çoklu para birimi *(`asset_class_weights`)*
-17. Getiriyi doğru ölçmek — nominal vs reel, dönem seçimi *(`real_return_12m`)*
+### Set 2 — Grafik ve Piyasa Okuryazarlığı (8 ders · Başlangıç→Gelişen) 🆕
+*(2026-07-24 eklendi — `16` §12; ders künyeleri `16` §5)*
+**Setin sözü:** *"Bir grafiğe baktığında ne gördüğünü bil — ve ne
+göremeyeceğini de bil."*
+16. **Grafik neyi gösterir?** — eksenler, nokta, çizgi, veri sıklığı *(`total_value`)*
+17. **Aynı veri, üç görüntü** ⭐ — ölçek, eksen kırpma, log ölçek, dönem penceresi
+18. **Mum grafiği** ⭐ — dört fiyat (OHLC), gövde, fitil, renk *(sinyal YOK)*
+19. **Zaman dilimi** — mumların birleşmesi, boşluk (gap), işlem saatleri
+20. **Hacim, makas ve emir defteri** — derinlik, likidite, gerçekleşme maliyeti
+21. **Grafik geleceği söylemez** 🔴⭐ — örüntü yanılsaması, geriye dönük görüş,
+    geçmişe uydurma; teknik/temel yaklaşımın **tanımı**; Nirengi neden sinyal üretmez
+22. **Endeks ve ölçüt** — "piyasa" kim; sektör; varlık ↔ ölçüt eşleme
+23. **Kalemini piyasaya göre okumak** 🔴⭐ — =100'e çekme, göreli performans,
+    piyasa ↔ kaleme özgü ayrımı *(`return_ratio` + ölçüt serisi: T6.26)*
 
-### Set 3 — Davranış (4 ders · `RiskAttitude` sırayı belirler)
-18. Kayıptan kaçınma · 19. FOMO ve sürü davranışı ·
-20. Çıpalama ve maliyet takıntısı · 21. Aşırı işlem ve gizli maliyetler
+### Set 3 — Portföyünü Okumak (4 ders · Başlangıç→Gelişen)
+24. Ağırlık ve yoğunlaşma *(`concentration_top2`)*
+25. Maliyet ortalaması / kademeli alım *(`cost_basis`)*
+26. Kur etkisi ve çoklu para birimi *(`asset_class_weights`)*
+27. Getiriyi doğru ölçmek — nominal vs reel, dönem seçimi *(`real_return_12m`)*
 
-### Set 4 — Türkiye Gerçekleri (4 ders · Gelişen→İleri)
-22. BES'i doğru kullanmak *(`bes_state_share`)*
-23. Altın kültürü — gram/çeyrek/22 ayar, düğün altını
-24. Enflasyon ortamında birikim *(`inflation_12m`)*
-25. Fon okuma — TEFAS, gider oranı *(T7.5 bağımlı)*
+### Set 4 — Davranış (4 ders · `RiskAttitude` sırayı belirler)
+28. Kayıptan kaçınma · 29. FOMO ve sürü davranışı ·
+30. Çıpalama ve maliyet takıntısı · 31. Aşırı işlem ve gizli maliyetler
+
+### Set 5 — Türkiye Gerçekleri (4 ders · Gelişen→İleri)
+32. BES'i doğru kullanmak *(`bes_state_share`)*
+33. Altın kültürü — gram/çeyrek/22 ayar, düğün altını
+34. Enflasyon ortamında birikim *(`inflation_12m`)*
+35. Fon okuma — TEFAS, gider oranı *(T7.5 bağımlı)*
 
 > **KARAR (2026-07-19): vergi dersi kapsam DIŞI.** Taslakta 18. ders olarak
 > önerilen "Maliyet ve vergi farkındalığı" çıkarıldı — mali müşavirlik alanına
@@ -318,14 +350,15 @@ her kavram somut bir sahneyle ve görselle anlatılır (§6.1).
 T6.11a/b'de Set 1 Ders 1-2 için oturan kalıp **Set 0'da zorunludur** ve iki
 noktada güçlendirilir:
 
-| Boyut | Set 1 (mevcut) | **Set 0 (yeni çıta)** |
-|---|---|---|
-| Aşama sayısı | ~13 | ~13 |
-| Kalıp | kavram → işlenmiş örnek → tuzak | aynı |
-| **Figür yoğunluğu** | ders başına 2-4 | **6-10 — neredeyse her anlatım aşamasında** |
-| **Figür türü** | tek sahne | **çok panelli anlatı** (tek SVG içinde 3-4 panel: önce → sonra) |
-| **Etkileşim** | yok | **set başına 1 mini araç** (§6.2) |
-| Test | 9 soru / 3 zorluk | aynı |
+| Boyut | Set 1 (mevcut) | **Set 0 (yeni çıta)** | **Set 2 (grafik · 2026-07-24)** |
+|---|---|---|---|
+| Aşama sayısı | ~13 | ~13 | **14-15** |
+| Kalıp | kavram → işlenmiş örnek → tuzak | aynı | aynı |
+| **Figür yoğunluğu** | ders başına 2-4 | **6-10 — neredeyse her anlatım aşamasında** | **8-11** |
+| **Figür türü** | tek sahne | **çok panelli anlatı** (tek SVG içinde 3-4 panel: önce → sonra) | **ağırlıklı çok panelli** (≥3/ders): *aynı veri, farklı görüntü* |
+| **Etkileşim** | yok | **set başına 1 mini araç** (§6.2) | ölçek oynatıcısı (§6.2) |
+| Test | 9 soru / 3 zorluk | aynı | aynı |
+| **Ek dil kuralı** | — | — | **`16` §6.6** (geçmiş zaman · şekil ≠ sonuç · 4 ön koşullu karşılaştırma) |
 
 **Reddedilen seçenek:** *tekrarlayan karakter/hikâye ekseni* (set boyunca aynı
 kişinin birikim öyküsü). Gerekçe: yeni `SectionKind = Story` + migration
@@ -342,6 +375,14 @@ erişilebilir etiket. Bilinmeyen `FigureKey` sessizce atlanır (mevcut davranı�
 Set 0'ın aracı: **enflasyon kaydırıcısı** (Ders 4 "Bekleyen para neden erir?").
 Kullanıcı yıllık oranı ve süreyi kaydırır, aynı sepetin alım gücünün nasıl
 eridiğini canlı görür.
+
+**Set 2'nin aracı (2026-07-24): ölçek oynatıcısı** (`chart-scale-playground`,
+Ders 17 "Aynı veri, üç görüntü"). Kullanıcı **tek bir kurgusal seri** üzerinde
+üç düğmeyi oynatır — *ekseni sıfırdan başlat / başlatma* · *doğrusal / log* ·
+*dönem penceresini kaydır* — ve **aynı verinin** nasıl bambaşka göründüğünü
+canlı görür. Bu setin en kritik dersi anlatılarak değil **oynatılarak** öğrenilir.
+⚠ Araç **veri çekmez**: seri tohumludur (aynı girdi → aynı grafik), hiçbir
+varlık adı geçmez, hiçbir yön yorumu üretmez. Aynı kurallar geçerlidir ↓
 
 Kurallar:
 - Hesap **istemcide deterministik** ve saf (`(1+i)^n` erime) — LLM yok, sunucu
@@ -383,6 +424,10 @@ Set 0, Gelişen+ → Set 1).
 | SC-E21 | **Kaynak + açılış bloğu** (`16` §6.1): her ders ≥1 `Source` bloğu **ve** öğrenme çıktılarını listeleyen açılış bloğu taşır |
 | SC-E22 | **Müfredat–seed yapısal sözleşmesi** (`16` §9.1): set bazlı figür eşiği (Set 0 ≥6) · figür anahtarı ↔ `LessonFigure` kayıt defteri mutabakatı · 9 soru/3 zorluk · boşta kavram yok |
 | SC-E23 | **Enflasyon kaydırıcısı:** saf/deterministik (aynı girdi → aynı çıktı), klavyeyle sürülebilir, varlık adı/tahmin cümlesi üretmez; bileşen düşerse ders statik figürle çalışır |
+| SC-E25 🆕 | **Grafik dili guard'ı (`16` §6.6 · M7a):** anlatım bloklarında ("formasyon ⇒", "sinyal verdi", "boşluk kapanır", "hedef fiyat") kalıpları **yok**; aynı kalıplar `Trap` bloğunda ve quiz çeldiricisinde **serbest** — test `SectionKind`'a bakarak ayırır |
+| SC-E26 🆕 | **Ölçüt beyaz listesi (`16` §12-K3 · M7b):** metinde geçen tek özel ad geniş endeks adıdır; tek şirket/fon/aracı kurum adı yok; endeks geçen cümlede **eylem fiili** (al/sat/geç) yok |
+| SC-E27 🆕 | **Ölçek oynatıcısı:** saf/deterministik (aynı tohum → aynı seri), üç düğme de klavyeyle erişilebilir, çıktıda yön yorumu/varlık adı yok; bileşen düşerse ders **statik üç panelli figürle** çalışır |
+| SC-E28 🆕 | **Göreli performans sözleşmesi (S2-L8):** karşılaştırma çıktısı dört ön koşulu (aynı dönem · para birimi · ölçek · uygun ölçüt) **beyan eder**, sonuna "geçmiş ölçüm" ibaresi ekler ve **eylem cümlesi üretmez**; ölçüt serisi yoksa **kurgusal/etiketli** örnekle çalışır (gerçekmiş gibi gösterilmez) |
 
 > Kanonik senaryo kataloğu [`09-TESTING-STRATEGY.md`](09-TESTING-STRATEGY.md) §5'tir.
 
@@ -404,14 +449,19 @@ Mevcut T6.1–T6.4 korunmuş, yeni işler T6.5'ten devam etmiştir.
 | T6.8 | `MiniMarkdown` genişletme: **tablo + link** (hâlâ `dangerouslySetInnerHTML` YOK) | — |
 | T6.9 | `UserConceptMastery` + quiz→ustalık akışı + aralıklı tekrar | T6.6 |
 | T6.10 | **Eğitim demo bağlam portföyü** (karar 1c): salt-okunur örnek portföy + belirgin rozet; demo sayı kendi pano/özetine sızmaz | T6.2 |
-| T6.11 | Set 2 içerikleri — Portföyünü Okumak (4 ders) | T6.1 |
-| T6.12 | Set 3 içerikleri — Davranış (4 ders) + `RiskAttitude` sıralaması | T6.6 |
-| T6.13 | Set 4 içerikleri — Türkiye Gerçekleri (4 ders; vergi hariç) | T6.11 |
+| T6.11 | Set 3 içerikleri — Portföyünü Okumak (4 ders) | T6.1 |
+| T6.12 | Set 4 içerikleri — Davranış (4 ders) + `RiskAttitude` sıralaması | T6.6 |
+| T6.13 | Set 5 içerikleri — Türkiye Gerçekleri (4 ders; vergi hariç) | T6.11 |
 | T6.14 | LLM ders yorumu katmanı (opsiyonel) + **enstrüman-sıralama guard'ı** | T6.2 |
 | **T6.15** | **Çok set desteği (web):** tek track varsayımı kalkar; set listesi + set başına ilerleme + **"Buradan başla" rozeti** (seviyeye göre öneri, kilit YOK) | T5E.4 |
-| **T6.16** | **Set 0 iskeleti:** "İlk Adımlar" track'i (OrderIndex 0) + 8 ders + track içi ön-koşul zinciri; **"Temeller" → "Yatırım Kavramları"** yeniden adlandırma | T6.15 |
-| **T6.17a-h** | **Set 0 içerik turu (ders ders):** ~13 aşama, **6-10 figür** (≥1 çok panelli), 9 soruluk 3 zorluklu test | T6.16 |
+| **T6.16** | **Set 0 iskeleti:** "İlk Adımlar" track'i (OrderIndex 0) + **10 ders** + track içi ön-koşul zinciri; **"Temeller" → "Yatırım Kavramları"** yeniden adlandırma | T6.15 |
+| **T6.17a-j** | **Set 0 içerik turu (ders ders):** ~13 aşama, **6-10 figür** (≥1 çok panelli), 9 soruluk 3 zorluklu test | T6.16 |
 | **T6.18** | **Enflasyon kaydırıcısı** (Set 0 Ders 4): saf/deterministik istemci hesabı, klavye erişilebilir, tahmin/enstrüman dili yok, fallback statik figür | T6.17d |
+| **T6.22** 🆕 | **Set 2 iskeleti:** `grafik-ve-piyasa` track'i (OrderIndex 2) + 8 ders + ön-koşul zinciri; eski Set 2-4 `OrderIndex` kaydırması | T6.15 |
+| **T6.23** 🆕 | **Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` (ölçek parametreli) · `SeriesPath` · `Candle`/`CandleSeries` · `VolumeBars` · `BookLadder` · `RangeBrush` — **içerikten önce** | T6.22 |
+| **T6.24a-h** 🆕 | **Set 2 içerik turu (ders ders):** 14-15 aşama, **8-11 figür** (≥3 çok panelli), 9 soruluk test; `16` §6.6 dil kuralı | T6.23 |
+| **T6.25** 🆕 | **Ölçek oynatıcısı** (`chart-scale-playground`, S2-L2): tohumlu seri · üç düğme · klavye erişimi · statik figür fallback | T6.24b |
+| **T6.26** 🆕 | **Ölçüt (endeks) serisi:** S2-L8 `LiveContext` için kaynaklı ölçüt verisi + kalem ↔ ölçüt eşleme; **gelene dek kurgusal/etiketli örnek** | T6.24h |
 
 **Plan etkisi:** T7.1 (okuryazarlık profili) → **T6.6 olarak Faz 6'ya taşındı**,
 çünkü uyarlanabilir derinliğin ön koşuludur. Faz 7'de yerine referans satırı

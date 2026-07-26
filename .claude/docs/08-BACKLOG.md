@@ -255,26 +255,44 @@ hesabı birim testli (SC-32/36); tahmin/yönlendirme yok (kalıcı disclaimer).
 | T6.11a | **Ders 1 içerik turu:** "Enflasyon ve Reel Getiri" 6 → **13 aşamaya** genişletildi (her kavramın ardından işlenmiş örnek; anlatım→örnek→tuzak dönüşümlü) + **5 figür** + **zorluk seviyeli test bankası** (3 → **9 soru**, Easy/Medium/Hard) | T6.10 | `15` §6, `13` §4 | [x] (2026-07-19; SC-E18; `Blk`/`Build` ile blok sayısı derse göre serbest; `QuizQuestion.Difficulty` + migration + **seviyeye göre filtre** (hem gösterim HEM puanlama — Başlangıç Easy · Gelişen +Medium · İleri hepsi); yeni figürler: alım gücü (ekmek), çıkarma hatası, kişisel sepet, dönem penceresi. ⚠ Tarayıcıda 3 hata yakalandı: uzun başlık yol haritasından taşıyordu · **çok satırlı liste öğesi ikiye bölünüyordu** (MiniMarkdown devam satırı) · italik desteklenmediği için yıldızlar görünüyordu. App 291/291, web 117/117) |
 | T6.11b | **Ders 2 içerik turu:** "Çeşitlendirme" 6 → **13 aşamaya**; yeni eksen: **para birimi/coğrafya** (TR'ye özgü), korelasyon sezgisi, ağırlık kayması; **3 yeni figür**; test 3 → **9 soru** | T6.11a | `15` §6 | [x] (2026-07-19; SC-E18; figürler: aynı-sektör · korelasyon yolları · ağırlık kayması. Yol haritası sütunu `fit-content(35%)` ile **tek satıra sığacak kadar** genişliyor, %35'i geçmiyor; taşan başlık "…" + `title`. App 291/291, web 117/117) |
 | T6.11c | Set 1'in kalan dersleri (3-5) aynı zenginlikte: aşama sayısı ↑, her detaya örneklem, figür, 3 zorluklu test | T6.11b | `15` §6 | [ ] |
-| T6.11 | **Set 2 içerikleri — Portföyünü Okumak (4 ders):** ağırlık/yoğunlaşma · maliyet ortalaması · kur etkisi · getiriyi doğru ölçmek | T6.1 | `15` §6 | [ ] |
-| T6.12 | **Set 3 içerikleri — Davranış (4 ders):** kayıptan kaçınma · FOMO/sürü · çıpalama · aşırı işlem. `RiskAttitude` yalnız **sırayı** belirler | T6.6 | `15` §6, §1.1 | [ ] |
-| T6.13 | **Set 4 içerikleri — Türkiye Gerçekleri (4 ders):** BES · altın kültürü · enflasyonda birikim · fon okuma (T7.5 bağımlı). **Vergi dersi kapsam dışı** (karar `15` §9) | T6.11 | `15` §6 | [ ] |
+| T6.11 | **Set 3 içerikleri — Portföyünü Okumak (4 ders):** ağırlık/yoğunlaşma · maliyet ortalaması · kur etkisi · getiriyi doğru ölçmek | T6.1 | `15` §6 | [ ] |
+| T6.12 | **Set 4 içerikleri — Davranış (4 ders):** kayıptan kaçınma · FOMO/sürü · çıpalama · aşırı işlem. `RiskAttitude` yalnız **sırayı** belirler | T6.6 | `15` §6, §1.1 | [ ] |
+| T6.13 | **Set 5 içerikleri — Türkiye Gerçekleri (4 ders):** BES · altın kültürü · enflasyonda birikim · fon okuma (T7.5 bağımlı). **Vergi dersi kapsam dışı** (karar `15` §9) | T6.11 | `15` §6 | [ ] |
 | T6.14 | **LLM ders yorumu katmanı (opsiyonel):** mevcut `CommentaryPrompts` deseni + tüm guard hattı; ⚠ **yeni `CommentaryOutputGuard` kuralı: enstrüman sıralaması** ("X, Y'den iyi performans gösterdi" → zımni yönlendirme, kart düşer, SC-E5) | T6.2 | `15` §3.4, `07` | [ ] |
 
 | **T6.15** | **Çok set desteği (web):** eğitim sayfası `tracks.data[0]` varsayımından kurtulur → set listesi + set başına ilerleme + **"Buradan başla" rozeti** (`LiteracyLevel`'a göre öneri; **kilit YOK**, §6.3) | T5E.4 | `15` §6.3, `13` | [ ] |
-| **T6.16** | **Set 0 iskeleti:** "İlk Adımlar" track'i (OrderIndex 0) + **8 ders** + track içi ön-koşul zinciri; **"Temeller" → "Yatırım Kavramları"** yeniden adlandırma (seed mutabakatıyla canlı DB'ye iner) | T6.15 | `15` §6 | [ ] |
-| **T6.17a-h** | **Set 0 içerik turu (ders ders):** 1 Yatırım nedir · 2 Paranın haritası · 3 Acil durum fonu ve borç · 4 Bekleyen para neden erir · 5 Varlık türleri turu · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade, hedef ve portföy. Her ders ~13 aşama, **6-10 figür** (≥1 **çok panelli**), 9 soruluk 3 zorluklu test | T6.16 | `15` §6.1 | [ ] |
+| **T6.16** | **Set 0 iskeleti:** "İlk Adımlar" track'i (OrderIndex 0) + **10 ders** + track içi ön-koşul zinciri; **"Temeller" → "Yatırım Kavramları"** yeniden adlandırma (seed mutabakatıyla canlı DB'ye iner) | T6.15 | `15` §6 | [ ] |
+| **T6.17a-j** | **Set 0 içerik turu (ders ders):** 1 Yatırım nedir · 2 Paranın haritası · 3 Acil durum fonu ve borç · 4 Bekleyen para neden erir · 5 Varlık türleri turu · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade, hedef ve portföy · **9 Fiyat nereden çıkıyor** 🆕 · **10 Bir alım nasıl gerçekleşir** 🆕. Her ders ~13 aşama, **6-10 figür** (≥1 **çok panelli**), 9 soruluk 3 zorluklu test | T6.16 | `15` §6.1, `16` §12-K1 | [ ] |
 | **T6.18** | **Enflasyon kaydırıcısı** (Set 0 Ders 4 · set başına 1 etkileşimli araç): saf/deterministik **istemci** hesabı, klavye erişilebilir, **tahmin/enstrüman dili yok**, bileşen düşerse statik figür fallback | T6.17d | `15` §6.2, `16` S0-L4 | [ ] |
 | **T6.19** | **Kaynak bloğu + açılış bloğu (tüm dersler):** kullanılmayan `SectionKind.Source` devreye alınır → her derse **"Bu bilgiler nereden geliyor?"** bloğu (kurum·belge·tarih + kurgusal sayı beyanı + hesap yöntemi) **ve** ilk aşamaya **"Bu derste ne öğreneceksin?"** (öğrenme çıktıları). Mevcut 5 derse **geriye dönük** (seed mutabakatı zaten destekliyor) | T6.8 | `16` §2.5, §6 | [x] (2026-07-22; SC-E21; 5 derse 10 blok → **44→54 bölüm**, canlı Postgres'e mutabakatla indi. `Intro`/`Src` yardımcıları + `Blocks` kalıbı genişletildi. Kaynak bloğu **dördü birden** söyler: kurum (TÜİK/KAP/SPK, tıklanabilir), **örnek sayıların kurgusal olduğu beyanı**, hesapların kodda yapıldığı (`CLAUDE.md` §3.1), **"yatırım tavsiyesi değildir"** çerçevesi (§2). ⚠ Ders 2'de açılış bloğu ilk turda atlandı → sabit bölüm sayısı testi (44) yakaladı. ⚠ **Canlıda görüldü:** kaynak bloğunun görsel ayrımı yoktu (diğer türlerin aksan çizgisi var) → `kind-source` kesikli çizgi + sönük ton eklendi. Education 16/16, web 130/130; **tarayıcıda ekran görüntüsüyle teyit**) |
 | **T6.21** | 🔴 **Enflasyon verisi gerçek değil:** `SeedData` `InflationRate`'i **`Source = "TÜİK"` etiketiyle sabit %38** yazıyor (kod içi yorum "placeholder" diyor). Eğitim artık **"kaynak daima görünür"** iddiası taşıyor (`16` §6) — kullanıcıya TÜİK etiketli **uydurma bir oran** göstermek bu iddiayı çürütür. Ya gerçek TÜFE çekilmeli ya da veri **açıkça "örnek"** etiketlenip reel getiri/`inflation_12m` çıktılarında böyle gösterilmeli | T6.19 | `16` §6.4, `14` §B1 | [ ] |
 | **T6.20** | **Yapısal sözleşme testleri:** `16` §9.1'deki M1-M9 kuralları `EducationSeedTests`'e (Source bloğu · açılış bloğu · set bazlı figür eşiği · **figür anahtarı ↔ `LessonFigure.tsx` kayıt defteri mutabakatı** · 9 soru/3 zorluk · kavram kapsaması · tavsiye taraması). ⚠ **İçerikten SONRA** yazılır (T6.19), kırmızı test bırakılmaz | T6.19 | `16` §9 | [ ] |
 
-**Faz 6 DoD:** 25 ders (Set 0 dahil) **seviyeye uyarlanmış derinlikte** (L1/L2/L3)
-okunabiliyor; **çok set** listeleniyor ve seviyeye göre "Buradan başla" öneriliyor;
-"Senin portföyünde" bloğu gerçek veriyle (yoksa etiketli demo ile) çalışıyor;
-tanılama testi seviyeyi belirliyor ve `RiskAttitude` hiçbir yerde görünmüyor;
-quiz + ilerleme + kavram ustalığı kaydediliyor; sözlük aranabilir;
-**her ders kaynak bloğu taşıyor** ve müfredat–seed uyumu testle bağlı;
-SC-E1–E10 + SC-E19–E23 yeşil. Detaylı tasarım: [`15-EDUCATION-PLAN.md`](15-EDUCATION-PLAN.md) ·
+### 🆕 Grafik ve Piyasa Okuryazarlığı (2026-07-24 · müfredat 25 → 35 ders)
+
+> **Neden:** ürün sahibi tespiti — eğitim *"yatırım nedir"den grafik okuma, mum
+> grafiği ve **piyasaya göre kalem yorumlama**ya kadar* gitmeliydi; müfredat bu
+> halkayı hiç içermiyordu. Kararlar ve ders künyeleri: [`16` §12 · §5 Set 2](16-CURRICULUM.md).
+> **Kod etkisi yok** — aynı şema/enum, migration gerekmez.
+
+| ID | Görev | Bağımlılık | Referans | Durum |
+|---|---|---|---|---|
+| **T6.22** | **Set 2 iskeleti:** `grafik-ve-piyasa` track'i (`OrderIndex = 2`) + **8 ders** + track içi ön-koşul zinciri; eski Set 2-4 (`portfoyunu-okumak`/davranış/TR) `OrderIndex` **3/4/5**'e kaydırılır; setler arası **sert kilit yok** (`15` §6.3) | T6.15 | `16` §5 Set 2 | [ ] |
+| **T6.23** | **Grafik SVG öğeleri** (`16` §8.3 · **içerikten ÖNCE**): `ChartFrame` (**ölçek parametreli**: `zeroBased`/`log`/pencere) · `SeriesPath` · `DotMarker` · `Candle`/`CandleSeries` (OHLC'den) · `VolumeBars` · `BookLadder` · `RangeBrush` · `LegendRow`. Kütüphane yok, tema değişkenli, `role="img"`. **Aynı seri farklı parametrelerle** çizilerek "aynı veri, üç görüntü" figürleri kurulur | T6.22 | `16` §8.3 | [ ] |
+| **T6.24a-h** | **Set 2 içerik turu (ders ders):** a) Grafik neyi gösterir · b) Aynı veri üç görüntü · c) Mum anatomisi · d) Zaman dilimi · e) Hacim/emir defteri · f) Grafik geleceği söylemez 🔴 · g) Endeks ve ölçüt · h) Kalemini piyasaya göre okumak 🔴. Her ders **14-15 aşama**, **8-11 figür** (≥3 çok panelli), **9 soru/3 zorluk**, `16` §6.6 dil kuralı | T6.23 | `16` §5 | [ ] |
+| **T6.25** | **Ölçek oynatıcısı** (`chart-scale-playground`, S2-L2 · setin tek etkileşimli aracı): **tohumlu kurgusal seri**, üç düğme (sıfır tabanlı eksen · log · dönem penceresi), saf istemci hesabı, klavye erişimi, **tahmin/varlık adı yok**, bileşen düşerse **statik üç panelli figür** | T6.24b | `15` §6.2, SC-E27 | [ ] |
+| **T6.26** | **Ölçüt (endeks) serisi:** S2-L8'in canlı karşılaştırması için **kaynaklı** ölçüt verisi (kurum + seri + dönem) + kalem ↔ ölçüt eşlemesi + `LiveContext` anahtarı. ⚠ Gelene dek ders **kurgusal/etiketli** örnekle çalışır (gerçekmiş gibi gösterilmez); dört ön koşul + "geçmiş ölçüm" ibaresi zorunlu | T6.24h | `16` §6.6, SC-E28 | [ ] |
+| **T6.27** | **Grafik dili guard'ları:** M7a (formasyon/sinyal/hedef-fiyat kalıpları **yalnız** `Trap` ve quiz çeldiricisinde) + M7b (**geniş endeks beyaz listesi**; endeks geçen cümlede eylem fiili yok) → `EducationSeedTests`. ⚠ T6.20 ile aynı dosyada, **içerikten sonra** | T6.24h, T6.20 | `16` §9.1, SC-E25/E26 | [ ] |
+
+**Faz 6 DoD:** **35 ders** (Set 0 ve Set 2 dahil) **seviyeye uyarlanmış
+derinlikte** (L1/L2/L3) okunabiliyor; **çok set** listeleniyor ve seviyeye göre
+"Buradan başla" öneriliyor; "Senin portföyünde" bloğu gerçek veriyle (yoksa
+etiketli demo ile) çalışıyor; **kullanıcı bir fiyat grafiğini ve mum grafiğini
+okuyabiliyor, kalemini bir ölçütle karşılaştırabiliyor** — hiçbir tahmin/sinyal
+cümlesi üretilmeden; tanılama testi seviyeyi belirliyor ve `RiskAttitude`
+hiçbir yerde görünmüyor; quiz + ilerleme + kavram ustalığı kaydediliyor;
+sözlük aranabilir; **her ders kaynak bloğu taşıyor** ve müfredat–seed uyumu
+testle bağlı; SC-E1–E10 + SC-E19–E28 yeşil. Detaylı tasarım: [`15-EDUCATION-PLAN.md`](15-EDUCATION-PLAN.md) ·
 ders bazında müfredat: [`16-CURRICULUM.md`](16-CURRICULUM.md).
 
 ---
