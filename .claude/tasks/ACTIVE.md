@@ -94,8 +94,15 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > `SeedSet0Async` canlı DB'ye iner) + **S0-L1 "Yatırım nedir" TAM** (12 aşama, **8
 > figür** çok panelli, 9 soru, `investment` kavramı). Yapısal testler güncellendi
 > (M3 Set-0 ≥6 figür **aktive**; figür tekilliği ders-içi; anlatımda figür serbest).
-> EducationSeed+Api **40/40**, web 135/135, build temiz. ⚠ Canlı tarayıcı teyidi
-> sıradaki turda (Docker api rebuild). Artık **2 set** → T6.15 seçicisi canlıda görünür.
+> EducationSeed+Api **40/40**, web 135/135, build temiz.
+> ✅ **Canlı tarayıcı teyidi yapıldı (2026-07-26):** api rebuild → compose Postgres'e
+> indi (2 track, S0-L1 12 bölüm/9 soru). Vite dev (`VITE_API_TARGET=https://localhost`)
+> ile /egitim gezildi: **çok-set seçici** (İlk Adımlar ⭐Buradan başla + Yatırım
+> Kavramları 1/5·%20), **"Setlere dön"**, **aşamalı okuyucu 13 adım** + rozetli yol
+> haritası, **çok panelli figürler render** (three-actions 3 panel · 10.000₺ üç yol
+> çubuk+belirsizlik bandı). ⚠ **Hata yakalandı & düzeltildi:** S0-L1'de 17 yerde
+> tek-yıldız `*italik*` MiniMarkdown desteklemediği için **literal yıldız** olarak
+> görünüyordu → `**kalın**`a çevrildi, api rebuild ile canlıda doğrulandı.
 
 ## Sıradaki (öncelik sırası)
 1. **T6.16 devam — S0-L2…L10 (ders ders, tam derinlik):** 2 Paranın haritası ·

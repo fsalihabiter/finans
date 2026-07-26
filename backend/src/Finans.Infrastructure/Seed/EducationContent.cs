@@ -1261,7 +1261,7 @@ internal static class EducationContent
         - Bir işin "yatırım" sayılması için gereken iki unsuru bir örnekte göstermek
         - Yatırımı bir şans oyunundan ayıran farkı — kazancın **nereden geldiğini** —
           açıklamak
-        - *(İleri)* Getirinin neden var olduğunu, yani neden birileri sana para
+        - **(İleri)** Getirinin neden var olduğunu, yani neden birileri sana para
           kazandırma sözü verir, çerçeveleyebilmek
 
         Dersin sonunda kısa bir test var; testi geçince bir sonraki ders açılır.
@@ -1273,15 +1273,15 @@ internal static class EducationContent
         Günlük dilde hepsine "para" deriz ama üç farklı şey yaparız:
 
         - **Saklamak** — parayı olduğu yerde tutmak (çekmece, kasa, vadesiz hesap).
-          Rakam sabit kalır; ona bir şey *yapmazsın*.
-        - **Biriktirmek** — geliri gideri aşınca kenara koymak. Bu bir *alışkanlık*:
+          Rakam sabit kalır; ona bir şey **yapmazsın**.
+        - **Biriktirmek** — geliri gideri aşınca kenara koymak. Bu bir **alışkanlık**:
           yatırılacak para buradan çıkar.
         - **Yatırmak** — biriktirdiğin parayı, **değer üretmesi umuduyla** bir
           kullanıma vermek. Karşılığında bir **getiri** beklersin, ama bu getiri
           **belirsizdir**.
 
-        Kısaca: biriktirmek parayı *hazırlar*, yatırmak onu *çalıştırır*, saklamak
-        ise sadece *bekletir*. Bu ders "çalıştırmak"ın ne demek olduğunu anlatır.
+        Kısaca: biriktirmek parayı **hazırlar**, yatırmak onu **çalıştırır**, saklamak
+        ise sadece **bekletir**. Bu ders "çalıştırmak"ın ne demek olduğunu anlatır.
         """, "three-actions"),
 
         Ex("""
@@ -1291,11 +1291,11 @@ internal static class EducationContent
         bir yıl sonra ne olduğuna bakalım:
 
         - **A — Çekmecede sakladın.** Bir yıl sonra hâlâ 10.000 ₺. Rakam değişmedi.
-          Ama fiyatlar arttıysa, o parayla artık daha *az* şey alabilirsin.
+          Ama fiyatlar arttıysa, o parayla artık daha **az** şey alabilirsin.
         - **B — Vadeli hesaba koydun (örnek oran %45).** Bir yıl sonra 14.500 ₺.
           Getiri baştan **belliydi**; bankaya borç verdin, faizini aldın.
         - **C — Bir işe ortak oldun.** Sonuç **belirsizdi**: iş iyi giderse 13.000 ₺
-          de olabilirdi, kötü giderse 8.000 ₺ de. Getiri *sözü* vardı, *garantisi* yok.
+          de olabilirdi, kötü giderse 8.000 ₺ de. Getiri **sözü** vardı, **garantisi** yok.
 
         Dikkat: yalnızca **B** ve **C** paraya bir iş yaptırdı. Aralarındaki fark ise
         **belirsizlik**: B'nin sonucu baştan biliniyordu, C'ninki bilinmiyordu. İşte
@@ -1309,13 +1309,13 @@ internal static class EducationContent
         Yukarıdaki C'ye tekrar bak. Onu yatırım yapan iki şey vardı:
 
         1. **Sermaye bir kullanıma verilir.** Paran boşta durmaz; bir işin, bir
-           varlığın parçası olur — orada bir şey *üretmesi* beklenir.
+           varlığın parçası olur — orada bir şey **üretmesi** beklenir.
         2. **Getiri belirsizdir.** Ne kadar, hatta olup olmayacağı önceden bilinmez.
            Bu belirsizliğe **risk** denir.
 
         İki unsur birden yoksa o şey yatırım değildir: çekmecedeki para (unsur 1 yok)
         saklamaktır; sonucu baştan belli olan işlem ise (unsur 2 yok) daha çok bir
-        *ödünç* ilişkisidir. Yatırım, ikisinin birlikte olduğu yerdedir.
+        **ödünç** ilişkisidir. Yatırım, ikisinin birlikte olduğu yerdedir.
         """, "capital-to-use"),
 
         Ex("""
@@ -1337,7 +1337,7 @@ internal static class EducationContent
         Trap("""
         ## Tuzak: "Yatırım = kazanç garantisi"
 
-        En yaygın yanılgı bu. Oysa gördük ki yatırımın *tanımında* belirsizlik var
+        En yaygın yanılgı bu. Oysa gördük ki yatırımın **tanımında** belirsizlik var
         (ikinci unsur). Getiri bir **olasılıktır**, bir **söz** değil.
 
         Birisi sana "yatırım" deyip **garantili** ve **yüksek** bir kazanç
@@ -1352,14 +1352,14 @@ internal static class EducationContent
         Üçü de "para koy, fazlasını al" gibi görünür ama kazancın **kaynağı** farklıdır:
 
         - **Yatırım** — kazanç, **üretilen değerden** gelir. Fırın ekmek üretir,
-          şirket mal satar; ortaya *yeni* bir değer çıkar ve sen ondan pay alırsın.
+          şirket mal satar; ortaya **yeni** bir değer çıkar ve sen ondan pay alırsın.
         - **Spekülasyon** — kazanç, çoğunlukla **fiyatın kısa vadeli
           dalgalanmasından** beklenir. Değer üretilmesini beklemezsin; "ucuza alıp
           pahalıya satmayı" umarsın.
         - **Şans oyunu** — kazanç **sıfır toplamlıdır**: birinin kazandığı, tam
           olarak başkalarının kaybettiğidir. Ortada üretilen yeni bir değer yoktur.
 
-        Kritik ayrım: yatırımda pastanın kendisi *büyüyebilir* (herkes kazanabilir);
+        Kritik ayrım: yatırımda pastanın kendisi **büyüyebilir** (herkes kazanabilir);
         şans oyununda pasta sabittir, yalnızca el değiştirir.
         """, "value-vs-zero-sum"),
 
@@ -1370,7 +1370,7 @@ internal static class EducationContent
         fark, **davranıştadır**.
 
         - **10 yıl tutmak:** Bir şirkete ortak olup yıllarca elde tutan kişi,
-          şirketin *ürettiği* değerden (büyüme, kâr payı) pay alır. Bu bir
+          şirketin **ürettiği** değerden (büyüme, kâr payı) pay alır. Bu bir
           yatırımdır.
         - **2 gün tutmak:** Aynı varlığı alıp iki gün sonra fiyatı çıktı diye satan
           kişi, üretilen değerden değil, **fiyat farkından** kazanmayı umar. Bu
@@ -1388,8 +1388,8 @@ internal static class EducationContent
         **Sonuç** ile **süreç** aynı şey değildir.
 
         Yazı-tura atıp üst üste beş kez kazanan biri "yetenekli" değildir; sadece
-        o seferlik şanslıdır. Kısa vadeli tek bir sonuç, kararın *iyi* mi yoksa
-        sadece *şanslı* mı olduğunu söylemez. İyi süreç uzun vadede ortaya çıkar;
+        o seferlik şanslıdır. Kısa vadeli tek bir sonuç, kararın **iyi** mi yoksa
+        sadece **şanslı** mı olduğunu söylemez. İyi süreç uzun vadede ortaya çıkar;
         tek bir parlak sonuç, arkasındaki riski gizleyebilir.
         """),
 
