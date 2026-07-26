@@ -28,11 +28,17 @@ public sealed class EducationSeedTests
         await using var db = NewContext();
         await SeedData.SeedAsync(db);
 
-        var track = await db.LearningTracks.SingleAsync();
-        track.Slug.Should().Be("temeller");
-        track.Title.Should().Be("Temeller");
+        // T6.16 — artık iki set var: "İlk Adımlar" (Set 0) + "Yatırım Kavramları"
+        // (eski "Temeller"; slug KORUNDU, başlık yeniden adlandırıldı).
+        var track = await db.LearningTracks.SingleAsync(t => t.Slug == "temeller");
+        track.Title.Should().Be("Yatırım Kavramları");
         track.Level.Should().Be(LessonLevel.Beginner);
         track.IsPublished.Should().BeTrue();
+
+        var set0 = await db.LearningTracks.SingleAsync(t => t.Slug == "ilk-adimlar");
+        set0.Title.Should().Be("İlk Adımlar");
+        set0.OrderIndex.Should().Be(0, "Set 0 giriş setidir — en başta gelir");
+        track.OrderIndex.Should().BeGreaterThan(set0.OrderIndex);
 
         var lessons = await db.Lessons.Where(l => l.TrackId == track.Id)
             .OrderBy(l => l.OrderIndex).ToListAsync();
@@ -56,8 +62,13 @@ public sealed class EducationSeedTests
         await SeedData.SeedAsync(db);
 
         // Her ders (2..5) yalnız bir öncekini ön-koşul ister; Ders 1'in ön-koşulu yok.
-        var lessons = await db.Lessons.OrderBy(l => l.OrderIndex).ToListAsync();
-        var prereqs = await db.LessonPrerequisites.ToListAsync();
+        // T6.16 — zincir TRACK İÇİNDE kalır; Set 0 dersleri karışmasın diye track'e kapsanır.
+        var temeller = await db.LearningTracks.SingleAsync(t => t.Slug == "temeller");
+        var lessons = await db.Lessons.Where(l => l.TrackId == temeller.Id)
+            .OrderBy(l => l.OrderIndex).ToListAsync();
+        var lessonIds = lessons.Select(l => l.Id).ToHashSet();
+        var prereqs = (await db.LessonPrerequisites.ToListAsync())
+            .Where(p => lessonIds.Contains(p.LessonId)).ToList();
 
         prereqs.Should().HaveCount(4);
         for (var i = 1; i < lessons.Count; i++)
@@ -78,6 +89,7 @@ public sealed class EducationSeedTests
             .Should().BeEquivalentTo(new[]
             {
                 "real-return", "diversification", "pe-ratio", "pb-ratio", "risk-return", "compound",
+                "investment", // T6.16 — Set 0 Ders 1 "Yatırım nedir" tanıtır
             });
 
         // F/K dersi iki etikete bağlı (F/K + PD/DD); diğerleri tekil.
@@ -119,8 +131,8 @@ public sealed class EducationSeedTests
         }
 
         // Bağımsız (derse bağlı olmayan) test yok — her quiz bir derse bağlı.
-        // T6.1 ile quiz sayısı 1 → 5 oldu (2-5. dersler de test aldı).
-        (await db.Quizzes.CountAsync()).Should().Be(5);
+        // T6.1: 1→5 · T6.16 (Set 0 Ders 1): 5→6.
+        (await db.Quizzes.CountAsync()).Should().Be(6);
         (await db.Quizzes.CountAsync(q => q.LessonId == null)).Should().Be(0);
     }
 
@@ -144,15 +156,17 @@ public sealed class EducationSeedTests
         await SeedData.SeedAsync(db);
         await SeedData.SeedAsync(db); // ikinci çağrı çoğaltmamalı
 
-        (await db.LearningTracks.CountAsync()).Should().Be(1);
-        (await db.Lessons.CountAsync()).Should().Be(5);
-        (await db.ConceptTags.CountAsync()).Should().Be(6);
-        (await db.LessonConceptTags.CountAsync()).Should().Be(6);
+        // T6.16 — Set 0 Ders 1 eklendi: +1 track, +1 ders, +1 kavram, +1 quiz (9 soru,
+        // 32 seçenek), +12 bölüm. Ön-koşul değişmez (S0-L1 setinin ilk dersi, kilitsiz).
+        (await db.LearningTracks.CountAsync()).Should().Be(2);
+        (await db.Lessons.CountAsync()).Should().Be(6);
+        (await db.ConceptTags.CountAsync()).Should().Be(7);
+        (await db.LessonConceptTags.CountAsync()).Should().Be(7);
         (await db.LessonPrerequisites.CountAsync()).Should().Be(4);
-        (await db.Quizzes.CountAsync()).Should().Be(5);          // T6.1: 1 → 5 (her derse bir test)
-        (await db.QuizQuestions.CountAsync()).Should().Be(27);    // Ders1+2: 9+9 (3 zorluk) + 3×3
-        (await db.QuizOptions.CountAsync()).Should().Be(94);      // Ders1+2: 32+32 · 3×10
-        (await db.LessonSections.CountAsync()).Should().Be(54);   // Ders1+2: 15+15 + 3×8 (T6.19: her derse açılış + kaynak bloğu)
+        (await db.Quizzes.CountAsync()).Should().Be(6);
+        (await db.QuizQuestions.CountAsync()).Should().Be(36);    // 27 + 9 (S0-L1)
+        (await db.QuizOptions.CountAsync()).Should().Be(126);     // 94 + 32 (S0-L1)
+        (await db.LessonSections.CountAsync()).Should().Be(66);   // 54 + 12 (S0-L1)
         (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
 
@@ -303,9 +317,9 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(54);
-        (await db.Quizzes.CountAsync()).Should().Be(5);
-        (await db.Lessons.CountAsync()).Should().Be(5); // dersler çoğaltılmadı
+        (await db.LessonSections.CountAsync()).Should().Be(66);
+        (await db.Quizzes.CountAsync()).Should().Be(6);
+        (await db.Lessons.CountAsync()).Should().Be(6); // dersler çoğaltılmadı
     }
 
     [Fact]
@@ -319,16 +333,16 @@ public sealed class EducationSeedTests
 
         // "Eski sürüm" simülasyonu: LiveContext blokları henüz yokmuş gibi sil.
         var live = await db.LessonSections.Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
-        live.Should().HaveCount(5);
+        live.Should().HaveCount(6);
         db.LessonSections.RemoveRange(live);
         await db.SaveChangesAsync();
-        (await db.LessonSections.CountAsync()).Should().Be(49); // diğer bloklar yerinde
+        (await db.LessonSections.CountAsync()).Should().Be(60); // diğer bloklar yerinde
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
-        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(5);
-        (await db.LessonSections.CountAsync()).Should().Be(54);
+        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(6);
+        (await db.LessonSections.CountAsync()).Should().Be(66);
     }
 
     [Fact]
@@ -340,7 +354,9 @@ public sealed class EducationSeedTests
         await using var db = NewContext();
         await SeedData.SeedAsync(db);
 
-        var section = await db.LessonSections.FirstAsync(s => s.Kind == SectionKind.Trap);
+        // Figürsüz bir tuzak seç: reconcile FigureKey'i null'a geri çekmeli
+        // (bazı Set 0 tuzakları figür taşır — o durumda "BeNull" beklentisi yanıltıcı olur).
+        var section = await db.LessonSections.FirstAsync(s => s.Kind == SectionKind.Trap && s.FigureKey == null);
         var (id, original, originalHeading) = (section.Id, section.BodyMarkdown, section.Heading);
 
         // "Eski sürüm" simülasyonu: içeriğin HER alanı bozulmuş/eskimiş.
@@ -358,7 +374,7 @@ public sealed class EducationSeedTests
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
-        (await db.LessonSections.CountAsync()).Should().Be(54); // çoğaltma yok
+        (await db.LessonSections.CountAsync()).Should().Be(66); // çoğaltma yok
     }
 
     [Fact]
@@ -405,17 +421,20 @@ public sealed class EducationSeedTests
                     "her ders en az bir açıklayıcı görsel taşımalı");
         }
 
-        // Figür anahtarları tekil — aynı görsel iki yerde çizilmemeli.
-        sections.Where(s => s.FigureKey != null).Select(s => s.FigureKey)
-            .Should().OnlyHaveUniqueItems();
+        // Figür anahtarları DERS İÇİNDE tekil — aynı görsel bir derste iki yerde
+        // çizilmemeli. Farklı dersler figür PAYLAŞABİLİR (16 §8.4); global tekillik
+        // dayatmak Set 0'ın paylaşılan öğe stratejisini (window-selection vb.) kırardı.
+        foreach (var group in sections.GroupBy(s => s.LessonId))
+            group.Where(s => s.FigureKey != null).Select(s => s.FigureKey)
+                .Should().OnlyHaveUniqueItems();
 
         // Tuzak blokları Core katmanda → başlangıç seviyesinde KATLANMAZ.
         sections.Where(s => s.Kind == SectionKind.Trap)
             .Should().OnlyContain(s => s.DepthTier == DepthTier.Core);
 
-        // Figür yalnız örnek bloklarında; anlatım blokları görselsiz.
-        sections.Where(s => s.Kind == SectionKind.Explain)
-            .Should().OnlyContain(s => s.FigureKey == null);
+        // NOT (T6.16): Set 1'de figür yalnız örnek bloklarındaydı; Set 0'da figür
+        // ANLATIM aşamalarında da olur (16 §6.1 "her anlatım aşamasında görsel hedeftir").
+        // Bu yüzden "Explain görselsiz" kısıtı KALDIRILDI — figür her blok türünde olabilir.
     }
 
     [Fact]
@@ -434,7 +453,7 @@ public sealed class EducationSeedTests
         var live = await db.LessonSections
             .Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
 
-        live.Should().HaveCount(5);
+        live.Should().HaveCount(6); // 5 (Set 1) + 1 (S0-L1)
         foreach (var s in live)
         {
             var tokens = System.Text.RegularExpressions.Regex
@@ -553,6 +572,31 @@ public sealed class EducationSeedTests
         var missing = used.Where(k => !registry.Contains(k)).ToList();
         missing.Should().BeEmpty(
             "seed'deki figür anahtarları LessonFigure.tsx'te tanımlı olmalı (yoksa görsel sessizce düşer)");
+    }
+
+    /// <summary>
+    /// M3 (Set 0) — <b>figür eşiği.</b> "İlk Adımlar" setinin her dersi <b>≥6 figür</b>
+    /// taşır (16 §9.1-M3, §6.1). T6.20'de sayısal eşik içerik gelene dek ertelenmişti;
+    /// Set 0 içerik turu (T6.16→) indikçe bu guard devreye girer. Çok panelli olma
+    /// koşulu (≥1) makineyle okunamaz (TSX ayrıntısı) → İ6 insan gözden geçirmesinde.
+    /// </summary>
+    [Fact]
+    public async Task Set0_lessons_meet_the_figure_threshold()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var set0 = await db.LearningTracks.SingleAsync(t => t.Slug == "ilk-adimlar");
+        var lessons = await db.Lessons.Where(l => l.TrackId == set0.Id && l.IsPublished).ToListAsync();
+        var sections = await db.LessonSections.ToListAsync();
+
+        lessons.Should().NotBeEmpty("Set 0 içerik turu en az bir ders indirmeli");
+        foreach (var lesson in lessons)
+        {
+            sections.Count(s => s.LessonId == lesson.Id && s.FigureKey != null)
+                .Should().BeGreaterThanOrEqualTo(6,
+                    $"'{lesson.Slug}' Set 0 figür eşiğini (≥6) karşılamalı (16 §9.1-M3)");
+        }
     }
 
     /// <summary>

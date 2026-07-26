@@ -88,41 +88,60 @@ public sealed class EducationApiTests : IClassFixture<SqliteWebApplicationFactor
 
     // ── İçerik (herkese açık) ────────────────────────────────────────────────
 
+    /// <summary>Track dizisinden slug'a göre kartı bulur (sıra artık sabit değil — Set 0 başta).</summary>
+    private static System.Text.Json.JsonElement TrackBySlug(System.Text.Json.JsonElement arr, string slug) =>
+        arr.EnumerateArray().Single(t => t.GetProperty("slug").GetString() == slug);
+
     [Fact]
-    public async Task Tracks_lists_temeller_with_lesson_count()
+    public async Task Tracks_lists_sets_in_order_with_lesson_count()
     {
         var resp = await ClientAs(Investor).GetAsync("/api/education/tracks");
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var arr = await JsonAsync(resp);
-        arr.GetArrayLength().Should().Be(1);
-        arr[0].GetProperty("slug").GetString().Should().Be("temeller");
-        arr[0].GetProperty("level").GetString().Should().Be("Beginner");
-        arr[0].GetProperty("lessonCount").GetInt32().Should().Be(5);
-        // T6.15 — set kartı sıra + kullanıcı ilerlemesini taşır (çok set desteği).
-        arr[0].GetProperty("orderIndex").GetInt32().Should().Be(1);
-        arr[0].GetProperty("completedCount").GetInt32().Should().Be(0); // yeni kullanıcı sıfırdan
+        // T6.16 — iki temel set: "İlk Adımlar" (Set 0, OrderIndex 0) + "Yatırım
+        // Kavramları" (eski "Temeller"). Not: paylaşılan SQLite fixture'a başka
+        // testler geçici track ekleyebildiği için TAM sayı değil, iki setin
+        // varlığı + sırası doğrulanır.
+        arr.GetArrayLength().Should().BeGreaterThanOrEqualTo(2);
+
+        var temeller = TrackBySlug(arr, "temeller");
+        temeller.GetProperty("level").GetString().Should().Be("Beginner");
+        temeller.GetProperty("lessonCount").GetInt32().Should().Be(5);
+        temeller.GetProperty("orderIndex").GetInt32().Should().Be(1);
+        temeller.GetProperty("completedCount").GetInt32().Should().Be(0); // yeni kullanıcı sıfırdan
+
+        var set0 = TrackBySlug(arr, "ilk-adimlar");
+        set0.GetProperty("orderIndex").GetInt32().Should().Be(0);
+        set0.GetProperty("lessonCount").GetInt32().Should().BeGreaterThanOrEqualTo(1); // içerik turu ders ders
+
+        // Set 0 giriş setidir: temeller'den ÖNCE gelir (OrderIndex 0 < 1) ve tel
+        // üzerinde de önce listelenir (servis OrderIndex'e göre sıralar).
+        set0.GetProperty("orderIndex").GetInt32()
+            .Should().BeLessThan(temeller.GetProperty("orderIndex").GetInt32());
+        var slugs = arr.EnumerateArray().Select(t => t.GetProperty("slug").GetString()).ToList();
+        slugs.IndexOf("ilk-adimlar").Should().BeLessThan(slugs.IndexOf("temeller"));
     }
 
     [Fact]
     public async Task Track_completed_count_reflects_the_current_users_progress()
     {
         // T6.15 — "set başına ilerleme" kullanıcıya kapsanır: A dersi bitirince
-        // A'nın sayacı artar, B'ninki (Investor) etkilenmez (11 §3 izolasyon).
+        // A'nın seti (temeller) sayacı artar, B'ninki (Investor) etkilenmez (11 §3 izolasyon).
         var learnerId = await NewLearnerAsync();
         var learner = ClientAs(learnerId);
 
-        (await JsonAsync(await learner.GetAsync("/api/education/tracks")))[0]
+        TrackBySlug(await JsonAsync(await learner.GetAsync("/api/education/tracks")), "temeller")
             .GetProperty("completedCount").GetInt32().Should().Be(0);
 
         var attempt = await learner.PostAsJsonAsync($"/api/education/quizzes/{Quiz}/attempts", AllCorrectAnswers());
         (await JsonAsync(attempt)).GetProperty("passed").GetBoolean().Should().BeTrue();
 
-        (await JsonAsync(await learner.GetAsync("/api/education/tracks")))[0]
+        TrackBySlug(await JsonAsync(await learner.GetAsync("/api/education/tracks")), "temeller")
             .GetProperty("completedCount").GetInt32().Should().Be(1);
 
         // İZOLASYON: bu ilerleme başka kullanıcıya sızmaz.
-        (await JsonAsync(await ClientAs(Investor).GetAsync("/api/education/tracks")))[0]
+        TrackBySlug(await JsonAsync(await ClientAs(Investor).GetAsync("/api/education/tracks")), "temeller")
             .GetProperty("completedCount").GetInt32().Should().Be(0);
     }
 

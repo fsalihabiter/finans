@@ -87,31 +87,41 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > §6.3), "← Setlere dön" ile geri. SC-E19/E20. EducationApi 19/19, web **135/135**
 > (4 yeni test), web build temiz, Application 291/291.
 
+> 🚧 **T6.16 başladı (2026-07-26) — ⚖ ürün sahibi kararı: "tam zenginlik şimdi"**
+> → T6.16+T6.17 birleşti; Set-0 dersleri **ders-ders TAM derinlikte** iniyor
+> (13 aşama, 6-10 figür, 9 soru). **Bu turda:** foundation ("Temeller"→**"Yatırım
+> Kavramları"** slug korunarak · **`ilk-adimlar` track'i** OrderIndex 0 · idempotent
+> `SeedSet0Async` canlı DB'ye iner) + **S0-L1 "Yatırım nedir" TAM** (12 aşama, **8
+> figür** çok panelli, 9 soru, `investment` kavramı). Yapısal testler güncellendi
+> (M3 Set-0 ≥6 figür **aktive**; figür tekilliği ders-içi; anlatımda figür serbest).
+> EducationSeed+Api **40/40**, web 135/135, build temiz. ⚠ Canlı tarayıcı teyidi
+> sıradaki turda (Docker api rebuild). Artık **2 set** → T6.15 seçicisi canlıda görünür.
+
 ## Sıradaki (öncelik sırası)
-1. **T6.16 — Set 0 iskeleti:** "İlk Adımlar" track'i + **10 ders** + ön-koşul
-   zinciri + "Temeller" → **"Yatırım Kavramları"** (slug korunur). ⚠ Bu iş
-   ikinci track'i getirir → T6.15'in `TrackList` seçicisi ilk kez GÖRÜNÜR olur.
-2. **T6.17a-j — Set 0 içerik turu (ders ders):** `16` §5 künyelerine göre
-   (**9 ve 10 yeni**: fiyat nasıl oluşur · bir alım nasıl gerçekleşir).
-   ⚠ İş yükü: **~80 figür + 90 soru** → önce `16` §8.3 paylaşılan SVG öğeleri.
-3. **T6.18** — Enflasyon kaydırıcısı (Set 0 Ders 4)
-4. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
+1. **T6.16 devam — S0-L2…L10 (ders ders, tam derinlik):** 2 Paranın haritası ·
+   3 Acil durum fonu · **4 Bekleyen para neden erir (+enflasyon aracı=T6.18)** ·
+   5 Varlık türleri · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
+   **9 Fiyat nereden çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders
+   foundation üstüne eklenir, ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
+   ⚠ İş yükü (kalan): **~72 figür + 81 soru** → §16 §8.3 paylaşılan SVG öğeleri
+   ihtiyaç oldukça çıkarılır. **T6.17a-j bu işe dahil edildi** (tam zenginlik kararı).
+2. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.
-5. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek
+3. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek
    parametreli** · `SeriesPath` · `Candle`/`CandleSeries` · `VolumeBars` ·
    `BookLadder` · `RangeBrush`. **İçerikten önce** — 75 figürün omurgası.
-6. 🆕 **T6.24a-h — Set 2 içerik turu:** grafik okuma → ölçek → **mum** → zaman
+4. 🆕 **T6.24a-h — Set 2 içerik turu:** grafik okuma → ölçek → **mum** → zaman
    dilimi → hacim → **"grafik geleceği söylemez"** 🔴 → endeks → **kalemini
    piyasaya göre okumak** 🔴. Dil kuralı `16` §6.6.
-7. 🆕 **T6.25** — Ölçek oynatıcısı · 🆕 **T6.26** — ölçüt (endeks) serisi ·
+5. 🆕 **T6.25** — Ölçek oynatıcısı · 🆕 **T6.26** — ölçüt (endeks) serisi ·
    🆕 **T6.27** — grafik dili guard'ları (M7a/M7b).
-8. **T6.11c** — Set 1 Ders 3-5 (`16` S1-L3/L4/L5 künyeleri hazır). ⚠ Bu iş
+6. **T6.11c** — Set 1 Ders 3-5 (`16` S1-L3/L4/L5 künyeleri hazır). ⚠ Bu iş
    Ders 3-5'i **≥2 figür + 9 soru**a çıkarır → T6.20'nin M3/M5 sayısal eşikleri
    burada aktive edilir (`EducationSeedTests`'e set eşiği eklenir).
-9. **T5E.4b** — Kavram derin bağlantı: `ConceptTag` → ilgili ders
-10. **T6.9** — `UserConceptMastery` + aralıklı tekrar
-11. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası — artık 103 kavram)*
-12. OSS kalanı — README ekran görüntüleri tazeleme
+7. **T5E.4b** — Kavram derin bağlantı: `ConceptTag` → ilgili ders
+8. **T6.9** — `UserConceptMastery` + aralıklı tekrar
+9. **T6.3** — Kavram sözlüğü *(omurgası `16` §3 haritası — artık 103 kavram)*
+10. OSS kalanı — README ekran görüntüleri tazeleme
 
 > ✅ **T6.11b bitti (2026-07-19):** **Ders 2 (Çeşitlendirme) 6 → 13 aşama** — TR'ye özgü
 > **para birimi ekseni** ("dört kalem, tek eksen"), korelasyon sezgisi, kriz anında

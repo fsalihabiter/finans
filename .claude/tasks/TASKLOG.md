@@ -20,6 +20,49 @@
 
 ---
 
+## 2026-07-26 · T6.16 (başladı) — Set 0 foundation + S0-L1 tam zenginlikte
+- **Görev(ler):** T6.16 (+ ürün sahibi kararıyla T6.17 birleşti). fable-mode.
+- **⚖ Ürün sahibi kararı — "tam zenginlik şimdi":** Set-0 dersleri sığ iskelet
+  değil, **ders-ders TAM derinlikte** (13 aşama, 6-10 figür, 9 soru, işlenmiş
+  örnekler) inecek → T6.16 ile T6.17a-j birleşti. Bu turda **foundation + S0-L1**;
+  L2-L10 sonraki turlarda aynı desenle (her ders tek turda tam, testler yeşilde).
+- **Ne yapıldı:** **(1) Foundation** — "Temeller" → **"Yatırım Kavramları"**
+  yeniden adlandırma (**slug KORUNDU** "temeller", kalıcı bağlantı kırılmaz);
+  **`ilk-adimlar` track'i** (OrderIndex 0 = giriş seti). İkisi de yeni idempotent
+  metot `SeedSet0Async`'te (varlık-bazında Id kapısı) → `SeedEducationAsync`
+  "track var mı?" ile korunduğundan **canlı DB'ye ancak böyle iner**; rename bir
+  mutabakat adımı. **(2) S0-L1 "Yatırım nedir, ne değildir?" tam:** 12 aşama
+  (açılış + 3 katman anlatım + 2 işlenmiş örnek + 2 tuzak + Senin portföyünde +
+  kaynak), **8 figür** — çoğu çok panelli anlatı (`three-actions`,
+  `ten-thousand-three-paths`, `capital-to-use`, `money-at-work`, `no-guarantee`,
+  `value-vs-zero-sum`, `hold-vs-flip`, `risk-premium-intro`) + paylaşılan `Panel`
+  öğesi, **9 soru/3 zorluk**, `investment` kavramı. Enstrüman adı YOK, sayılar
+  kurgusal/etiketli, tavsiye/tahmin YOK (CLAUDE.md §2).
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Seed/SeedData.cs` (SeedSet0Async +
+  rename + builder kaydı), `Finans.Infrastructure/Seed/EducationContent.cs`
+  (LessonS0L1 + 9 soruluk quiz), `web/src/components/LessonFigure.tsx` (8 figür +
+  Panel), `tests/.../EducationSeedTests.cs` (sayımlar + gevşetmeler + M3 Set-0),
+  `tests/.../EducationApiTests.cs` (tracks testleri), docs (08), ACTIVE.
+- **Test:** **EducationSeed+Api 40/40.** Güncellenen sözleşme: sayımlar
+  (bölüm 54→66, quiz 5→6, soru 27→36, seçenek 94→126, track 1→2, ders 5→6,
+  kavram 6→7, live 5→6); **figür tekilliği GLOBAL→DERS-İÇİ** (16 §8.4 paylaşımı);
+  **"anlatımda figür yok" kısıtı KALDIRILDI** (16 §6.1 Set-0'da anlatım aşamasında
+  figür); **M3 Set-0 ≥6 figür guard'ı EKLENDİ** (T6.20'de ertelenen sayısal eşik
+  Set-0 içeriği inince aktive). `Tracks` testi paylaşılan-fixture sızıntısına
+  dayanıklı yapıldı (tam sayı yerine "iki set var + sırası"). Application 291/291,
+  web 135/135, web build (tsc) temiz. (Integration'daki 4 kırmızı = bilinen
+  `WebApplicationFactory` ortam hatası.)
+- **Karar/Not:** ⚠ **JSX tuzağı:** figür caption'ında `\"` kaçışı esbuild'i
+  kırdı ("Unexpected backslash in JSX") → küme-parantezli string'e çevrildi.
+  ⚠ **Reconcile testi** figürsüz tuzak seçecek şekilde daraltıldı (bazı Set-0
+  tuzakları figür taşır). ⚠ **Canlı tarayıcı görsel teyidi YAPILMADI** — seed
+  değişikliği Docker api rebuild ister (`docker compose up -d --build api`),
+  sonraki turda Vite dev (`VITE_API_TARGET=https://localhost`) ile yapılacak;
+  bu turda doğrulama test+build düzeyinde.
+- **Durum:** devam ediyor (10 dersin 1'i + foundation).
+- **Sıradaki:** **S0-L2 "Paranın haritası"** aynı desenle (tam derinlik), sonra
+  L3…L10; L4'te enflasyon aracı (T6.18). Her ders ön-koşul zinciriyle bağlanır.
+
 ## 2026-07-26 · T6.15 — Çok set desteği (web + backend)
 - **Görev(ler):** T6.15 (`15` §6.3 · `16` set yapısı). fable-mode.
 - **Ne yapıldı:** Eğitim sayfası `tracks.data[0]` **tek set** varsayımından

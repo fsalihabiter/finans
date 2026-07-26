@@ -525,8 +525,221 @@ function CompoundCurve() {
   );
 }
 
+// ══ SET 0 — İlk Adımlar figürleri (T6.16) ═══════════════════════════════════
+// Çok panelli anlatı ağırlıklı (16 §6.1). Sayılar dersin örnek bloğuyla aynı,
+// kurgusal ve etiketli; enstrüman adı YOK, sıralama YOK (CLAUDE.md §2).
+
+/** Ortak panel çerçevesi (çok panelli figürlerin yapı taşı, 16 §8.3). */
+function Panel({ x, y, w, h, title }: { x: number; y: number; w: number; h: number; title: string }) {
+  return (
+    <>
+      <rect x={x} y={y} width={w} height={h} rx="8" className="fig-card" />
+      <text x={x + w / 2} y={y + 15} className="fig-label" textAnchor="middle">
+        {title}
+      </text>
+    </>
+  );
+}
+
+/** S0-L1 · Üç eylem: saklamak (sabit) · biriktirmek (yığılır) · yatırmak (belirsiz büyür). */
+function ThreeActions() {
+  return (
+    <Figure
+      label="Üç ayrı eylem: saklamak parayı sabit tutar, biriktirmek yığar, yatırmak belirsiz bir büyüme umuduyla çalıştırır"
+      caption="Saklamak: rakam sabit. Biriktirmek: yavaş yavaş artar. Yatırmak: belirsiz ama büyüme umutlu."
+      height={150}
+    >
+      <Panel x={6} y={20} w={96} h={116} title="Saklamak" />
+      <rect x={38} y={92} width={32} height={30} rx="3" className="fig-bar-muted" />
+      <text x={54} y={112} className="fig-value" textAnchor="middle">=</text>
+
+      <Panel x={112} y={20} w={96} h={116} title="Biriktirmek" />
+      {[0, 1, 2].map((i) => (
+        <rect key={i} x={130} y={112 - i * 14} width={60} height={11} rx="2" className="fig-bar-muted" />
+      ))}
+
+      <Panel x={218} y={20} w={96} h={116} title="Yatırmak" />
+      <path d="M236 118 L252 84 L268 96 L288 52" className="fig-line-steady" fill="none" />
+      <circle cx={288} cy={52} r="3.5" className="fig-dot-volatile" />
+      <text x={266} y={130} className="fig-label" textAnchor="middle">?</text>
+    </Figure>
+  );
+}
+
+/** S0-L1 · 10.000 ₺'nin üç yolu, bir yıl sonra (A sabit · B belli · C belirsiz aralık). */
+function TenThousandThreePaths() {
+  return (
+    <Figure
+      label="10.000 liranın üç yolu bir yıl sonra: çekmecede 10.000 sabit, vadelide 14.500 belli, ortaklıkta 8.000 ile 13.000 arası belirsiz"
+      caption="A çekmece: değişmez. B vadeli: baştan belli. C ortaklık: belirsiz aralık (8–13 bin)."
+      height={150}
+    >
+      <line x1={70} y1="16" x2={70} y2="132" className="fig-axis" />
+      {[
+        { n: "A", label: "çekmece", bar: 62, val: "10.000", cls: "fig-bar-muted", band: 0 },
+        { n: "B", label: "vadeli", bar: 90, val: "14.500", cls: "fig-bar-pos", band: 0 },
+        { n: "C", label: "ortaklık", bar: 80, val: "8–13 bin", cls: "fig-bar-muted", band: 44 },
+      ].map((r, i) => {
+        const y = 26 + i * 36;
+        return (
+          <g key={r.n}>
+            <text x={8} y={y + 13} className="fig-label">{r.n} · {r.label}</text>
+            {r.band > 0 ? (
+              <rect x={70 + 62} y={y} width={r.band} height="16" rx="3" className="fig-bar-muted" opacity="0.45" />
+            ) : null}
+            <rect x={70} y={y} width={r.bar} height="16" rx="3" className={r.cls} />
+            <text x={70 + r.bar + r.band + 6} y={y + 13} className="fig-value">{r.val}</text>
+          </g>
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** S0-L1 · Yatırımın iki unsuru: sermaye bir kullanıma verilir + getiri belirsizdir. */
+function CapitalToUse() {
+  return (
+    <Figure
+      label="Yatırımın iki unsuru: para bir kullanıma verilir ve dönen getiri belirsizdir"
+      caption="Para bir işe girer (1. unsur); dönüş bir olasılıktır, garanti değil (2. unsur)."
+      height={132}
+    >
+      <rect x={10} y={54} width={54} height={30} rx="6" className="fig-bar-muted" />
+      <text x={37} y={73} className="fig-value" textAnchor="middle">para</text>
+      <path d="M68 69 L120 69" className="fig-line-steady" fill="none" markerEnd="" />
+      <text x={94} y={60} className="fig-label" textAnchor="middle">1 · kullanıma girer</text>
+      <rect x={124} y={48} width={70} height={42} rx="8" className="fig-card" />
+      <text x={159} y={73} className="fig-value" textAnchor="middle">bir iş</text>
+      <path d="M198 62 L250 40" className="fig-line-steady" fill="none" />
+      <path d="M198 76 L250 98" className="fig-line-flat" fill="none" strokeDasharray="4 4" />
+      <text x={262} y={44} className="fig-value pos">↑ ?</text>
+      <text x={262} y={102} className="fig-value neg">↓ ?</text>
+      <text x={236} y={122} className="fig-label" textAnchor="middle">2 · getiri belirsiz</text>
+    </Figure>
+  );
+}
+
+/** S0-L1 · "Parayı çalıştırmak": para → girdi/üretim → gelir → sana dönen pay. */
+function MoneyAtWork() {
+  const steps = ["para", "un · fırın", "ekmek · satış", "sana pay"];
+  return (
+    <Figure
+      label="Parayı çalıştırmak: para girdiye ve üretim aracına dönüşür, ürün satılır ve gelirden sana pay döner"
+      caption="Paran boşta durmaz; bir değer üreten sürecin parçası olur ve getiri o süreçten gelir."
+      height={110}
+    >
+      {steps.map((s, i) => {
+        const x = 8 + i * 78;
+        return (
+          <g key={s}>
+            <rect x={x} y={40} width={64} height={34} rx="7" className={i === steps.length - 1 ? "fig-bar-pos" : "fig-card"} />
+            <text x={x + 32} y={61} className="fig-value" textAnchor="middle">{s}</text>
+            {i < steps.length - 1 && (
+              <path d={`M${x + 64} 57 L${x + 78} 57`} className="fig-line-steady" fill="none" />
+            )}
+          </g>
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** S0-L1 · "Garanti yok": tek yatırımdan iki olası sonuç (yukarı / aşağı). */
+function NoGuarantee() {
+  return (
+    <Figure
+      label="Bir yatırımın sonucu belirsizdir: aynı başlangıçtan hem kazanç hem kayıp ihtimali çıkar"
+      caption={'Getiri bir olasılıktır, bir söz değil. "Garantili yüksek getiri" bir çelişkidir.'}
+      height={120}
+    >
+      <rect x={12} y={46} width={58} height={30} rx="6" className="fig-bar-muted" />
+      <text x={41} y={65} className="fig-value" textAnchor="middle">yatırım</text>
+      <path d="M72 58 L150 26" className="fig-line-steady" fill="none" />
+      <path d="M72 62 L150 96" className="fig-line-volatile" fill="none" />
+      <rect x={152} y={14} width={64} height={26} rx="6" className="fig-bar-pos" />
+      <text x={184} y={31} className="fig-value" textAnchor="middle">kazanç</text>
+      <rect x={152} y={84} width={64} height={26} rx="6" className="fig-bar-neg" />
+      <text x={184} y={101} className="fig-value" textAnchor="middle">kayıp</text>
+      <text x={124} y={66} className="fig-big" textAnchor="middle">?</text>
+    </Figure>
+  );
+}
+
+/** S0-L1 · Değer üretimi (pasta büyür) ↔ sıfır toplamlı oyun (pasta sabit, el değiştirir). */
+function ValueVsZeroSum() {
+  return (
+    <Figure
+      label="Yatırımda üretilen değerle pasta büyür ve herkes kazanabilir; şans oyununda pasta sabittir, yalnızca el değiştirir"
+      caption="Yatırım: değer üretilir, pasta büyür. Şans oyunu: sıfır toplamlı, biri kazanır biri kaybeder."
+      height={150}
+    >
+      <Panel x={6} y={20} w={148} h={116} title="Yatırım — pasta büyür" />
+      <circle cx={54} cy={92} r="20" className="fig-bar-muted" />
+      <path d="M96 92 L120 92" className="fig-line-steady" fill="none" />
+      <circle cx={130} cy={92} r="30" className="fig-bar-pos" />
+
+      <Panel x={166} y={20} w={148} h={116} title="Şans oyunu — sabit" />
+      <circle cx={214} cy={92} r="24" className="fig-bar-muted" />
+      <circle cx={286} cy={92} r="24" className="fig-bar-muted" />
+      <path d="M240 84 L262 84" className="fig-line-volatile" fill="none" />
+      <path d="M262 100 L240 100" className="fig-line-volatile" fill="none" />
+      <text x={251} y={128} className="fig-label" textAnchor="middle">el değiştirir</text>
+    </Figure>
+  );
+}
+
+/** S0-L1 · Getiri neden var: güvenli getiri + belirsizliğe karşılık risk primi. */
+function RiskPremiumIntro() {
+  return (
+    <Figure
+      label="Riskli bir yolun beklenen getirisi, güvenli getirinin üstüne belirsizliğe katlanmanın karşılığı olan bir risk primi ekler"
+      caption="Güvenli getiri (fırsat maliyeti) + risk primi (belirsizliğin karşılığı) = beklenen getiri."
+      height={130}
+    >
+      <line x1={78} y1="14" x2={78} y2="112" className="fig-axis" />
+      <text x={8} y={44} className="fig-label">güvenli</text>
+      <rect x={78} y={30} width={96} height={20} rx="3" className="fig-bar-muted" />
+      <text x={180} y={45} className="fig-value">%45</text>
+
+      <text x={8} y={90} className="fig-label">riskli</text>
+      <rect x={78} y={76} width={96} height={20} rx="3" className="fig-bar-muted" />
+      <rect x={174} y={76} width={54} height={20} rx="3" className="fig-bar-pos" />
+      <text x={234} y={91} className="fig-value pos">+prim</text>
+      <text x={126} y={124} className="fig-label" textAnchor="middle">aynı taban + belirsizliğin karşılığı</text>
+    </Figure>
+  );
+}
+
+/** S0-L1 · Aynı varlık, iki davranış: 10 yıl tutmak (değer üretiminden pay) ↔ 2 gün (fiyat farkı). */
+function HoldVsFlip() {
+  return (
+    <Figure
+      label="Uzun süre tutan kişi üretilen değerden pay alır; iki gün tutup satan kişi yalnızca fiyat farkından kazanmayı umar"
+      caption="Aynı varlık: 10 yıl tutmak üretilen değere ortak olur; 2 gün tutmak fiyat farkına oynar."
+      height={140}
+    >
+      <Panel x={6} y={20} w={148} h={106} title="10 yıl tutmak" />
+      <path d="M20 108 L48 96 L76 84 L104 62 L138 40" className="fig-line-steady" fill="none" />
+      <text x={80} y={122} className="fig-label" textAnchor="middle">üretilen değere ortak</text>
+
+      <Panel x={166} y={20} w={148} h={106} title="2 gün tutmak" />
+      <path d="M180 92 L206 60 L232 96 L258 58 L300 92" className="fig-line-volatile" fill="none" />
+      <text x={240} y={122} className="fig-label" textAnchor="middle">fiyat farkına oynar</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
+  // Set 0 — İlk Adımlar (T6.16)
+  "three-actions": ThreeActions,
+  "hold-vs-flip": HoldVsFlip,
+  "ten-thousand-three-paths": TenThousandThreePaths,
+  "capital-to-use": CapitalToUse,
+  "money-at-work": MoneyAtWork,
+  "no-guarantee": NoGuarantee,
+  "value-vs-zero-sum": ValueVsZeroSum,
+  "risk-premium-intro": RiskPremiumIntro,
   "real-vs-nominal": RealVsNominal,
   "purchasing-power": PurchasingPower,
   "subtraction-error": SubtractionError,

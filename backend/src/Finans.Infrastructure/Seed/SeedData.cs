@@ -30,9 +30,10 @@ public static class SeedData
         var now = DateTime.UtcNow;
         await SeedPortfolioAsync(db, now, ct);
         await SeedEducationAsync(db, now, ct);
-        // AYRI kapı (T6.1): SeedEducationAsync "track var mı?" ile korunur, dolayısıyla
-        // eğitimi ZATEN almış DB'ler katmanlı içeriği ondan alamaz. Bu adım kendi
-        // kapısıyla çalışır → çalışan kurulumlar da bir sonraki açılışta bölümleri alır.
+        // AYRI kapılar (T6.1): SeedEducationAsync "track var mı?" ile korunur, dolayısıyla
+        // eğitimi ZATEN almış DB'ler sonraki içeriği ondan alamaz. Bu adımlar kendi
+        // kapılarıyla çalışır → çalışan kurulumlar da bir sonraki açılışta güncellenir.
+        await SeedSet0Async(db, now, ct); // T6.16: "İlk Adımlar" seti + "Temeller"→"Yatırım Kavramları"
         await SeedEducationSectionsAsync(db, ct);
         await SeedRemainingQuizzesAsync(db, ct);
     }
@@ -484,12 +485,103 @@ public static class SeedData
     /// </list>
     /// Ders bulunamazsa (özel/eksik kurulum) sessizce atlanır — seed hiçbir zaman çökmez.
     /// </remarks>
+    /// <summary>
+    /// T6.16 — Set 0 "İlk Adımlar" (sıfır bilgi) + "Temeller" → "Yatırım Kavramları"
+    /// yeniden adlandırma. <b>Kendi idempotent kapıları</b> (varlık bazında Id kontrolü)
+    /// → eğitimi zaten almış çalışan DB'ler de bu seti ve yeni adı alır (SeedEducationAsync
+    /// "track var mı?" ile korunduğu için oradan gelmez). Ders GÖVDELERİ
+    /// <see cref="SeedEducationSectionsAsync"/>'de, TESTLER <see cref="SeedRemainingQuizzesAsync"/>'de
+    /// (ikisi de kendi kapılı) attach edilir. Bu metot yalnız iskeleti (track/ders/kavram/ön-koşul) kurar.
+    /// </summary>
+    private static async Task SeedSet0Async(FinansDbContext db, DateTime now, CancellationToken ct)
+    {
+        var changed = false;
+
+        // ── Yeniden adlandırma: "Temeller" artık Set 0 değil (ad çakışması, 15 §6) ──
+        // Set 0 eklenince "Temeller" adı yanıltıcı oldu (asıl temeller Set 0). Slug
+        // KORUNUR (yatırım-kavramları değil, "temeller") — kalıcı bağlantılar kırılmasın.
+        var temeller = await db.LearningTracks.FirstOrDefaultAsync(t => t.Id == Id("track-temeller"), ct);
+        if (temeller is not null && temeller.Title != "Yatırım Kavramları")
+        {
+            temeller.Title = "Yatırım Kavramları";
+            temeller.Description =
+                "Enflasyon ve reel getiri, çeşitlendirme, hisse okuma (F/K · PD/DD), " +
+                "risk-getiri dengesi ve bileşik getiri. Yatırımın temel kavramları, sıra sıra.";
+            changed = true;
+        }
+
+        // ── Track "İlk Adımlar" (OrderIndex 0) — Set 0 ──────────────────────────
+        if (!await db.LearningTracks.AnyAsync(t => t.Id == Id("track-ilk-adimlar"), ct))
+        {
+            db.LearningTracks.Add(new LearningTrack
+            {
+                Id = Id("track-ilk-adimlar"),
+                Slug = "ilk-adimlar",
+                Title = "İlk Adımlar",
+                Description =
+                    "Sıfırdan başla: yatırım nedir, para nereye gider, risk ne demek, " +
+                    "fiyat nasıl oluşur. Jargon yok, formül yok — her kavram somut bir sahneyle.",
+                Level = LessonLevel.Beginner,
+                OrderIndex = 0, // Set 0 → en başta (T6.15 "Buradan başla" bunu giriş seti sayar)
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // ── S0-L1 · Yatırım nedir, ne değildir? ─────────────────────────────────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l1"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l1"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "yatirim-nedir",
+                OrderIndex = 1,
+                Title = "Yatırım nedir, ne değildir?",
+                Summary = "Saklamak, biriktirmek, yatırmak — ve yatırımı şans oyunundan ayıran şey.",
+                BodyMarkdown =
+                    "## Yatırım nedir?\n\n" +
+                    "Yatırım, biriktirdiğin parayı **değer üretmesi umuduyla** bir kullanıma vermendir; " +
+                    "karşılığında bir **getiri** beklersin ama bu getiri **belirsizdir**. İşte bu " +
+                    "belirsizlik (risk), yatırımı hem saklamaktan hem de sonucu baştan belli bir " +
+                    "ödünç ilişkisinden ayırır.",
+                EstimatedMinutes = 6,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // ── Kavram etiketi: "Yatırım" (S0-L1 tanıtır) ───────────────────────────
+        if (!await db.ConceptTags.AnyAsync(t => t.Id == Id("tag-investment"), ct))
+        {
+            db.ConceptTags.Add(new ConceptTag { Id = Id("tag-investment"), Key = "investment", Label = "Yatırım" });
+            changed = true;
+        }
+        if (!await db.LessonConceptTags.AnyAsync(
+                lt => lt.LessonId == Id("lesson-s0l1") && lt.ConceptTagId == Id("tag-investment"), ct))
+        {
+            db.LessonConceptTags.Add(new LessonConceptTag
+            {
+                LessonId = Id("lesson-s0l1"),
+                ConceptTagId = Id("tag-investment"),
+            });
+            changed = true;
+        }
+
+        if (changed)
+            await db.SaveChangesAsync(ct);
+    }
+
     private static async Task SeedEducationSectionsAsync(FinansDbContext db, CancellationToken ct)
     {
         // Ders kimlikleri deterministik (Id(...)) — slug'a değil kimliğe bağlanmak,
         // içerik ile ders eşleşmesini yeniden adlandırmalara karşı korur.
         var builders = new (Guid LessonId, Func<Guid, IEnumerable<LessonSection>> Build)[]
         {
+            (Id("lesson-s0l1"), EducationContent.LessonS0L1), // T6.16 — Set 0 Ders 1
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),

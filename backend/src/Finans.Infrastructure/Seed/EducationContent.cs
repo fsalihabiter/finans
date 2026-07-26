@@ -1242,6 +1242,206 @@ internal static class EducationContent
         süre yatırımda kalman gerektiğini söylemez.
         """);
 
+    // ══ SET 0 — İLK ADIMLAR (sıfır bilgi) ════════════════════════════════════
+    // Tam zenginlik (16 §5 S0 künyeleri): 6-10 figür/ders, çok panelli anlatı,
+    // işlenmiş örnekler. Set 1'in aksine figür ANLATIM aşamalarında da olabilir
+    // (16 §6.1 "her anlatım aşamasında görsel hedeftir"). Sayılar KURGUSAL/etiketli;
+    // enstrüman adı YOK (soyut "A/B yolu"), tavsiye/tahmin YOK (CLAUDE.md §2).
+
+    // ── S0-L1 — Yatırım nedir, ne değildir? ──────────────────────────────────
+    public static IEnumerable<LessonSection> LessonS0L1(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Bu ders sıfırdan başlar — hiçbir ön bilgi gerektirmez. Bitirdiğinde
+        şunları yapabileceksin:
+
+        - **Saklamak**, **biriktirmek** ve **yatırmak** eylemlerini birbirinden ayırmak
+        - Bir işin "yatırım" sayılması için gereken iki unsuru bir örnekte göstermek
+        - Yatırımı bir şans oyunundan ayıran farkı — kazancın **nereden geldiğini** —
+          açıklamak
+        - *(İleri)* Getirinin neden var olduğunu, yani neden birileri sana para
+          kazandırma sözü verir, çerçeveleyebilmek
+
+        Dersin sonunda kısa bir test var; testi geçince bir sonraki ders açılır.
+        """),
+
+        Core("""
+        ## Üç ayrı eylem: saklamak, biriktirmek, yatırmak
+
+        Günlük dilde hepsine "para" deriz ama üç farklı şey yaparız:
+
+        - **Saklamak** — parayı olduğu yerde tutmak (çekmece, kasa, vadesiz hesap).
+          Rakam sabit kalır; ona bir şey *yapmazsın*.
+        - **Biriktirmek** — geliri gideri aşınca kenara koymak. Bu bir *alışkanlık*:
+          yatırılacak para buradan çıkar.
+        - **Yatırmak** — biriktirdiğin parayı, **değer üretmesi umuduyla** bir
+          kullanıma vermek. Karşılığında bir **getiri** beklersin, ama bu getiri
+          **belirsizdir**.
+
+        Kısaca: biriktirmek parayı *hazırlar*, yatırmak onu *çalıştırır*, saklamak
+        ise sadece *bekletir*. Bu ders "çalıştırmak"ın ne demek olduğunu anlatır.
+        """, "three-actions"),
+
+        Ex("""
+        ## Adım adım: 10.000 ₺'nin üç yolu
+
+        Diyelim elinde **10.000 ₺** var (örnek bir tutar). Üç yol seçebilirsin;
+        bir yıl sonra ne olduğuna bakalım:
+
+        - **A — Çekmecede sakladın.** Bir yıl sonra hâlâ 10.000 ₺. Rakam değişmedi.
+          Ama fiyatlar arttıysa, o parayla artık daha *az* şey alabilirsin.
+        - **B — Vadeli hesaba koydun (örnek oran %45).** Bir yıl sonra 14.500 ₺.
+          Getiri baştan **belliydi**; bankaya borç verdin, faizini aldın.
+        - **C — Bir işe ortak oldun.** Sonuç **belirsizdi**: iş iyi giderse 13.000 ₺
+          de olabilirdi, kötü giderse 8.000 ₺ de. Getiri *sözü* vardı, *garantisi* yok.
+
+        Dikkat: yalnızca **B** ve **C** paraya bir iş yaptırdı. Aralarındaki fark ise
+        **belirsizlik**: B'nin sonucu baştan biliniyordu, C'ninki bilinmiyordu. İşte
+        "yatırım" kelimesi asıl **C** gibi durumlar için, yani sonucun önceden
+        bilinmediği yerde anlamlıdır.
+        """, "ten-thousand-three-paths"),
+
+        Core("""
+        ## Bir işi "yatırım" yapan iki unsur
+
+        Yukarıdaki C'ye tekrar bak. Onu yatırım yapan iki şey vardı:
+
+        1. **Sermaye bir kullanıma verilir.** Paran boşta durmaz; bir işin, bir
+           varlığın parçası olur — orada bir şey *üretmesi* beklenir.
+        2. **Getiri belirsizdir.** Ne kadar, hatta olup olmayacağı önceden bilinmez.
+           Bu belirsizliğe **risk** denir.
+
+        İki unsur birden yoksa o şey yatırım değildir: çekmecedeki para (unsur 1 yok)
+        saklamaktır; sonucu baştan belli olan işlem ise (unsur 2 yok) daha çok bir
+        *ödünç* ilişkisidir. Yatırım, ikisinin birlikte olduğu yerdedir.
+        """, "capital-to-use"),
+
+        Ex("""
+        ## "Parayı çalıştırmak" tam olarak ne demek?
+
+        Soyut bir laf gibi duruyor; somutlaştıralım. Bir fırına ortak olduğunu
+        düşün. Verdiğin para çekmecede beklemez; şu somut şeylere **dönüşür**:
+
+        - Un, maya, elektrik → **girdi**
+        - Fırının fırını, tezgâhı → **üretim aracı**
+        - Ekmek yapılır, satılır → **gelir**
+        - Gelirden payına düşen → **sana dönen getiri**
+
+        Yani "para çalışıyor" derken kastedilen budur: paran, bir değer üreten
+        sürecin parçası olur. Getirin, o süreçten **üretilen** değerin bir
+        parçasıdır — havadan gelmez, bir yerde bir iş yapılır.
+        """, "money-at-work"),
+
+        Trap("""
+        ## Tuzak: "Yatırım = kazanç garantisi"
+
+        En yaygın yanılgı bu. Oysa gördük ki yatırımın *tanımında* belirsizlik var
+        (ikinci unsur). Getiri bir **olasılıktır**, bir **söz** değil.
+
+        Birisi sana "yatırım" deyip **garantili** ve **yüksek** bir kazanç
+        vaat ediyorsa, iki kelimeden biri yanlıştır: ya garantili değildir, ya da
+        beklediğin kadar yüksek değildir. Bu ikisi aynı anda ve sürekli bir arada
+        olamaz — nedenini birazdan "getiri neden var?" bölümünde göreceksin.
+        """, "no-guarantee"),
+
+        Ctx("""
+        ## Yatırım, spekülasyon, şans oyunu: kazanç nereden geliyor?
+
+        Üçü de "para koy, fazlasını al" gibi görünür ama kazancın **kaynağı** farklıdır:
+
+        - **Yatırım** — kazanç, **üretilen değerden** gelir. Fırın ekmek üretir,
+          şirket mal satar; ortaya *yeni* bir değer çıkar ve sen ondan pay alırsın.
+        - **Spekülasyon** — kazanç, çoğunlukla **fiyatın kısa vadeli
+          dalgalanmasından** beklenir. Değer üretilmesini beklemezsin; "ucuza alıp
+          pahalıya satmayı" umarsın.
+        - **Şans oyunu** — kazanç **sıfır toplamlıdır**: birinin kazandığı, tam
+          olarak başkalarının kaybettiğidir. Ortada üretilen yeni bir değer yoktur.
+
+        Kritik ayrım: yatırımda pastanın kendisi *büyüyebilir* (herkes kazanabilir);
+        şans oyununda pasta sabittir, yalnızca el değiştirir.
+        """, "value-vs-zero-sum"),
+
+        ExDeep("""
+        ## Aynı varlık, iki farklı davranış
+
+        İlginç olan şu: aynı varlıkla hem yatırım hem spekülasyon yapılabilir —
+        fark, **davranıştadır**.
+
+        - **10 yıl tutmak:** Bir şirkete ortak olup yıllarca elde tutan kişi,
+          şirketin *ürettiği* değerden (büyüme, kâr payı) pay alır. Bu bir
+          yatırımdır.
+        - **2 gün tutmak:** Aynı varlığı alıp iki gün sonra fiyatı çıktı diye satan
+          kişi, üretilen değerden değil, **fiyat farkından** kazanmayı umar. Bu
+          davranış spekülasyona yakındır.
+
+        Ders sana hangisinin "doğru" olduğunu söylemez — ikisinin **farklı şeyler**
+        olduğunu fark etmeni ister. Kazancının kaynağını bilmek, riskini de bilmenin
+        ilk adımıdır.
+        """, "hold-vs-flip"),
+
+        Trap("""
+        ## Tuzak: "Kısa vadede çok kazanan iyi yatırımcıdır"
+
+        Bir kişi iki günde büyük kazandıysa iyi yatırımcı mıdır? Şart değil.
+        **Sonuç** ile **süreç** aynı şey değildir.
+
+        Yazı-tura atıp üst üste beş kez kazanan biri "yetenekli" değildir; sadece
+        o seferlik şanslıdır. Kısa vadeli tek bir sonuç, kararın *iyi* mi yoksa
+        sadece *şanslı* mı olduğunu söylemez. İyi süreç uzun vadede ortaya çıkar;
+        tek bir parlak sonuç, arkasındaki riski gizleyebilir.
+        """),
+
+        Deep("""
+        ## Getiri neden var? — fırsat maliyeti ve risk primi
+
+        Peki neden birileri paranı kullanıp sana getiri sözü versin? İki nedenden:
+
+        - **Fırsat maliyeti** — Parayı bugün onlara verirsen, o parayı bugün
+          kullanmaktan **vazgeçersin**. Bu vazgeçişin bir bedeli vardır; getirinin
+          bir kısmı bunun karşılığıdır.
+        - **Risk primi** — Sonuç belirsizse (yatırımın ikinci unsuru), bu
+          belirsizliğe katlanman için **ekstra** bir beklenti gerekir. Kimse
+          karşılığında fazladan bir şey ummadan riske girmez.
+
+        Bu yüzden güvenli bir yol (örnek %45) ile riskli bir yolun **beklenen**
+        getirisi farklıdır: riskli yol, üstlendiğin belirsizlik için bir **prim**
+        vaat eder. Ve tam da bu yüzden "garantili yüksek getiri" bir çelişkidir:
+        garanti varsa risk yoktur, risk yoksa prim de olmaz.
+        """, "risk-premium-intro"),
+
+        Live("""
+        ## Senin portföyünde
+
+        Şu an takip ettiğin portföyde **{{holding_count}}** kalem var. Bu dersten
+        sonra her birine şu gözle bakabilirsin: bu kalem bir **değer üretiminden**
+        mi pay veriyor (ortaklık), yoksa bir **ödünç** ilişkisi mi (faiz), yoksa
+        değerini **fiyat dalgalanmasından** mı bekliyorum?
+
+        Sorunun cevabı, o kalemin getirisinin nereden geldiğini — ve dolayısıyla
+        riskini — anlamanın ilk adımıdır.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Tanımlar.** "Yatırım", "sermaye piyasası aracı" gibi kavramların resmî
+        çerçevesi **SPK**'nın (Sermaye Piyasası Kurulu) yatırımcı bilgilendirme
+        yayınlarına ve **TCMB** terimler sözlüğüne dayanır —
+        [spk.gov.tr](https://www.spk.gov.tr) · [tcmb.gov.tr](https://www.tcmb.gov.tr).
+
+        **Örnek sayılar kurgusaldır.** Bu dersteki 10.000 ₺, %45 gibi rakamların
+        tamamı anlatımı somutlaştırmak için **seçilmiş örneklerdir** — gerçek
+        piyasa verisi değildir. Gerçek veri yalnızca "Senin portföyünde" bölümünde,
+        kendi kayıtlarından gelir; oradaki sayılar da **kodda** hesaplanır, bir dil
+        modeli tarafından üretilmez.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders hiçbir varlık, ürün ya da
+        davranışı önermez; "şuna ortak ol", "şunu al" demez. Yalnızca kavramların
+        ne anlama geldiğini gösterir — kararlar senindir.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -1256,6 +1456,87 @@ internal static class EducationContent
     public static IEnumerable<(string LessonKey, string QuizKey, string Title, SeedQuestion[] Questions)>
         RemainingQuizzes()
     {
+        // ── Set 0 · Ders 1 — Yatırım nedir, ne değildir? (9 soru / 3 zorluk) ──
+        yield return ("lesson-s0l1", "quiz-s0l1", "Yatırım Nedir — Mini Test",
+        [
+            // ── Kolay: kavramı tanıyor mu? ───────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Parayı vadesiz hesapta hiç dokunmadan bekletmek hangi eylemdir?",
+                "Paraya bir iş yaptırmıyorsun, sadece bekletiyorsun — bu saklamaktır. Yatırmak, paranın " +
+                "değer üretmesi umuduyla bir kullanıma verilmesidir; biriktirmek ise yatırılacak parayı hazırlamaktır.",
+                [("Yatırmak", false), ("Saklamak", true), ("Biriktirmek", false), ("Spekülasyon", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Bir işin \"yatırım\" sayılması için getirisinin baştan garanti olması gerekir.",
+                "Tam tersi: yatırımın tanımında belirsizlik (risk) vardır. Getiri bir olasılıktır, bir söz değil. " +
+                "Sonucu baştan belli olan işlem daha çok bir ödünç ilişkisidir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Yatırımda kazanç esas olarak nereden gelir?",
+                "Yatırımda kazanç, üretilen değerden gelir — şirket mal satar, fırın ekmek üretir, ortaya yeni " +
+                "bir değer çıkar ve sen ondan pay alırsın. Şans oyununda ise ortada üretilen yeni bir değer yoktur.",
+                [("Başkalarının kaybından", false),
+                 ("Üretilen değerden alınan paydan", true),
+                 ("Sadece fiyatın rastgele oynamasından", false),
+                 ("Bankanın verdiği hediyeden", false)]),
+
+            // ── Orta: kavramı kullanabiliyor mu? ─────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir kişi bir varlığı sabah alıp öğleden sonra fiyatı çıktı diye satıyor. Bu davranış neye yakındır?",
+                "Kazancı üretilen değerden değil, kısa vadeli fiyat farkından bekliyor — bu spekülasyona yakındır. " +
+                "Aynı varlıkla yıllarca ortak kalıp üretilen değerden pay almak ise yatırıma yakın olurdu. Fark davranıştadır.",
+                [("Yatırıma — uzun vadeli değer üretimi", false),
+                 ("Spekülasyona — fiyat farkından kazanç beklentisi", true),
+                 ("Saklamaya — paraya dokunmama", false),
+                 ("Biriktirmeye — kenara koyma", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Hangi durumda bir iş \"yatırım\"ın iki unsurunu birden taşır?",
+                "Yatırımın iki unsuru: (1) sermaye bir kullanıma verilir, (2) getiri belirsizdir. Çekmecedeki para " +
+                "birinci unsuru taşımaz; sonucu baştan belli işlem ikinciyi taşımaz. İkisi birlikte olduğunda yatırımdır.",
+                [("Para çekmecede duruyor, değeri sabit", false),
+                 ("Para bir işe konmuş ve sonuç belirsiz", true),
+                 ("Para vadeli hesapta, getiri baştan belli", false),
+                 ("Para hiç harcanmadan bekletiliyor", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Şans oyununda toplam kazanç ile toplam kayıp birbirine eşittir (sıfır toplamlı).",
+                "Doğru. Şans oyununda birinin kazandığı, tam olarak başkalarının kaybettiğidir; ortada üretilen yeni " +
+                "değer yoktur, pasta sabittir. Yatırımda ise pasta büyüyebilir — herkes birden kazanabilir.",
+                [("Doğru", true), ("Yanlış", false)]),
+
+            // ── Zor: kavramı başka bağlama taşıyabiliyor mu? ─────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Bir ürün \"garantili ve yıllık %90 getiri\" diye pazarlanıyor. Buradaki mantık hatası nedir?",
+                "Getiri bir risk primi içerir: belirsizliğe katlanana verilen ekstra. Garanti varsa risk yoktur, " +
+                "risk yoksa yüksek prim de olmaz. \"Garantili\" ve \"çok yüksek\" aynı anda sürekli var olamaz — " +
+                "biri gerçek değildir. Bu, dolandırıcılığın klasik işaretidir.",
+                [("Hiçbir hata yok, mümkündür", false),
+                 ("Garanti ile yüksek getiri aynı anda olamaz — risk primi çelişkisi", true),
+                 ("Sadece oran biraz yüksek, gerisi doğru", false),
+                 ("Getiri aylık verilseydi doğru olurdu", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "İki günde büyük kazanan biri için hangisi doğrudur?",
+                "Kısa vadeli tek bir sonuç, kararın iyi mi yoksa sadece şanslı mı olduğunu söylemez — sonuç ile süreç " +
+                "aynı şey değildir. Yazı-turada üst üste kazanmak yetenek değildir. İyi süreç uzun vadede belli olur.",
+                [("Kesinlikle yetenekli bir yatırımcıdır", false),
+                 ("Tek sonuç sürecin iyi mi şanslı mı olduğunu göstermez", true),
+                 ("Yöntemi herkes kopyalamalıdır", false),
+                 ("Bundan sonra hep kazanır", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Aşağıdakilerden hangileri getirinin VAR OLMA sebebidir? (birden fazla)",
+                "Getiri iki şeyin karşılığıdır: parayı bugün kullanmaktan vazgeçmek (fırsat maliyeti) ve belirsizliğe " +
+                "katlanmak (risk primi). \"Bankanın cömertliği\" ya da \"paranın kendiliğinden çoğalması\" gerçek " +
+                "sebepler değildir — getirinin arkasında hep bir vazgeçiş ve bir risk vardır.",
+                [("Fırsat maliyeti — bugün kullanmaktan vazgeçmek", true),
+                 ("Risk primi — belirsizliğe katlanmak", true),
+                 ("Paranın kendiliğinden çoğalması", false),
+                 ("Bankanın cömertliği", false)]),
+        ]);
+
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",
         [
             // ── Kolay ────────────────────────────────────────────────────────
