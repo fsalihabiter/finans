@@ -271,6 +271,28 @@ describe("EducationPage", () => {
     expect(await screen.findByRole("img", { name: /nominal ve reel getirisi/i })).toBeInTheDocument();
   });
 
+  it("yarım kalan ders KALDIĞI adımdan açılır (progressPercent'ten resume)", async () => {
+    // Kullanıcı bildirimi: dersi kapatıp açınca baştan başlıyordu. Artık ilerleme
+    // yüzdesinden en ileri okuma adımına dönülür. 5 adım (4 bölüm + test), %50 → 3. adım.
+    mockStepped("Beginner", steppedDetail({ status: "InProgress", progressPercent: 50 }));
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    expect(await screen.findByText("Uzman katmanı.")).toBeInTheDocument(); // 3. adımın gövdesi
+    expect(screen.getByText("Adım 3/5")).toBeInTheDocument();
+    // 1. adımın gövdesi artık görünmüyor (baştan başlamadı).
+    expect(screen.queryByText("Çekirdek anlatım.")).not.toBeInTheDocument();
+  });
+
+  it("tamamlanmış ders baştan açılır (gözden geçirme — resume etmez)", async () => {
+    mockStepped("Beginner", steppedDetail({ status: "Completed", progressPercent: 100 }));
+    renderWithProviders(<EducationPage />);
+    fireEvent.click(await screen.findByText("Enflasyon ve Reel Getiri"));
+
+    expect(await screen.findByText("Çekirdek anlatım.")).toBeInTheDocument();
+    expect(screen.getByText("Adım 1/5")).toBeInTheDocument();
+  });
+
   it("bölümsüz ders tek parça okunur (geriye dönük uyum)", async () => {
     mockStepped("Beginner", {
       ...lessonDetail,

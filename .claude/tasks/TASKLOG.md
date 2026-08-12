@@ -20,6 +20,40 @@
 
 ---
 
+## 2026-07-26 · Eğitim UX düzeltmeleri (kullanıcı bildirimi) — 3 sorun
+- **Görev(ler):** ad-hoc (canlı kullanımda bulunan hatalar). fable-mode.
+- **Ne yapıldı:** Kullanıcı üç sorun bildirdi, üçü de düzeltildi ve **canlı
+  tarayıcıda doğrulandı**:
+  **(1) Kaldığı yer tutulmuyordu** — ders kapatılıp açılınca baştan başlıyordu.
+  `LessonReader` artık `progressPercent`'ten en ileri okuma adımına döner (bir kez,
+  `resumed` bayrağı); ileri gidince InProgress + yüzde **backend'e kaydedilir**
+  (`persistStep`, 95'te sınırlı — tamamlama yalnız testle=100). Tamamlanmış ders
+  baştan açılır (gözden geçirme). Canlı: 4. adıma gidip kapatınca "Adım 4/13"ten açıldı.
+  **(2) Ders tamamlanınca set kartı ilerlemesi değişmiyordu** — `useSubmitQuizAttempt`
+  ve `useUpdateLessonProgress` `edu-tracks` sorgusunu **invalidate etmiyordu**;
+  set kartındaki `completedCount` o sorgudan gelir. Eklendi. Canlı: testi geçince
+  kart 0/2 → **1/2 · %50** oldu.
+  **(3) Seçili quiz şıkkı belirsizdi** — `.quiz-option.selected:not(:disabled)`
+  güçlendirildi (accent halka `box-shadow` + `color-mix` dolu bg + kalın metin +
+  `quiz-pick` pop animasyonu); işaret seçiliyken **dolu** (○→●, ☐→☑) ve accent renkli.
+  Submit sonrası şık `disabled` → efekt düşer, doğru/yanlış rengi devralır. Canlı:
+  seçili şıklar net ayırt edilir.
+- **Dokunulan dosyalar:** `web/src/lib/hooks.ts` (edu-tracks invalidasyonu),
+  `web/src/routes/EducationPage.tsx` (resume + persistStep + goToStep + quiz işareti),
+  `web/src/App.css` (quiz-option.selected efekti + quiz-pick keyframe),
+  `web/src/routes/EducationPage.test.tsx` (2 resume regresyon testi).
+- **Test:** 2 yeni web testi (yarım ders kaldığı adımdan açılır · tamamlanmış ders
+  baştan açılır), web **137/137**, web build (tsc) temiz. **Canlı teyit:** üç sorun
+  da tarayıcıda düzeltilmiş görüldü (Docker api+caddy + Vite dev, eğitim ilerlemesi
+  sıfırlanıp senaryo baştan sürüldü — portföy verisine dokunulmadı).
+- **Karar/Not:** Resume backend `progressPercent` üzerinden (cross-device, ilerleme
+  çubuğunu da anlamlı kılar); `sessionStorage` yerine seçildi çünkü uygulama zaten
+  ilerlemeyi sunucuda tutuyor. InProgress kaydı sonraki dersi AÇMAZ (kilit yalnız
+  Completed'a bağlı, öğrenme kapısı korunur). Okuma yüzdesi 95 tavanlı → yanlışlıkla
+  "tamamlandı" sayılmaz.
+- **Durum:** tamamlandı.
+- **Sıradaki:** **S0-L3 "Acil durum fonu ve borç"** (tam derinlik, ön-koşul S0-L2→S0-L3).
+
 ## 2026-07-26 · T6.16 devam — S0-L2 "Paranın haritası" tam zenginlikte (ders 2/10)
 - **Görev(ler):** T6.16 (Set 0 içerik turu, ders 2). fable-mode.
 - **Ne yapıldı:** **S0-L2 "Paranın haritası — gelir, gider, birikim"** eksiksiz.

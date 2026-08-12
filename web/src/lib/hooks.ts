@@ -436,7 +436,10 @@ export function useUpdateLessonProgress(lessonId: string) {
   return useMutation({
     mutationFn: (input: UpdateLessonProgressInput) => api.updateLessonProgress(lessonId, input),
     onSuccess: () => {
-      // Ders listesi (durum/kilit) + ders detayı yeniden çekilsin.
+      // Ders listesi (durum/kilit) + ders detayı + SET KARTI ilerlemesi tazelensin.
+      // `edu-tracks` unutulunca set kartındaki "x/y ders" sayacı bayat kalıyordu
+      // (kullanıcı bildirimi) — completedCount o sorgudan gelir.
+      void qc.invalidateQueries({ queryKey: ["edu-tracks"] });
       void qc.invalidateQueries({ queryKey: ["edu-track-lessons"] });
       void qc.invalidateQueries({ queryKey: ["edu-lesson"] });
       void qc.invalidateQueries({ queryKey: ["edu-by-concept"] });
@@ -449,8 +452,9 @@ export function useSubmitQuizAttempt(quizId: string) {
   return useMutation({
     mutationFn: (input: SubmitQuizAttemptInput) => api.submitQuizAttempt(quizId, input),
     onSuccess: () => {
-      // Testi GEÇMEK dersi tamamlar (öğrenme kapısı, backend) → ders durumu ve
-      // sonraki dersin kilidi değişmiş olabilir; liste + detay tazelenmeli.
+      // Testi GEÇMEK dersi tamamlar (öğrenme kapısı, backend) → ders durumu,
+      // sonraki dersin kilidi VE set kartı ilerlemesi (completedCount) değişir; hepsi tazelenmeli.
+      void qc.invalidateQueries({ queryKey: ["edu-tracks"] });
       void qc.invalidateQueries({ queryKey: ["edu-track-lessons"] });
       void qc.invalidateQueries({ queryKey: ["edu-lesson"] });
       void qc.invalidateQueries({ queryKey: ["edu-by-concept"] });

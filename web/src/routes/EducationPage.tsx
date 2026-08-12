@@ -630,15 +630,50 @@ function LessonReader({
 
   // Ders değişince baştan başla (sonraki derse geçişte adım sayacı sıfırlanmalı).
   const [loadedSlug, setLoadedSlug] = useState(slug);
+  const [resumed, setResumed] = useState(false);
   if (loadedSlug !== slug) {
     setLoadedSlug(slug);
     setStepIndex(0);
+    setResumed(false);
   }
 
   const steps = useMemo(
     () => (lesson.data ? buildSteps(lesson.data, profile.data?.literacyLevel ?? null) : []),
     [lesson.data, profile.data?.literacyLevel],
   );
+
+  // KALDIĞI YER (kullanıcı bildirimi): ders açıldığında `progressPercent`'ten en
+  // ileri okuma adımına dön — böylece dersi kapatıp açınca baştan başlamaz.
+  // Bir kez uygulanır (`resumed`); sonraki adım ilerlemeleri bunu EZMEZ.
+  // Tamamlanmış ders baştan açılır (gözden geçirme); yarım kalan yerinden devam eder.
+  if (!resumed && lesson.data && steps.length > 0) {
+    setResumed(true);
+    if (lesson.data.status !== "Completed") {
+      const maxStep = steps.length - 1;
+      const target = Math.min(
+        Math.max(Math.round(((lesson.data.progressPercent ?? 0) / 100) * maxStep), 0),
+        maxStep,
+      );
+      if (target !== stepIndex) setStepIndex(target);
+    }
+  }
+
+  // İlerleme kalıcı olsun: ileri adımda InProgress + yüzde kaydedilir (backend).
+  // Okuma ilerlemesi 95'te sınırlı — "tamamlandı" (100) YALNIZ testi geçince olur
+  // (öğrenme kapısı). Yalnız daha ileri bir yüzdeye geçince yazılır (gereksiz istek yok).
+  const persistStep = (target: number) => {
+    if (!lesson.data || lesson.data.status === "Completed") return;
+    const maxStep = Math.max(steps.length - 1, 1);
+    const pct = Math.min(95, Math.round((target / maxStep) * 100));
+    if (pct > (lesson.data.progressPercent ?? 0)) {
+      complete.mutate({ status: "InProgress", progressPercent: pct });
+    }
+  };
+
+  const goToStep = (target: number) => {
+    if (target > stepIndex) persistStep(target);
+    setStepIndex(target);
+  };
 
   const onComplete = () => {
     complete.mutate(
@@ -738,7 +773,7 @@ function LessonReader({
               {/* Geniş ekranda iki sütun: solda yol haritası (yapışkan), sağda adım.
                   Böylece metin kendi okuma genişliğini korurken sayfa boş kalmaz. */}
               <div className="lesson-layout">
-                <LessonRoadmap steps={steps} current={stepIndex} onJump={setStepIndex} />
+                <LessonRoadmap steps={steps} current={stepIndex} onJump={goToStep} />
 
                 <div className="lesson-step">
                   <div className="lesson-step-head">
@@ -769,7 +804,7 @@ function LessonReader({
                   <button
                     type="button"
                     className="btn-primary next-lesson"
-                    onClick={() => setStepIndex(stepIndex + 1)}
+                    onClick={() => goToStep(stepIndex + 1)}
                   >
                     {nextStep?.key === "quiz" ? "Mini teste geç →" : `Devam: ${nextStep?.title} →`}
                   </button>
@@ -891,7 +926,17 @@ function QuizPanel({ quiz }: { quiz: Quiz }) {
                       aria-pressed={isSelected}
                     >
                       <span className="quiz-mark" aria-hidden="true">
-                        {submitted && isCorrect ? "✓" : submitted && isSelected ? "✕" : multi ? "☐" : "○"}
+                        {submitted && isCorrect
+                          ? "✓"
+                          : submitted && isSelected
+                            ? "✕"
+                            : isSelected
+                              ? multi
+                                ? "☑"
+                                : "●"
+                              : multi
+                                ? "☐"
+                                : "○"}
                       </span>
                       {o.text}
                     </button>
