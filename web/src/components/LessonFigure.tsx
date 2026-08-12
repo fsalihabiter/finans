@@ -729,11 +729,185 @@ function HoldVsFlip() {
   );
 }
 
+// ── S0-L2 · Paranın haritası figürleri ──────────────────────────────────────
+
+/** S0-L2 · Üç kova: gelir → zorunlu gider · isteğe bağlı gider · birikim. */
+function ThreeBuckets() {
+  return (
+    <Figure
+      label="Gelir üç kovaya dağılır: zorunlu gider, isteğe bağlı gider ve birikim; yatırım hep birikim kovasından başlar"
+      caption="Gelir üç kovaya bölünür. Yatırılacak para yalnızca üçüncü kovadan (birikim) çıkar."
+      height={150}
+    >
+      <rect x={110} y={16} width={100} height={22} rx="5" className="fig-bar-muted" />
+      <text x={160} y={31} className="fig-value" textAnchor="middle">gelir</text>
+      <path d="M140 40 L60 66" className="fig-line-steady" fill="none" />
+      <path d="M160 40 L160 66" className="fig-line-steady" fill="none" />
+      <path d="M180 40 L260 66" className="fig-line-steady" fill="none" />
+      <Panel x={10} y={70} w={96} h={66} title="Zorunlu" />
+      <Panel x={112} y={70} w={96} h={66} title="İsteğe bağlı" />
+      <rect x={214} y={70} width={96} height={66} rx="8" className="fig-bar-pos" opacity="0.28" />
+      <text x={262} y={85} className="fig-label" textAnchor="middle">Birikim</text>
+      <text x={262} y={116} className="fig-value pos" textAnchor="middle">→ yatırım</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · Bir aylık dağılım: gelir çubuğu üç dilime bölünür (18k/9k/3k örnek). */
+function MonthlySplit() {
+  const segs = [
+    { w: 168, cls: "fig-bar-muted", label: "zorunlu 18.000" },
+    { w: 84, cls: "fig-bar-muted", label: "isteğe bağlı 9.000" },
+    { w: 28, cls: "fig-bar-pos", label: "birikim 3.000" },
+  ];
+  let x = 20;
+  return (
+    <Figure
+      label="30.000 liralık gelir dilimlere ayrılıyor: 18.000 zorunlu, 9.000 isteğe bağlı, geriye 3.000 birikim kalıyor"
+      caption="Örnek: 30.000 ₺ gelirin yalnızca küçük bir dilimi (3.000 ₺) birikime kalıyor."
+      height={110}
+    >
+      {segs.map((s) => {
+        const rx = x;
+        x += s.w + 2;
+        return (
+          <g key={s.label}>
+            <rect x={rx} y={34} width={s.w} height={28} rx="3" className={s.cls} />
+          </g>
+        );
+      })}
+      <text x={20} y={82} className="fig-label">◼ zorunlu 18.000</text>
+      <text x={150} y={82} className="fig-label">◼ isteğe bağlı 9.000</text>
+      <text x={20} y={98} className="fig-value pos">◼ birikim 3.000 ₺ (%10)</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · Birikim oranı: gelirin içinde birikim payı (%10 örnek). */
+function SavingsRateBar() {
+  return (
+    <Figure
+      label="Birikim oranı gelirin içindeki birikim payıdır: örnekte gelirin yüzde onu kenara ayrılıyor"
+      caption="Birikim oranı = birikim ÷ gelir. Mutlak tutar değil, bu oran karşılaştırma sağlar."
+      height={96}
+    >
+      <text x={16} y={50} className="fig-label">gelir</text>
+      <rect x={70} y={34} width={230} height={26} rx="4" className="fig-bar-muted" />
+      <rect x={70} y={34} width={23} height={26} rx="4" className="fig-bar-pos" />
+      <text x={181} y={51} className="fig-value" textAnchor="middle">%90 yaşam · %10 birikim</text>
+      <text x={70} y={80} className="fig-value pos">birikim ÷ gelir = %10</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · Aynı gelir, iki oran: 12 ayda biriken tutar (A %10 → 36k, B %20 → 72k). */
+function TwoSavers() {
+  return (
+    <Figure
+      label="Aynı gelirle A yüzde on biriktirince on iki ayda 36.000, B yüzde yirmi biriktirince 72.000 birikir — tam iki katı"
+      caption="Aynı gelir, aynı süre: yalnızca birikim oranı farkı biriken tutarı ikiye katlıyor."
+      height={140}
+    >
+      <Panel x={6} y={20} w={148} h={106} title="A · %10" />
+      <rect x={30} y={92} width={100} height={22} rx="3" className="fig-bar-muted" />
+      <text x={80} y={108} className="fig-value" textAnchor="middle">36.000 ₺</text>
+
+      <Panel x={166} y={20} w={148} h={106} title="B · %20" />
+      <rect x={190} y={70} width={100} height={44} rx="3" className="fig-bar-pos" />
+      <text x={240} y={97} className="fig-value" textAnchor="middle">72.000 ₺</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · "Önce harca, kalanı biriktir" → kalan sıfıra yaklaşır. */
+function LeftoverTrap() {
+  return (
+    <Figure
+      label="Önce harca kalanı biriktir planında harcama geliri neredeyse tümüyle yer ve birikime kalan sıfıra yaklaşır"
+      caption={'Biriktirmeyi "kalan"a bırakmak, onu her ay en zayıf halkaya bağlar.'}
+      height={100}
+    >
+      <text x={16} y={48} className="fig-label">gelir</text>
+      <rect x={70} y={32} width={228} height={26} rx="4" className="fig-bar-muted" />
+      <rect x={70} y={32} width={222} height={26} rx="4" className="fig-bar-neg" opacity="0.55" />
+      <text x={180} y={49} className="fig-value" textAnchor="middle">harcama genişler…</text>
+      <text x={70} y={80} className="fig-value neg">kalan ≈ 0</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · Önce kendine öde: birikim EN BAŞTA ayrılır, kalanla yaşanır. */
+function PayYourselfFirst() {
+  return (
+    <Figure
+      label="Önce kendine öde yönteminde birikim gelirin en başında ayrılır ve geriye kalanla yaşanır"
+      caption="Sıra tersine döner: önce birikim ayrılır, kalanla yaşanır. Birikim artık öncelik, artık değil."
+      height={100}
+    >
+      <text x={16} y={48} className="fig-label">gelir</text>
+      <rect x={70} y={32} width={228} height={26} rx="4" className="fig-bar-muted" />
+      <rect x={70} y={32} width={46} height={26} rx="4" className="fig-bar-pos" />
+      <text x={93} y={50} className="fig-value" textAnchor="middle">önce</text>
+      <text x={207} y={49} className="fig-label" textAnchor="middle">kalanla yaşa</text>
+      <text x={70} y={80} className="fig-value pos">birikim = öncelik, artık değil</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · Yaşam tarzı enflasyonu: zam gelince harcama büyür, birikim yerinde sayar. */
+function LifestyleCreep() {
+  return (
+    <Figure
+      label="Zam gelince harcama da onunla büyür ve birikim oranı yerinde sayar; buna yaşam tarzı enflasyonu denir"
+      caption="Gelir artınca harcama da büyürse birikim oranı yerinde sayar — yükseltmek bilinçli bir karardır."
+      height={130}
+    >
+      <text x={12} y={44} className="fig-label">önce</text>
+      <rect x={64} y={30} width={150} height={22} rx="3" className="fig-bar-muted" />
+      <rect x={214} y={30} width={22} height={22} rx="3" className="fig-bar-pos" />
+
+      <text x={12} y={92} className="fig-label">zam sonrası</text>
+      <rect x={64} y={78} width={190} height={22} rx="3" className="fig-bar-muted" />
+      <rect x={254} y={78} width={22} height={22} rx="3" className="fig-bar-pos" />
+      <text x={150} y={120} className="fig-label" textAnchor="middle">harcama büyüdü · birikim aynı kaldı</text>
+    </Figure>
+  );
+}
+
+/** S0-L2 · Oran mı getiri mi: erken dönemde oran kaldıracı tutarı ikiye katlar. */
+function RateVsReturnLever() {
+  return (
+    <Figure
+      label="Yolun başında birikim oranını ikiye katlamak biriken tutarı doğrudan ikiye katlar; küçük tutarda getiri farkının etkisi ise çok küçüktür"
+      caption="Başlangıçta kaldıraç oran tarafındadır: oranı ikiye katlamak tutarı ikiye katlar; getiri farkı küçük tutarda az fark eder."
+      height={150}
+    >
+      <Panel x={6} y={20} w={148} h={116} title="Oranı 2'ye katla" />
+      <rect x={40} y={98} width={40} height={22} rx="3" className="fig-bar-muted" />
+      <rect x={40} y={70} width={80} height={22} rx="3" className="fig-bar-pos" />
+      <text x={80} y={132} className="fig-value pos" textAnchor="middle">tutar ×2</text>
+
+      <Panel x={166} y={20} w={148} h={116} title="Getiriyi 2'ye katla" />
+      <rect x={200} y={98} width={40} height={22} rx="3" className="fig-bar-muted" />
+      <rect x={200} y={90} width={46} height={22} rx="3" className="fig-bar-pos" />
+      <text x={240} y={132} className="fig-label" textAnchor="middle">küçük tutarda az fark</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
   "three-actions": ThreeActions,
   "hold-vs-flip": HoldVsFlip,
+  "three-buckets": ThreeBuckets,
+  "monthly-split": MonthlySplit,
+  "savings-rate-bar": SavingsRateBar,
+  "two-savers": TwoSavers,
+  "leftover-trap": LeftoverTrap,
+  "pay-yourself-first": PayYourselfFirst,
+  "lifestyle-creep": LifestyleCreep,
+  "rate-vs-return-lever": RateVsReturnLever,
   "ten-thousand-three-paths": TenThousandThreePaths,
   "capital-to-use": CapitalToUse,
   "money-at-work": MoneyAtWork,

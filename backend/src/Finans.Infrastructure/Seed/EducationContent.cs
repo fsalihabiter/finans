@@ -1442,6 +1442,189 @@ internal static class EducationContent
         ne anlama geldiğini gösterir — kararlar senindir.
         """));
 
+    // ── S0-L2 — Paranın haritası: gelir, gider, birikim ──────────────────────
+    public static IEnumerable<LessonSection> LessonS0L2(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Yatırılacak para gökten inmez — bir yerden **artması** gerekir. Bu ders
+        onun haritasını çıkarır. Bitirdiğinde şunları yapabileceksin:
+
+        - Geliri, **zorunlu** gideri, **isteğe bağlı** gideri ve birikimi
+          birbirinden ayırmak
+        - Birikim oranını (birikim ÷ gelir) hesaplamak
+        - Yatırılacak paranın tam olarak **nereden çıktığını** kendi cümlenle
+          anlatmak
+        - **(İleri)** Erken dönemde birikim oranının, getiri oranından neden daha
+          güçlü bir kaldıraç olduğunu karşılaştırmak
+
+        Dersin sonunda kısa bir test var. **Not:** bu ders sana "şu kadar biriktir"
+        demez — yalnızca haritayı ve araçları verir; oran senin kararın.
+        """),
+
+        Core("""
+        ## Para nereye gidiyor? Üç kova
+
+        Her ay eline geçen paraya **gelir** diyelim. Gelir üç kovaya dağılır:
+
+        - **Zorunlu gider** — ertelenemeyen, olmazsa olmaz harcamalar (kira,
+          fatura, temel gıda).
+        - **İsteğe bağlı gider** — hayatı güzelleştiren ama ertelenebilir
+          harcamalar (dışarıda yemek, abonelikler, keyif).
+        - **Birikim** — hiçbir kovaya gitmeyip kenara ayrılan kısım.
+
+        Yatırım hep bu üçüncü kovadan başlar. Zorunlu ve isteğe bağlı giderler
+        geliri tümüyle yerse, üçüncü kova boş kalır ve yatırılacak hiçbir şey olmaz.
+        Yani yatırımın ilk adımı borsada değil, bu haritada atılır.
+        """, "three-buckets"),
+
+        Ex("""
+        ## Adım adım: bir aylık dağılım
+
+        Diyelim aylık gelirin **30.000 ₺** (örnek bir tutar). Bir ay şöyle geçti:
+
+        - Zorunlu gider: **18.000 ₺** (kira, fatura, temel gıda)
+        - İsteğe bağlı gider: **9.000 ₺** (yemek, keyif, abonelik)
+        - Kalan: 30.000 − 18.000 − 9.000 = **3.000 ₺**
+
+        Bu 3.000 ₺ senin **birikimin** — yatırıma dönüşebilecek tek kısım. Görüldüğü
+        gibi 30.000 liralık gelirin yalnızca küçük bir dilimi kenara kaldı. Haritayı
+        çizmek, bu dilimin nereden büyüyebileceğini de gösterir: iki gider kovasından
+        biri küçülürse üçüncü kova büyür.
+        """, "monthly-split"),
+
+        Core("""
+        ## Birikim oranı: tek bir sayı
+
+        "3.000 lira" tek başına bir şey söylemez — geliri farklı iki kişide çok
+        farklı anlamlar taşır. Bu yüzden mutlak tutar yerine **oran** kullanılır:
+
+        > birikim oranı = birikim ÷ gelir
+
+        Örnekteki kişide: 3.000 ÷ 30.000 = **0,10**, yani **%10**. Bu oran, gelirin
+        ne kadarını geleceğe aktardığını tek bakışta gösterir ve farklı gelirleri
+        **karşılaştırılabilir** kılar. Yüksek gelir tek başına yeterli değildir;
+        önemli olan gelirin **ne kadarının** kaldığıdır.
+        """, "savings-rate-bar"),
+
+        Ex("""
+        ## Adım adım: aynı gelir, iki oran
+
+        İki kişinin de geliri aylık 30.000 ₺. Ama birikim oranları farklı:
+
+        - **Kişi A** — %10 biriktiriyor → ayda 3.000 ₺
+        - **Kişi B** — %20 biriktiriyor → ayda 6.000 ₺
+
+        On iki ay sonra (getiriyi bir kenara bırakıp yalnız biriken tutara bakalım):
+
+        - A: 3.000 × 12 = **36.000 ₺**
+        - B: 6.000 × 12 = **72.000 ₺**
+
+        Aynı gelir, aynı süre — ama biriken tutar **iki katı**. Daha yatırım
+        yapmadan, sadece haritadaki oran değişti. İşte bu yüzden birikim oranı
+        yolculuğun ilk ve en kontrol edilebilir değişkenidir.
+        """, "two-savers"),
+
+        Trap("""
+        ## Tuzak: "Önce harca, kalanı biriktiririm"
+
+        En yaygın plan budur ve en sık başarısız olandır. Sıra şöyle işler: gelir
+        gelir → harcamalar yapılır → **kalanı** biriktiririm.
+
+        Sorun şu: harcama, kendini dolduracak kadar genişleme eğilimindedir. Ay
+        sonunda "kalan" çoğu zaman sıfıra yakındır — kötü niyetten değil, sıranın
+        kendisinden. Biriktirmeyi **artığa** bırakmak, onu her ay en zayıf halkaya
+        bağlamaktır.
+        """, "leftover-trap"),
+
+        Ctx("""
+        ## Sırayı ters çevirmek: önce kendine ayır
+
+        Tuzağın çözümü sırayı değiştirmektir: gelir gelir → **önce birikim ayrılır**
+        → kalanla yaşanır. Buna genelde "önce kendine öde" denir.
+
+        Fark psikolojiktir ama güçlüdür: birikim artık bir **artık** değil, bir
+        **öncelik**tir. Kalanla yaşamak, çoğu insanda harcamayı kendiliğinden o
+        çerçeveye sığdırır. Otomatik bir talimatla ayın ilk günü ayırmak, bu sırayı
+        iradene bağlı olmaktan çıkarır.
+
+        Bu bir **yöntemdir**, bir zorunluluk değil — hangi oranın sana uyduğuna
+        yalnızca sen karar verirsin.
+        """, "pay-yourself-first"),
+
+        Ex("""
+        ## Düzensiz gelir: oran yerine aralık
+
+        Ya gelir her ay değişiyorsa (serbest çalışan, esnaf)? O zaman tek bir oran
+        yerine bir **aralık** düşünmek daha gerçekçidir: bol aylarda daha çok, kıt
+        aylarda daha az ayırmak.
+
+        Bir yaklaşım, kıt ayları da karşılayan bir **tampon** (acil durum fonu — bir
+        sonraki ders) kurup, bol ayların fazlasını oraya aktarmaktır. Böylece
+        düzensiz gelir, düzenli bir birikime çevrilebilir. Buradaki amaç kesin bir
+        rakam değil, dalgalanmaya dayanıklı bir **alışkanlık**.
+        """),
+
+        Trap("""
+        ## Tuzak: "Zam alınca birikim kendiliğinden artar"
+
+        Sezgi şöyle der: gelirim artarsa, biriktirdiğim de artar. Gerçekte çoğu zaman
+        olan farklıdır — gelir artınca **harcama da onunla birlikte büyür** ve
+        birikim oranı yerinde sayar. Buna "yaşam tarzı enflasyonu" denir.
+
+        Yeni bir gelir geldiğinde oran kendiliğinden yükselmez; onu yükseltmek
+        **bilinçli** bir karardır. Zammın bir kısmını doğrudan birikim kovasına
+        yönlendirmezsen, birkaç ay içinde o para da harcamaların içinde erir.
+        """, "lifestyle-creep"),
+
+        Deep("""
+        ## Oran mı, getiri mi? Erken dönemin kaldıracı
+
+        Yeni başlayan biri iki şeyi büyütebilir: **birikim oranını** ya da yatırımın
+        **getiri oranını**. Hangisi daha güçlü?
+
+        Başlangıçta biriken tutar küçüktür. Küçük bir tutarın getirisi de küçüktür —
+        %10 yerine %20 getiri, 3.000 liralık birikimde yılda yalnızca birkaç yüz
+        lira fark eder. Oysa birikim oranını %10'dan %20'ye çıkarmak, biriken tutarı
+        **doğrudan ikiye katlar** (örnekte 36.000 → 72.000).
+
+        Yani yolun başında **kaldıracın oran tarafındadır**: kontrolün daha fazla,
+        etkisi daha büyük. Getiri, biriken tutar büyüdükçe (ileriki yıllarda,
+        bileşik etkiyle — Set 1) öne çıkar. İkisi düşman değil; sırası önemli.
+        """, "rate-vs-return-lever"),
+
+        Live("""
+        ## Senin portföyünde
+
+        Şu an portföyünün **{{cash_weight}}**'i nakitte duruyor. Nakit, henüz bir
+        kovaya yerleşmemiş, esnek kısımdır: acil durum tamponu da olabilir, sıradaki
+        yatırımın hammaddesi de.
+
+        Bu dersten sonra o nakde şu soruyla bakabilirsin: bu, bilinçli ayrılmış bir
+        **tampon** mu, yoksa "önce harca kalanı biriktir" tuzağından artakalan mı?
+        Cevap, senin haritanın ne kadarını kontrol ettiğini gösterir.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Kavramlar evrenseldir.** Gelir, gider, birikim oranı ve "önce kendine öde"
+        gibi kavramlar kişisel finans yazınının ortak dilidir; belirli bir kuruma
+        değil, genel muhasebe mantığına dayanır. Birikim oranı basit bir bölme
+        işlemidir (birikim ÷ gelir).
+
+        **Örnek sayılar kurgusaldır.** 30.000 ₺, %10, %20 gibi rakamların tamamı
+        anlatımı somutlaştırmak için **seçilmiş örneklerdir** — bir gelir/harcama
+        önerisi değildir. Gerçek veri yalnızca "Senin portföyünde" bölümünde, kendi
+        kayıtlarından gelir ve **kodda** hesaplanır.
+
+        **Bu bir yatırım tavsiyesi değildir** — bir bütçe tavsiyesi de değildir.
+        Ders hedef bir birikim oranı **dayatmaz** ("gelirinin şu kadarını biriktir"
+        demez); yalnızca oranın nasıl hesaplandığını ve hangi çerçevelerin
+        bulunduğunu gösterir. Karar senindir.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -1535,6 +1718,87 @@ internal static class EducationContent
                  ("Risk primi — belirsizliğe katlanmak", true),
                  ("Paranın kendiliğinden çoğalması", false),
                  ("Bankanın cömertliği", false)]),
+        ]);
+
+        // ── Set 0 · Ders 2 — Paranın haritası (9 soru / 3 zorluk) ────────────
+        yield return ("lesson-s0l2", "quiz-s0l2", "Paranın Haritası — Mini Test",
+        [
+            // ── Kolay ────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Kira ve fatura hangi kovaya girer?",
+                "Kira ve fatura ertelenemeyen, olmazsa olmaz harcamalardır — zorunlu gider. İsteğe bağlı gider " +
+                "ertelenebilen keyif harcamalarıdır; birikim ise hiçbir kovaya gitmeyip kenara ayrılan kısımdır.",
+                [("İsteğe bağlı gider", false), ("Zorunlu gider", true), ("Birikim", false), ("Gelir", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Birikim oranı nasıl hesaplanır?",
+                "Birikim oranı = birikim ÷ gelir. Mutlak tutar (\"3.000 lira\") tek başına anlam taşımaz; oran, " +
+                "gelirin ne kadarının geleceğe aktarıldığını gösterir ve farklı gelirleri karşılaştırılabilir kılar.",
+                [("Gelir ÷ gider", false),
+                 ("Birikim ÷ gelir", true),
+                 ("Gider ÷ birikim", false),
+                 ("Zorunlu gider ÷ gelir", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Yatırılacak para, gelir-gider haritasındaki birikim kovasından çıkar.",
+                "Doğru. Yatırım hep üçüncü kovadan (birikim) başlar. Zorunlu ve isteğe bağlı giderler geliri " +
+                "tümüyle yerse birikim kovası boş kalır ve yatırılacak hiçbir şey olmaz.",
+                [("Doğru", true), ("Yanlış", false)]),
+
+            // ── Orta ─────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Gelir 40.000 ₺, zorunlu gider 24.000 ₺, isteğe bağlı gider 10.000 ₺. Birikim oranı nedir?",
+                "Birikim = 40.000 − 24.000 − 10.000 = 6.000 ₺. Oran = 6.000 ÷ 40.000 = 0,15, yani %15. " +
+                "Önce birikim tutarı bulunur, sonra gelire bölünür.",
+                [("%10", false), ("%15", true), ("%24", false), ("%40", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "İki kişinin de geliri 30.000 ₺. A %10, B %20 biriktiriyor. 12 ay sonra (getiri hariç) " +
+                "biriken tutarlar nasıl olur?",
+                "A: 3.000 × 12 = 36.000 ₺; B: 6.000 × 12 = 72.000 ₺ — tam iki katı. Aynı gelir ve süreyle, " +
+                "yalnızca oran farkı biriken tutarı ikiye katlıyor. Henüz hiç yatırım getirisi işin içinde değil.",
+                [("İkisi de yaklaşık aynı birikir", false),
+                 ("A 36.000, B 72.000 — B iki katı", true),
+                 ("A 36.000, B 54.000", false),
+                 ("Oran fark etmez, tutarlar eşit", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Gelir artınca birikim oranı kendiliğinden yükselir.",
+                "Yükselmez. Gelir artınca harcama da onunla büyüme eğilimindedir (yaşam tarzı enflasyonu) ve oran " +
+                "yerinde sayabilir. Oranı yükseltmek — örneğin zammın bir kısmını doğrudan birikime yönlendirmek — " +
+                "bilinçli bir karardır.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor ──────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Yolun başında biriken tutar küçükken hangi kaldıraç daha güçlüdür?",
+                "Başlangıçta biriken tutar küçük olduğu için getiri farkının (ör. %10→%20) mutlak etkisi küçüktür. " +
+                "Oysa birikim oranını %10'dan %20'ye çıkarmak biriken tutarı DOĞRUDAN ikiye katlar. Erken dönemde " +
+                "kaldıraç oran tarafındadır; getiri, tutar büyüdükçe (bileşik etkiyle) öne çıkar.",
+                [("Getiri oranı — küçük tutarda bile belirleyicidir", false),
+                 ("Birikim oranı — tutarı doğrudan büyütür, kontrol daha fazla", true),
+                 ("İkisi de aynı etkiyi yapar", false),
+                 ("Hiçbiri; başlangıçta ikisi de önemsizdir", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "\"Önce harca, kalanı biriktir\" planı neden sık başarısız olur?",
+                "Harcama, kendini dolduracak kadar genişleme eğilimindedir; biriktirmeyi \"kalan\"a bırakmak onu her ay " +
+                "en zayıf halkaya bağlar ve ay sonunda kalan çoğu zaman sıfıra yakındır. Çözüm sırayı ters çevirmektir: " +
+                "önce birikimi ayırıp kalanla yaşamak.",
+                [("Faizler düşük olduğu için", false),
+                 ("Harcama genişleyip \"kalan\"ı sıfıra yaklaştırdığı için", true),
+                 ("Gelir her zaman yetersiz olduğu için", false),
+                 ("Bankalar biriktirmeye izin vermediği için", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Düzensiz geliri (serbest çalışan) düzenli birikime çevirmek için hangileri işe yarar? (birden fazla)",
+                "Tek bir sabit oran yerine bol/kıt aylara göre bir aralık düşünmek ve kıt ayları karşılayan bir tampon " +
+                "(acil durum fonu) kurup bol ayların fazlasını oraya aktarmak, dalgalanmayı düzenli birikime çevirir. " +
+                "\"Gelir düzenli olana kadar hiç biriktirmemek\" ise fırsatı tümden kaçırır.",
+                [("Bol/kıt aylara göre bir aralık belirlemek", true),
+                 ("Kıt ayları karşılayan bir tampon kurmak", true),
+                 ("Bol ayların fazlasını tampona aktarmak", true),
+                 ("Gelir düzenli olana kadar hiç biriktirmemek", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

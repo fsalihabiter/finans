@@ -104,13 +104,28 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > tek-yıldız `*italik*` MiniMarkdown desteklemediği için **literal yıldız** olarak
 > görünüyordu → `**kalın**`a çevrildi, api rebuild ile canlıda doğrulandı.
 
+> 🚧 **T6.16 · S0-L2 bitti (2026-07-26):** **"Paranın haritası — gelir, gider,
+> birikim"** tam zenginlikte. 12 aşama (üç kova · birikim oranı · önce kendine öde ·
+> yaşam tarzı enflasyonu · oran↔getiri kaldıracı), **8 figür** (`three-buckets`,
+> `monthly-split`, `savings-rate-bar`, `two-savers`, `leftover-trap`,
+> `pay-yourself-first`, `lifestyle-creep`, `rate-vs-return-lever` — 3 çok panelli),
+> **9 soru/3 zorluk**, **3 kavram** (income-expense · savings-rate ·
+> pay-yourself-first), ön-koşul S0-L1→S0-L2. ⚠ Yasal: hedef birikim oranı
+> **dayatılmadı** (§ "gelirinin şu kadarını biriktir" YOK; İ4 sınırı). İtalik
+> hatasından kaçınıldı (yalnız `**kalın**`). Sayımlar: bölüm 66→78, quiz 6→7,
+> soru 36→45, kavram 7→10, live 6→7, ön-koşul 4→5. EducationSeed+Api **41/41**,
+> Application 291/291, web 135/135, web build temiz.
+> ⚠ **Canlı tarayıcı teyidi: Docker Desktop kapalı (oturum boşluğunda), rebuild
+> bekliyor** — daemon ayağa kalkınca `docker compose up -d --build api` + Vite dev
+> ile S0-L2 figürleri/metni doğrulanacak.
+
 ## Sıradaki (öncelik sırası)
-1. **T6.16 devam — S0-L2…L10 (ders ders, tam derinlik):** 2 Paranın haritası ·
-   3 Acil durum fonu · **4 Bekleyen para neden erir (+enflasyon aracı=T6.18)** ·
+1. **T6.16 devam — S0-L3…L10 (ders ders, tam derinlik):**
+   3 Acil durum fonu ve borç · **4 Bekleyen para neden erir (+enflasyon aracı=T6.18)** ·
    5 Varlık türleri · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
    **9 Fiyat nereden çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders
    foundation üstüne eklenir, ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
-   ⚠ İş yükü (kalan): **~72 figür + 81 soru** → §16 §8.3 paylaşılan SVG öğeleri
+   ⚠ İş yükü (kalan): **~64 figür + 72 soru** → §16 §8.3 paylaşılan SVG öğeleri
    ihtiyaç oldukça çıkarılır. **T6.17a-j bu işe dahil edildi** (tam zenginlik kararı).
 2. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.

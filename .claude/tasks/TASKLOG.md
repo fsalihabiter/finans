@@ -20,6 +20,43 @@
 
 ---
 
+## 2026-07-26 · T6.16 devam — S0-L2 "Paranın haritası" tam zenginlikte (ders 2/10)
+- **Görev(ler):** T6.16 (Set 0 içerik turu, ders 2). fable-mode.
+- **Ne yapıldı:** **S0-L2 "Paranın haritası — gelir, gider, birikim"** eksiksiz.
+  12 aşama: açılış → **üç kova** (zorunlu/isteğe bağlı gider + birikim) → aylık
+  dağılım örneği → **birikim oranı** (birikim÷gelir) → aynı gelir iki oran (12 ayda
+  36k↔72k, iki katı) → tuzak "önce harca kalanı biriktir" → **önce kendine öde** →
+  düzensiz gelir (aralık + tampon) → tuzak "zam gelince oran artar" (yaşam tarzı
+  enflasyonu) → **oran↔getiri kaldıracı** (erken dönemde oran daha güçlü) → Senin
+  portföyünde (`cash_weight`) → kaynak. **8 figür** (3 çok panelli): `three-buckets`,
+  `monthly-split`, `savings-rate-bar`, `two-savers`, `leftover-trap`,
+  `pay-yourself-first`, `lifestyle-creep`, `rate-vs-return-lever`. **9 soru/3 zorluk**.
+  **3 kavram** tanıtıldı: income-expense · savings-rate · pay-yourself-first.
+  Ön-koşul zinciri: S0-L2 → S0-L1. Seed `SeedSet0Async`'te idempotent (ders +
+  ön-koşul + 3 kavram + wiring); builder + RemainingQuizzes'e kaydedildi.
+- **Dokunulan dosyalar:** `Finans.Infrastructure/Seed/EducationContent.cs` (LessonS0L2 +
+  9 soruluk quiz), `Finans.Infrastructure/Seed/SeedData.cs` (SeedSet0Async'e S0-L2 +
+  ön-koşul + 3 kavram + builder), `web/src/components/LessonFigure.tsx` (8 figür),
+  `tests/.../EducationSeedTests.cs` (sayımlar), ACTIVE.
+- **Test:** **EducationSeed+Api 41/41.** Sayımlar: bölüm 66→78, quiz 6→7,
+  soru 36→45, seçenek 126→158, ders 6→7, kavram 7→10, LessonConceptTag 7→10,
+  ön-koşul 4→5, live 6→7. Application **291/291**, web **135/135**, web build (tsc)
+  temiz. (Integration'daki 4 kırmızı = bilinen `WebApplicationFactory` ortam hatası.)
+- **Karar/Not:** ⚠ **Yasal (İ4):** ders hedef birikim oranı **DAYATMAZ** —
+  "gelirinin %20'sini biriktir" gibi bir cümle yok; kaynak bloğu bunu açıkça
+  söyler ("bir bütçe tavsiyesi de değildir"). ⚠ **İki tuzaktan kaçınıldı:**
+  (a) figür caption'ında `\"` JSX kaçışı (LeftoverTrap) → küme-parantezli string;
+  (b) kaynak bloğunda "yatırım **(veya bütçe)** tavsiyesi" araya girince yapısal
+  test ("yatırım tavsiyesi değildir" tam ifadesi) kırıldı → ifade bütünlüğü
+  korunacak şekilde yeniden yazıldı. S0-L1'in italik dersiyle bu turda hiç
+  tek-yıldız italik kullanılmadı.
+  ⚠ **Canlı tarayıcı teyidi bekliyor:** Docker Desktop oturum boşluğunda kapandı;
+  daemon ayağa kalkınca api rebuild + Vite dev ile S0-L2 doğrulanacak (S0-L1'de
+  bu adım italik hatasını yakalamıştı — canlı teyit atlanmamalı).
+- **Durum:** devam ediyor (10 dersin 2'si + foundation).
+- **Sıradaki:** **S0-L3 "Acil durum fonu ve borç"** aynı desende (tam derinlik),
+  ön-koşul S0-L2→S0-L3. ⚠ 🔴 İ4 dersi (borcun maliyeti — kesin↔belirsiz asimetrisi).
+
 ## 2026-07-26 · T6.16 (başladı) — Set 0 foundation + S0-L1 tam zenginlikte
 - **Görev(ler):** T6.16 (+ ürün sahibi kararıyla T6.17 birleşti). fable-mode.
 - **⚖ Ürün sahibi kararı — "tam zenginlik şimdi":** Set-0 dersleri sığ iskelet

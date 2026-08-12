@@ -571,6 +571,68 @@ public static class SeedData
             changed = true;
         }
 
+        // ── S0-L2 · Paranın haritası — gelir, gider, birikim ────────────────────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l2"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l2"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "paranin-haritasi",
+                OrderIndex = 2,
+                Title = "Paranın haritası — gelir, gider, birikim",
+                Summary = "Yatırılacak para nereden çıkar? Üç kova, birikim oranı ve \"önce kendine öde\".",
+                BodyMarkdown =
+                    "## Paranın haritası\n\n" +
+                    "Gelir üç kovaya dağılır: **zorunlu gider**, **isteğe bağlı gider** ve **birikim**. " +
+                    "Yatırım hep üçüncü kovadan başlar. Birikim oranı (birikim ÷ gelir) gelirin ne kadarının " +
+                    "geleceğe aktarıldığını gösterir; yolun başında en güçlü kaldıraç bu orandır.",
+                EstimatedMinutes = 6,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L2, S0-L1'i ister (track içi zincir).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l2") && p.PrerequisiteLessonId == Id("lesson-s0l1"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l2"),
+                PrerequisiteLessonId = Id("lesson-s0l1"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L2 üç kavram tanıtır (gelir-gider · birikim oranı · önce kendine öde).
+        var s0l2Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-income-expense", "income-expense", "Gelir ve Gider"),
+            ("tag-savings-rate", "savings-rate", "Birikim Oranı"),
+            ("tag-pay-yourself-first", "pay-yourself-first", "Önce Kendine Ayır"),
+        };
+        foreach (var (tagId, key, label) in s0l2Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l2") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l2"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -582,6 +644,7 @@ public static class SeedData
         var builders = new (Guid LessonId, Func<Guid, IEnumerable<LessonSection>> Build)[]
         {
             (Id("lesson-s0l1"), EducationContent.LessonS0L1), // T6.16 — Set 0 Ders 1
+            (Id("lesson-s0l2"), EducationContent.LessonS0L2), // T6.16 — Set 0 Ders 2
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),
