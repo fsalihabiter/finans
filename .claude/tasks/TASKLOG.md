@@ -50,9 +50,13 @@
   test ("yatırım tavsiyesi değildir" tam ifadesi) kırıldı → ifade bütünlüğü
   korunacak şekilde yeniden yazıldı. S0-L1'in italik dersiyle bu turda hiç
   tek-yıldız italik kullanılmadı.
-  ⚠ **Canlı tarayıcı teyidi bekliyor:** Docker Desktop oturum boşluğunda kapandı;
-  daemon ayağa kalkınca api rebuild + Vite dev ile S0-L2 doğrulanacak (S0-L1'de
-  bu adım italik hatasını yakalamıştı — canlı teyit atlanmamalı).
+  ✅ **Canlı tarayıcı teyidi yapıldı:** Docker daemon (oturum boşluğunda kapanmıştı)
+  yeniden başlatıldı → `docker compose up -d --build api` + `caddy` → seed indi
+  (S0-L2 12 bölüm/9 soru). /egitim'de: İlk Adımlar kartı 1/2·%50, ders listesi
+  (01 ✓Tamamlandı · 02 kilitsiz), S0-L2 okuyucu 13 adım + 3 kavram çipi, figürler
+  render (three-buckets çok panelli · two-savers 36k↔72k). **Literal yıldız YOK**,
+  işlenmiş örnek aritmetiği figürle eşleşti. (⚠ Docker daemon Windows/WSL2'de yavaş
+  kalktı — ~10 dk; caddy servisi de ayrıca başlatıldı, rebuild sadece api'yi getiriyor.)
 - **Durum:** devam ediyor (10 dersin 2'si + foundation).
 - **Sıradaki:** **S0-L3 "Acil durum fonu ve borç"** aynı desende (tam derinlik),
   ön-koşul S0-L2→S0-L3. ⚠ 🔴 İ4 dersi (borcun maliyeti — kesin↔belirsiz asimetrisi).

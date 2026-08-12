@@ -115,9 +115,13 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > hatasından kaçınıldı (yalnız `**kalın**`). Sayımlar: bölüm 66→78, quiz 6→7,
 > soru 36→45, kavram 7→10, live 6→7, ön-koşul 4→5. EducationSeed+Api **41/41**,
 > Application 291/291, web 135/135, web build temiz.
-> ⚠ **Canlı tarayıcı teyidi: Docker Desktop kapalı (oturum boşluğunda), rebuild
-> bekliyor** — daemon ayağa kalkınca `docker compose up -d --build api` + Vite dev
-> ile S0-L2 figürleri/metni doğrulanacak.
+> ✅ **Canlı tarayıcı teyidi yapıldı (2026-07-26):** Docker daemon (oturum boşluğunda
+> kapanmıştı) yeniden başlatıldı → api rebuild + caddy → compose Postgres'e indi
+> (S0-L2 12 bölüm/9 soru). /egitim'de: İlk Adımlar kartı **1/2 · %50**, ders listesi
+> (01 ✓Tamamlandı · 02 kilitsiz ön-koşuldan), S0-L2 okuyucu **13 adım** + 3 kavram
+> çipi + rozetli yol haritası, **figürler render** (three-buckets çok panelli akış ·
+> two-savers 36k↔72k karşılaştırma). **Literal yıldız YOK** (S0-L1 italik dersi
+> uygulandı), işlenmiş örnek aritmetiği figürle eşleşiyor.
 
 ## Sıradaki (öncelik sırası)
 1. **T6.16 devam — S0-L3…L10 (ders ders, tam derinlik):**
