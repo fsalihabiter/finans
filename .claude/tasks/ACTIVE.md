@@ -123,13 +123,23 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > two-savers 36k↔72k karşılaştırma). **Literal yıldız YOK** (S0-L1 italik dersi
 > uygulandı), işlenmiş örnek aritmetiği figürle eşleşiyor.
 
+> 🚧 **T6.16 · S0-L3 bitti (2026-07-26):** 🔴 İ4 dersi **"Acil durum fonu ve borç"**
+> tam zenginlikte. 13 aşama (şok · tampon 3 özellik · borcun bileşik maliyeti aylık %4→
+> yıllık ≈%60 · fırsat maliyeti · **kesin↔belirsiz asimetrisi**), **9 figür** (3 çok
+> panelli: with-without-buffer, one-lira-two-jobs, certain-vs-uncertain), **9 soru/3
+> zorluk**, **3 kavram** (emergency-fund·debt-cost·opportunity-cost), ön-koşul S0-L2→L3.
+> ⚠ İ4: "borcunu öde / yatırım yap" **demez** — yalnız çerçeve + hesap. EducationSeed+Api
+> **41/41**, Application 291/291, web 137/137. **✅ Canlı teyit:** S0-L1/L2 tamamlandı
+> işaretlenip S0-L3 kilidi açıldı; figürler render (debt-cost-ladder 12 bileşik çubuk
+> ≈%60, aritmetik tutarlı), literal yıldız yok, kart 2/3·%67.
+
 ## Sıradaki (öncelik sırası)
-1. **T6.16 devam — S0-L3…L10 (ders ders, tam derinlik):**
-   3 Acil durum fonu ve borç · **4 Bekleyen para neden erir (+enflasyon aracı=T6.18)** ·
-   5 Varlık türleri · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
-   **9 Fiyat nereden çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders
-   foundation üstüne eklenir, ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
-   ⚠ İş yükü (kalan): **~64 figür + 72 soru** → §16 §8.3 paylaşılan SVG öğeleri
+1. **T6.16 devam — S0-L4…L10 (ders ders, tam derinlik):**
+   **4 Bekleyen para neden erir (+enflasyon kaydırıcısı=T6.18)** · 5 Varlık türleri ·
+   6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy · **9 Fiyat nereden
+   çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders foundation üstüne eklenir,
+   ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
+   ⚠ İş yükü (kalan): **~55 figür + 63 soru** → §16 §8.3 paylaşılan SVG öğeleri
    ihtiyaç oldukça çıkarılır. **T6.17a-j bu işe dahil edildi** (tam zenginlik kararı).
 2. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.

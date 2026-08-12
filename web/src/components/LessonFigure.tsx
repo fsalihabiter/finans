@@ -895,11 +895,204 @@ function RateVsReturnLever() {
   );
 }
 
+// ── S0-L3 · Acil durum fonu ve borç figürleri ───────────────────────────────
+
+/** S0-L3 · Şok: düz giden hayat, aniden beklenmedik bir gider (sıçrama). */
+function ShockEvent() {
+  return (
+    <Figure
+      label="Hayat düz giderken beklenmedik ve ertelenemez bir gider aniden ortaya çıkar; buna şok denir"
+      caption="Şok: ne zaman geleceği belli olmayan, beklemeyen bir gider."
+      height={110}
+    >
+      <path d="M16 78 L120 78 L150 30 L152 78 L300 78" className="fig-line-volatile" fill="none" />
+      <circle cx={151} cy={30} r="4" className="fig-dot-volatile" />
+      <text x={151} y={20} className="fig-value neg" textAnchor="middle">şok!</text>
+      <text x={60} y={95} className="fig-label">olağan akış</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Aynı şok, iki kişi: tamponlu (yatırıma dokunmaz) ↔ tamponsuz (satmak zorunda). */
+function WithWithoutBuffer() {
+  return (
+    <Figure
+      label="Aynı şok karşısında tamponu olan kişi yatırımına dokunmaz, tamponu olmayan kişi bir varlığı satmak zorunda kalır"
+      caption="Tamponlu: şok tampondan karşılanır, yatırım korunur. Tamponsuz: mecburen satış."
+      height={150}
+    >
+      <Panel x={6} y={20} w={148} h={116} title="Tamponlu" />
+      <rect x={30} y={92} width={44} height={28} rx="4" className="fig-bar-pos" />
+      <text x={52} y={110} className="fig-value" textAnchor="middle">tampon</text>
+      <path d="M78 106 L112 106" className="fig-line-steady" fill="none" />
+      <text x={128} y={100} className="fig-label" textAnchor="middle">şok</text>
+      <text x={90} y={132} className="fig-label" textAnchor="middle">yatırım korunur</text>
+
+      <Panel x={166} y={20} w={148} h={116} title="Tamponsuz" />
+      <rect x={196} y={92} width={44} height={28} rx="4" className="fig-bar-muted" />
+      <text x={218} y={110} className="fig-value" textAnchor="middle">yatırım</text>
+      <path d="M244 106 L280 106" className="fig-line-volatile" fill="none" />
+      <text x={252} y={132} className="fig-value neg" textAnchor="middle">mecburen satış</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Tamponun üç özelliği: erişilebilir · oynamayan · ayrı. */
+function BufferTraits() {
+  const traits = ["Erişilebilir", "Oynamayan", "Ayrı"];
+  return (
+    <Figure
+      label="İyi bir tampon üç özellik taşır: erişilebilir, oynamayan ve ayrı"
+      caption="Bu üç özellik tamponu bir yatırımdan ayırır: yatırım büyümeyi, tampon hazır olmayı hedefler."
+      height={96}
+    >
+      {traits.map((t, i) => {
+        const x = 10 + i * 102;
+        return (
+          <g key={t}>
+            <rect x={x} y={34} width={92} height={34} rx="8" className="fig-bar-pos" opacity="0.22" />
+            <text x={x + 46} y={55} className="fig-value" textAnchor="middle">{t}</text>
+          </g>
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** S0-L3 · Getiri peşinde tamponun likiditesi feda edilir (ters yönlü iki ok). */
+function LiquidityTradedAway() {
+  return (
+    <Figure
+      label="Tampondan getiri beklemek onu tampon yapan likiditeyi feda eder: getiri artarken erişilebilirlik düşer"
+      caption="Getiri peşinde tamponu dalgalı/kilitli yere koymak, şok anında koruma işlevini yitirir."
+      height={110}
+    >
+      <text x={44} y={48} className="fig-label" textAnchor="middle">getiri isteği</text>
+      <path d="M20 58 L120 58" className="fig-line-steady" fill="none" />
+      <text x={130} y={62} className="fig-value pos">↑</text>
+
+      <text x={44} y={88} className="fig-label" textAnchor="middle">likidite</text>
+      <path d="M20 78 L120 78" className="fig-line-volatile" fill="none" />
+      <text x={130} y={82} className="fig-value neg">↓</text>
+      <text x={220} y={70} className="fig-label" textAnchor="middle">koruma zayıflar</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Aylık oran küçük görünür, yıllık maliyet büyür (aylık ↔ yıllık çubuk). */
+function MonthlyToYearly() {
+  return (
+    <Figure
+      label="Aylık oran küçük görünür ama yıla yayıldığında bileşiklenerek çok daha büyük bir maliyete döner"
+      caption="Aylık küçük oran ≠ yıllık maliyet: faiz faizin de üstüne biner (bileşik)."
+      height={110}
+    >
+      <line x1={78} y1="14" x2={78} y2="94" className="fig-axis" />
+      <text x={12} y={40} className="fig-label">aylık</text>
+      <rect x={78} y={26} width={22} height={20} rx="3" className="fig-bar-muted" />
+      <text x={106} y={41} className="fig-value">%4</text>
+      <text x={12} y={80} className="fig-label">yıllık</text>
+      <rect x={78} y={66} width={200} height={20} rx="3" className="fig-bar-neg" />
+      <text x={284} y={81} className="fig-value neg">≈%60</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Aylık %4 → bileşik merdiven → yıllık ≈ %60 (kaba çarpım %48 eksik). */
+function DebtCostLadder() {
+  const bars = [10, 22, 36, 52, 70, 92, 118, 148, 182, 218];
+  return (
+    <Figure
+      label="Aylık yüzde dört oran her ay bileşiklenerek yükselir ve yılda yaklaşık yüzde altmışa ulaşır; kaba çarpım yüzde kırk sekiz der ve eksik gösterir"
+      caption="Her ay oran bir önceki borcun üstüne biner (1,04 on iki kez): yıllık ≈ %60, kaba çarpım %48."
+      height={130}
+    >
+      <line x1={20} y1="104" x2={300} y2="104" className="fig-axis" />
+      {bars.map((h, i) => (
+        <rect key={i} x={22 + i * 27} y={104 - h * 0.4} width={20} height={h * 0.4} rx="2"
+          className={i === bars.length - 1 ? "fig-bar-neg" : "fig-bar-muted"} />
+      ))}
+      <text x={20} y={122} className="fig-label">1. ay → 12. ay (bileşik)</text>
+      <text x={276} y={40} className="fig-value neg" textAnchor="end">≈%60</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Bir lira iki işi aynı anda yapamaz: borç azaltmak ↔ yatırım (fırsat maliyeti). */
+function OneLiraTwoJobs() {
+  return (
+    <Figure
+      label="Bir lira ya borcu azaltmakta ya yatırımda kullanılabilir ama ikisinde birden değil; birini seçmek diğerinden vazgeçmektir"
+      caption="Bir lira, iki işi aynı anda yapamaz. Vazgeçtiğinin değeri: fırsat maliyeti."
+      height={130}
+    >
+      <rect x={132} y={22} width={56} height={26} rx="6" className="fig-bar-muted" />
+      <text x={160} y={39} className="fig-value" textAnchor="middle">1 ₺</text>
+      <path d="M150 48 L80 84" className="fig-line-steady" fill="none" />
+      <path d="M170 48 L240 84" className="fig-line-steady" fill="none" />
+      <Panel x={16} y={82} w={128} h={40} title="Borcu azalt" />
+      <text x={80} y={116} className="fig-label" textAnchor="middle">kesin kaçınılmış gider</text>
+      <Panel x={176} y={82} w={128} h={40} title="Yatırım" />
+      <text x={240} y={116} className="fig-label" textAnchor="middle">belirsiz getiri umudu</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Kesin maliyet (tek değer) ↔ belirsiz getiri (olasılık aralığı). */
+function CertainVsUncertain() {
+  return (
+    <Figure
+      label="Borcun maliyeti kesin bir sayıdır ama yatırımın getirisi bir olasılık aralığıdır; ikisini doğrudan karşılaştırmak yanıltıcıdır"
+      caption="Kesin bir maliyeti belirsiz bir getiriyle doğrudan kıyaslamak elmayla armut gibidir."
+      height={140}
+    >
+      <Panel x={6} y={20} w={148} h={106} title="Borç — KESİN" />
+      <rect x={40} y={70} width={80} height={26} rx="3" className="fig-bar-neg" />
+      <text x={80} y={88} className="fig-value" textAnchor="middle">%60 · olur</text>
+
+      <Panel x={166} y={20} w={148} h={106} title="Yatırım — BELİRSİZ" />
+      <rect x={196} y={62} width={90} height={44} rx="4" className="fig-bar-muted" opacity="0.4" />
+      <text x={241} y={78} className="fig-value pos" textAnchor="middle">belki +%40</text>
+      <text x={241} y={98} className="fig-value neg" textAnchor="middle">belki −%10</text>
+    </Figure>
+  );
+}
+
+/** S0-L3 · Nakdin iki yüzü: erime (maliyet) ve likidite (değer). */
+function TwoCostsOfCash() {
+  return (
+    <Figure
+      label="Nakit tutmanın iki yüzü vardır: enflasyon onu eritir bir maliyettir ama hemen kullanılabilir olması likidite bir değerdir"
+      caption="Nakit ne tümüyle kayıp ne tümüyle güvenli: erime bir maliyet, likidite bir değer."
+      height={120}
+    >
+      <rect x={124} y={46} width={72} height={30} rx="7" className="fig-card" />
+      <text x={160} y={65} className="fig-value" textAnchor="middle">nakit</text>
+      <path d="M122 61 L60 40" className="fig-line-volatile" fill="none" />
+      <text x={44} y={34} className="fig-value neg" textAnchor="middle">erime ↓</text>
+      <text x={44} y={50} className="fig-label" textAnchor="middle">(maliyet)</text>
+      <path d="M198 61 L262 40" className="fig-line-steady" fill="none" />
+      <text x={280} y={34} className="fig-value pos" textAnchor="middle">likidite ↑</text>
+      <text x={280} y={50} className="fig-label" textAnchor="middle">(değer)</text>
+      <text x={160} y={104} className="fig-label" textAnchor="middle">ne kadarı tampon, ne kadarı boşta?</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
   "three-actions": ThreeActions,
   "hold-vs-flip": HoldVsFlip,
+  "shock-event": ShockEvent,
+  "with-without-buffer": WithWithoutBuffer,
+  "buffer-traits": BufferTraits,
+  "liquidity-traded-away": LiquidityTradedAway,
+  "monthly-to-yearly": MonthlyToYearly,
+  "debt-cost-ladder": DebtCostLadder,
+  "one-lira-two-jobs": OneLiraTwoJobs,
+  "certain-vs-uncertain": CertainVsUncertain,
+  "two-costs-of-cash": TwoCostsOfCash,
   "three-buckets": ThreeBuckets,
   "monthly-split": MonthlySplit,
   "savings-rate-bar": SavingsRateBar,

@@ -1625,6 +1625,219 @@ internal static class EducationContent
         bulunduğunu gösterir. Karar senindir.
         """));
 
+    // ── S0-L3 — Acil durum fonu ve borç ──────────────────────────────────────
+    // 🔴 İ4: borç ödemek mi yatırım mı KARAR VERMEZ; kesin maliyet ↔ belirsiz
+    // getiri asimetrisini ÇERÇEVE olarak verir (16 §5 S0-L3, CLAUDE.md §2).
+    public static IEnumerable<LessonSection> LessonS0L3(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Yatırıma başlamadan önce iki basamak vardır: bir **tampon** kurmak ve varsa
+        pahalı **borcu** anlamak. Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - Acil durum fonunun ne işe yaradığını — varlık satmadan bir şoku
+          karşılamak — açıklamak
+        - Bir borcun aylık oranından **yıllık** maliyetine geçmeyi hesaplamak
+        - Bir lirayı borca mı yatırıma mı vermenin **fırsat maliyeti** çerçevesini
+          kurmak (karar vermeden)
+        - **(İleri)** Kesin bir maliyetle belirsiz bir getirinin neden doğrudan
+          karşılaştırılamayacağını göstermek
+
+        Dersin sonunda kısa bir test var. **Not:** bu ders "borcunu öde" ya da
+        "yatırım yap" demez — yalnızca çerçeveyi ve hesabı verir; karar senindir.
+        """),
+
+        Core("""
+        ## Şok nedir?
+
+        Hayat düz gitmez. Beklenmedik ve **ertelenemez** bir gider her an çıkabilir:
+        bozulan bir diş, kaybolan bir iş, aniden gereken bir onarım.
+
+        Bunlara **şok** diyelim. Şokun iki huyu vardır: ne zaman geleceği belli
+        değildir ve genelde beklemez. İşte acil durum fonu — kısaca **tampon** —
+        bu şokları karşılamak için önceden ayrılmış, elinin altındaki paradır.
+
+        Tamponun amacı zengin etmek değil; bir şok geldiğinde seni **kötü bir karar
+        vermek zorunda bırakmamaktır**. Nedenini birazdan göreceğiz.
+        """, "shock-event"),
+
+        Ex("""
+        ## Adım adım: aynı şok, iki kişi
+
+        Diyelim ikisinin de aniden **20.000 ₺**'lik bir gideri çıktı (örnek bir tutar).
+
+        - **Tamponu olan kişi:** Kenarda ayrılmış parası var. Şoku oradan karşılar;
+          yatırımlarına **hiç dokunmaz**. Ertesi gün hayat kaldığı yerden devam eder.
+        - **Tamponu olmayan kişi:** Nakdi yok. Şoku karşılamak için elindeki bir
+          varlığı **satmak zorunda** kalır — hem de fiyatı iyi olsun olmasın,
+          **zamanlamayı seçemeden**. Belki de tam da satmak istemeyeceği bir anda.
+
+        Fark, paranın miktarında değil, **hazır olup olmamasında**. Tampon, seni
+        "mecburen sat" durumundan kurtaran şeydir. Yatırımın ilk koruması budur.
+        """, "with-without-buffer"),
+
+        Core("""
+        ## Tamponun üç özelliği
+
+        Her para "tampon" olamaz. İyi bir tampon üç şeyi birden taşır:
+
+        - **Erişilebilir** — şok geldiğinde hemen ulaşabilmelisin (günler değil,
+          saatler). Kilitli, vadesi dolmamış paraya tampon denmez.
+        - **Oynamayan** — değeri şok anında dalgalanmamalı. Tam ihtiyacın olduğu gün
+          düşmüş olabilecek bir varlık, tampon işini göremez.
+        - **Ayrı** — günlük harcama hesabından ayrı dursun ki farkında olmadan
+          erimesin.
+
+        Bu üç özellik, tamponu bir **yatırımdan** ayırır. Yatırım büyümeyi hedefler;
+        tampon **hazır olmayı** hedefler. İkisi farklı işler için vardır.
+        """, "buffer-traits"),
+
+        Trap("""
+        ## Tuzak: "Acil durum fonu da getiri getirsin"
+
+        Çok doğal bir istek: "Madem para duruyor, bari kazandırsın." Ama tampondan
+        getiri beklemek, onu tampon yapan özelliği — **oynamamayı ve
+        erişilebilirliği** — feda etmek demektir.
+
+        Getiri peşinde tamponu dalgalı ya da kilitli bir yere koyarsan, şok tam da
+        değerin düştüğü ya da paraya ulaşamadığın bir güne denk gelebilir. O anda
+        elinde tampon değil, bir sorun daha olur.
+
+        Tamponun "getirisi" para kazandırmak değildir; sana **kötü zamanlamayla
+        satış yaptırmamaktır**. Bu koruma, çoğu zaman küçük bir getiriden değerlidir.
+        """, "liquidity-traded-away"),
+
+        Core("""
+        ## Borcun maliyeti: aylık oran ≠ yıllık maliyet
+
+        Bir borcun "aylık %4 faiz" gibi bir oranı olur. Küçük görünür — ama yıla
+        yayıldığında çok daha büyür, çünkü faiz **faizin de üstüne** biner (bileşik).
+
+        Kaba bir çarpım (12 × %4 = %48) gerçeği **eksik** gösterir. Doğrusu her ay
+        oranın bir önceki ayın borcuna eklenmesidir: (1 + 0,04) on iki kez çarpılır.
+
+        Aylık oran ne kadar yüksekse, kaba çarpım ile gerçek yıllık maliyet
+        arasındaki fark o kadar açılır. Bir borcu değerlendirirken bakılacak sayı
+        **yıllık gerçek maliyettir**, aylık küçük oran değil.
+        """, "monthly-to-yearly"),
+
+        Ex("""
+        ## Adım adım: aylık %4 borç yılda ne eder?
+
+        Aylık **%4** oranlı bir borcu ele alalım (örnek bir oran).
+
+        - **Kaba çarpım:** 12 × %4 = **%48**. (Yanıltıcı — bileşiği yok sayar.)
+        - **Gerçek (bileşik):** (1 + 0,04) her ay çarpılır → (1,04)¹² ≈ **1,60**.
+          Yani yıllık maliyet yaklaşık **%60**.
+
+        Aradaki **~12 puan**, faizin faize binmesinden gelir. Aylık oranı %5 yapsan
+        fark daha da açılırdı: (1,05)¹² ≈ 1,80, yani ≈ **%80** — kaba çarpım ise
+        yalnızca %60 derdi.
+
+        Ders şunu göstermek için: küçük görünen aylık bir oran, yıllık **gerçek**
+        maliyette hiç de küçük olmayabilir.
+        """, "debt-cost-ladder"),
+
+        Ctx("""
+        ## Fırsat maliyeti: bir lira iki işi aynı anda yapamaz
+
+        Elinde bir lira var. Onu ya bir borcu azaltmakta ya bir yatırımda
+        kullanabilirsin — ama **ikisinde birden değil**. Birini seçmek, diğerinden
+        **vazgeçmek** demektir. Vazgeçtiğin şeyin değerine **fırsat maliyeti** denir.
+
+        Bu bir "şunu yap" kuralı değil, bir **düşünme çerçevesidir**: her lira için
+        "bu para başka nerede ne yapardı?" diye sormak. Borcu azaltmak, o borcun
+        yıllık maliyeti kadar bir "kaçınılmış gider" sağlar; yatırım ise belirsiz
+        bir getiri **umudu** sağlar.
+
+        Dikkat: bu ikisi aynı cinsten değil — bir sonraki adımda tam da bu farka
+        bakacağız.
+        """, "one-lira-two-jobs"),
+
+        ExDeep("""
+        ## Karşılaştırma çerçevesi: neyi neyle kıyaslıyorsun?
+
+        Diyelim bir borcun yıllık gerçek maliyeti **%60** (kesin: ödemezsen bu gider
+        kesinlikle işler). Bir yatırımın ise "belki %40 kazandırır, belki %10
+        kaybettirir" (belirsiz).
+
+        Bu iki sayıyı yan yana koyup "%60 > %40, demek ki borcu azaltmak daha
+        mantıklı" demek **kolaycı** olur — çünkü:
+
+        - Borcun %60'ı **kesin** bir maliyettir; olur ya da olmaz değil, **olur**.
+        - Yatırımın %40'ı bir **olasılıktır**; gerçekleşebilir de, tersine dönebilir de.
+
+        Kesin bir sayıyı belirsiz bir sayıyla doğrudan karşılaştırmak, elmayla armut
+        kıyaslamaya benzer. Çerçeve şunu söyler: **önce türünü ayırt et** — kesin mi,
+        olasılık mı — sonra kararı sen ver.
+        """),
+
+        Trap("""
+        ## Tuzak: "Getiri faizden yüksekse borç iyidir"
+
+        En yaygın kısayol: "Yatırım %40 kazandırır, borç %60'a mal olur — bekleyip
+        yatırımdan çıkanla borcu öderim." Kulağa mantıklı gelir ama **belirsizliği
+        unutur**.
+
+        Borcun %60'ı **kesin** işler. Yatırımın %40'ı ise yalnızca bir **beklenti** —
+        tersine dönerse hem yatırımdan kaybeder hem kesin borç maliyetini ödersin.
+        Kesin bir gideri, gerçekleşmesi garanti olmayan bir gelirle kapatmayı
+        planlamak, iki riski üst üste bindirir.
+
+        Bu ders hangisinin doğru olduğunu **söylemez**. Yalnızca şunu hatırlatır:
+        kesin bir maliyeti belirsiz bir getiriyle kıyaslarken, **belirsizliğin
+        kendisi bir maliyettir** ve hesaba katılmalıdır.
+        """, "certain-vs-uncertain"),
+
+        Deep("""
+        ## Nakit tutmanın iki yüzü: erime ve hazır olma
+
+        Nakit tutmanın bir **maliyeti** vardır: enflasyon onu yavaşça eritir (bunu
+        Ders 4'te göreceğiz). Bu yüzden "tüm paranı nakitte tut" iyi bir fikir
+        değildir.
+
+        Ama nakdin bir de **değeri** vardır: hemen kullanılabilir olmak, yani
+        **likidite**. Şok anında satış yapmak zorunda kalmamak, kaçırılan getiriden
+        daha pahalıya mal olabilir.
+
+        Yani nakit ne tümüyle "kayıp" ne tümüyle "güvenli"dir; iki yönü birden
+        taşır. Doğru soru "nakit iyi mi kötü mü?" değil, **"ne kadarı tampon için
+        gerekli, ne kadarı boşta eriyor?"** sorusudur. İkisini ayırmak, haritanı
+        netleştirir.
+        """, "two-costs-of-cash"),
+
+        Live("""
+        ## Senin portföyünde
+
+        Şu an portföyünün **{{cash_weight}}**'i nakitte. Bu dersten sonra o nakde iki
+        soruyla bakabilirsin: ne kadarı bir şoku karşılayacak **tampon** (erişilebilir,
+        oynamayan, ayrı), ne kadarı ise sadece **boşta** bekleyip yavaşça eriyen kısım?
+
+        İki soru aynı nakde bakar ama farklı şeyler söyler: biri koruma, diğeri
+        fırsat maliyeti. Ayrımı görmek, kararın senin olmasını sağlar.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Kavramlar evrenseldir.** Acil durum fonu, fırsat maliyeti ve borcun
+        bileşik maliyeti kişisel finans ile temel finans matematiğinin ortak
+        dilidir; belirli bir kuruma değil, aritmetiğe dayanır. Aylık orandan yıllık
+        maliyete geçiş **bileşik faiz formülüdür** ((1 + i)ⁿ − 1) ve bu dersteki
+        hesap **kodda** yapılır, bir dil modeli tarafından üretilmez.
+
+        **Örnek sayılar kurgusaldır.** 20.000 ₺, aylık %4, %60 gibi rakamların
+        tamamı mekanizmayı göstermek için **seçilmiş örneklerdir** — gerçek bir
+        borç, faiz ya da getiri değildir. Gerçek veri yalnızca "Senin portföyünde"
+        bölümünde, kendi kayıtlarından gelir.
+
+        **Bu bir yatırım tavsiyesi değildir** — bir borç tavsiyesi de değildir.
+        Ders "borcunu öde" ya da "yatırım yap" **demez**; kesin maliyet ile belirsiz
+        getiriyi ayırt etmenin çerçevesini verir. Kararı — kendi sayıların ve
+        durumunla — sen verirsin.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -1799,6 +2012,93 @@ internal static class EducationContent
                  ("Kıt ayları karşılayan bir tampon kurmak", true),
                  ("Bol ayların fazlasını tampona aktarmak", true),
                  ("Gelir düzenli olana kadar hiç biriktirmemek", false)]),
+        ]);
+
+        // ── Set 0 · Ders 3 — Acil durum fonu ve borç (9 soru / 3 zorluk) ─────
+        yield return ("lesson-s0l3", "quiz-s0l3", "Acil Durum Fonu ve Borç — Mini Test",
+        [
+            // ── Kolay ────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Acil durum fonunun (tampon) temel amacı nedir?",
+                "Tamponun amacı zengin etmek değil, bir şok geldiğinde seni varlık satmak zorunda BIRAKMAMAKTIR. " +
+                "Böylece kötü bir zamanlamada satış yapmak zorunda kalmazsın. Getiri onun işi değildir.",
+                [("Mümkün olan en yüksek getiriyi sağlamak", false),
+                 ("Bir şoku, varlık satmadan karşılayabilmek", true),
+                 ("Vergi avantajı elde etmek", false),
+                 ("Enflasyondan tamamen korunmak", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "İyi bir tamponun taşıması gereken üç özellik hangisidir?",
+                "İyi bir tampon erişilebilir (hemen ulaşılır), oynamayan (değeri şok anında dalgalanmaz) ve " +
+                "ayrı (günlük harcamadan ayrı) olmalıdır. Bu üç özellik onu bir yatırımdan ayırır: yatırım büyümeyi, " +
+                "tampon hazır olmayı hedefler.",
+                [("Yüksek getirili, kilitli, riskli", false),
+                 ("Erişilebilir, oynamayan, ayrı", true),
+                 ("Uzun vadeli, dalgalı, gizli", false),
+                 ("Büyük, karmaşık, çeşitlendirilmiş", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Aylık %4 faizli bir borç yılda kabaca 12 × %4 = %48'e mal olur.",
+                "Yanlış — bu kaba çarpım bileşiği yok sayar. Gerçekte her ay oran bir önceki borcun üstüne biner: " +
+                "(1,04)¹² ≈ 1,60, yani yıllık maliyet yaklaşık %60'tır. Kaba çarpım gerçeği eksik gösterir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Orta ─────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Aylık %4 oranlı bir borcun yaklaşık YILLIK gerçek maliyeti nedir?",
+                "Aylık oran her ay bileşiklenir: (1 + 0,04)¹² ≈ 1,60 → yaklaşık %60. Kaba çarpım (%48) ise bileşiği " +
+                "atladığı için ~12 puan eksik gösterir. Aylık oran yükseldikçe bu fark açılır.",
+                [("Yaklaşık %48 — 12 × %4", false),
+                 ("Yaklaşık %60 — (1,04)¹² bileşik", true),
+                 ("Tam %4 — yıl boyu sabit", false),
+                 ("Yaklaşık %24 — yılda iki kez", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Tamponunu dalgalı, değeri oynayan bir yere koyarsan hangi risk doğar?",
+                "Getiri peşinde tamponun oynamama özelliğini feda edersin. Şok tam da değerin düştüğü bir güne denk " +
+                "gelirse, elinde tampon değil bir sorun daha olur — koruma amacı boşa gider.",
+                [("Hiçbir risk — getiri her zaman iyidir", false),
+                 ("Şok anında değeri düşük olabilir ve koruma işlevini göremez", true),
+                 ("Vergi artar", false),
+                 ("Borç faizi yükselir", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Bir lirayı hem borcu azaltmakta hem yatırımda AYNI ANDA kullanabilirsin.",
+                "Kullanamazsın. Birini seçmek diğerinden vazgeçmektir; vazgeçtiğinin değerine fırsat maliyeti denir. " +
+                "Bu, kararın kendisi değil, kararı düşünmenin çerçevesidir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor ──────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Borcun yıllık KESİN maliyeti %60, bir yatırımın BELİRSİZ beklenen getirisi %40. " +
+                "\"%60 > %40, öyleyse borcu azaltmak kesin daha iyi\" çıkarımının sorunu nedir?",
+                "İki sayı aynı cinsten değil: borcun %60'ı KESİN (olur), yatırımın %40'ı bir OLASILIK (olabilir de " +
+                "olmaz da). Kesin bir maliyeti belirsiz bir getiriyle doğrudan kıyaslamak yanıltıcıdır. Ders hangisinin " +
+                "doğru olduğunu söylemez; önce türü (kesin mi, olasılık mı) ayırt etmeni ister.",
+                [("Hiçbir sorun yok, çıkarım doğru", false),
+                 ("Kesin bir maliyet ile belirsiz bir getiri doğrudan kıyaslanıyor", true),
+                 ("Yüzdeler yanlış hesaplanmış", false),
+                 ("Borç her zaman iyidir", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "\"Yatırımdan çıkanla sonra borcu öderim\" planının gizli riski nedir?",
+                "Borcun maliyeti KESİN işler; yatırımın getirisi ise yalnızca bir beklentidir. Yatırım tersine dönerse " +
+                "hem yatırımdan kaybeder hem kesin borç maliyetini ödersin — iki risk üst üste biner. Belirsizliğin " +
+                "kendisi bir maliyettir ve hesaba katılmalıdır.",
+                [("Risk yok — plan garantili", false),
+                 ("Yatırım tersine dönerse hem kayıp hem kesin borç maliyeti üst üste biner", true),
+                 ("Borç kendiliğinden kapanır", false),
+                 ("Enflasyon borcu eritir", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Nakit tutmak için aşağıdakilerden hangileri DOĞRUDUR? (birden fazla)",
+                "Nakdin iki yüzü vardır: enflasyon onu yavaşça eritir (maliyet) AMA hemen kullanılabilir olması " +
+                "(likidite) şok anında satış yapmaktan kurtarır (değer). Bu yüzden \"tümüyle kayıp\" da \"tümüyle " +
+                "güvenli\" de değildir; doğru soru ne kadarının tampon, ne kadarının boşta olduğudur.",
+                [("Enflasyon nakdi zamanla eritir (bir maliyet)", true),
+                 ("Likidite şok anında satış zorunluluğundan kurtarır (bir değer)", true),
+                 ("Bir kısmı tampon, bir kısmı boşta olabilir — ayırmak gerekir", true),
+                 ("Tüm parayı nakitte tutmak en iyisidir", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

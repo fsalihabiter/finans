@@ -20,6 +20,39 @@
 
 ---
 
+## 2026-07-26 · T6.16 devam — S0-L3 "Acil durum fonu ve borç" (ders 3/10)
+- **Görev(ler):** T6.16 (Set 0 içerik turu, ders 3). fable-mode. 🔴 İ4 dersi.
+- **Ne yapıldı:** **S0-L3 "Acil durum fonu ve borç"** eksiksiz. 13 aşama: açılış →
+  **şok nedir** → aynı şok iki kişi (tamponlu↔tamponsuz) → **tamponun üç özelliği**
+  (erişilebilir·oynamayan·ayrı) → tuzak "fon da getiri getirsin" → **borcun maliyeti**
+  (aylık≠yıllık) → aylık %4 → yıllık **bileşik** ≈%60 (kaba çarpım %48 eksik) →
+  **fırsat maliyeti** (bir lira iki iş yapamaz) → karşılaştırma çerçevesi (kesin↔belirsiz)
+  → tuzak "getiri faizden yüksekse borç iyidir" → nakdin iki yüzü (erime+likidite) →
+  Senin portföyünde (`cash_weight`) → kaynak. **9 figür** (with-without-buffer,
+  debt-cost-ladder, one-lira-two-jobs, certain-vs-uncertain çok panelli dahil).
+  **9 soru/3 zorluk**. **3 kavram**: emergency-fund · debt-cost · opportunity-cost.
+  Ön-koşul S0-L2→S0-L3.
+- **Dokunulan dosyalar:** `EducationContent.cs` (LessonS0L3 + quiz), `SeedData.cs`
+  (SeedSet0Async S0-L3 + ön-koşul + 3 kavram + builder), `LessonFigure.tsx` (9 figür),
+  `EducationSeedTests.cs` (sayımlar), ACTIVE.
+- **Test:** **EducationSeed+Api 41/41.** Sayımlar: bölüm 78→91, quiz 7→8, soru 45→54,
+  seçenek 158→190, ders 7→8, kavram 10→13, ön-koşul 5→6, live 7→8. Application 291/291,
+  web 137/137, web build (tsc) temiz.
+  **✅ Canlı teyit:** api rebuild → seed indi (S0-L3 13 bölüm/9 soru). S0-L1/L2'yi
+  SQL ile tamamlandı işaretleyip S0-L3 kilidini açtım → tarayıcıda gezildi: 3 kavram
+  çipi (Acil Durum Fonu·Fırsat Maliyeti·Borcun Maliyeti), "Adım 1/14", figürler render
+  (with-without-buffer "yatırım korunur↔mecburen satış" · debt-cost-ladder 12 bileşik
+  çubuk ≈%60). **Literal yıldız YOK**, İ4 çerçevesi görünür, aritmetik ((1,04)¹²≈1,60)
+  figürle tutarlı. Set kartı 2/3·%67 gösterdi (ilerleme doğru).
+- **Karar/Not:** 🔴 **İ4:** ders "borcunu öde" ya da "yatırım yap" **demez**; kesin
+  maliyet↔belirsiz getiri asimetrisini ÇERÇEVE olarak verir. Kaynak bloğunda "yatırım
+  tavsiyesi değildir — bir borç tavsiyesi de değildir" (tam ifade bozulmasın diye
+  "(veya borç)" araya konmadı — S0-L2'deki aynı hata tekrarlanmadı). Tek-yıldız
+  italik hiç kullanılmadı. `fig-line-pos` (var olmayan sınıf) → `fig-line-steady`.
+- **Durum:** devam ediyor (10 dersin 3'ü + foundation).
+- **Sıradaki:** **S0-L4 "Bekleyen para neden erir?"** (enflasyon sezgisi) + **enflasyon
+  kaydırıcısı (T6.18)** — Set 0'ın tek etkileşimli aracı. Ön-koşul S0-L3→S0-L4.
+
 ## 2026-07-26 · Eğitim UX düzeltmeleri (kullanıcı bildirimi) — 3 sorun
 - **Görev(ler):** ad-hoc (canlı kullanımda bulunan hatalar). fable-mode.
 - **Ne yapıldı:** Kullanıcı üç sorun bildirdi, üçü de düzeltildi ve **canlı
