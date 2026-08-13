@@ -1532,9 +1532,232 @@ function BidAskSpread() {
   );
 }
 
+// ── S0-L6 · Getiri nereden gelir? figürleri ─────────────────────────────────
+// Getirinin İKİ kaynağı ayrıştırılır (değer artışı + nakit akışı). Şirket adı/sembol
+// YOK (soyut "A"); temettü anlatımı strateji önerisine dönüşmez. Sayılar kurgusal.
+
+/** S0-L6 · ÇOK PANELLİ · Getirinin iki kaynağı: değer artışı + nakit akışı → toplam. */
+function TwoReturnSources() {
+  return (
+    <Figure
+      label="Getiri iki kaynaktan gelir: fiyatın yükselmesi yani değer artışı ve varlığın ödediği faiz temettü kira yani nakit akışı; ikisinin toplamı toplam getiridir"
+      caption="İki kaynak: değer artışı (fiyat ↑) + nakit akışı (ödeme) = toplam getiri."
+      height={150}
+    >
+      <Panel x={6} y={22} w={148} h={90} title="Değer artışı" />
+      <path d="M26 96 L60 78 L94 84 L134 50" className="fig-line-steady" fill="none" />
+      <circle cx={134} cy={50} r="3.5" className="fig-dot-steady" />
+      <text x={80} y={108} className="fig-label" textAnchor="middle">fiyat ↑</text>
+
+      <Panel x={166} y={22} w={148} h={90} title="Nakit akışı" />
+      <rect x={196} y={62} width={40} height={26} rx="6" className="fig-card" />
+      <text x={216} y={80} className="fig-label" textAnchor="middle">varlık</text>
+      {[0, 1, 2].map((i) => (
+        <circle key={i} cx={256 + i * 18} cy={75} r="6" className="fig-bar-pos" opacity="0.7" />
+      ))}
+      <text x={274} y={108} className="fig-label" textAnchor="middle">faiz · temettü · kira</text>
+
+      <text x={160} y={136} className="fig-value" textAnchor="middle">toplam getiri = ikisinin toplamı</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · Kira örneği: aynı daire değer artışı (+%8) ve kira (+%4) getirir. */
+function RentPlusValue() {
+  return (
+    <Figure
+      label="Bir daire hem değer artışı yüzde sekiz hem yıl boyunca toplanan kira yüzde dört olmak üzere iki ayrı getiri üretir"
+      caption="A dairesi: değer artışı +%8 (satınca) · kira +%4 (yıl boyunca cebe girdi)."
+      height={130}
+    >
+      <rect x={128} y={48} width={64} height={34} rx="7" className="fig-card" />
+      <text x={160} y={69} className="fig-value" textAnchor="middle">A dairesi</text>
+
+      <path d="M196 58 L262 40" className="fig-line-steady" fill="none" />
+      <text x={278} y={40} className="fig-value pos" textAnchor="middle">+%8</text>
+      <text x={278} y={54} className="fig-label" textAnchor="middle">değer</text>
+
+      <path d="M196 74 L262 92" className="fig-line-steady" fill="none" />
+      <text x={278} y={94} className="fig-value pos" textAnchor="middle">+%4</text>
+      <text x={278} y={108} className="fig-label" textAnchor="middle">kira</text>
+
+      <text x={124} y={62} className="fig-label" textAnchor="end">1.000.000 ₺</text>
+      <text x={160} y={104} className="fig-label" textAnchor="middle">iki ayrı getiri kaynağı</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · Değer artışı: alış fiyatı → bugünkü fiyat, aradaki fark (kâğıt üstü). */
+function CapitalGainLine() {
+  return (
+    <Figure
+      label="Değer artışı alış fiyatı yüz lira ile bugünkü fiyat yüz sekiz lira arasındaki farktır; sekiz lira artı yüzde sekiz ama satana kadar kâğıt üstündedir"
+      caption="Alış 100 ₺ → bugün 108 ₺: değer artışı +8 ₺ (%8). Satana kadar kâğıt üstünde."
+      height={130}
+    >
+      <line x1={40} y1="16" x2={40} y2="104" className="fig-axis" />
+      <line x1={40} y1="104" x2={300} y2="104" className="fig-axis" />
+      <path d="M56 88 L150 74 L260 44" className="fig-line-steady" fill="none" />
+      <circle cx={56} cy={88} r="4" className="fig-dot-steady" />
+      <text x={56} y={100} className="fig-label" textAnchor="middle">alış 100</text>
+      <circle cx={260} cy={44} r="4" className="fig-dot-steady" />
+      <text x={260} y={34} className="fig-value pos" textAnchor="middle">bugün 108</text>
+      <text x={158} y={64} className="fig-value pos" textAnchor="middle">+8 ₺ (%8)</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · Nakit akışı: varlık elindeyken düzenli ödeme damlatır (satmaya gerek yok). */
+function CashFlowDrip() {
+  return (
+    <Figure
+      label="Nakit akışı varlığın elindeyken düzenli olarak ödediği paradır: faiz temettü ya da kira zaman içinde satmadan cebe damlar"
+      caption="Varlık elindeyken düzenli ödeme damlatır (faiz/temettü/kira) — satmaya gerek yok."
+      height={120}
+    >
+      <rect x={12} y={44} width={58} height={32} rx="7" className="fig-card" />
+      <text x={41} y={64} className="fig-value" textAnchor="middle">varlık</text>
+      <line x1={78} y1="60" x2={300} y2="60" className="fig-axis" />
+      {[0, 1, 2, 3].map((i) => {
+        const x = 110 + i * 52;
+        return (
+          <g key={i}>
+            <path d={`M${x} 60 L${x} 82`} className="fig-line-flat" fill="none" />
+            <circle cx={x} cy={88} r="6" className="fig-bar-pos" opacity="0.7" />
+          </g>
+        );
+      })}
+      <text x={190} y={30} className="fig-label" textAnchor="middle">düzenli ödeme (cebe girer)</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · ÇOK PANELLİ · Toplam getiri = değer artışı + nakit akışı (yığılmış). */
+function TotalReturnSum() {
+  return (
+    <Figure
+      label="Toplam getiri değer artışı yüzde sekiz ile nakit akışı yüzde dördün toplamıdır yani yüzde on iki; iki bileşen üst üste yığılır"
+      caption="Toplam getiri = %8 (değer artışı) + %4 (nakit akışı) = %12."
+      height={130}
+    >
+      <line x1={70} y1="14" x2={70} y2="104" className="fig-axis" />
+      <text x={12} y={40} className="fig-label">değer</text>
+      <rect x={70} y={26} width={130} height={22} rx="3" className="fig-bar-muted" />
+      <text x={206} y={42} className="fig-value pos">%8</text>
+
+      <text x={12} y={72} className="fig-label">nakit</text>
+      <rect x={70} y={58} width={65} height={22} rx="3" className="fig-bar-pos" opacity="0.65" />
+      <text x={141} y={74} className="fig-value pos">%4</text>
+
+      <text x={12} y={104} className="fig-label">toplam</text>
+      <rect x={70} y={90} width={195} height={22} rx="3" className="fig-bar-pos" />
+      <text x={271} y={106} className="fig-value">%12</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · ÇOK PANELLİ · Temettü bedava değil: dağıtım öncesi 100 = sonrası 95 hisse + 5 nakit. */
+function DividendNotFree() {
+  return (
+    <Figure
+      label="Temettü bedava değildir: dağıtım öncesi yüz liralık hisse, dağıtım sonrası doksan beş liralık hisse artı beş lira nakit olur; toplam yine yüz lira"
+      caption="Temettü dağıtımı fiyattan düşer: 100 ₺ hisse → 95 ₺ hisse + 5 ₺ nakit = 100 ₺."
+      height={150}
+    >
+      <Panel x={6} y={22} w={130} h={100} title="Dağıtım öncesi" />
+      <rect x={40} y={54} width={62} height={48} rx="5" className="fig-bar-muted" />
+      <text x={71} y={82} className="fig-value" textAnchor="middle">100 ₺</text>
+
+      <text x={152} y={78} className="fig-value" textAnchor="middle">→</text>
+
+      <Panel x={170} y={22} w={144} h={100} title="Dağıtım sonrası" />
+      <rect x={196} y={60} width={54} height={42} rx="5" className="fig-bar-muted" />
+      <text x={223} y={85} className="fig-value" textAnchor="middle">95 ₺</text>
+      <rect x={262} y={72} width={40} height={30} rx="5" className="fig-bar-pos" opacity="0.7" />
+      <text x={282} y={91} className="fig-value" textAnchor="middle">5 ₺</text>
+      <text x={242} y={116} className="fig-label" textAnchor="middle">hisse + nakit = 100 ₺</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · Getirinin karşılığı: sermayen bir kullanıma girer + risk taşırsın → getiri. */
+function WhoUsesYourCapital() {
+  return (
+    <Figure
+      label="Getiri bedava değildir: sermayeni birinin kullanımına verirsin ve bir risk taşırsın, getiri bu kullandırmanın ve riskin karşılığıdır"
+      caption="Sermayen bir işe girer + risk taşırsın → getiri bunun karşılığıdır."
+      height={130}
+    >
+      <rect x={8} y={50} width={58} height={30} rx="7" className="fig-card" />
+      <text x={37} y={70} className="fig-value" textAnchor="middle">sermaye</text>
+      <path d="M68 65 L118 65" className="fig-line-steady" fill="none" />
+      <rect x={122} y={46} width={76} height={38} rx="8" className="fig-card" />
+      <text x={160} y={62} className="fig-label" textAnchor="middle">kullanan</text>
+      <text x={160} y={77} className="fig-label" textAnchor="middle">(banka/şirket)</text>
+      <path d="M202 60 L252 48" className="fig-line-steady" fill="none" />
+      <text x={276} y={48} className="fig-value pos" textAnchor="middle">getiri</text>
+      <path d="M202 72 L252 92" className="fig-line-volatile" fill="none" />
+      <text x={276} y={94} className="fig-value neg" textAnchor="middle">risk</text>
+      <text x={160} y={110} className="fig-label" textAnchor="middle">getiri = kullandırma + risk karşılığı</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · ÇOK PANELLİ · Aynı şirket: ortak (belirsiz, üst sınırsız) ↔ alacaklı (belli, öncelikli). */
+function EquityVsDebtReturn() {
+  return (
+    <Figure
+      label="Aynı şirkete ortak olmak belirsiz ve üst sınırsız bir getiri şekli verirken borç vermek baştan belli ve öncelikli bir getiri şekli verir"
+      caption="Aynı şirket, iki getiri şekli: ortak (belirsiz·üst sınırsız) ↔ alacaklı (belli·öncelikli)."
+      height={140}
+    >
+      <Panel x={6} y={20} w={148} h={108} title="Ortak (hisse)" />
+      <path d="M30 96 L64 70 L98 92 L134 44" className="fig-line-volatile" fill="none" />
+      <text x={80} y={116} className="fig-label" textAnchor="middle">belirsiz · üst sınır yok</text>
+
+      <Panel x={166} y={20} w={148} h={108} title="Alacaklı (borç)" />
+      <path d="M190 78 L306 78" className="fig-line-steady" fill="none" />
+      <text x={240} y={64} className="fig-value pos" textAnchor="middle">belli faiz</text>
+      <text x={240} y={116} className="fig-label" textAnchor="middle">öncelikli · sınırlı</text>
+    </Figure>
+  );
+}
+
+/** S0-L6 · Kâğıt üstü kâr (kesikli, olasılık) ↔ nakit akışı (dolu, gerçekleşmiş, elde). */
+function PaperVsRealized() {
+  return (
+    <Figure
+      label="Fiyat yüz liradan yüz elli liraya çıktı ama satılmadıysa elli lira kâr kâğıt üstündedir ve değişebilir; nakit akışı ise zaten cebe girmiş gerçekleşmiş getiridir"
+      caption="Kâğıt üstü kâr (satana kadar olasılık, değişebilir) ↔ nakit akışı (gerçekleşmiş, elde)."
+      height={130}
+    >
+      <text x={16} y={30} className="fig-label">kâğıt üstü</text>
+      <path d="M20 74 L150 40" className="fig-line-flat" fill="none" strokeDasharray="5 4" />
+      <text x={92} y={36} className="fig-value" textAnchor="middle">100 → 150 (+50?)</text>
+      <text x={150} y={92} className="fig-value neg" textAnchor="middle">satana kadar değişebilir</text>
+
+      <line x1={20} y1="102" x2={300} y2="102" className="fig-axis" />
+      <text x={16} y={122} className="fig-label">gerçekleşmiş</text>
+      {[0, 1, 2].map((i) => (
+        <circle key={i} cx={188 + i * 30} cy={116} r="6" className="fig-bar-pos" opacity="0.75" />
+      ))}
+      <text x={308} y={120} className="fig-label" textAnchor="end">cebe girdi</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
+  "two-return-sources": TwoReturnSources,
+  "rent-plus-value": RentPlusValue,
+  "capital-gain-line": CapitalGainLine,
+  "cash-flow-drip": CashFlowDrip,
+  "total-return-sum": TotalReturnSum,
+  "dividend-not-free": DividendNotFree,
+  "who-uses-your-capital": WhoUsesYourCapital,
+  "equity-vs-debt-return": EquityVsDebtReturn,
+  "paper-vs-realized": PaperVsRealized,
   "asset-class-map": AssetClassMap,
   "deposit-lending": DepositLending,
   "equity-ownership": EquityOwnership,

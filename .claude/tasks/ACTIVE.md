@@ -158,14 +158,28 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > **canlıya indi** (Postgres: 119 bölüm/10 ders, S0-L5 15 bölüm/9 soru/9 figür). ⚠ **Görsel
 > polish teyidi bekliyor** (S0-L4 slider + S0-L5 figürleri) — Chrome eklentisi bu turda da koptu.
 
+> 🚧 **T6.16 · S0-L6 bitti (2026-08-13):** **"Getiri nereden gelir?"** tam zenginlikte.
+> 13 aşama (iki kaynak: değer artışı + nakit akışı · kira örneği +%8/+%4 · toplam getiri
+> %8+%4=%12 · temettü bedava değil 100→95+5 · getirinin karşılığı sermaye+risk · ortak↔
+> alacaklı getiri şekli · yüksek temettü tuzağı · kâğıt üstü↔gerçekleşmiş), **9 figür**
+> (4 çok panelli: two-return-sources·total-return-sum·dividend-not-free·equity-vs-debt-return),
+> **9 soru/3 zorluk**, **3 kavram** (return-source·capital-gain·cash-flow-return), ön-koşul
+> S0-L5→L6. ⚠ **Yasal:** şirket adı/sembol yok (soyut "A"), temettü strateji önerisine
+> dönüşmez. LiveContext `price_change_12m` yerine mevcut `{{return_ratio}}` (yeni plumbing
+> yok). EducationSeed+Api **41/41**, web 141/141, Application 291/291, build temiz; **canlıya
+> indi** (Postgres: 132 bölüm/11 ders, S0-L6 13 bölüm/9 soru/9 figür). ⚠ Görsel polish teyidi
+> bekliyor (S0-L4 slider + S0-L5/L6 figürleri) — Chrome eklentisi bağlı değil.
+
 ## Sıradaki (öncelik sırası)
-1. **T6.16 devam — S0-L6…L10 (ders ders, tam derinlik):**
-   6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
+1. **T6.16 devam — S0-L7…L10 (ders ders, tam derinlik):**
+   7 Risk ne demek · 8 Vade/hedef/portföy ·
    **9 Fiyat nereden çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders foundation
    üstüne eklenir, ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
-   ⚠ İş yükü (kalan): **~38 figür + 45 soru** → §16 §8.3 paylaşılan SVG öğeleri
+   ⚠ İş yükü (kalan): **~29 figür + 36 soru** → §16 §8.3 paylaşılan SVG öğeleri
    ihtiyaç oldukça çıkarılır. **T6.17a-j bu işe dahil edildi** (tam zenginlik kararı).
-   + **canlı görsel teyit** (S0-L4 slider + S0-L5 figürleri; eklenti bağlanınca).
+   ⚠ **S0-L7 dikkat:** künye LiveContext YOK diyor ama depth-ladder testi LiveContext
+   ŞART koşar → uygun token bulunmalı ya da test gözden geçirilmeli.
+   + **canlı görsel teyit** (S0-L4 slider + S0-L5/L6 figürleri; eklenti bağlanınca).
 2. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.
 3. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek

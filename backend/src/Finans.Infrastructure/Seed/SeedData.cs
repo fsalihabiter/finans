@@ -824,6 +824,71 @@ public static class SeedData
             }
         }
 
+        // ── S0-L6 · Getiri nereden gelir? ───────────────────────────────────────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l6"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l6"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "getiri-nereden-gelir",
+                OrderIndex = 6,
+                Title = "Getiri nereden gelir?",
+                Summary = "Getirinin iki kaynağı: değer artışı (fiyat yükselmesi) ve nakit akışı (faiz·temettü·" +
+                    "kira). Toplam getiri ikisinin toplamıdır; getiri bedava değildir.",
+                BodyMarkdown =
+                    "## Getiri nereden gelir?\n\n" +
+                    "Bir yatırımın getirisi temelde **iki kaynaktan** gelir: **değer artışı** (sahip olduğun şeyin " +
+                    "fiyatının yükselmesi — satana kadar kâğıt üstünde) ve **nakit akışı** (varlığın elindeyken " +
+                    "ödediği faiz, temettü ya da kira — satmadan cebe girer). **Toplam getiri = değer artışı + nakit " +
+                    "akışı.** Getiri bedava değildir: karşılığında sermayeni bir kullanıma verir ve bir risk taşırsın. " +
+                    "Örneklerde şirket adı geçmez; ders bir strateji önermez.",
+                EstimatedMinutes = 7,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L6, S0-L5'i ister (track içi zincir).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l6") && p.PrerequisiteLessonId == Id("lesson-s0l5"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l6"),
+                PrerequisiteLessonId = Id("lesson-s0l5"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L6 üç kavram tanıtır (getiri kaynağı · değer artışı · nakit akışı getirisi).
+        var s0l6Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-return-source", "return-source", "Getirinin Kaynağı"),
+            ("tag-capital-gain", "capital-gain", "Değer Artışı"),
+            ("tag-cash-flow-return", "cash-flow-return", "Nakit Akışı Getirisi"),
+        };
+        foreach (var (tagId, key, label) in s0l6Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l6") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l6"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -839,6 +904,7 @@ public static class SeedData
             (Id("lesson-s0l3"), EducationContent.LessonS0L3), // T6.16 — Set 0 Ders 3
             (Id("lesson-s0l4"), EducationContent.LessonS0L4), // T6.16 — Set 0 Ders 4
             (Id("lesson-s0l5"), EducationContent.LessonS0L5), // T6.16 — Set 0 Ders 5
+            (Id("lesson-s0l6"), EducationContent.LessonS0L6), // T6.16 — Set 0 Ders 6
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),

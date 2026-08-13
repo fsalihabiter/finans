@@ -94,6 +94,7 @@ public sealed class EducationSeedTests
                 "emergency-fund", "debt-cost", "opportunity-cost", // Set 0 Ders 3 "Acil durum fonu ve borç"
                 "inflation", "purchasing-power", "price-index", // Set 0 Ders 4 "Bekleyen para neden erir"
                 "asset-class", "ownership-vs-lending", "liquidity", // Set 0 Ders 5 "Varlık türleri turu"
+                "return-source", "capital-gain", "cash-flow-return", // Set 0 Ders 6 "Getiri nereden gelir"
             });
 
         // F/K dersi iki etikete bağlı (F/K + PD/DD); diğerleri tekil.
@@ -135,8 +136,8 @@ public sealed class EducationSeedTests
         }
 
         // Bağımsız (derse bağlı olmayan) test yok — her quiz bir derse bağlı.
-        // T6.1: 1→5 · T6.16 (Set 0 L1-L5): 5→10.
-        (await db.Quizzes.CountAsync()).Should().Be(10);
+        // T6.1: 1→5 · T6.16 (Set 0 L1-L6): 5→11.
+        (await db.Quizzes.CountAsync()).Should().Be(11);
         (await db.Quizzes.CountAsync(q => q.LessonId == null)).Should().Be(0);
     }
 
@@ -160,17 +161,17 @@ public sealed class EducationSeedTests
         await SeedData.SeedAsync(db);
         await SeedData.SeedAsync(db); // ikinci çağrı çoğaltmamalı
 
-        // T6.16 — Set 0: S0-L1..L5. +1 track, +5 ders, +13 kavram, +5 quiz
-        // (45 soru, 160 seçenek), +65 bölüm, +4 ön-koşul (S0 zinciri).
+        // T6.16 — Set 0: S0-L1..L6. +1 track, +6 ders, +16 kavram, +6 quiz
+        // (54 soru, 192 seçenek), +78 bölüm, +5 ön-koşul (S0 zinciri).
         (await db.LearningTracks.CountAsync()).Should().Be(2);
-        (await db.Lessons.CountAsync()).Should().Be(10);
-        (await db.ConceptTags.CountAsync()).Should().Be(19);
-        (await db.LessonConceptTags.CountAsync()).Should().Be(19);
-        (await db.LessonPrerequisites.CountAsync()).Should().Be(8);
-        (await db.Quizzes.CountAsync()).Should().Be(10);
-        (await db.QuizQuestions.CountAsync()).Should().Be(72);    // + S0-L5 9
-        (await db.QuizOptions.CountAsync()).Should().Be(254);     // + S0-L5 32
-        (await db.LessonSections.CountAsync()).Should().Be(119);  // + S0-L5 15
+        (await db.Lessons.CountAsync()).Should().Be(11);
+        (await db.ConceptTags.CountAsync()).Should().Be(22);
+        (await db.LessonConceptTags.CountAsync()).Should().Be(22);
+        (await db.LessonPrerequisites.CountAsync()).Should().Be(9);
+        (await db.Quizzes.CountAsync()).Should().Be(11);
+        (await db.QuizQuestions.CountAsync()).Should().Be(81);    // + S0-L6 9
+        (await db.QuizOptions.CountAsync()).Should().Be(286);     // + S0-L6 32
+        (await db.LessonSections.CountAsync()).Should().Be(132);  // + S0-L6 13
         (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
 
@@ -321,9 +322,9 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(119);
-        (await db.Quizzes.CountAsync()).Should().Be(10);
-        (await db.Lessons.CountAsync()).Should().Be(10); // dersler çoğaltılmadı
+        (await db.LessonSections.CountAsync()).Should().Be(132);
+        (await db.Quizzes.CountAsync()).Should().Be(11);
+        (await db.Lessons.CountAsync()).Should().Be(11); // dersler çoğaltılmadı
     }
 
     [Fact]
@@ -337,16 +338,16 @@ public sealed class EducationSeedTests
 
         // "Eski sürüm" simülasyonu: LiveContext blokları henüz yokmuş gibi sil.
         var live = await db.LessonSections.Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
-        live.Should().HaveCount(10);
+        live.Should().HaveCount(11);
         db.LessonSections.RemoveRange(live);
         await db.SaveChangesAsync();
-        (await db.LessonSections.CountAsync()).Should().Be(109); // diğer bloklar yerinde
+        (await db.LessonSections.CountAsync()).Should().Be(121); // diğer bloklar yerinde
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
-        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(10);
-        (await db.LessonSections.CountAsync()).Should().Be(119);
+        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(11);
+        (await db.LessonSections.CountAsync()).Should().Be(132);
     }
 
     [Fact]
@@ -378,7 +379,7 @@ public sealed class EducationSeedTests
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
-        (await db.LessonSections.CountAsync()).Should().Be(119); // çoğaltma yok
+        (await db.LessonSections.CountAsync()).Should().Be(132); // çoğaltma yok
     }
 
     [Fact]
@@ -457,7 +458,7 @@ public sealed class EducationSeedTests
         var live = await db.LessonSections
             .Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
 
-        live.Should().HaveCount(10); // 5 (Set 1) + S0-L1..L5
+        live.Should().HaveCount(11); // 5 (Set 1) + S0-L1..L6
         foreach (var s in live)
         {
             var tokens = System.Text.RegularExpressions.Regex

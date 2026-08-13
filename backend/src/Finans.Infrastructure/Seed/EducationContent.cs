@@ -2319,6 +2319,235 @@ internal static class EducationContent
         kalite sırası değildir. Hangi sınıfın senin için uygun olduğu **senin** kararındır.
         """));
 
+    // ── S0-L6 — Getiri nereden gelir? ────────────────────────────────────────
+    // 15 §S0-L6 künyesi: return-source · capital-gain · cash-flow-return. Getirinin
+    // İKİ kaynağı (değer artışı + nakit akışı) ayrıştırılır; getiri BEDAVA değildir
+    // (sermaye + risk karşılığı). Şirket ADI/SEMBOL YOK (soyut "A şirketi/kalemi");
+    // temettü anlatımı bir STRATEJİ önerisine dönüşmez (künye yasal notu, §3.4).
+    public static IEnumerable<LessonSection> LessonS0L6(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        "Bu yatırım ne kadar getirdi?" sorusunun cevabı aslında **iki ayrı yerden**
+        gelir. Bu ders o iki kaynağı ayırır. Bitirdiğinde şunları yapabileceksin:
+
+        - Getirinin iki kaynağını — **değer artışı** ve **nakit akışı** — birbirinden
+          ayırt etmek
+        - Bir varlığın getirisinin hangi kaynaktan geldiğini örnekte göstermek
+        - **Toplam getiriyi** bu iki bileşenin toplamı olarak hesaplamak
+        - "Bedava getiri" iddiasının neden eksik bir cümle olduğunu — karşılığında
+          **ne verildiğini** — açıklamak
+
+        Örneklerde **şirket adı geçmez**; soyut "A kalemi" kullanılır. Bu ders bir
+        strateji önermez, yalnızca getirinin **nereden** geldiğini gösterir. Sonunda
+        kısa bir test var.
+        """),
+
+        Core("""
+        ## Getirinin iki kaynağı
+
+        Bir yatırımdan kazanç, temelde **iki ayrı yoldan** gelir:
+
+        - **Değer artışı:** Sahip olduğun şeyin fiyatı yükselir. 100 ₺'ye aldığın bir
+          kalem 108 ₺ olduysa, aradaki fark senin lehinedir. Bu getiri, sen **satana
+          kadar** kâğıt üstündedir.
+        - **Nakit akışı:** Varlık, elindeyken sana **düzenli ödeme** yapar — mevduatın
+          faizi, hissenin temettüsü, gayrimenkulün kirası. Bu para, satmana gerek
+          kalmadan cebe girer.
+
+        Çoğu varlık bu ikisinin **bir bileşimini** sunar. Bir sonraki adımlarda her
+        kaynağı tek tek göreceğiz; ama akılda tutulması gereken temel ayrım budur:
+        **fiyat mı arttı, yoksa varlık sana nakit mi ödedi?** İkisi farklı şeylerdir.
+        """, "two-return-sources"),
+
+        Ex("""
+        ## Kira örneği: iki ayrı getiri
+
+        Somutlaştıralım. Diyelim bir **A dairesi** aldın; alırken **1.000.000 ₺** ödedin.
+
+        - **Bir yıl sonra** dairenin değeri **1.080.000 ₺** oldu. Bu **80.000 ₺**'lik
+          **değer artışıdır** (+%8) — ama daireyi satmadıkça bu kâr kâğıt üstündedir.
+        - **Yıl boyunca** daireyi kiraya verdin ve toplam **40.000 ₺** kira topladın.
+          Bu **nakit akışıdır** (+%4) — satmana gerek yok, para zaten cebine girdi.
+
+        Aynı daire, iki ayrı getiri üretti: biri fiyatın artmasından (henüz elde
+        edilmemiş), biri düzenli ödemeden (çoktan elde edilmiş). "Ne kadar kazandın?"
+        sorusuna cevap verirken **ikisini de** saymak gerekir.
+        """, "rent-plus-value"),
+
+        Core("""
+        ## Değer artışı: fiyat değişimi
+
+        **Değer artışı**, bir varlığın **alış fiyatı** ile bugünkü (ya da satış)
+        **fiyatı** arasındaki farktır. 100 ₺'ye alıp 108 ₺'ye ulaşan bir kalemin
+        değer artışı 8 ₺'dir — oran olarak +%8.
+
+        İki noktayı vurgulamak gerekir:
+
+        - **Her iki yöne de gider.** Fiyat düşerse değer artışı **negatif** olur; bu
+          da getirinin bir bileşenidir, sadece eksi işaretlisi.
+        - **Satana kadar kâğıt üstündedir.** Fiyat 108 ₺ göründüğü hâlde sen henüz
+          satmadıysan, o 8 ₺ cebine girmiş değildir; fiyat tekrar değişebilir.
+
+        Yani değer artışı bir **olasılık** taşır: gerçekleşmesi, o fiyattan gerçekten
+        elden çıkarmana bağlıdır. Bir sonraki kaynak bu açıdan farklıdır.
+        """, "capital-gain-line"),
+
+        Core("""
+        ## Nakit akışı: faiz, temettü, kira
+
+        **Nakit akışı**, bir varlığın sen elde tutarken sana **ödediği** paradır.
+        Değer artışının aksine, bunun için bir şey satman gerekmez — para düzenli
+        olarak sana akar. Sınıfına göre farklı adlar alır:
+
+        - **Faiz** — mevduat ya da tahvil gibi **alacaklılık** araçlarında.
+        - **Temettü (kâr payı)** — bir şirkete **ortak** olduğunda, şirket kârından
+          pay dağıtırsa.
+        - **Kira** — gayrimenkulde, kiracıdan gelen düzenli ödeme.
+
+        Nakit akışının en önemli özelliği, **gerçekleşmiş** olmasıdır: cebine giren
+        para, fiyat sonradan ne yaparsa yapsın senindir. Bu yüzden bir varlığın
+        getirisini düşünürken "fiyatı ne yaptı?" kadar "bana ne ödedi?" sorusu da
+        önemlidir.
+        """, "cash-flow-drip"),
+
+        Ex("""
+        ## Toplam getiri = değer artışı + nakit akışı
+
+        İki kaynağı bir araya getirelim. Az önceki A dairesini hatırla:
+
+        - **Değer artışı:** +%8 (fiyat 1.000.000 → 1.080.000 ₺)
+        - **Nakit akışı:** +%4 (yıl boyunca 40.000 ₺ kira)
+
+        **Toplam getiri = %8 + %4 = %12.**
+
+        Tek başına "%8 kazandım" demek eksik olurdu — kirayı saymamış olurdun. Tek
+        başına "%4 kira aldım" demek de eksik olurdu — değer artışını atlamış olurdun.
+        Bir yatırımın gerçek getirisi, **iki kaynağın toplamıdır.** Bazı varlıklar
+        ağırlıkla değer artışı, bazıları ağırlıkla nakit akışı sunar; ama hesap her
+        zaman **ikisinin toplamıdır.**
+        """, "total-return-sum"),
+
+        Trap("""
+        ## Tuzak: temettü bedava para değildir
+
+        Çok yaygın bir sezgi: "Şirket bana temettü dağıttı, demek ki bedava para
+        kazandım." Aritmetiğe bakınca durum farklıdır.
+
+        Diyelim bir **A şirketinin** hissesi **100 ₺**. Şirket **5 ₺ temettü** dağıtıyor.
+        Bu 5 ₺, şirketin kasasından **çıkar** — yani şirketin değeri 5 ₺ azalır. Kabaca:
+
+        - **Dağıtım öncesi:** elinde 100 ₺'lik hisse.
+        - **Dağıtım sonrası:** elinde ~95 ₺'lik hisse **+** 5 ₺ nakit = yine **100 ₺**.
+
+        Toplam servetin değişmedi; sadece 5 ₺'si hisseden **nakde** döndü. Temettü bir
+        **hediye** değil, şirketin değerinden sana **aktarılan** nakittir. Faydalı bir
+        şeydir — parayı cebe geçirir — ama "bedava" değildir.
+        """, "dividend-not-free"),
+
+        Ctx("""
+        ## Getirinin karşılığı nedir?
+
+        Getiri gökten inmez; her zaman bir **karşılığı** vardır. O karşılık iki
+        şeydir: sermayeni bir **kullanıma** verirsin ve bir **risk** taşırsın.
+
+        - **Sermayeni kim kullanıyor?** Mevduatta bankaya kullandırırsın; tahvilde
+          borçlanana; hissede bir şirkete ortak olarak. Paran boşta değil, birinin
+          elinde bir işi çeviriyor.
+        - **Hangi riski alıyorsun?** Alacaklı olduğunda dönüş büyük ölçüde bellidir,
+          belirsizlik düşüktür. Ortak olduğunda dönüş belirsizdir — hem yukarı hem
+          aşağı açık.
+
+        Getiri, işte bu **kullandırmanın ve risk taşımanın** karşılığıdır. "Neden bana
+        getiri ödensin?" sorusunun cevabı budur. Bu yüzden karşılıksız, risksiz bir
+        yüksek getiri vaadi kulağa hoş gelse de, eksik bir cümledir: karşılığında **ne**
+        verdiğini sormak gerekir.
+        """, "who-uses-your-capital"),
+
+        ExDeep("""
+        ## Ortak olmak ↔ borç vermek: getiri şekli
+
+        Aynı **A şirketine** iki farklı biçimde para verebilirsin — ve getirinin
+        **şekli** buna göre değişir.
+
+        - **Ortak olursan (hisse):** Getirin belirsizdir. Şirket iyi giderse hem
+          değer artışı hem temettü alabilirsin; üst sınır yoktur. Ama şirket kötüye
+          giderse payının değeri de düşer ve sıra ödemede sana en sonda gelir.
+        - **Borç verirsen (tahvil gibi):** Getirin ağırlıkla **nakit akışıdır** —
+          baştan kararlaştırılan faiz. Değer artışı sınırlıdır, ama ödemede **önceliğin**
+          vardır ve dönüş daha belirlidir.
+
+        Aynı şirket, aynı para — ama biri **belirsiz ve üst sınırsız**, diğeri **belli
+        ve öncelikli** bir getiri şekli sunar. Hangisinin "doğru" olduğu değil; getirinin
+        **nereden ve nasıl** geldiği farklıdır.
+        """, "equity-vs-debt-return"),
+
+        Trap("""
+        ## Tuzak: yüksek temettü her zaman iyi değildir
+
+        Bir varlığın yüksek nakit akışı ödemesi ilk bakışta çekici görünür. Ama tek
+        başına yüksek bir temettü **oranı**, bir kalite işareti değildir. Asıl soru
+        şudur: **bu ödeme nereden geliyor?**
+
+        - Şirket, sürdürülebilir bir **kârdan** mı dağıtıyor — yoksa kârı yetmediği
+          hâlde, geleceğini zayıflatarak mı ödüyor?
+        - Yüksek oran bazen fiyatın **düşmüş** olmasından kaynaklanır: ödeme aynı
+          kalsa da fiyat gerilediğinde oran mekanik olarak yükselir.
+
+        Yani "temettü yüksek" cümlesi tek başına eksiktir; kaynağına bakmadan onu bir
+        avantaj saymak yanıltıcı olur. Bu ders bir yönlendirme yapmaz — yalnızca
+        **hangi soruyu** sorman gerektiğini gösterir: rakam değil, **kaynağı** önemlidir.
+        """),
+
+        Deep("""
+        ## Kâğıt üstünde kâr ↔ nakde dönen kâr
+
+        Değer artışıyla nakit akışı arasındaki en ince fark **gerçekleşme**dir.
+
+        Bir kalemin fiyatı 100 ₺'den 150 ₺'ye çıktıysa, "50 ₺ kârım var" dersin — ama
+        bu kâr **kâğıt üstündedir.** Satmadığın sürece cebine girmemiştir ve fiyat
+        yeniden düşerse o kârın bir kısmı ya da tamamı **buharlaşabilir.** Gerçekleşmesi,
+        o fiyattan gerçekten satmana bağlıdır.
+
+        Nakit akışı ise farklıdır: elindeyken aldığın faiz, temettü ya da kira **zaten
+        gerçekleşmiştir** — cebine girmiştir, fiyat sonradan ne yaparsa yapsın senindir.
+
+        Bu ayrım ileride (nakit akışı ve gerçekleşen kâr dersinde) daha derinleşecek.
+        Şimdilik akılda kalması gereken: **kâğıt üstündeki kâr bir olasılıktır;
+        gerçekleşmiş getiri ise eldedir.** İkisini aynı kefeye koymak yanıltır.
+        """, "paper-vs-realized"),
+
+        Live("""
+        ## Senin portföyünde
+
+        Portföyünün maliyetinin üzerine eklenen nominal getirisi **{{return_ratio}}**.
+
+        Bu dersin sorusu tam da bu rakamın **içidir:** o getirinin ne kadarı **değer
+        artışından** (kalemlerinin fiyatı yükseldi), ne kadarı **nakit akışından**
+        (faiz, temettü, kira) geldi? Aynı toplam getiri, çok farklı kaynak
+        bileşimlerinden çıkabilir — ve bu bileşim, portföyünün nasıl davrandığı
+        hakkında değer rakamının tek başına söylemediğini anlatır.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Temettü ve kâr payı.** Şirketlerin kâr payı (temettü) dağıtım kararları ve
+        bu dağıtımın fiyata yansıması **KAP** (Kamuyu Aydınlatma Platformu) üzerinden
+        kamuya bildirilir — [kap.org.tr](https://www.kap.org.tr). Kâr payı mevzuatının
+        tanımları **SPK** çerçevesine dayanır.
+
+        **Örnek sayılar kurgusaldır.** 100 ₺, 108 ₺, %8, %4, 5 ₺ temettü gibi rakamların
+        tamamı mekanizmayı göstermek için **seçilmiş örneklerdir** — gerçek bir varlığın
+        getirisi değildir. "A dairesi", "A şirketi" gibi etiketler soyuttur; **gerçek bir
+        şirket ya da sembol değildir.** Tüm getiri hesapları uygulamada **kodda** yapılır.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders getirinin **nereden** geldiğini
+        açıklar; hangi kaynağın daha iyi olduğunu söylemez, temettü için bir strateji
+        önermez ve bir getiri **vaat etmez**. Karar senindir.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -2753,6 +2982,91 @@ internal static class EducationContent
                  ("Yüksek likidite otomatik olarak \"daha iyi\" demek değildir", true),
                  ("Az likit bir varlığı acele satmak fiyattan ödün gerektirebilir", true),
                  ("Yüksek likidite, varlığın getirisini garanti eder", false)]),
+        ]);
+
+        // ── Set 0 · Ders 6 — Getiri nereden gelir? ───────────────────────────────
+        yield return ("lesson-s0l6", "quiz-s0l6", "Getiri Nereden Gelir? — Mini Test",
+        [
+            // ── Kolay: iki kaynağı tanıma ────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Bir yatırımın getirisi temelde hangi iki kaynaktan gelir?",
+                "Getiri iki yoldan gelir: değer artışı (sahip olduğun şeyin fiyatının yükselmesi) ve nakit akışı " +
+                "(varlığın elindeyken sana ödediği faiz, temettü ya da kira). Çoğu varlık bu ikisinin bir bileşimini sunar.",
+                [("Sadece şanstan ve zamanlamadan", false),
+                 ("Değer artışından ve nakit akışından", true),
+                 ("Sadece bankanın faizinden", false),
+                 ("Enflasyondan ve kurdan", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Aşağıdakilerden hangisi bir NAKİT AKIŞI getirisidir?",
+                "Nakit akışı, varlık elindeyken sana ödenen paradır: faiz, temettü, kira. Hissenin fiyatının " +
+                "yükselmesi ise değer artışıdır — satana kadar kâğıt üstündedir, cebe girmiş bir ödeme değildir.",
+                [("Bir hissenin fiyatının yükselmesi", false),
+                 ("Mevduatın ödediği faiz", true),
+                 ("Altının fiyatının artması", false),
+                 ("Dövizin değer kazanması", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Bir varlık sana ancak onu sattığında getiri sağlayabilir.",
+                "Yanlış. Nakit akışı (faiz, temettü, kira) satmana gerek kalmadan, sen elde tutarken cebine girer. " +
+                "Satış yalnızca değer artışını gerçekleştirmek için gerekir; getirinin tek yolu değildir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Orta: toplam getiri hesabı, kaynağı belirleme ────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir kalemin değeri yılda %8 arttı ve ayrıca %4'lük nakit ödeme (kira/temettü) yaptı. Toplam getiri nedir?",
+                "Toplam getiri iki kaynağın toplamıdır: %8 (değer artışı) + %4 (nakit akışı) = %12. Yalnız birini " +
+                "saymak eksik olur — değer artışını da nakit akışını da hesaba katmak gerekir.",
+                [("%8", false),
+                 ("%4", false),
+                 ("%12", true),
+                 ("%32", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir daireyi elde tutarken topladığın kira, getirinin hangi kaynağıdır?",
+                "Kira bir nakit akışıdır: daireyi satmana gerek kalmadan, elinde tutarken düzenli olarak cebine girer. " +
+                "Dairenin fiyatının yükselmesi ise ayrı bir kaynaktır — değer artışı.",
+                [("Değer artışı", false),
+                 ("Nakit akışı", true),
+                 ("Enflasyon primi", false),
+                 ("Likidite getirisi", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Fiyatı bir yıl boyunca hiç değişmeyen bir varlık, o yıl kesinlikle hiç getiri sağlamamıştır.",
+                "Yanlış. Fiyat sabit kalsa bile varlık nakit akışı (faiz, temettü, kira) ödemiş olabilir. Değer artışı " +
+                "sıfır olsa da nakit akışı pozitif olabilir; getiri iki kaynağın toplamıdır.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor: temettü tuzağı, kâğıt üstü/gerçekleşmiş ─────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "100 ₺'lik bir hisse 5 ₺ temettü dağıtıyor. Dağıtımdan hemen sonra elindeki toplam servete kabaca ne olur?",
+                "Temettü bedava para değildir: 5 ₺ şirketin kasasından çıkar, hissenin değeri kabaca 5 ₺ azalır. " +
+                "Dağıtım sonrası elinde ~95 ₺ hisse + 5 ₺ nakit = yine ~100 ₺. Toplam servet aynı kalır; 5 ₺'si " +
+                "hisseden nakde dönmüştür.",
+                [("100 ₺'den 105 ₺'ye çıkar — bedava kâr", false),
+                 ("Kabaca 100 ₺ kalır: ~95 ₺ hisse + 5 ₺ nakit", true),
+                 ("100 ₺'den 95 ₺'ye düşer — net kayıp", false),
+                 ("İki katına, 200 ₺'ye çıkar", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Bir kalemin fiyatı 100 ₺'den 150 ₺'ye çıktı ama sen satmadın. Bu 50 ₺'lik kâr için en doğru ifade nedir?",
+                "Değer artışı satana kadar kâğıt üstündedir: 50 ₺ henüz cebine girmemiştir ve fiyat yeniden düşerse " +
+                "bir kısmı ya da tamamı buharlaşabilir. Gerçekleşmesi, o fiyattan gerçekten satmana bağlıdır. Nakit " +
+                "akışı ise (faiz/temettü/kira) elde edildiği an gerçekleşmiştir.",
+                [("Gerçekleşmiş, garanti bir kârdır", false),
+                 ("Kâğıt üstündedir; satana kadar gerçekleşmez ve değişebilir", true),
+                 ("Zaten cebine girmiş bir nakit akışıdır", false),
+                 ("Vergiden muaf bir temettüdür", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Bir varlığın \"yüksek temettü\" ödemesi hakkında hangileri DOĞRUDUR? (birden fazla)",
+                "Temettü fiyattan düşülür — bedava değildir. Önemli olan ödemenin kaynağıdır: sürdürülebilir bir kârdan " +
+                "mı geliyor? Yüksek oran bazen fiyatın düşmesinden kaynaklanır (aynı ödeme, gerilemiş fiyat → mekanik " +
+                "olarak yüksek oran). Yüksek oran tek başına bir kalite işareti değildir.",
+                [("Temettü hissenin değerinden düşülür; bedava para değildir", true),
+                 ("Önemli olan ödemenin kaynağıdır (sürdürülebilir kâr mı?)", true),
+                 ("Yüksek oran bazen fiyatın düşmüş olmasından kaynaklanır", true),
+                 ("Yüksek temettü, bir varlığı her zaman daha iyi bir yatırım yapar", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

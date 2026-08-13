@@ -20,6 +20,46 @@
 
 ---
 
+## 2026-08-13 · T6.16 · S0-L6 "Getiri nereden gelir?" (ders 6/10)
+- **Görev(ler):** T6.16 (Set 0 Ders 6 / T6.17f). fable-mode.
+- **Ne yapıldı:** **S0-L6 "Getiri nereden gelir?"** tam zenginlikte (künye `16` §S0-L6).
+  13 bölüm / 13 aşama: açılış → getirinin iki kaynağı (değer artışı + nakit akışı) →
+  **işlenmiş örnek** kira (A dairesi: değer +%8 · kira +%4) → değer artışı (fiyat
+  değişimi, kâğıt üstü) → nakit akışı (faiz·temettü·kira, gerçekleşmiş) → **işlenmiş
+  örnek** toplam getiri = %8+%4=%12 → tuzak "temettü bedava" (100 → 95 hisse + 5 nakit
+  = 100) → getirinin karşılığı (sermaye + risk) → ortak↔alacaklı getiri şekli → tuzak
+  "yüksek temettü her zaman iyi" (kaynağı önemli) → kâğıt üstü↔gerçekleşmiş kâr (Deep,
+  S3-L2 köprüsü) → Senin portföyünde → kaynak. **9 figür** (4 çok panelli:
+  two-return-sources · total-return-sum · dividend-not-free · equity-vs-debt-return),
+  **9 soru/3 zorluk**, **3 kavram** (return-source · capital-gain · cash-flow-return),
+  ön-koşul S0-L5→S0-L6.
+- **Dokunulan dosyalar:** `EducationContent.cs` (LessonS0L6 + quiz-s0l6), `SeedData.cs`
+  (SeedSet0Async: ders + ön-koşul + 3 kavram + builder), `LessonFigure.tsx` (9 figür +
+  FIGURES kaydı), `EducationSeedTests.cs` (sayımlar + kavram anahtarları), docs (08
+  T6.16 ilerleme), ACTIVE, TASKLOG.
+- **Test:** **EducationSeed+Api 41/41.** Sayımlar: bölüm 119→132, quiz 10→11, soru
+  72→81, seçenek 254→286, ders 10→11, kavram 19→22, ön-koşul 8→9, live 10→11. web
+  **141/141** (yeni figürler statik → M4 mutabakat testiyle kapsanır), web build (tsc)
+  temiz. Application 291/291. **Seed canlıya indi** (Postgres: S0-L6 13 bölüm/9 soru/9
+  figür; toplam 132 bölüm/11 ders).
+- **Karar/Not:** ⚠ **Yasal (künye yasal notu + `15` §3.4):** örneklerde **şirket adı/
+  sembol yok** (soyut "A dairesi/şirketi"); temettü anlatımı bir **strateji önerisine
+  dönüşmez** — yüksek temettü tuzağı "kaynağına bak" çerçevesi verir, yönlendirme yapmaz.
+  ⚠ **LiveContext `price_change_12m` yerine `{{return_ratio}}`:** künye ideal token'ı
+  portföy fiyat geçmişi plumbing'i isterdi; `return_ratio` Own+Demo'da hazır ve "getiri"
+  ile semantik uyumlu (S0-L4/L5 emsali — yeni plumbing yok). Ders getiriyi "değer artışı
+  + nakit akışı" olarak ayrıştırıp o rakamın **içini** sorar. ⚠ Tek-yıldız italik taraması
+  temiz. ⚠ **Görsel polish teyidi:** Chrome eklentisi bu turda da bağlı değil — 9 figürün
+  görsel teyidi (bekleyen S0-L4 slider + S0-L5 ile birlikte) eklenti bağlanınca. Statik
+  geometri denetlendi; PaperVsRealized'da "cebe girdi" etiketi taşma riskine karşı
+  sağ-hizalı yapıldı (x=308 end).
+- **Durum:** devam ediyor (10 dersin 6'sı + foundation tamam).
+- **Sıradaki:** **S0-L7 "Risk ne demek?"** (risk · volatility · guaranteed-return-fallacy;
+  ön bilgi investment + return-source). Ön-koşul S0-L6→S0-L7. ⚠ Künye: LiveContext YOK
+  (karşılığı bir metrik yok) — depth-ladder testi LiveContext ŞART koşar, dikkat: mevcut
+  emsalde her derste Live var; S0-L7'de en yakın uygun token bulunmalı ya da test
+  gözden geçirilmeli. + canlı görsel teyit (eklenti bağlanınca).
+
 ## 2026-08-13 · T6.16 · S0-L5 "Varlık türleri turu" (ders 5/10)
 - **Görev(ler):** T6.16 (Set 0 Ders 5 / T6.17e). fable-mode.
 - **Ne yapıldı:** **S0-L5 "Nereye yatırılır? — varlık türleri turu"** tam zenginlikte
