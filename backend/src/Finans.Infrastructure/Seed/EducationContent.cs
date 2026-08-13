@@ -1838,6 +1838,217 @@ internal static class EducationContent
         durumunla — sen verirsin.
         """));
 
+    // ── S0-L4 — Bekleyen para neden erir? ────────────────────────────────────
+    // Enflasyon SEZGİSİ (formülsüz — reel getiri formülü S1-L1'e ait, §2.3).
+    // 6. aşama ETKİLEŞİMLİ (enflasyon kaydırıcısı, T6.18): figür anahtarı
+    // "inflation-slider" → istemcide saf/deterministik bileşen; düşerse ders
+    // diğer statik figürlerle çalışır (15 §6.2, SC-E23).
+    public static IEnumerable<LessonSection> LessonS0L4(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Para çekmecede beklerken rakamı değişmez — ama **alabildikleri** değişir.
+        Bu dersi bitirdiğinde şunları yapabileceksin:
+
+        - Enflasyonu "aynı sepetin fiyatının artması" olarak tanımlamak
+        - Cüzdanındaki **tutar** ile o paranın **alım gücünü** birbirinden ayırmak
+        - Fiyat endeksinin (TÜFE) ne ölçtüğünü ve neden **senin** sepetinden farklı
+          olabileceğini açıklamak
+        - Verilen bir oran ve süre için alım gücünün nasıl eridiğini **kaydırıcıyla**
+          okumak
+
+        Bu ders **formül içermez** — reel getiriyi hesaplamayı ileride (Set 1)
+        göreceksin. Burada sezgiyi kuruyoruz. Sonunda kısa bir test var.
+        """),
+
+        Core("""
+        ## Aynı sepet, iki tarih
+
+        Bir alışveriş sepeti düşün: ekmek, süt, ulaşım, biraz da eğlence. Bu sepetin
+        bir **fiyatı** vardır ve zamanla değişir.
+
+        - **Geçen yıl:** sepet 1.000 ₺'ydi.
+        - **Bu yıl:** aynı sepet — aynı ekmek, aynı süt — artık 1.400 ₺.
+
+        Sepet değişmedi; **fiyatı** değişti. İşte **enflasyon** budur: aynı sepetin
+        fiyatının zamanla artması. Örnekte bir yılda %40 artmış.
+
+        Dikkat: burada senin paran hiç konuşmadı bile. Enflasyon bir **fiyat**
+        olgusudur — parana ne olduğunu birazdan göreceğiz.
+        """, "same-basket-two-dates"),
+
+        Ex("""
+        ## Adım adım: elindeki 1.000 ₺ ne alır?
+
+        Diyelim geçen yıl elinde tam **1.000 ₺** vardı ve onu harcamayıp beklettin.
+
+        - **Geçen yıl:** 1.000 ₺ ile sepetin **tamamını** alabilirdin (sepet 1.000 ₺).
+        - **Bu yıl:** sepet 1.400 ₺ oldu. Elindeki 1.000 ₺ ile artık sepetin ancak
+          **1.000 / 1.400 ≈ %71'ini** alabilirsin.
+
+        Rakam olarak paran hâlâ 1.000 ₺ — hiç azalmadı. Ama **alabildiği** yaklaşık
+        üçte bir azaldı. Beklettiğin para, sen hiçbir şey yapmadan **eridi**. İşte
+        enflasyonun sana dokunduğu yer burasıdır.
+        """, "basket-price-up"),
+
+        Core("""
+        ## Tutar bir şey, alım gücü başka bir şey
+
+        Buradan iki ayrı kavram çıkar ve karıştırılmaları en yaygın hatadır:
+
+        - **Tutar** — cüzdandaki rakam. 1.000 ₺ hep 1.000 ₺'dir; kendiliğinden
+          değişmez.
+        - **Alım gücü** — o parayla gerçekte kaç sepet alabildiğin. Fiyatlar
+          arttıkça bu **düşer**.
+
+        Enflasyon tutarı değil, **alım gücünü** aşındırır. Bu yüzden "param duruyor,
+        kaybetmedim" hissi yanıltıcıdır: rakam durur, ama alım gücü sessizce erir.
+
+        Yatırımın en temel gerekçelerinden biri budur — parayı, en azından bu
+        erimeye karşı **çalıştırmak**. Ama bu ders bir çözüm önermez; önce **sorunu**
+        net görmek gerekir.
+        """, "amount-vs-power"),
+
+        Trap("""
+        ## Tuzak: "Param aynı kaldı, demek ki kaybetmedim"
+
+        En sinsi yanılgı budur çünkü rakam seni haklı çıkarır gibi görünür: hesabında
+        hâlâ aynı sayı yazar. Ama "kayıp" sadece rakamın küçülmesi değildir.
+
+        Alım gücü düştüyse, o parayla artık daha az şey alabiliyorsun demektir — bu
+        da bir kayıptır, sadece **görünmez** bir kayıp. Enflasyon, hırsız gibi
+        kapıyı kırmaz; cüzdanın içinde, fark etmeden çalışır.
+
+        Doğru soru "rakamım aynı mı?" değil, **"bu parayla hâlâ aynı şeyleri alabiliyor
+        muyum?"** sorusudur.
+        """, "standing-still"),
+
+        Ex("""
+        ## Kendin dene: enflasyon kaydırıcısı
+
+        Aşağıdaki araçta iki şeyi oynatabilirsin: yıllık enflasyon **oranı** ve kaç
+        **yıl** beklendiği. Bugünkü 100 ₺'nin alım gücünün, o oran **olursa** kaç
+        yılda ne kadar eriyeceğini canlı görürsün.
+
+        Birkaç şeyi dene: oranı yükselt — erime hızlanır. Süreyi uzat — erime derinleşir.
+        Küçük görünen bir oran bile, yıllar üst üste binince alım gücünü ciddi biçimde
+        düşürür.
+
+        **Not:** araç bir **tahmin** değildir; "şu oran **olursa** ne olur" der,
+        "şu oran olacak" demez. Sayılar senin oynattığın varsayımlardır.
+        """, "inflation-slider"),
+
+        Ctx("""
+        ## Fiyat endeksi (TÜFE): sepet nasıl kurulur?
+
+        Bir ülkede milyonlarca farklı fiyat var. "Enflasyon %40" derken hangi
+        fiyat? İşte burada **fiyat endeksi** devreye girer.
+
+        İstatistik kurumu (Türkiye'de **TÜİK**) tipik bir hanenin aldığı mal ve
+        hizmetlerden bir **sepet** oluşturur — gıda, konut, ulaşım, giyim… — ve her
+        kalemin ne kadar ağırlık taşıdığını belirler. Sonra bu sepetin fiyatının
+        zaman içindeki değişimini ölçer. **TÜFE** (Tüketici Fiyat Endeksi) bu
+        ölçümün adıdır.
+
+        Yani "resmî enflasyon", bu **ortalama sepetin** fiyat değişimidir. Ortalama
+        kelimesi önemli — bir sonraki adımda nedenini göreceğiz.
+        """, "index-basket"),
+
+        ExDeep("""
+        ## Kişisel sepet: neden herkesin enflasyonu farklı?
+
+        TÜFE **ortalama** bir sepeti ölçer. Ama senin sepetin ortalamadan farklıysa,
+        **hissettiğin** enflasyon da farklı olur.
+
+        - **Kirada oturan biri:** bütçesinin büyük kısmı kira. Kiralar hızlı arttıysa,
+          onun kişisel enflasyonu resmî ortalamanın **üstünde** olur.
+        - **Ev sahibi biri:** kira ödemez; onun sepetinde konutun ağırlığı düşük.
+          Aynı dönemde onun enflasyonu ortalamanın **altında** kalabilir.
+
+        İkisi de aynı ülkede, aynı yıl yaşıyor — ama farklı sepetler farklı sonuçlar
+        verir. TÜFE yanlış değildir; **ortalamadır**. Kendi enflasyonun, kendi
+        harcama sepetine bağlıdır.
+        """, "personal-basket"),
+
+        Trap("""
+        ## Tuzak: "Resmî oran benim enflasyonum"
+
+        Resmî TÜFE'yi duyup "demek benim param da tam bu kadar eridi" demek doğal ama
+        eksiktir. Az önce gördük: resmî oran **ortalama** sepetin oranıdır.
+
+        Senin harcamaların ortalamadan farklıysa — çok kira ödüyorsan, ya da geliri
+        ağırlıkla belirli bir kaleme gidiyorsa — hissettiğin erime resmî orandan
+        yukarı ya da aşağı sapabilir. Ayrıca enflasyon **her kalemi eşit etkilemez**:
+        bazı fiyatlar hızlı, bazıları yavaş artar.
+
+        Resmî oran iyi bir **pusuladır**, ama senin tam adresin değildir. Kendi
+        sepetine bakmak, haritanı netleştirir.
+        """),
+
+        Deep("""
+        ## Bileşik erime: yıllar üst üste binince
+
+        Enflasyon tek yılda küçük görünebilir — ama etkisi **üst üste biner**, tıpkı
+        borcun bileşik maliyeti gibi (önceki ders). İkinci yılın erimesi, birinci
+        yıldan **kalan** alım gücünün üzerine işler.
+
+        Örneğin yıllık %40 erimeyle: bir yıl sonra 100 ₺'nin alım gücü ≈ 71 ₺, iki
+        yıl sonra ≈ 51 ₺, üç yıl sonra ≈ 36 ₺. Her yıl aynı **oran**, ama azalan bir
+        tabana uygulandığı için alım gücü giderek hızlanan biçimde düşer.
+
+        Bu yüzden "yılda sadece biraz" diye küçümsenen bir oran, birkaç yılda alım
+        gücünün önemli bir kısmını götürebilir. Zaman, enflasyonun tarafındadır.
+        """, "compounded-erosion"),
+
+        ExDeep("""
+        ## Adım adım: alım gücü kaç yılda yarıya iner?
+
+        "Alım gücüm ne zaman yarıya iner?" sorusunun kaba bir cevabı vardır. Yıllık
+        erime oranını **70'e böl**, yaklaşık yıl sayısını bulursun (bu, bileşik
+        büyümenin bilinen bir kısayoludur).
+
+        - **%10 erimeyle:** 70 / 10 ≈ **7 yıl**.
+        - **%35 erimeyle:** 70 / 35 ≈ **2 yıl**.
+        - **%70 erimeyle:** 70 / 70 ≈ **1 yıl**.
+
+        Oran yükseldikçe "yarıya inme" süresi hızla kısalır. Kaydırıcıda da bunu
+        görebilirsin: yüksek oranda çubuk çok daha çabuk çöker. Bu bir tahmin değil,
+        verilen oranın **matematiksel** sonucudur.
+        """),
+
+        Live("""
+        ## Senin portföyünde
+
+        Şu an portföyünün **{{cash_weight}}**'i nakitte bekliyor. Bu ders tam da o
+        nakitle ilgili: rakamı sabit görünse de, alım gücü enflasyon oranında
+        sessizce erir.
+
+        Bu, "nakit kötü" demek değildir — bir önceki derste gördük ki nakit aynı
+        zamanda bir **tampon** ve **likidite** kaynağıdır. Ama boşta, ihtiyaç
+        fazlası bekleyen nakit için erime gerçek bir maliyettir. Ne kadarı tampon,
+        ne kadarı boşta — ayrımı yine sen yaparsın.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Fiyat endeksi tanımı.** Tüketici Fiyat Endeksi (TÜFE), sepet kapsamı ve
+        yayın takvimi **TÜİK** (Türkiye İstatistik Kurumu) tarafından belirlenir —
+        [tuik.gov.tr](https://www.tuik.gov.tr). Enflasyon kavramının çerçevesi bu
+        resmî ölçüme dayanır.
+
+        **Örnek sayılar kurgusaldır.** 1.000 ₺, 1.400 ₺, %40 gibi rakamların tamamı
+        sezgiyi kurmak için **seçilmiş örneklerdir** — gerçek bir dönemin TÜFE'si
+        değildir. Kaydırıcıdaki değerler de senin oynattığın **varsayımlardır**;
+        hesap istemcide, **kodda** yapılır (bileşik erime), bir dil modeli üretmez.
+
+        **Bu bir yatırım tavsiyesi değildir** — bir gelecek tahmini de değildir.
+        Enflasyon burada **geçmiş/olası** bir olgu olarak anlatılır; "enflasyon şu
+        olacak" ya da "şuna yatır" **denmez**. Kaydırıcı "şu oran **olursa**" der.
+        Karar senindir.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -2099,6 +2310,92 @@ internal static class EducationContent
                  ("Likidite şok anında satış zorunluluğundan kurtarır (bir değer)", true),
                  ("Bir kısmı tampon, bir kısmı boşta olabilir — ayırmak gerekir", true),
                  ("Tüm parayı nakitte tutmak en iyisidir", false)]),
+        ]);
+
+        // ── Set 0 · Ders 4 — Bekleyen para neden erir? (9 soru / 3 zorluk) ───
+        yield return ("lesson-s0l4", "quiz-s0l4", "Bekleyen Para Neden Erir? — Mini Test",
+        [
+            // ── Kolay ────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Enflasyon en iyi nasıl tanımlanır?",
+                "Enflasyon, aynı sepetin (aynı mal ve hizmetlerin) fiyatının zamanla artmasıdır. Sepet değişmez; " +
+                "fiyatı değişir. Bu bir fiyat olgusudur — paranın kendisiyle değil, fiyatlarla ilgilidir.",
+                [("Paranın hesapta kendiliğinden çoğalması", false),
+                 ("Aynı sepetin fiyatının zamanla artması", true),
+                 ("Döviz kurunun yükselmesi", false),
+                 ("Maaşların artması", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "\"Tutar\" ile \"alım gücü\" arasındaki fark nedir?",
+                "Tutar cüzdandaki rakamdır (1.000 ₺ hep 1.000 ₺). Alım gücü ise o parayla gerçekte kaç şey " +
+                "alabildiğindir. Enflasyon tutarı değiştirmez ama alım gücünü düşürür.",
+                [("İkisi aynı şeydir", false),
+                 ("Tutar rakam, alım gücü o parayla alınabilen şeydir", true),
+                 ("Tutar gelecekteki değer, alım gücü bugünküdür", false),
+                 ("Alım gücü sadece dövizde geçerlidir", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Hesabındaki rakam aynı kaldıysa, enflasyona rağmen hiçbir şey kaybetmemişsindir.",
+                "Yanlış. Rakam aynı kalsa bile fiyatlar arttıysa o parayla artık daha az şey alabilirsin — bu " +
+                "görünmez bir kayıptır. Doğru soru \"rakamım aynı mı?\" değil, \"aynı şeyleri hâlâ alabiliyor muyum?\"dur.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Orta ─────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Geçen yıl 1.000 ₺ olan sepet bu yıl 1.400 ₺ oldu. Elindeki 1.000 ₺ ile bu yıl sepetin ne kadarını alırsın?",
+                "1.000 / 1.400 ≈ 0,71, yani sepetin yaklaşık %71'ini. Paran rakam olarak azalmadı ama alabildiği " +
+                "yaklaşık üçte bir düştü — beklettiğin para sen hiçbir şey yapmadan eridi.",
+                [("Tamamını (%100)", false),
+                 ("Yaklaşık %71'ini", true),
+                 ("Yaklaşık %140'ını", false),
+                 ("Yaklaşık %40'ını", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Tüketici Fiyat Endeksi (TÜFE) neyi ölçer?",
+                "TÜFE, tipik bir hanenin aldığı mal ve hizmetlerden oluşan ORTALAMA bir sepetin fiyatının zaman " +
+                "içindeki değişimini ölçer. \"Resmî enflasyon\" bu ortalama sepetin oranıdır — tek bir ürünün değil.",
+                [("Sadece altının fiyatını", false),
+                 ("Ortalama bir tüketim sepetinin fiyat değişimini", true),
+                 ("Bankaların faiz oranını", false),
+                 ("Döviz kurunu", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Resmî TÜFE oranı herkesin hissettiği enflasyonu tam olarak yansıtır.",
+                "Yansıtmaz. TÜFE ortalama bir sepeti ölçer; senin sepetin ortalamadan farklıysa (örneğin çok kira " +
+                "ödüyorsan) hissettiğin enflasyon sapabilir. Resmî oran iyi bir pusuladır ama tam adresin değildir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor ──────────────────────────────────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "İkisinin de nominal geliri aynı ama biri kirada, diğeri ev sahibi. Enflasyon ikisini neden farklı etkiler?",
+                "Herkesin sepeti farklıdır. Kiracının bütçesinde kira büyük ağırlık taşır; kiralar hızlı arttıysa " +
+                "kişisel enflasyonu ortalamanın ÜSTÜNDE olur. Ev sahibi kira ödemez, konut ağırlığı düşüktür; " +
+                "enflasyonu ortalamanın ALTINDA kalabilir. TÜFE yanlış değil, ortalamadır.",
+                [("Enflasyon herkesi tam olarak eşit etkiler", false),
+                 ("Farklı harcama sepetleri farklı kişisel enflasyon verir", true),
+                 ("Sadece gelir farkı önemlidir", false),
+                 ("Ev sahibi enflasyondan hiç etkilenmez", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Yıllık %40 enflasyonla 100 ₺'nin alım gücü: 1 yıl sonra ≈71 ₺, 2 yıl sonra ≈51 ₺, 3 yıl sonra ≈36 ₺. " +
+                "Bu neyi gösterir?",
+                "Erime bileşiktir: her yıl aynı ORAN, ama azalan bir tabana uygulanır. Bu yüzden alım gücü doğrusal " +
+                "değil, giderek hızlanan biçimde düşer. \"Yılda sadece biraz\" diye küçümsenen oran, birkaç yılda " +
+                "alım gücünün önemli kısmını götürür — zaman enflasyonun tarafındadır.",
+                [("Erime her yıl eşit miktarda (doğrusal) olur", false),
+                 ("Erime bileşiktir; azalan tabana binerek hızlanır", true),
+                 ("Üç yıl sonra alım gücü artmaya başlar", false),
+                 ("Enflasyon ikinci yıl durur", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Enflasyon kaydırıcısı hakkında hangileri DOĞRUDUR? (birden fazla)",
+                "Araç bir tahmin değildir: \"şu oran OLURSA ne olur\" der, \"şu oran olacak\" demez. Hesap istemcide " +
+                "saf ve deterministiktir (aynı girdi → aynı çıktı) ve varsayımsaldır. Gelecekteki gerçek enflasyonu " +
+                "bilmez ve bir varlık önermez.",
+                [("\"Şu oran olursa\" der, gelecek tahmini yapmaz", true),
+                 ("Değerler senin oynattığın varsayımlardır", true),
+                 ("Aynı girdi her zaman aynı sonucu verir (deterministik)", true),
+                 ("Gelecekteki gerçek enflasyon oranını söyler", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

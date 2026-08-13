@@ -3777,6 +3777,45 @@ body.drawer-lock {
   line-height: 1.5;
   color: var(--muted, #9aa6c4);
 }
+
+/* Enflasyon kaydırıcısı (etkileşimli araç, T6.18) — set başına 1 (15 §6.2). */
+.inflation-slider {
+  max-width: 480px;
+  padding: 16px;
+  border: 1px solid var(--line, #26304f);
+  border-radius: 14px;
+  background: var(--panel-2, #1a2240);
+}
+.infl-controls {
+  display: grid;
+  gap: 6px;
+}
+.infl-controls label {
+  font-size: 13px;
+  color: var(--muted, #9aa6c4);
+}
+.infl-controls label strong {
+  color: var(--accent, #8a94dc);
+}
+.inflation-slider input[type="range"] {
+  width: 100%;
+  margin: 0 0 8px;
+  accent-color: var(--accent, #8a94dc);
+  cursor: pointer;
+}
+.inflation-slider input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent, #8a94dc);
+  outline-offset: 3px;
+}
+.infl-readout {
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text, #eef2ff);
+}
+.infl-readout strong {
+  color: var(--accent, #8a94dc);
+}
 .fig-axis {
   stroke: var(--line, #26304f);
   stroke-width: 1;

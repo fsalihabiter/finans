@@ -133,14 +133,26 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > işaretlenip S0-L3 kilidi açıldı; figürler render (debt-cost-ladder 12 bileşik çubuk
 > ≈%60, aritmetik tutarlı), literal yıldız yok, kart 2/3·%67.
 
+> 🚧 **T6.16 · S0-L4 + T6.18 bitti (2026-07-26):** **"Bekleyen para neden erir?"**
+> (enflasyon sezgisi, formülsüz) tam zenginlikte. 13 aşama (sepet fiyatı · tutar↔alım
+> gücü · **etkileşimli kaydırıcı** · TÜFE · kişisel sepet · bileşik erime), **8 figür**
+> (7 statik + 1 etkileşimli), **9 soru/3 zorluk**, **3 kavram** (inflation·purchasing-
+> power·price-index), ön-koşul S0-L3→L4. **T6.18 tamam:** `InflationSlider` — iki
+> klavye range, saf/deterministik `100/(1+i)^n`, **tahminsiz** ("olursa"), enstrüman
+> adı yok, bilinmeyen anahtar → fallback. EducationSeed+Api **41/41**, web **141/141**
+> (4 yeni SC-E23 testi), Application 291/291, build temiz. Seed canlıya indi.
+> ⚠ **Canlı slider görsel teyidi bekliyor** (Chrome eklentisi bu turda koptu; Vite
+> açık: http://localhost:5173/egitim). ⚠ LiveContext `inflation_12m` yerine `cash_weight`
+> (T6.21 sahte-TÜİK'ten kaçınmak için; canlı token gerçek TÜFE inince eklenir).
+
 ## Sıradaki (öncelik sırası)
-1. **T6.16 devam — S0-L4…L10 (ders ders, tam derinlik):**
-   **4 Bekleyen para neden erir (+enflasyon kaydırıcısı=T6.18)** · 5 Varlık türleri ·
-   6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy · **9 Fiyat nereden
-   çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders foundation üstüne eklenir,
-   ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
-   ⚠ İş yükü (kalan): **~55 figür + 63 soru** → §16 §8.3 paylaşılan SVG öğeleri
+1. **T6.16 devam — S0-L5…L10 (ders ders, tam derinlik):**
+   5 Varlık türleri turu · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
+   **9 Fiyat nereden çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders foundation
+   üstüne eklenir, ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
+   ⚠ İş yükü (kalan): **~47 figür + 54 soru** → §16 §8.3 paylaşılan SVG öğeleri
    ihtiyaç oldukça çıkarılır. **T6.17a-j bu işe dahil edildi** (tam zenginlik kararı).
+   + **canlı enflasyon kaydırıcısı görsel teyidi**.
 2. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.
 3. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek

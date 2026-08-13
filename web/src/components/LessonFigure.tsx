@@ -1,3 +1,5 @@
+import { useId, useState } from "react";
+
 /**
  * Ders figürleri (T6.7) — kavramı tek bakışta gösteren küçük, elle yazılmış SVG'ler.
  *
@@ -1079,11 +1081,244 @@ function TwoCostsOfCash() {
   );
 }
 
+// ── S0-L4 · Bekleyen para neden erir? (enflasyon) figürleri ──────────────────
+
+/** S0-L4 · Aynı sepet, iki tarih: sepet değişmez, fiyatı 1.000 → 1.400 ₺ artar. */
+function SameBasketTwoDates() {
+  return (
+    <Figure
+      label="Aynı alışveriş sepeti geçen yıl bin lira iken bu yıl bin dört yüz liraya çıkar; sepet değişmez, fiyatı artar"
+      caption="Sepet aynı (aynı ekmek, aynı süt); değişen fiyatı. Bir yılda %40 artmış."
+      height={140}
+    >
+      <Panel x={6} y={20} w={148} h={106} title="Geçen yıl" />
+      <rect x={54} y={54} width={52} height={40} rx="6" className="fig-bar-muted" />
+      <text x={80} y={78} className="fig-value" textAnchor="middle">🧺</text>
+      <text x={80} y={114} className="fig-value" textAnchor="middle">1.000 ₺</text>
+
+      <Panel x={166} y={20} w={148} h={106} title="Bu yıl" />
+      <rect x={214} y={54} width={52} height={40} rx="6" className="fig-bar-muted" />
+      <text x={240} y={78} className="fig-value" textAnchor="middle">🧺</text>
+      <text x={240} y={114} className="fig-value neg" textAnchor="middle">1.400 ₺</text>
+    </Figure>
+  );
+}
+
+/** S0-L4 · Elindeki 1.000 ₺ sepet 1.400 olunca ancak %71'ini alır. */
+function BasketPriceUp() {
+  return (
+    <Figure
+      label="Sepet bin dört yüz liraya çıkınca elindeki bin lira sepetin ancak yüzde yetmiş birini alır; para azalmadı ama alabildiği düştü"
+      caption="Elindeki 1.000 ₺ değişmedi; ama sepet 1.400 olunca ancak ~%71'ini alır."
+      height={100}
+    >
+      <text x={16} y={40} className="fig-label">geçen yıl</text>
+      <rect x={92} y={26} width={200} height={20} rx="3" className="fig-bar-pos" />
+      <text x={192} y={41} className="fig-value" textAnchor="middle">tam sepet (%100)</text>
+      <text x={16} y={80} className="fig-label">bu yıl</text>
+      <rect x={92} y={66} width={200} height={20} rx="3" className="fig-bar-muted" />
+      <rect x={92} y={66} width={142} height={20} rx="3" className="fig-bar-neg" opacity="0.5" />
+      <text x={163} y={81} className="fig-value" textAnchor="middle">≈ %71</text>
+    </Figure>
+  );
+}
+
+/** S0-L4 · Tutar sabit (rakam), alım gücü düşer (aynı para, daralan sepet). */
+function AmountVsPower() {
+  return (
+    <Figure
+      label="Tutar yani cüzdandaki rakam sabit kalır ama alım gücü yani o parayla alınabilen şey enflasyonla düşer"
+      caption="Tutar (rakam) sabit; alım gücü (alınabilen) erir. Karıştırılması en yaygın hata."
+      height={110}
+    >
+      <text x={16} y={40} className="fig-label">Tutar</text>
+      <rect x={92} y={26} width={140} height={20} rx="3" className="fig-bar-muted" />
+      <text x={240} y={41} className="fig-value">1.000 ₺ · sabit</text>
+      <text x={16} y={84} className="fig-label">Alım gücü</text>
+      <path d="M92 70 L232 92" className="fig-line-volatile" fill="none" />
+      <text x={244} y={96} className="fig-value neg">↓ erir</text>
+    </Figure>
+  );
+}
+
+/** S0-L4 · "Param aynı kaldı" tuzağı: rakam sabit, sepet küçülür (görünmez kayıp). */
+function StandingStill() {
+  return (
+    <Figure
+      label="Rakam aynı kalsa bile alım gücü düştüyse bir kayıp vardır; enflasyon görünmez biçimde cüzdanın içinde çalışır"
+      caption="Rakam sabit ama alınan sepet küçülüyor — görünmez bir kayıp."
+      height={120}
+    >
+      <rect x={30} y={44} width={64} height={34} rx="7" className="fig-card" />
+      <text x={62} y={65} className="fig-value" textAnchor="middle">1.000 ₺</text>
+      <text x={62} y={98} className="fig-label" textAnchor="middle">rakam sabit</text>
+      <path d="M100 61 L150 61" className="fig-line-steady" fill="none" />
+      <circle cx={210} cy={61} r={34} className="fig-bar-muted" opacity="0.4" />
+      <circle cx={210} cy={61} r={20} className="fig-bar-neg" opacity="0.55" />
+      <text x={210} y={110} className="fig-label" textAnchor="middle">alınabilen küçülür</text>
+    </Figure>
+  );
+}
+
+/** S0-L4 · ETKİLEŞİMLİ: enflasyon kaydırıcısı (T6.18). Saf/deterministik, klavye
+ *  erişimli, tahmin ÜRETMEZ ("olursa"). Hesap istemcide: 100 / (1+i)^n. */
+function InflationSlider() {
+  const [rate, setRate] = useState(30); // yıllık enflasyon (%)
+  const [years, setYears] = useState(5); // süre (yıl)
+  const rateId = useId();
+  const yearsId = useId();
+
+  // Bugünkü 100 ₺'nin alım gücü, n yıl sonra (bileşik erime — saf, deterministik).
+  const power = (n: number) => 100 / Math.pow(1 + rate / 100, n);
+  const endPower = power(years);
+  const fmt = (v: number) => v.toLocaleString("tr-TR", { maximumFractionDigits: 0 });
+
+  // Yıl yıl erime çubukları.
+  const bars = Array.from({ length: years + 1 }, (_, y) => power(y));
+  const bw = Math.min(26, (300 - 20) / bars.length);
+
+  return (
+    <figure className="lesson-figure inflation-slider" role="group" aria-label="Enflasyon kaydırıcısı — alım gücü erimesi">
+      <div className="infl-controls">
+        <label htmlFor={rateId}>
+          Yıllık enflasyon: <strong>%{rate}</strong>
+        </label>
+        <input
+          id={rateId}
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={rate}
+          onChange={(e) => setRate(Number(e.target.value))}
+          aria-valuetext={`yüzde ${rate}`}
+        />
+        <label htmlFor={yearsId}>
+          Süre: <strong>{years} yıl</strong>
+        </label>
+        <input
+          id={yearsId}
+          type="range"
+          min={1}
+          max={20}
+          step={1}
+          value={years}
+          onChange={(e) => setYears(Number(e.target.value))}
+          aria-valuetext={`${years} yıl`}
+        />
+      </div>
+
+      <p className="infl-readout">
+        Bugünkü <strong>100 ₺</strong>, yıllık %{rate} enflasyon {years} yıl sürerse
+        yaklaşık <strong>{fmt(endPower)} ₺</strong>'lik alım gücüne iner.
+      </p>
+
+      <svg viewBox="0 0 320 96" role="img" aria-label={`${years} yılda alım gücü 100 liradan yaklaşık ${fmt(endPower)} liraya iner`}>
+        <line x1="14" y1="82" x2="306" y2="82" className="fig-axis" />
+        {bars.map((p, y) => (
+          <rect
+            key={y}
+            x={16 + y * bw}
+            y={82 - (p / 100) * 68}
+            width={Math.max(bw - 3, 3)}
+            height={(p / 100) * 68}
+            rx="2"
+            className={y === bars.length - 1 ? "fig-bar-neg" : "fig-bar-pos"}
+          />
+        ))}
+        <text x="16" y="94" className="fig-label">bugün → {years}. yıl</text>
+      </svg>
+
+      <figcaption>
+        Bu bir tahmin değildir — "şu oran <strong>olursa</strong>" senaryosudur; sayılar senin varsayımların.
+      </figcaption>
+    </figure>
+  );
+}
+
+/** S0-L4 · Fiyat endeksi (TÜFE): ağırlıklı bir tüketim sepeti. */
+function IndexBasket() {
+  const items = [
+    { name: "Gıda", w: 90 },
+    { name: "Konut", w: 70 },
+    { name: "Ulaşım", w: 50 },
+    { name: "Diğer", w: 40 },
+  ];
+  return (
+    <Figure
+      label="Fiyat endeksi TÜFE tipik bir hanenin sepetindeki gıda konut ulaşım gibi kalemleri ağırlıklarıyla ölçer"
+      caption="TÜFE, ağırlıklı bir ortalama sepetin fiyat değişimini ölçer — tek bir ürünün değil."
+      height={128}
+    >
+      {items.map((it, i) => {
+        const y = 20 + i * 26;
+        return (
+          <g key={it.name}>
+            <text x="12" y={y + 13} className="fig-label">{it.name}</text>
+            <rect x="86" y={y} width={it.w * 2.1} height="16" rx="3" className="fig-bar-muted" />
+          </g>
+        );
+      })}
+      <text x="12" y="122" className="fig-label">ağırlıklar sepetin katkısını gösterir</text>
+    </Figure>
+  );
+}
+
+/** S0-L4 · Kişisel sepet: kiracı (ortalamanın üstü) ↔ ev sahibi (altı). */
+function PersonalBasket() {
+  return (
+    <Figure
+      label="Kirada oturanın kişisel enflasyonu ortalamanın üstünde ev sahibininki altında kalabilir çünkü sepetleri farklıdır"
+      caption="Aynı yıl, farklı sepetler: kiracı ortalamanın üstünde, ev sahibi altında hissedebilir."
+      height={120}
+    >
+      <line x1="150" y1="16" x2="150" y2="104" className="fig-axis" />
+      <text x="150" y="12" className="fig-value" textAnchor="middle">ortalama (TÜFE)</text>
+      <text x="12" y="44" className="fig-label">Kiracı</text>
+      <rect x="150" y="30" width="90" height="18" rx="3" className="fig-bar-neg" />
+      <text x="246" y="44" className="fig-value neg">üstünde</text>
+      <text x="12" y="88" className="fig-label">Ev sahibi</text>
+      <rect x="90" y="74" width="60" height="18" rx="3" className="fig-bar-pos" />
+      <text x="84" y="88" className="fig-value pos" textAnchor="end">altında</text>
+    </Figure>
+  );
+}
+
+/** S0-L4 · Bileşik erime: 100 → 71 → 51 → 36 (yıllar üst üste binince hızlanır). */
+function CompoundedErosion() {
+  const vals = [100, 71, 51, 36];
+  return (
+    <Figure
+      label="Yıllık yüzde kırk enflasyonla yüz liranın alım gücü sırayla yetmiş bir elli bir ve otuz altı liraya iner; erime bileşiktir ve hızlanır"
+      caption="Yıllık %40 erimeyle: 100 → 71 → 51 → 36. Aynı oran, azalan tabana binerek hızlanır."
+      height={130}
+    >
+      <line x1="20" y1="104" x2="300" y2="104" className="fig-axis" />
+      {vals.map((v, i) => (
+        <g key={i}>
+          <rect x={40 + i * 68} y={104 - v * 0.8} width="44" height={v * 0.8} rx="3"
+            className={i === 0 ? "fig-bar-pos" : "fig-bar-muted"} />
+          <text x={62 + i * 68} y={104 - v * 0.8 - 6} className="fig-value" textAnchor="middle">{v}</text>
+          <text x={62 + i * 68} y="118" className="fig-label" textAnchor="middle">{i}. yıl</text>
+        </g>
+      ))}
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
   "three-actions": ThreeActions,
   "hold-vs-flip": HoldVsFlip,
+  "same-basket-two-dates": SameBasketTwoDates,
+  "basket-price-up": BasketPriceUp,
+  "amount-vs-power": AmountVsPower,
+  "standing-still": StandingStill,
+  "inflation-slider": InflationSlider,
+  "index-basket": IndexBasket,
+  "personal-basket": PersonalBasket,
+  "compounded-erosion": CompoundedErosion,
   "shock-event": ShockEvent,
   "with-without-buffer": WithWithoutBuffer,
   "buffer-traits": BufferTraits,

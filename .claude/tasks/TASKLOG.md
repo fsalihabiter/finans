@@ -20,6 +20,45 @@
 
 ---
 
+## 2026-07-26 · T6.16 · S0-L4 + T6.18 enflasyon kaydırıcısı (ders 4/10)
+- **Görev(ler):** T6.16 (Set 0 Ders 4) + **T6.18** (Set 0 etkileşimli aracı). fable-mode.
+- **Ne yapıldı:** **S0-L4 "Bekleyen para neden erir?"** (enflasyon SEZGİSİ, formülsüz —
+  reel getiri formülü S1-L1'e ait, §2.3). 13 aşama: açılış → aynı sepet iki tarih
+  (1.000→1.400) → elindeki 1.000 ne alır (%71) → tutar↔alım gücü → tuzak "rakam aynı
+  kaldı kaybetmedim" → **ETKİLEŞİMLİ enflasyon kaydırıcısı** → fiyat endeksi (TÜFE) →
+  kişisel sepet (kiracı↔ev sahibi) → tuzak "resmî oran benim enflasyonum" → **bileşik
+  erime** (100→71→51→36) → yarıya inme (70/oran kısayolu) → Senin portföyünde
+  (`cash_weight`) → kaynak. **8 figür** (7 statik + 1 etkileşimli), **9 soru/3 zorluk**,
+  **3 kavram** (inflation·purchasing-power·price-index), ön-koşul S0-L3→S0-L4.
+  **T6.18 — `InflationSlider`:** iki native range (yıllık oran %0-100, süre 1-20 yıl),
+  klavye erişimli (accent-color + focus ring), hesap istemcide **saf/deterministik**
+  (`100/(1+i)^n`), TR biçim. Tahmin ÜRETMEZ ("şu oran **olursa**", "olacak" yok),
+  enstrüman adı yok. `FIGURES["inflation-slider"]` → bilinmeyen/başarısız = `null`
+  (fallback; ders statik figürlerle eksiksiz).
+- **Dokunulan dosyalar:** `EducationContent.cs` (LessonS0L4 + quiz), `SeedData.cs`
+  (SeedSet0Async S0-L4 + ön-koşul + 3 kavram + builder), `LessonFigure.tsx`
+  (import useState/useId + 7 statik figür + InflationSlider), `LessonFigure.test.tsx`
+  (YENİ — SC-E23 4 test), `App.css` (kaydırıcı stilleri), `EducationSeedTests.cs`
+  (sayımlar), docs (08 T6.18 [x]), ACTIVE.
+- **Test:** **EducationSeed+Api 41/41.** Sayımlar: bölüm 91→104, quiz 8→9, soru 54→63,
+  seçenek 190→222, ders 8→9, kavram 13→16, ön-koşul 6→7, live 8→9. **web 141/141**
+  (4 yeni InflationSlider testi: 2 klavye slider · deterministik %0→100 · tahminsiz+
+  varlık adı taraması · fallback boş DOM), web build (tsc) temiz. Application 291/291.
+  **Seed canlıya indi** (Postgres: S0-L4 13 bölüm).
+- **Karar/Not:** ⚠ **LiveContext `inflation_12m` YERİNE `cash_weight`:** künye
+  `inflation_12m` istiyordu ama (a) T6.21 enflasyonu "örnek" yaptı → sahte TÜİK
+  göstermemeli, (b) LessonContextService'e inflation plumbing gerekirdi. Erime dersi
+  doğal olarak "senin nakdine" bağlanır; `inflation_12m` canlı token gerçek TÜFE
+  inince eklenecek (T6.21 gerçek-veri kolu). İçerik yine TÜİK/TÜFE'yi kavram olarak
+  anlatır, örnek sayıların kurgusal olduğunu beyan eder. ⚠ Tek-yıldız italik yok;
+  `SeedData` özetinde "Rereel" → "Reel" düzeltildi. ⚠ **Canlı tarayıcı görsel teyidi
+  YAPILAMADI:** Chrome eklentisi bu turda koptu (3 deneme). Seed indiği ve slider
+  SC-E23 testleriyle kapsandığı için işlev güvencede; slider'ın GÖRSEL polish teyidi
+  (Vite açık bırakıldı, http://localhost:5173/egitim) sonraki turda yapılacak.
+- **Durum:** devam ediyor (10 dersin 4'ü + foundation; T6.18 tamam).
+- **Sıradaki:** **S0-L5 "Nereye yatırılır? — varlık türleri turu"** (mevduat·altın·
+  döviz·hisse·fon·BES). Ön-koşul S0-L4→S0-L5. + canlı slider görsel teyidi.
+
 ## 2026-07-26 · T6.16 devam — S0-L3 "Acil durum fonu ve borç" (ders 3/10)
 - **Görev(ler):** T6.16 (Set 0 içerik turu, ders 3). fable-mode. 🔴 İ4 dersi.
 - **Ne yapıldı:** **S0-L3 "Acil durum fonu ve borç"** eksiksiz. 13 aşama: açılış →

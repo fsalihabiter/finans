@@ -696,6 +696,69 @@ public static class SeedData
             }
         }
 
+        // ── S0-L4 · Bekleyen para neden erir? (enflasyon sezgisi + kaydırıcı) ────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l4"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l4"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "bekleyen-para-neden-erir",
+                OrderIndex = 4,
+                Title = "Bekleyen para neden erir?",
+                Summary = "Enflasyon sezgisi: rakam sabit dursa da alım gücü sessizce erir. Kendin kaydırıcıyla dene.",
+                BodyMarkdown =
+                    "## Bekleyen para neden erir?\n\n" +
+                    "**Enflasyon**, aynı sepetin fiyatının zamanla artmasıdır. Cüzdandaki **tutar** sabit kalsa " +
+                    "bile, o paranın **alım gücü** (kaç sepet alabildiği) düşer. Ders bu sezgiyi formülsüz kurar; " +
+                    "bir kaydırıcıyla verilen oran ve sürede alım gücünün nasıl eridiğini kendin görürsün. " +
+                    "Reel getiri hesabı ileride (Set 1).",
+                EstimatedMinutes = 7,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L4, S0-L3'ü ister (track içi zincir).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l4") && p.PrerequisiteLessonId == Id("lesson-s0l3"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l4"),
+                PrerequisiteLessonId = Id("lesson-s0l3"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L4 üç kavram tanıtır (enflasyon · alım gücü · fiyat endeksi).
+        var s0l4Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-inflation", "inflation", "Enflasyon"),
+            ("tag-purchasing-power", "purchasing-power", "Alım Gücü"),
+            ("tag-price-index", "price-index", "Fiyat Endeksi (TÜFE)"),
+        };
+        foreach (var (tagId, key, label) in s0l4Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l4") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l4"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -709,6 +772,7 @@ public static class SeedData
             (Id("lesson-s0l1"), EducationContent.LessonS0L1), // T6.16 — Set 0 Ders 1
             (Id("lesson-s0l2"), EducationContent.LessonS0L2), // T6.16 — Set 0 Ders 2
             (Id("lesson-s0l3"), EducationContent.LessonS0L3), // T6.16 — Set 0 Ders 3
+            (Id("lesson-s0l4"), EducationContent.LessonS0L4), // T6.16 — Set 0 Ders 4
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),
