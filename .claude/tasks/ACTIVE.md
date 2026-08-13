@@ -145,14 +145,27 @@ T6.19 devreye alıyor. `14` §B1 zaten "kaynak daima görünür" diyordu.
 > açık: http://localhost:5173/egitim). ⚠ LiveContext `inflation_12m` yerine `cash_weight`
 > (T6.21 sahte-TÜİK'ten kaçınmak için; canlı token gerçek TÜFE inince eklenir).
 
+> 🚧 **T6.16 · S0-L5 bitti (2026-08-13):** **"Nereye yatırılır? — varlık türleri turu"**
+> tam zenginlikte. 14 aşama / 15 bölüm (varlık sınıfı · mevduat=alacaklılık · hisse=ortaklık
+> · aynı 10.000₺ üç sınıf · altın/döviz değer saklama · fon/BES sepet · ortaklık↔alacaklılık
+> ekseni · likidite ekseni · alış-satış makası 102/98≈%3,9 · sınıf içi tür farkı), **9 figür**
+> (3 çok panelli: same-money-three-forms · fund-wrapper · ownership-lending-axis), **9 soru/3
+> zorluk**, **3 kavram** (asset-class · ownership-vs-lending · liquidity), ön-koşul S0-L4→L5.
+> ⚠ **Yasal:** sınıflar **sıralanmaz/karşılaştırılmaz**, likidite bir **kalite sırası değil**
+> (metin+tuzak+kaynak+caption); yalnız sınıf adları, enstrüman/şirket adı yok. LiveContext
+> `asset_class_weights` yerine mevcut `{{holding_count}}`+`{{asset_class_count}}` (yeni plumbing
+> yok, S0-L4 emsali). EducationSeed+Api **41/41**, web 141/141, Application 291/291, build temiz;
+> **canlıya indi** (Postgres: 119 bölüm/10 ders, S0-L5 15 bölüm/9 soru/9 figür). ⚠ **Görsel
+> polish teyidi bekliyor** (S0-L4 slider + S0-L5 figürleri) — Chrome eklentisi bu turda da koptu.
+
 ## Sıradaki (öncelik sırası)
-1. **T6.16 devam — S0-L5…L10 (ders ders, tam derinlik):**
-   5 Varlık türleri turu · 6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
+1. **T6.16 devam — S0-L6…L10 (ders ders, tam derinlik):**
+   6 Getiri nereden gelir · 7 Risk ne demek · 8 Vade/portföy ·
    **9 Fiyat nereden çıkıyor** · **10 Bir alım nasıl gerçekleşir**. Her ders foundation
    üstüne eklenir, ön-koşul zinciriyle bağlanır, testler yeşilde tutulur.
-   ⚠ İş yükü (kalan): **~47 figür + 54 soru** → §16 §8.3 paylaşılan SVG öğeleri
+   ⚠ İş yükü (kalan): **~38 figür + 45 soru** → §16 §8.3 paylaşılan SVG öğeleri
    ihtiyaç oldukça çıkarılır. **T6.17a-j bu işe dahil edildi** (tam zenginlik kararı).
-   + **canlı enflasyon kaydırıcısı görsel teyidi**.
+   + **canlı görsel teyit** (S0-L4 slider + S0-L5 figürleri; eklenti bağlanınca).
 2. 🆕 **T6.22 — Set 2 iskeleti:** `grafik-ve-piyasa` track'i + 8 ders + eski
    setlerin `OrderIndex` kaydırması.
 3. 🆕 **T6.23 — Grafik SVG öğeleri** (`16` §8.3): `ChartFrame` **ölçek

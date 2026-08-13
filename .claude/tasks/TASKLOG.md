@@ -20,6 +20,44 @@
 
 ---
 
+## 2026-08-13 · T6.16 · S0-L5 "Varlık türleri turu" (ders 5/10)
+- **Görev(ler):** T6.16 (Set 0 Ders 5 / T6.17e). fable-mode.
+- **Ne yapıldı:** **S0-L5 "Nereye yatırılır? — varlık türleri turu"** tam zenginlikte
+  (künye `16` §S0-L5). 15 bölüm / 14 aşama: açılış → varlık sınıfı ne demek → mevduat
+  (bankaya borç·alacaklılık) → hisse (ortaklık) → **işlenmiş örnek** aynı 10.000₺ üç
+  sınıfta (alacak·pay·metal) → altın/döviz (değer saklama, nakit akışı YOK) → fon/BES
+  (paketlenmiş sepet) → tuzak "fon = tek varlık" → ortaklık↔alacaklılık ekseni → likidite
+  ekseni → **işlenmiş örnek** alış-satış makası (102/98 → ≈%3,9) → tuzak "her varlık her
+  an satılmaz" → sınıf içi tür farkı (Deep, S5-L2 altın köprüsü) → Senin portföyünde →
+  kaynak. **9 figür** (3 çok panelli: same-money-three-forms · fund-wrapper ·
+  ownership-lending-axis), **9 soru/3 zorluk**, **3 kavram** (asset-class ·
+  ownership-vs-lending · liquidity), ön-koşul S0-L4→S0-L5.
+- **Dokunulan dosyalar:** `EducationContent.cs` (LessonS0L5 + quiz-s0l5), `SeedData.cs`
+  (SeedSet0Async: ders + ön-koşul + 3 kavram + builder), `LessonFigure.tsx` (9 figür +
+  FIGURES kaydı), `EducationSeedTests.cs` (sayımlar + kavram anahtarları), docs (08
+  T6.16 ilerleme), ACTIVE, TASKLOG.
+- **Test:** **EducationSeed+Api 41/41.** Sayımlar: bölüm 104→119, quiz 9→10, soru
+  63→72, seçenek 222→254, ders 9→10, kavram 16→19, ön-koşul 7→8, live 9→10. web
+  **141/141** (yeni figürler statik → M4 figür-kayıt mutabakat testiyle kapsanır, yeni
+  web testi gerekmedi), web build (tsc) temiz. Application 291/291. **Seed canlıya
+  indi** (Postgres doğrulandı: S0-L5 15 bölüm/9 soru/9 figür; toplam 119 bölüm/10 ders).
+- **Karar/Not:** ⚠ **Yasal (künye yasal notu + `15` §3.4):** sınıflar **sıralanmaz,
+  karşılaştırılmaz** — "hangisi daha iyi" dersin dışında; likidite ekseni bir **kalite
+  sırası değildir** (metin, tuzak, kaynak ve figür caption'larında açıkça yazıldı).
+  Yalnız **sınıf adları** (mevduat·hisse·altın·döviz·fon·BES) geçer, enstrüman/şirket/fon
+  adı yok (`16` §K3). ⚠ **LiveContext `asset_class_weights` yerine `{{holding_count}}`+
+  `{{asset_class_count}}`:** künye ideal token'ı ağırlık dökümü isterdi ama (a) ikisi de
+  Own+Demo'da hazır, (b) yeni plumbing gerekmez — S0-L4'ün emsali (`inflation_12m`→
+  `cash_weight`). Sınıf sayısı dersin doğal metriği. ⚠ Tek-yıldız italik taraması temiz
+  (tekrar eden hata önlendi). ⚠ **Canlı tarayıcı görsel polish teyidi YAPILAMADI:**
+  Chrome eklentisi bu turda da bağlı değil (S0-L4'teki gibi). İşlev güvencede (canlı
+  seed + 41 test + M4 figür mutabakatı + build + statik geometri denetimi); 9 figürün +
+  bekleyen S0-L4 slider'ının **görsel** teyidi eklenti bağlanınca sıradaki turda.
+- **Durum:** devam ediyor (10 dersin 5'i + foundation tamam).
+- **Sıradaki:** **S0-L6 "Getiri nereden gelir?"** (return-source · capital-gain ·
+  cash-flow-return; ön bilgi asset-class + ownership-vs-lending). Ön-koşul S0-L5→S0-L6.
+  + canlı görsel teyit (eklenti bağlanınca).
+
 ## 2026-07-26 · T6.16 · S0-L4 + T6.18 enflasyon kaydırıcısı (ders 4/10)
 - **Görev(ler):** T6.16 (Set 0 Ders 4) + **T6.18** (Set 0 etkileşimli aracı). fable-mode.
 - **Ne yapıldı:** **S0-L4 "Bekleyen para neden erir?"** (enflasyon SEZGİSİ, formülsüz —

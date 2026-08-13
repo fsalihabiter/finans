@@ -2049,6 +2049,276 @@ internal static class EducationContent
         Karar senindir.
         """));
 
+    // ── S0-L5 — Nereye yatırılır? — varlık türleri turu ──────────────────────
+    // 15 §S0-L5 künyesi: varlık sınıfı · ortaklık↔alacaklılık · likidite. Sınıflar
+    // TANITILIR ama SIRALANMAZ/KARŞILAŞTIRILMAZ (15 §3.4, künye yasal notu). Likidite
+    // ekseni bir KALİTE sırası değildir — metinde açıkça yazılır. Enstrüman/şirket/fon
+    // adı YOK; yalnız SINIF adları (mevduat·hisse·altın·döviz·fon·BES) geçer (16 §K3).
+    public static IEnumerable<LessonSection> LessonS0L5(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Para "yatırıldığında" aslında bir başka **şeye** dönüşür — bir alacağa, bir
+        paya, bir metale. Bu ders o şeylerin haritasını çıkarır. Bitirdiğinde
+        şunları yapabileceksin:
+
+        - **Varlık sınıfı** kavramını tanımlamak ve yaygın sınıfları örneklemek
+        - Bir varlıkta **ortak mı** olduğunu yoksa birine **borç mu** verdiğini ayırt
+          etmek
+        - **Likiditeyi** — bir varlığın ne kadar hızlı nakde döndüğünü — tanımlamak ve
+          varlıkları bu eksende sıralamak
+        - Aynı paranın farklı sınıflarda **neyin parçasına** dönüştüğünü açıklamak
+
+        Bu ders sınıfları **karşılaştırmaz**, "hangisi daha iyi" demez — yalnızca
+        her birinin **ne** olduğunu gösterir. Sonunda kısa bir test var.
+        """),
+
+        Core("""
+        ## Varlık sınıfı ne demek?
+
+        Yatırılabilecek onlarca farklı şey var. Bunları tek tek düşünmek yerine,
+        **benzer davranan** ve **benzer özellik taşıyan** varlıkları gruplarız. Bu
+        gruplara **varlık sınıfı** denir.
+
+        Yaygın sınıflardan birkaçı:
+
+        - **Mevduat** (bankadaki para)
+        - **Hisse** (şirket ortaklığı)
+        - **Altın** ve **döviz** (değer saklama araçları)
+        - **Fon** ve **BES** (paketlenmiş sepetler)
+
+        Sınıf düşünmek işe yarar çünkü aynı sınıftaki varlıklar çoğu zaman **benzer
+        sebeplerle** hareket eder. Bir sonraki adımlarda her sınıfın temelde **ne**
+        olduğuna bakacağız — hangisinin "daha iyi" olduğuna değil; o soru bu dersin
+        dışındadır.
+        """, "asset-class-map"),
+
+        Core("""
+        ## Mevduat: bankaya borç veriyorsun
+
+        Paranı bankaya yatırdığında sezgi "paramı bankaya koydum" der. Ama olan şey
+        aslında şudur: **bankaya borç verdin.** Banka o parayı kullanır ve sana
+        **anaparanı geri ödemeyi**, çoğu zaman bir de **faiz** ödemeyi taahhüt eder.
+
+        Bu ilişkide sen bir **alacaklısın** — bankanın ortağı değil. Bankanın kârı
+        çok da olsa, sana düşen kararlaştırılan tutardır; bankanın ortağı gibi bu
+        kârdan pay almazsın. Buna karşılık, ödemesi de baştan **bellidir**.
+
+        Aynı mantık bir sonraki sınıfla taban tabana zıttır: hissede borç veren
+        değil, **ortak** olursun.
+        """, "deposit-lending"),
+
+        Core("""
+        ## Hisse: şirkete ortak oluyorsun
+
+        Bir şirketin hissesini aldığında, o şirketin **küçük bir parçasına sahip**
+        olursun — ortağı olursun. Sermayeni borç olarak vermezsin; şirketin kaderine
+        **ortak** olursun.
+
+        Bunun iki yüzü vardır:
+
+        - Şirket değer ürettikçe payının değeri de büyüyebilir; şirket kâr dağıtırsa
+          (temettü) ondan pay alırsın.
+        - Şirket kötüye giderse payının değeri de **düşebilir** — kayıp riskini de
+          ortak olarak taşırsın.
+
+        Mevduatta ödeme baştan belliydi; ortaklıkta ise dönüş **belirsizdir** — hem
+        yukarı hem aşağı açıktır. İşte paranı verirken yaptığın en temel ayrım budur:
+        **borç mu veriyorsun, ortak mı oluyorsun?**
+        """, "equity-ownership"),
+
+        Ex("""
+        ## Aynı 10.000 ₺, üç farklı sınıf
+
+        Elinde **10.000 ₺** olduğunu düşün. Aynı parayı üç ayrı sınıfa koyduğunda,
+        para farklı bir **şeye** dönüşür:
+
+        - **Mevduata koyarsan:** para bankaya **borç** olur. Elinde artık nakit değil,
+          bir **alacak** vardır — anapara + kararlaştırılan faiz.
+        - **Hisseye koyarsan:** para bir şirkette **paya** dönüşür. Elinde bir
+          **ortaklık** vardır; değeri piyasada dalgalanır.
+        - **Altına koyarsan:** para fiziksel bir **metale** dönüşür. Elinde bir **şey**
+          vardır; değeri, başkasının onun için ödediği kadardır.
+
+        Aynı 10.000 ₺ — üç ayrı şey. "Yatırım yaptım" cümlesi tek başına yeterli
+        değildir; asıl soru **neye** dönüştüğüdür. Her dönüşümün kendine has bir
+        davranışı olur.
+        """, "same-money-three-forms"),
+
+        Core("""
+        ## Altın ve döviz: değer saklama aracı
+
+        Altın ve döviz farklı bir mantıkla çalışır. Bir altın külçesini ya da bir
+        miktar dövizi elde tutmak, sana kendiliğinden **faiz ödemez, temettü
+        dağıtmaz** — bir **nakit akışı** üretmez. Mevduat faiz öder, hisse temettü
+        dağıtabilir; altının kendisi bunu yapmaz.
+
+        Peki değeri nereden gelir? Yalnızca **başkasının onun için ödemeye razı
+        olduğu tutardan.** Bu yüzden altın ve dövize **değer saklama aracı** denir:
+        insanlar onları, alım gücünü bir yerde tutmak için elde tutar.
+
+        Buradan önemli bir düzeltme çıkar: "altın da faiz **öder**" beklentisi
+        yanlıştır. Altının değeri fiyatından gelir, bir faiz ödemesinden değil.
+        Nakit akışı üreten sınıflarla, değer saklayan sınıfları karıştırmamak gerekir.
+        """, "store-of-value"),
+
+        Core("""
+        ## Fon ve BES: paketlenmiş sepetler
+
+        Bir **fon**, tek bir varlık değildir — birçok varlığı bir arada tutan bir
+        **sepettir.** Fonu yöneten taraf, toplanan parayla farklı varlıklardan bir
+        sepet oluşturur; sen fonun bir payını aldığında, aslında o **sepetin
+        tamamından** küçük bir dilim almış olursun.
+
+        **BES** (Bireysel Emeklilik Sistemi) de benzer biçimde, birikimini emeklilik
+        fonları aracılığıyla bir sepette değerlendirir; ayrıca kendi katkının yanına
+        eklenen **devlet katkısı** ile kendine özgü bir yapısı vardır.
+
+        Anahtar sezgi şudur: fon ya da BES aldığında **paketlenmiş bir sepet**
+        alırsın. İçinde ne olduğu — sepetin neyle dolu olduğu — o paketin nasıl
+        davrandığını belirler. Bir sonraki adımda bunun neden bir tuzağa yol açtığına
+        bakalım.
+        """, "fund-wrapper"),
+
+        Trap("""
+        ## Tuzak: fon tek bir varlık değildir
+
+        En yaygın yanılgı şudur: "Bir fon aldım, yani **tek bir şey** aldım." Oysa
+        az önce gördük — fon bir **sepettir.** İçinde onlarca farklı varlık olabilir.
+
+        Bu yanılgı iki yönde de yanıltır:
+
+        - "Tek bir fon aldım, o yüzden her şeyim **tek bir şeye** bağlı" demek eksiktir
+          — sepet birçok varlığa yayılmış olabilir.
+        - Ama tersi de doğru değildir: "Fon aldım, demek ki otomatik olarak dağıtılmış
+          durumdayım" da garanti değildir — sepetin **içine bakmak** gerekir. Bir fon,
+          hepsi benzer davranan varlıklarla da dolu olabilir.
+
+        Doğru soru "fon mu aldım?" değil, **"bu fonun sepetinde ne var?"** sorusudur.
+        Paketin adı değil, **içeriği** önemlidir.
+        """),
+
+        Ctx("""
+        ## Ortaklık ↔ alacaklılık ekseni
+
+        Sınıfları düzenlemenin güçlü bir yolu, hepsini tek bir eksene yerleştirmektir:
+        parayı verirken **borç mu veriyorsun** yoksa **ortak mı oluyorsun?**
+
+        - **Alacaklılık ucu:** Mevduat ve tahvil gibi araçlar. Birine borç verirsin;
+          karşılığında genelde **baştan belli** bir ödeme beklersin ve ödemede
+          **önceliğin** vardır. Ama şirketin kârı ne kadar büyürse büyüsün, senin
+          payın kararlaştırılan tutardır.
+        - **Ortaklık ucu:** Hisse. Sahip olursun; dönüşün **belirsizdir**, hem yukarı
+          hem aşağı açıktır. Sıra sana en **sonda** gelir, ama üst sınır da yoktur.
+
+        Bu bir "iyi–kötü" ekseni değildir; bir **rol** eksenidir. Aynı parayı bir uçta
+        alacaklı, diğer uçta ortak olarak koyabilirsin — ikisi farklı şeylerdir, biri
+        diğerinden üstün değildir.
+        """, "ownership-lending-axis"),
+
+        Ctx("""
+        ## Likidite: ne kadar hızlı nakde döner?
+
+        İkinci yararlı eksen **likiditedir:** bir varlığı, değerini fazla düşürmeden,
+        ne kadar **hızlı ve kolay** nakde çevirebildiğin.
+
+        - **Yüksek likidite:** Nakit ve vadesiz mevduat neredeyse anında harcanabilir.
+          Büyük, çok işlem gören varlıklar da hızlıca satılabilir.
+        - **Düşük likidite:** Gayrimenkul gibi varlıkları satmak zaman alır; alıcı
+          bulmak ve pazarlık günler, aylar sürebilir.
+
+        Çok önemli bir uyarı: **likidite bir kalite sıralaması değildir.** "Daha likit"
+        varlık "daha iyi" demek değildir. Likidite yalnızca **ne kadar çabuk nakde
+        döndüğünü** anlatır — bir varlığın senin için doğru olup olmadığını değil.
+        Hızlı erişim bazen değerli, bazen gereksizdir; bu sana ve ihtiyacına bağlıdır.
+        """, "liquidity-axis"),
+
+        ExDeep("""
+        ## Aynı varlık, iki fiyat: alış-satış makası
+
+        Likiditenin somut bir yüzü **alış-satış makasıdır.** Bir varlığın aynı anda
+        iki fiyatı vardır: alabileceğin fiyat (alış) ve hemen satabileceğin fiyat
+        (satış). Aradaki fark **makastır.**
+
+        Diyelim bir varlığı **102 ₺'ye** alabiliyorsun, ama aynı anda ancak **98 ₺'ye**
+        satabiliyorsun:
+
+        - Alıp hemen geri satarsan: 102 ₺ verdin, 98 ₺ aldın → **4 ₺** kaybettin.
+        - Oran olarak: 4 / 102 ≈ **%3,9**. Fiyat hiç hareket etmese bile, sırf
+          girip çıkmak bu kadara mal oldu.
+
+        Makas ne kadar **genişse**, varlık o kadar az likittir — girip çıkmak daha
+        pahalıdır. Çok likit varlıklarda makas dardır; az likitlerde açılır. Likidite
+        soyut bir kavram değil; makasta **doğrudan** hissedilir.
+        """, "bid-ask-spread"),
+
+        Trap("""
+        ## Tuzak: her varlık her an satılmaz
+
+        "Nasılsa istediğim an satar, nakde çeviririm" rahatlığı yanıltıcı olabilir.
+        Her varlık her an, **istediğin fiyattan** satılmaz.
+
+        - Az likit bir varlıkta (örneğin gayrimenkul) acil satış, **fiyattan ödün**
+          vermeyi gerektirebilir — hızlı satmak için indirim yaparsın.
+        - Bazı ürünlerde **vade** ya da erken çıkış koşulları vardır; istediğin an
+          çıkmak mümkün olmayabilir ya da bir bedeli olur.
+
+        Bu yüzden "ne kadarını hızlıca nakde çevirebilirim?" sorusu, bir önceki
+        derslerdeki **acil durum tamponu** ile doğrudan ilişkilidir. Elindeki her şey
+        "her an nakit" değildir; hangi kısmının gerçekten likit olduğunu bilmek gerekir.
+        """),
+
+        Deep("""
+        ## Sınıf içinde de türler var
+
+        Bir sınıfa "altın" demek, işin sadece başıdır — aynı sınıfın içinde farklı
+        **türler** vardır ve bunlar birbirinden ayrışır. Örneğin altın sınıfında:
+
+        - **Fiziksel gram altın** — elde tutulur, saklama sorumluluğu sende.
+        - **Ziynet (takı) altını** — üzerine **işçilik** payı biner; alırken ödediğin,
+          satarken geri alamayabileceğin bir fark oluşur.
+        - **Altına dayalı fon ya da hesap** — fiziksel saklama yükü olmadan altının
+          değerine bağlanmanın bir yolu.
+
+        Hepsi "altın" sınıfındadır ama **maliyet** ve **likidite** özellikleri
+        farklıdır. Aynı durum diğer sınıflar için de geçerlidir. Bu türlerin
+        ayrıntısına ileride (altın kültürü modülü) gireceğiz; şimdilik akılda kalması
+        gereken şey: sınıf adı tek başına yeterli değildir, **tür** de fark yaratır.
+        """),
+
+        Live("""
+        ## Senin portföyünde
+
+        Şu an portföyünde **{{holding_count}}** kalem var ve bunlar
+        **{{asset_class_count}}** farklı varlık sınıfına dağılmış.
+
+        Bu dersin merceğiyle bakınca her kalem bir **role** karşılık gelir: kimi bir
+        alacak (borç verdiğin), kimi bir ortaklık (sahip olduğun), kimi bir değer
+        saklama aracı. Kaç **farklı** sınıfa yayıldığın, portföyünün nasıl davranacağı
+        hakkında çeşitlendirmeden önceki ilk ipucudur — hangisinin "doğru" olduğu değil,
+        neyin **neye** dönüştüğü sorusu.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Sınıf tanımları.** Sermaye piyasası araçlarının (hisse, tahvil, fon vb.)
+        tanımları **SPK** (Sermaye Piyasası Kurulu) mevzuatına, yatırım fonu kategorileri
+        **TEFAS** çerçevesine dayanır — [spk.gov.tr](https://www.spk.gov.tr). Mevduatın
+        "alacaklılık" niteliği ve mevduat güvencesi **TMSF** kapsamında düzenlenir;
+        güvence limiti ayrı bir derste ele alınır.
+
+        **Örnek sayılar kurgusaldır.** 10.000 ₺, 102/98 ₺ ve %3,9 gibi rakamların tamamı
+        kavramı göstermek için **seçilmiş örneklerdir** — gerçek bir fiyat ya da makas
+        değildir. Tüm parasal hesaplar (makas oranı gibi) uygulamada **kodda** yapılır;
+        bir dil modeli bu rakamları üretmez.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders varlık sınıflarını **tanıtır**,
+        aralarında bir sıralama yapmaz ve "şuna yatır" **demez**. Likidite ekseni bir
+        kalite sırası değildir. Hangi sınıfın senin için uygun olduğu **senin** kararındır.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -2396,6 +2666,93 @@ internal static class EducationContent
                  ("Değerler senin oynattığın varsayımlardır", true),
                  ("Aynı girdi her zaman aynı sonucu verir (deterministik)", true),
                  ("Gelecekteki gerçek enflasyon oranını söyler", false)]),
+        ]);
+
+        // ── Set 0 · Ders 5 — Nereye yatırılır? (varlık türleri turu) ─────────────
+        yield return ("lesson-s0l5", "quiz-s0l5", "Varlık Türleri Turu — Mini Test",
+        [
+            // ── Kolay: sınıf tanıma, ortak/alacaklı ayrımı ───────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "\"Varlık sınıfı\" en iyi nasıl tanımlanır?",
+                "Varlık sınıfı, benzer davranan ve benzer özellik taşıyan varlıkların grubudur (mevduat, hisse, " +
+                "altın, döviz, fon…). Sınıf düşünmek işe yarar çünkü aynı sınıftaki varlıklar çoğu zaman benzer " +
+                "sebeplerle hareket eder.",
+                [("Tek bir şirketin hisse fiyatı", false),
+                 ("Benzer davranan varlıkların grubu", true),
+                 ("Bankanın belirlediği faiz oranı", false),
+                 ("Bir portföyün toplam değeri", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Bankaya mevduat yatırdığında hangi rolü üstlenirsin?",
+                "Mevduat yatırmak, bankaya borç vermektir: banka o parayı kullanır ve sana anaparanı + faizi ödemeyi " +
+                "taahhüt eder. Sen bir alacaklısın — bankanın ortağı değil; bu yüzden bankanın kârından pay almazsın.",
+                [("Bankanın ortağı olursun", false),
+                 ("Bankaya borç veren (alacaklı) olursun", true),
+                 ("Bankanın çalışanı olursun", false),
+                 ("Hiçbir rol üstlenmezsin", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Bir şirketin hissesini almak, o şirkete ortak olmaktır.",
+                "Doğru. Hisse aldığında şirketin küçük bir parçasına sahip olursun — ortağı olursun. Sermayeni borç " +
+                "olarak vermezsin; şirket değer ürettikçe payın büyüyebilir, kötüye giderse değeri düşebilir.",
+                [("Doğru", true), ("Yanlış", false)]),
+
+            // ── Orta: hangi eksende, likidite sıralaması ─────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir altın külçesini elde tutmak sana kendiliğinden faiz ya da temettü öder mi?",
+                "Ödemez. Altın ve döviz değer saklama araçlarıdır — bir nakit akışı üretmezler. Değerleri yalnızca " +
+                "başkasının onlar için ödemeye razı olduğu tutardan gelir. Mevduat faiz öder, hisse temettü " +
+                "dağıtabilir; altının kendisi bunu yapmaz.",
+                [("Evet, düzenli faiz öder", false),
+                 ("Hayır; değeri yalnızca fiyatından gelir, faiz/temettü ödemez", true),
+                 ("Evet, her yıl temettü dağıtır", false),
+                 ("Sadece bankadaysa faiz öder", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Aşağıdakilerden hangisi genellikle en HIZLI nakde döner (en likit)?",
+                "Nakit ve vadesiz mevduat neredeyse anında harcanabilir — en likit uçtadır. Gayrimenkul gibi " +
+                "varlıkları satmak ise zaman alır: alıcı bulmak ve pazarlık günler, aylar sürebilir.",
+                [("Bir daire (gayrimenkul)", false),
+                 ("Vadesiz mevduattaki para", true),
+                 ("Uzun vadeli, erken çıkışı kısıtlı bir ürün", false),
+                 ("Satması zaman alan bir varlık", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Bir fon almak, tek bir varlık almak demektir.",
+                "Yanlış. Fon bir sepettir — içinde birçok farklı varlık olabilir. Fonun bir payını aldığında, o " +
+                "sepetin tamamından küçük bir dilim almış olursun. Önemli olan paketin adı değil, sepetin içeriğidir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor: fon = sepet çıkarımı, makasın maliyeti ──────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Bir kişi \"tek bir fon aldım, yani tüm param tek bir şeye bağlı\" diyor. Bu çıkarımın nesi eksik?",
+                "Fon bir sepettir; içinde onlarca farklı varlık olabilir, dolayısıyla \"tek bir şey\" değildir. Ama " +
+                "tersi de garanti değildir: fon almak otomatik dağıtılmışlık demek değildir — sepet, hepsi benzer " +
+                "davranan varlıklarla dolu olabilir. Doğru soru \"sepette ne var?\"dır.",
+                [("Hiçbir eksiği yok, doğru bir çıkarım", false),
+                 ("Fon bir sepettir; tek bir şeye bağlı olmak zorunda değil — içeriğine bakmak gerekir", true),
+                 ("Fonlar her zaman tek bir hisseden oluşur", false),
+                 ("Fon almak her zaman zarar ettirir", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Bir varlığı aynı anda 102 ₺'ye alabiliyor, 98 ₺'ye satabiliyorsun. Alıp hemen geri satarsan ne kaybedersin?",
+                "Alış ile satış arasındaki fark makastır: 102 ₺ verir, 98 ₺ alırsın → 4 ₺ kayıp. Oran olarak " +
+                "4 / 102 ≈ %3,9. Fiyat hiç hareket etmese bile sırf girip çıkmak bu kadara mal olur. Makas geniştikçe " +
+                "varlık daha az likittir.",
+                [("Hiçbir şey — alış ve satış fiyatı aynıdır", false),
+                 ("Yaklaşık 4 ₺ (≈ %3,9) — alış-satış makası", true),
+                 ("Yaklaşık %40", false),
+                 ("Kazanç elde edersin", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Likidite ekseni hakkında hangileri DOĞRUDUR? (birden fazla)",
+                "Likidite, bir varlığı değerini fazla düşürmeden ne kadar hızlı/kolay nakde çevirebildiğindir. Bir " +
+                "KALİTE sıralaması değildir — \"daha likit\" \"daha iyi\" demek değildir. Az likit varlığı acele " +
+                "satmak fiyattan ödün gerektirebilir. Likidite getiriyi garanti etmez.",
+                [("Bir varlığın ne kadar hızlı/kolay nakde döndüğünü anlatır", true),
+                 ("Yüksek likidite otomatik olarak \"daha iyi\" demek değildir", true),
+                 ("Az likit bir varlığı acele satmak fiyattan ödün gerektirebilir", true),
+                 ("Yüksek likidite, varlığın getirisini garanti eder", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

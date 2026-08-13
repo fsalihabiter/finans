@@ -1306,9 +1306,244 @@ function CompoundedErosion() {
   );
 }
 
+// ── S0-L5 · Nereye yatırılır? — varlık türleri turu figürleri ────────────────
+// Sınıflar TANITILIR ama SIRALANMAZ (15 §3.4): eşit boy kartlar, "iyi/kötü" yok.
+// Yalnız SINIF adları geçer (mevduat·hisse·altın·döviz·fon); enstrüman/şirket adı yok.
+
+/** S0-L5 · Varlık sınıfı haritası: benzer davranan varlıklar eşit kartlarda gruplanır. */
+function AssetClassMap() {
+  const classes = ["Mevduat", "Hisse", "Altın", "Döviz", "Fon", "BES"];
+  return (
+    <Figure
+      label="Yaygın varlık sınıfları eşit boyutlu kartlar hâlinde bir harita gibi dizilir: mevduat, hisse, altın, döviz, fon ve BES; hiçbiri diğerinden büyük gösterilmez"
+      caption="Benzer davranan varlıklar bir sınıf oluşturur. Kartlar eşit — sıralama değil, harita."
+      height={150}
+    >
+      {classes.map((c, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const x = 8 + col * 103;
+        const y = 24 + row * 62;
+        return (
+          <g key={c}>
+            <rect x={x} y={y} width={95} height={48} rx="8" className="fig-card" />
+            <text x={x + 47} y={y + 29} className="fig-value" textAnchor="middle">{c}</text>
+          </g>
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** S0-L5 · Mevduat = bankaya borç: para gider, karşılığında anapara+faiz ALACAĞI kalır. */
+function DepositLending() {
+  return (
+    <Figure
+      label="Mevduatta para bankaya gider ve karşılığında sana anapara artı faiz alacağı doğar; sen bankanın ortağı değil alacaklısısın"
+      caption="Mevduat yatırmak bankaya borç vermektir: sen alacaklısın, ortak değil."
+      height={130}
+    >
+      <rect x={10} y={50} width={68} height={32} rx="7" className="fig-card" />
+      <text x={44} y={70} className="fig-value" textAnchor="middle">Sen</text>
+      <rect x={242} y={50} width={68} height={32} rx="7" className="fig-card" />
+      <text x={276} y={70} className="fig-value" textAnchor="middle">Banka</text>
+
+      <path d="M80 60 L240 60" className="fig-line-steady" fill="none" />
+      <text x={160} y={50} className="fig-label" textAnchor="middle">para (borç)</text>
+
+      <path d="M240 74 L80 74" className="fig-line-steady" fill="none" />
+      <text x={160} y={92} className="fig-label" textAnchor="middle">anapara + faiz (alacak)</text>
+      <text x={160} y={112} className="fig-value pos" textAnchor="middle">sen alacaklısın</text>
+    </Figure>
+  );
+}
+
+/** S0-L5 · Hisse = ortaklık: şirketin bir dilimine sahip olursun, değeri dalgalanır. */
+function EquityOwnership() {
+  return (
+    <Figure
+      label="Hisse almak şirkete ortak olmaktır: şirketin bir dilimine sahip olursun, kâr dağıtılırsa pay alırsın ve payının değeri hem yukarı hem aşağı dalgalanabilir"
+      caption="Hisse = ortaklık: şirketin bir dilimi senin. Değeri yukarı da aşağı da açık."
+      height={140}
+    >
+      <circle cx={80} cy={72} r={44} className="fig-bar-muted" opacity="0.35" />
+      <path d="M80 72 L80 28 A44 44 0 0 1 118 94 Z" className="fig-bar-pos" opacity="0.7" />
+      <text x={80} y={128} className="fig-label" textAnchor="middle">şirket · senin payın</text>
+
+      <path d="M148 60 L206 44" className="fig-line-steady" fill="none" />
+      <text x={252} y={44} className="fig-value pos" textAnchor="middle">değer ↑ ?</text>
+      <path d="M148 84 L206 100" className="fig-line-volatile" fill="none" />
+      <text x={252} y={104} className="fig-value neg" textAnchor="middle">değer ↓ ?</text>
+      <text x={230} y={128} className="fig-label" textAnchor="middle">dönüş belirsiz</text>
+    </Figure>
+  );
+}
+
+/** S0-L5 · ÇOK PANELLİ · Aynı 10.000 ₺ üç sınıfta üç ayrı şeye dönüşür. */
+function SameMoneyThreeForms() {
+  return (
+    <Figure
+      label="Aynı on bin lira üç ayrı sınıfta üç ayrı şeye dönüşür: mevduatta bir alacağa, hissede bir ortaklık payına, altında fiziksel bir metale"
+      caption="Aynı 10.000 ₺, üç ayrı şey: alacak (mevduat) · pay (hisse) · metal (altın)."
+      height={150}
+    >
+      <text x={160} y={14} className="fig-value" textAnchor="middle">10.000 ₺</text>
+
+      <Panel x={4} y={26} w={100} h={104} title="Mevduat" />
+      <rect x={26} y={62} width={56} height={30} rx="5" className="fig-bar-muted" />
+      <text x={54} y={81} className="fig-label" textAnchor="middle">alacak</text>
+      <text x={54} y={116} className="fig-label" textAnchor="middle">anapara + faiz</text>
+
+      <Panel x={110} y={26} w={100} h={104} title="Hisse" />
+      <circle cx={160} cy={76} r={22} className="fig-bar-muted" opacity="0.4" />
+      <path d="M160 76 L160 54 A22 22 0 0 1 179 87 Z" className="fig-bar-pos" opacity="0.7" />
+      <text x={160} y={116} className="fig-label" textAnchor="middle">ortaklık payı</text>
+
+      <Panel x={216} y={26} w={100} h={104} title="Altın" />
+      <rect x={244} y={60} width={44} height={32} rx="5" className="fig-bar-pos" opacity="0.55" />
+      <text x={266} y={81} className="fig-value" textAnchor="middle">Au</text>
+      <text x={266} y={116} className="fig-label" textAnchor="middle">fiziksel metal</text>
+    </Figure>
+  );
+}
+
+/** S0-L5 · Altın/döviz = değer saklama: nakit akışı ÜRETMEZ; değeri fiyatından gelir. */
+function StoreOfValue() {
+  return (
+    <Figure
+      label="Altın ve döviz değer saklama araçlarıdır: elde tutmak kendiliğinden faiz veya temettü ödemez, bir nakit akışı üretmez; değeri yalnızca başkasının ödediği fiyattan gelir"
+      caption="Altın/döviz nakit akışı üretmez (faiz/temettü yok); değeri fiyatından gelir."
+      height={130}
+    >
+      <rect x={116} y={40} width={88} height={36} rx="8" className="fig-card" />
+      <text x={160} y={63} className="fig-value" textAnchor="middle">altın · döviz</text>
+
+      <path d="M116 58 L44 58" className="fig-line-flat" fill="none" strokeDasharray="4 4" />
+      <text x={44} y={44} className="fig-value neg" textAnchor="middle">faiz ✗</text>
+      <text x={44} y={78} className="fig-label" textAnchor="middle">nakit akışı yok</text>
+
+      <path d="M204 58 L276 58" className="fig-line-steady" fill="none" />
+      <text x={276} y={44} className="fig-value" textAnchor="middle">değer</text>
+      <text x={276} y={78} className="fig-label" textAnchor="middle">= ödenen fiyat</text>
+      <text x={160} y={108} className="fig-label" textAnchor="middle">alım gücünü saklamak için tutulur</text>
+    </Figure>
+  );
+}
+
+/** S0-L5 · ÇOK PANELLİ · Fon = sepet: "tek kutu" görünür ama içi çok varlıkla doludur. */
+function FundWrapper() {
+  const inner = [0, 1, 2, 3, 4, 5];
+  return (
+    <Figure
+      label="Fon görünüşte tek bir kutudur ama gerçekte içi birçok farklı varlıkla dolu bir sepettir; fon payı almak o sepetin tamamından küçük bir dilim almaktır"
+      caption="Fon tek bir şey değil, bir sepettir: içinde birçok farklı varlık olabilir."
+      height={150}
+    >
+      <Panel x={6} y={22} w={130} h={110} title="Göründüğü" />
+      <rect x={40} y={58} width={62} height={44} rx="6" className="fig-card" />
+      <text x={71} y={84} className="fig-value" textAnchor="middle">FON</text>
+
+      <text x={152} y={80} className="fig-value" textAnchor="middle">→</text>
+
+      <Panel x={170} y={22} w={144} h={110} title="Gerçekte (sepet)" />
+      {inner.map((i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        return (
+          <rect key={i} x={182 + col * 42} y={54 + row * 34} width={34} height={26} rx="3"
+            className={i % 2 === 0 ? "fig-bar-muted" : "fig-bar-pos"} opacity="0.65" />
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** S0-L5 · ÇOK PANELLİ · Ortaklık↔alacaklılık ekseni: iki uç, bir ROL ekseni (kalite değil). */
+function OwnershipLendingAxis() {
+  return (
+    <Figure
+      label="Bir eksenin bir ucunda alacaklılık yani mevduat ve tahvil, diğer ucunda ortaklık yani hisse yer alır; bu bir iyi kötü ekseni değil bir rol eksenidir"
+      caption="Alacaklı mısın, ortak mı? Bir rol ekseni — biri diğerinden üstün değil."
+      height={140}
+    >
+      <line x1={20} y1="66" x2={300} y2="66" className="fig-axis" />
+      <text x={20} y={26} className="fig-label">Alacaklılık</text>
+      <text x={300} y={26} className="fig-label" textAnchor="end">Ortaklık</text>
+
+      <circle cx={20} cy={66} r="5" className="fig-dot-volatile" />
+      <circle cx={300} cy={66} r="5" className="fig-dot-volatile" />
+
+      <Panel x={6} y={80} w={140} h={52} title="Borç verirsin" />
+      <text x={76} y={116} className="fig-label" textAnchor="middle">mevduat · tahvil</text>
+      <text x={76} y={44} className="fig-label" textAnchor="middle">belli ödeme · öncelik</text>
+
+      <Panel x={174} y={80} w={140} h={52} title="Sahip olursun" />
+      <text x={244} y={116} className="fig-label" textAnchor="middle">hisse</text>
+      <text x={244} y={44} className="fig-label" textAnchor="middle">belirsiz · üst sınır yok</text>
+    </Figure>
+  );
+}
+
+/** S0-L5 · Likidite ekseni: hızlı↔yavaş nakde dönme. Bir KALİTE sırası DEĞİL (caption'da). */
+function LiquidityAxis() {
+  const items = [
+    { label: "nakit · mevduat", x: 48 },
+    { label: "büyük hisse", x: 160 },
+    { label: "gayrimenkul", x: 280 },
+  ];
+  return (
+    <Figure
+      label="Likidite ekseninde nakit ve mevduat hızlı, büyük hisseler orta, gayrimenkul yavaş nakde döner; bu bir kalite sıralaması değil yalnızca hız eksenidir"
+      caption="Ne kadar hızlı nakde döner? Bir hız ekseni — kalite/iyi-kötü sırası DEĞİL."
+      height={120}
+    >
+      <line x1={20} y1="60" x2={300} y2="60" className="fig-axis" />
+      <text x={20} y={92} className="fig-label">← yavaş</text>
+      <text x={300} y={92} className="fig-label" textAnchor="end">hızlı →</text>
+      {items.map((it) => (
+        <g key={it.label}>
+          <circle cx={it.x} cy={60} r="5" className="fig-dot-volatile" />
+          <text x={it.x} y={42} className="fig-label" textAnchor="middle">{it.label}</text>
+        </g>
+      ))}
+    </Figure>
+  );
+}
+
+/** S0-L5 · Alış-satış makası: aynı anda alış 102 / satış 98 → girip çıkmak ≈ %3,9. */
+function BidAskSpread() {
+  return (
+    <Figure
+      label="Aynı varlığın aynı anda alış fiyatı yüz iki lira satış fiyatı doksan sekiz liradır; alıp hemen satarsan dört lira yaklaşık yüzde üç virgül dokuz kaybedersin, bu makastır"
+      caption="Aynı an, iki fiyat: alış 102 ₺ / satış 98 ₺. Girip çıkmak ≈ 4 ₺ (%3,9) makas."
+      height={120}
+    >
+      <text x={16} y={44} className="fig-label">alış</text>
+      <rect x={64} y={30} width={210} height={20} rx="3" className="fig-bar-muted" />
+      <text x={284} y={45} className="fig-value" textAnchor="end">102 ₺</text>
+
+      <text x={16} y={84} className="fig-label">satış</text>
+      <rect x={64} y={70} width={190} height={20} rx="3" className="fig-bar-pos" opacity="0.6" />
+      <text x={284} y={85} className="fig-value" textAnchor="end">98 ₺</text>
+
+      <rect x={254} y={30} width={20} height={60} className="fig-bar-neg" opacity="0.4" />
+      <text x={160} y={110} className="fig-value neg" textAnchor="middle">makas ≈ 4 ₺ (%3,9)</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
+  "asset-class-map": AssetClassMap,
+  "deposit-lending": DepositLending,
+  "equity-ownership": EquityOwnership,
+  "same-money-three-forms": SameMoneyThreeForms,
+  "store-of-value": StoreOfValue,
+  "fund-wrapper": FundWrapper,
+  "ownership-lending-axis": OwnershipLendingAxis,
+  "liquidity-axis": LiquidityAxis,
+  "bid-ask-spread": BidAskSpread,
   "three-actions": ThreeActions,
   "hold-vs-flip": HoldVsFlip,
   "same-basket-two-dates": SameBasketTwoDates,
