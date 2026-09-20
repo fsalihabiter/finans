@@ -691,7 +691,7 @@ public sealed class HoldingService(
             var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow(), h.CurrentPrice);
 
             dtos.Add(new HoldingDto(
-                h.Id, h.Asset.Type, h.Asset.Name, h.Asset.Symbol, h.Asset.PricingCurrency, h.Asset.Unit,
+                h.Id, h.Asset.Type, h.Asset.Name, h.Asset.Symbol, h.Asset.PricingCurrency, baseCcy, h.Asset.Unit,
                 h.Quantity, h.AvgCost, h.CurrentPrice,
                 r.TotalCost, r.CurrentValue, r.Profit, r.ReturnRatio, r.Weight, bes));
         }

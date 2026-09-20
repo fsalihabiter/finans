@@ -178,13 +178,13 @@ public sealed class LocalModelTrial(ITestOutputHelper output)
         var holdings = new List<HoldingDto>
         {
             new(Guid.Parse("11111111-1111-1111-1111-111111111111"), AssetType.Gold, "Gram Altın", null,
-                CurrencyCode.TRY, "gram", 120m, 2_100m, 3_050m, 252_000m, 366_000m, 114_000m, 0.452m, 0.57m, null),
+                CurrencyCode.TRY, CurrencyCode.TRY, "gram", 120m, 2_100m, 3_050m, 252_000m, 366_000m, 114_000m, 0.452m, 0.57m, null),
             new(Guid.Parse("22222222-2222-2222-2222-222222222222"), AssetType.Fx, "Amerikan Doları", "USD",
-                CurrencyCode.USD, "adet", 4_500m, 32.10m, 41.30m, 144_450m, 185_850m, 41_400m, 0.287m, 0.29m, null),
+                CurrencyCode.USD, CurrencyCode.TRY, "adet", 4_500m, 32.10m, 41.30m, 144_450m, 185_850m, 41_400m, 0.287m, 0.29m, null),
             new(Guid.Parse("33333333-3333-3333-3333-333333333333"), AssetType.Bes, "BES Sözleşmesi", null,
-                CurrencyCode.TRY, "adet", 1m, 60_000m, 78_500m, 60_000m, 78_500m, 18_500m, 0.308m, 0.12m, null),
+                CurrencyCode.TRY, CurrencyCode.TRY, "adet", 1m, 60_000m, 78_500m, 60_000m, 78_500m, 18_500m, 0.308m, 0.12m, null),
             new(Guid.Parse("44444444-4444-4444-4444-444444444444"), AssetType.Cash, "Nakit", null,
-                CurrencyCode.TRY, "adet", 12_000m, 1m, 1m, 12_000m, 12_000m, 0m, 0m, 0.02m, null),
+                CurrencyCode.TRY, CurrencyCode.TRY, "adet", 12_000m, 1m, 1m, 12_000m, 12_000m, 0m, 0m, 0.02m, null),
         };
 
         var allocation = new List<AllocationDto>

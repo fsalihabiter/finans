@@ -24,7 +24,7 @@ blockers: []
 # DR-005 (iç içe finans/ klonu) ve DR-006 (kökteki ADM dağıtım dosyaları) açık.
 
 review:
-  last_review_id: null
-  # Kod değişti ve review koşmadı; config.review.required_for_code_changes: true
-  # → GD-001 `review` durumunda bekliyor.
-  status: pending   # not-run | pending | clean | findings
+  last_review_id: REVIEW-001
+  # 4 bulgu (2 medium · 2 low), hepsi `open`. Critical/high YOK → INV-18 gereği
+  # GD-001'in tamamlanması engellenmiyor; kabul kararı insana ait (INV-06).
+  status: findings  # not-run | pending | clean | findings

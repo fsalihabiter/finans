@@ -118,7 +118,10 @@ export interface Holding {
   assetType: AssetType;
   name: string;
   symbol: string | null;
+  /** Birim alanların (avgCost · currentPrice) para birimi — varlığın kendi birimi. */
   currency: CurrencyCode;
+  /** Toplulaştırmaların (totalCost · currentValue · profit) para birimi. `currency`den FARKLI olabilir. */
+  baseCurrency: CurrencyCode;
   unit: string;
   quantity: number;
   avgCost: number;
