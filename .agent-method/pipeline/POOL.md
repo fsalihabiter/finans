@@ -10,7 +10,7 @@
 
 | ID | Title | Phase hint | Priority | Notes |
 |---|---|---|---|---|
-| T6.16/T6.17g-j | Set 0 dersleri 7-10 tam zenginlikte (Risk ne demek · Vade-hedef-portföy · Fiyat nereden çıkıyor · Bir alım nasıl gerçekleşir) | PHASE-006 | 1 | Sıradaki somut iş: **S0-L7 "Risk ne demek?"**. Künye `16` §S0-L7. ⚠ LiveContext karşılığı olmayan ilk ders — depth-ladder testi LiveContext şart koşuyor. |
+| T6.16/T6.17g-j | Set 0 dersleri 7-10 tam zenginlikte (Risk ne demek · Vade-hedef-portföy · Fiyat nereden çıkıyor · Bir alım nasıl gerçekleşir) | PHASE-006 | 1 | Sıradaki somut iş: **S0-L7 "Risk ne demek?"**. Künye `16` §S0-L7. LiveContext sorunu **D-017** ile çözüldü (künye kanonik; test istisna listesi taşır) — uygulaması GD-001 içinde. |
 | T5E.4b | ConceptTag derin bağlantısı (Analiz/Hisse kartından `/lessons/by-concept`) | PHASE-006 | 2 | T5E.4'ün `[~]` kalan parçası. |
 | T6.11c | Set 1 dersleri 3-5 aynı zenginlikte (figür + 9 soru) | PHASE-006 | 2 | M3/M5 sayısal eşiklerinin global açılmasının önkoşulu. |
 | T6.3 | Kavram sözlüğü `/egitim/sozluk` (aranabilir InfoTip indeksi + çapraz bağlantı) | PHASE-006 | 2 | Faz 6 DoD'de. |
@@ -26,7 +26,7 @@
 | T6.11 | Set 3 içerikleri — Portföyünü Okumak (4 ders) | PHASE-006 | 5 | |
 | T6.12 | Set 4 içerikleri — Davranış (4 ders) | PHASE-006 | 5 | |
 | T6.13 | Set 5 içerikleri — Türkiye Gerçekleri (4 ders) | PHASE-006 | 5 | Fon dersi T7.5'e bağlı. |
-| T6.14 | LLM ders yorumu katmanı (opsiyonel) | PHASE-006 | 5 | Yeni guard kuralı: enstrüman sıralaması (SC-E5). |
+| T6.14 | LLM ders yorumu katmanı (opsiyonel) | PHASE-006 | 6 | ⚠ **D-018 ile önceliği düştü:** LLM artık varsayılan kapalı, opsiyonel zenginleştirme. Yapılırsa yeni guard kuralı: enstrüman sıralaması (SC-E5). |
 
 ## PHASE-007 — Kişiselleşme & Erişim
 
@@ -95,6 +95,13 @@
 | TM.4 | Varlık detay + ekle (alttan kayan overlay) | TM.3 | `05` §7-8 | |
 | TM.5 | Analiz / Hisse / Eğitim ekranları (web ile parite) | TM.3 | `05` §4-6 | |
 | TM.6 | Token saklama (`expo-secure-store`) + Jest/RTL + Maestro E2E | TM.1 | `11` §2, `09` §3 | |
+
+## Spike'lar (karar girdisi üreten kısa işler)
+
+| ID | Title | Phase hint | Priority | Notes |
+|---|---|---|---|---|
+| ~~SPIKE-001~~ | ~~Yerel açık ağırlıklı model denemesi~~ → **bitti 2026-09-20, sonuç: D-018** | — | — | Ölçüm: `qwen3:0.6b/8b`, `gemma3:4b/12b` · hepsi CPU (RTX 3060 sürücü 512.89 eski → Ollama GPU görmedi, `total_vram=0`) · en iyi başarılı koşu 281 sn (bütçe 150) · şema tutturma ~%50 · 0.6b **yanlış atıf** yaptı (guard yakalamaz). Raporlar: `tmp_diag/llm-trial/`. Düzenek repoda kalır (`LocalModelTrial.cs`) — donanım/model değişirse tekrarlanır. |
+| T-LLM.1 | **Deterministik yorum çekirdeği (D-018 uygulaması):** yorum kartları kural + şablon ile üretilir (`NudgeRuleEngine` deseni); LLM opsiyonel ve varsayılan kapalı; LLM açıkken çıktı çekirdeğin ÜSTÜNE gelir (başarısızlıkta kullanıcı tam yorum görür, "üretilemedi" kartı değil) | PHASE-006 sonrası | 2 | Şablon boşlukları hesaplanmış değerlerden dolar → yanlış atıf imkânsız. Çıktı deterministik olduğu için **birim testle kilitlenir** (D-015). Kapsam: `PortfolioController` yorum ucu + `StocksController` açıklama ucu. |
 
 ## Çapraz-kesen kurallar (her GD için geçerli, POOL kalemi değil)
 
