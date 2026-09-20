@@ -1746,9 +1746,259 @@ function PaperVsRealized() {
   );
 }
 
+// ── S0-L7 · Risk ne demek? (GD-001) ────────────────────────────────────────
+// ⚠ Künye yasal notu: bu dersin figürlerinde kurum/kişi/platform/ürün adı YOK;
+// yalnız kalıp çizilir. Sayılar dersin Örnek bloklarıyla birebir aynı.
+
+/** S0-L7 · Belirsizlik yelpazesi: tek noktadan çıkan sonuçlar aralığa yayılır. */
+function UncertaintyFan() {
+  const ends = [34, 52, 70, 88, 106];
+  return (
+    <Figure
+      label="Bugünkü tek noktadan çıkan çizgiler, gelecekte geniş bir sonuç aralığına yayılıyor"
+      caption="Risk, sonucun belli olmaması: tek bir nokta değil, bir aralık. Aralık genişledikçe risk artar."
+    >
+      <path d="M30 70 L296 34 L296 106 Z" className="fig-seg" opacity="0.35" />
+      {ends.map((y, i) => (
+        <line key={i} x1="30" y1="70" x2="296" y2={y} className="fig-line-flat" opacity="0.8" />
+      ))}
+      <circle cx="30" cy="70" r="4" className="fig-dot-steady" />
+      <text x="16" y="92" className="fig-label">bugün</text>
+      <text x="308" y="24" className="fig-value pos" textAnchor="end">iyi sonuç</text>
+      <text x="308" y="124" className="fig-value neg" textAnchor="end">kötü sonuç</text>
+      <text x="160" y="136" className="fig-value" textAnchor="middle">hepsi mümkün</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · ÇOK PANELLİ — aynı varış (130), iki farklı yol: sakin ve dalgalı. */
+function TwoPathsSameAverage() {
+  const a = [100, 106, 112, 118, 124, 130];
+  const b = [100, 135, 85, 150, 95, 130];
+  const toY = (v: number) => 118 - ((v - 80) / 80) * 76; // 80→118, 160→42
+  const toX = (i: number, x0: number) => x0 + i * 16;
+  const path = (vals: number[], x0: number) =>
+    vals.map((v, i) => `${i === 0 ? "M" : "L"}${toX(i, x0)},${toY(v)}`).join(" ");
+
+  return (
+    <Figure
+      label="İki panel: A kalemi küçük adımlarla 100'den 130'a çıkıyor, B kalemi aynı yere sert iniş çıkışlarla varıyor"
+      caption="İki kalem de 100 ₺'den 130 ₺'ye vardı. Ortalama aynı; yolculuk — ve yolda satmak zorunda kalmak — farklı."
+      height={172}
+    >
+      <Panel x={6} y={16} w={150} h={134} title="A · sakin yol" />
+      <line x1="20" y1={toY(100)} x2="146" y2={toY(100)} className="fig-axis" strokeDasharray="3 3" />
+      <path d={path(a, 24)} className="fig-line-steady" fill="none" />
+      <text x={81} y={142} className="fig-value pos" textAnchor="middle">100 → 130</text>
+
+      <Panel x={164} y={16} w={150} h={134} title="B · dalgalı yol" />
+      <line x1="178" y1={toY(100)} x2="304" y2={toY(100)} className="fig-axis" strokeDasharray="3 3" />
+      <path d={path(b, 182)} className="fig-line-volatile" fill="none" />
+      <circle cx={toX(2, 182)} cy={toY(85)} r="3.5" className="fig-dot-volatile" />
+      <text x={toX(2, 182)} y={toY(85) + 14} className="fig-value neg" textAnchor="middle">85</text>
+      <text x={239} y={142} className="fig-value" textAnchor="middle">100 → 130</text>
+
+      <text x={160} y={166} className="fig-label" textAnchor="middle">aynı varış, farklı deneyim</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · Oynaklık bandı: dar bant ↔ geniş bant, aynı orta çizgi. */
+function VolatilityBand() {
+  return (
+    <Figure
+      label="Aynı orta çizgi etrafında biri dar biri geniş iki dalgalanma bandı"
+      caption="Oynaklık, fiyatın orta çizgi etrafında ne kadar geniş salındığıdır. Yön değil, genişlik anlatır."
+    >
+      <path d="M24 60 L296 60" className="fig-line-flat" strokeDasharray="4 3" />
+      <path d="M24 44 Q80 40 136 48 L136 72 Q80 80 24 76 Z" className="fig-seg" />
+      <path d="M170 22 Q226 14 296 30 L296 94 Q226 106 170 98 Z" className="fig-seg" opacity="0.55" />
+      <path d="M24 62 Q52 56 80 64 T136 58" className="fig-line-steady" fill="none" />
+      <path d="M170 60 Q184 26 198 66 T226 34 T254 84 T296 44" className="fig-line-volatile" fill="none" />
+      <text x={80} y={122} className="fig-label" textAnchor="middle">dar bant</text>
+      <text x={80} y={136} className="fig-value" textAnchor="middle">düşük oynaklık</text>
+      <text x={233} y={122} className="fig-label" textAnchor="middle">geniş bant</text>
+      <text x={233} y={136} className="fig-value" textAnchor="middle">yüksek oynaklık</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · Risk primi basamağı: belirsizlik arttıkça beklenen getiri de yükselir. */
+function RiskPremiumStep() {
+  const steps = [
+    { x: 30, h: 26, label: "dar aralık" },
+    { x: 118, h: 52, label: "orta" },
+    { x: 206, h: 84, label: "geniş aralık" },
+  ];
+  return (
+    <Figure
+      label="Belirsizlik arttıkça beklenen getirinin de basamak basamak yükselmesi"
+      caption="Belirsizliği taşımanın karşılığına risk primi denir: aralık genişledikçe beklenen getiri de yükselir."
+    >
+      <line x1="18" y1="112" x2="308" y2="112" className="fig-axis" />
+      {steps.map((s, i) => (
+        <g key={i}>
+          <rect x={s.x} y={112 - s.h} width={62} height={s.h} rx="3" className={i === 2 ? "fig-seg-lead" : "fig-seg"} />
+          <text x={s.x + 31} y={126} className="fig-value" textAnchor="middle">{s.label}</text>
+        </g>
+      ))}
+      <path d="M30 78 L268 30" className="fig-line-flat" strokeDasharray="4 3" />
+      <text x={18} y={20} className="fig-label">beklenen getiri</text>
+      <text x={308} y={140} className="fig-value" textAnchor="end">belirsizlik →</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · ÇOK PANELLİ — bir getiri ödemesinin üç olası kaynağı. */
+function WhereMoneyComesFrom() {
+  return (
+    <Figure
+      label="Üç panel: ödeme gerçek bir faaliyetten, yeni katılanların parasından ya da bir güvence verenden gelebilir"
+      caption="Bir getiri vaadinde para üç yerden gelebilir. Dördüncü bir kaynak yoktur — hangisi olduğunu sormak gerekir."
+      height={164}
+    >
+      <Panel x={4} y={16} w={100} h={120} title="Faaliyet" />
+      <rect x={28} y={58} width={52} height={30} rx="4" className="fig-bar-muted" />
+      <text x={54} y={78} className="fig-value" textAnchor="middle">iş · gelir</text>
+      <path d="M54 92 L54 112" className="fig-line-steady" />
+      <text x={54} y={126} className="fig-value pos" textAnchor="middle">ödeme</text>
+
+      <Panel x={110} y={16} w={100} h={120} title="Yeni katılanlar" />
+      {[0, 1, 2].map((i) => (
+        <circle key={i} cx={132 + i * 24} cy={62} r="7" className="fig-bar-muted" />
+      ))}
+      <path d="M156 74 L156 96" className="fig-line-volatile" />
+      <text x={160} y={112} className="fig-value neg" textAnchor="middle">öncekilere</text>
+      <text x={160} y={126} className="fig-value neg" textAnchor="middle">ödeme</text>
+
+      <Panel x={216} y={16} w={100} h={120} title="Güvence veren" />
+      <path d="M266 52 L286 62 L286 82 Q266 96 246 82 L246 62 Z" className="fig-card" />
+      <text x={266} y={76} className="fig-value" textAnchor="middle">kapsam?</text>
+      <text x={266} y={112} className="fig-value" textAnchor="middle">kim · sınırı ne</text>
+
+      <text x={160} y={158} className="fig-label" textAnchor="middle">para nereden geliyor?</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · ÇOK PANELLİ — "garanti" ile "yüksek getiri" birbirini götürür. */
+function GuaranteeContradiction() {
+  return (
+    <Figure
+      label="İki panel yan yana: garanti belirsizliğin olmadığını, yüksek getiri ise yüksek belirsizliği gerektirir"
+      caption="İki iddia aynı cümlede duramaz: belirsizlik yoksa yüksek getiriyi gerektiren sebep de yoktur."
+      height={162}
+    >
+      <Panel x={6} y={16} w={140} h={112} title="&quot;Garanti&quot;" />
+      <line x1="30" y1="86" x2="122" y2="86" className="fig-line-flat" />
+      <circle cx="76" cy="86" r="4" className="fig-dot-steady" />
+      <text x={76} y={64} className="fig-value" textAnchor="middle">tek sonuç</text>
+      <text x={76} y={110} className="fig-value" textAnchor="middle">belirsizlik yok</text>
+
+      <Panel x={174} y={16} w={140} h={112} title="&quot;Yüksek getiri&quot;" />
+      <path d="M198 86 L290 52 L290 120 Z" className="fig-seg" opacity="0.5" />
+      <circle cx="198" cy="86" r="4" className="fig-dot-volatile" />
+      <text x={252} y={44} className="fig-value" textAnchor="middle">geniş aralık</text>
+      <text x={244} y={110} className="fig-value" textAnchor="middle">belirsizlik yüksek</text>
+
+      <text x={160} y={74} className="fig-big" textAnchor="middle">✗</text>
+      <text x={160} y={152} className="fig-label" textAnchor="middle">ikisi birlikte olamaz</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · Üç soru kartı: kim ödüyor · kaynağı ne · kim güvence veriyor. */
+function ThreeQuestions() {
+  const cards = [
+    { x: 4, t: "1", q: "Parayı kim", q2: "ödüyor?" },
+    { x: 110, t: "2", q: "Kaynağı", q2: "ne?" },
+    { x: 216, t: "3", q: "Kim güvence", q2: "veriyor?" },
+  ];
+  return (
+    <Figure
+      label="Üç soru kartı: parayı kim ödüyor, kaynağı ne, kim güvence veriyor ve sınırı ne"
+      caption="Bir getiri vaadi karşısında bu üç soru sorulur. Biri bile cevapsızsa eksik olan vaadin kendisidir."
+      height={140}
+    >
+      {cards.map((c) => (
+        <g key={c.t}>
+          <rect x={c.x} y={18} width={100} height={92} rx="8" className="fig-card" />
+          <text x={c.x + 50} y={48} className="fig-big" textAnchor="middle">{c.t}</text>
+          <text x={c.x + 50} y={74} className="fig-label" textAnchor="middle">{c.q}</text>
+          <text x={c.x + 50} y={90} className="fig-label" textAnchor="middle">{c.q2}</text>
+        </g>
+      ))}
+      <text x={160} y={130} className="fig-value" textAnchor="middle">cevabı olmayan soru = eksik vaat</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · Aynı kelime, iki dayanak: yazılı kapsamlı güvence ↔ kişisel söz. */
+function GuaranteedByWhom() {
+  return (
+    <Figure
+      label="Solda yazılı kapsamı ve sınırı olan kurumsal güvence, sağda yalnız bir söze dayanan güvence"
+      caption="İkisi de &quot;güvence&quot; der. Fark, güvencenin neye dayandığı: yazılı bir yapı mı, yalnız bir söz mü?"
+      height={152}
+    >
+      <Panel x={6} y={16} w={140} h={112} title="Yazılı yapı" />
+      <rect x={28} y={44} width={96} height={58} rx="4" className="fig-card" />
+      {/* Yazılı maddeler: `fig-axis` kart zemininde görünmüyordu (canlı kontrolde
+          yakalandı) → muted çizgi sınıfı. */}
+      {[0, 1, 2].map((i) => (
+        <line key={i} x1="40" y1={60 + i * 14} x2={i === 2 ? 92 : 112} y2={60 + i * 14} className="fig-line-flat" />
+      ))}
+      <text x={76} y={120} className="fig-value pos" textAnchor="middle">kapsam · sınır belli</text>
+
+      <Panel x={174} y={16} w={140} h={112} title="Yalnız söz" />
+      <circle cx="244" cy="58" r="13" className="fig-bar-muted" />
+      <path d="M224 92 Q244 74 264 92" className="fig-line-flat" />
+      <text x={244} y={106} className="fig-value" textAnchor="middle">“söz”</text>
+      <text x={244} y={120} className="fig-value neg" textAnchor="middle">kapsam yazılı değil</text>
+
+      <text x={160} y={146} className="fig-label" textAnchor="middle">güvence neye dayanıyor?</text>
+    </Figure>
+  );
+}
+
+/** S0-L7 · Aynı dalgalanma, iki taşıyıcı: uzun vade çukuru geçer, kısa vade dipte satar. */
+function RiskCarryingCapacity() {
+  const wave = "M30 64 Q62 26 94 70 T158 58 T222 86 T290 40";
+  return (
+    <Figure
+      label="Aynı dalgalı çizgi iki kez: uzun vadeli olan çukuru bekleyerek geçiyor, kısa vadeli olan tam dipte satmak zorunda kalıyor"
+      caption="Riskin kendisi aynı; değişen onu taşıyabilme kapasiten — vaden, tamponun ve o kalemin ağırlığı."
+      height={168}
+    >
+      <path d={wave} className="fig-line-volatile" fill="none" />
+      <circle cx="222" cy="86" r="4.5" className="fig-dot-volatile" />
+      {/* Etiket çizginin ALTINA değil SAĞINA: canlı kontrolde dalga ile çakışıyordu. */}
+      <text x={232} y={99} className="fig-value neg">çukur</text>
+
+      <rect x={6} y={118} width={148} height={42} rx="6" className="fig-card" />
+      <text x={80} y={134} className="fig-label" textAnchor="middle">uzun vade + tampon</text>
+      <text x={80} y={150} className="fig-value pos" textAnchor="middle">bekler, geçer</text>
+
+      <rect x={166} y={118} width={148} height={42} rx="6" className="fig-card" />
+      <text x={240} y={134} className="fig-label" textAnchor="middle">kısa vade, tampon yok</text>
+      <text x={240} y={150} className="fig-value neg" textAnchor="middle">dipte satmak zorunda</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
+  // S0-L7 · Risk ne demek? (GD-001)
+  "uncertainty-fan": UncertaintyFan,
+  "two-paths-same-average": TwoPathsSameAverage,
+  "volatility-band": VolatilityBand,
+  "risk-premium-step": RiskPremiumStep,
+  "where-money-comes-from": WhereMoneyComesFrom,
+  "guarantee-contradiction": GuaranteeContradiction,
+  "three-questions": ThreeQuestions,
+  "guaranteed-by-whom": GuaranteedByWhom,
+  "risk-carrying-capacity": RiskCarryingCapacity,
   "two-return-sources": TwoReturnSources,
   "rent-plus-value": RentPlusValue,
   "capital-gain-line": CapitalGainLine,

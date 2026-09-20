@@ -2548,6 +2548,296 @@ internal static class EducationContent
         önermez ve bir getiri **vaat etmez**. Karar senindir.
         """));
 
+    /// <summary>
+    /// S0-L7 · <b>Risk ne demek?</b> (künye: <c>16-CURRICULUM.md</c> §S0-L7, GD-001).
+    /// Tanıtılan kavramlar: <c>risk</c> · <c>volatility</c> · <c>guaranteed-return-fallacy</c>.
+    ///
+    /// <para>⚠ <b>Yasal (künye yasal notu · <c>15</c> §3.4):</b> dolandırıcılık kalıbı
+    /// anlatılırken <b>hiçbir kurum, kişi, platform veya ürün adı geçmez</b>; yalnız
+    /// kalıp tarif edilir. Biçim "şuna güvenme" değil, <b>"şu soruları sor"</b>dur.</para>
+    ///
+    /// <para><b>LiveContext YOK</b> — künye "karşılığı bir metrik yok" diyor; mevcut
+    /// dokuz <c>ContextKey</c>'den hiçbiri risk kavramına dürüstçe bağlanmıyor.
+    /// Bu bloksuzluk <b>D-017</b> ile sözleşmeye uygundur ve
+    /// <c>EducationSeedTests.LessonsWithoutLiveContext</c> içinde beyan edilir.</para>
+    /// </summary>
+    public static IEnumerable<LessonSection> LessonS0L7(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Günlük dilde "riskli" demek çoğu zaman "tehlikeli" demektir. Yatırımda ise
+        risk, bundan farklı ve daha dar bir anlam taşır. Bu ders o anlamı yerine
+        oturtur. Bitirdiğinde şunları yapabileceksin:
+
+        - Riski **sonucun belirsizliği** olarak tanımlamak ve **kayıptan** ayırt etmek
+        - **Oynaklığı** bir örnek üzerinde okumak
+        - "Garantili yüksek getiri" ifadesinin neden kendi içinde **çelişki**
+          olduğunu açıklamak
+        - Bir getiri vaadiyle karşılaştığında sorulacak **üç soruyu** sıralamak
+
+        Örneklerde şirket, kurum, platform ya da ürün adı **geçmez**; yalnız kalıplar
+        anlatılır. Bu ders bir yatırımın iyi ya da kötü olduğunu söylemez. Sonunda
+        kısa bir test var.
+        """),
+
+        Core("""
+        ## Risk = belirsizlik, kayıp değil
+
+        Yatırımda **risk**, sonucun **önceden tam olarak bilinememesidir.** Sonuç bir
+        aralık içinde dağılır: iyi de gelebilir, kötü de; aradaki her yer de mümkündür.
+
+        Bu tanımın önemli bir sonucu var: **risk, kaybın kendisi değildir.** Kayıp,
+        gerçekleşmiş bir sonuçtur — risk ise sonuç **belli olmadan önceki** durumdur.
+        Yüksek riskli bir kalem kazandırabilir; düşük riskli bir kalem de eksi
+        verebilir. Risk, hangi sonucun çıkacağını değil, **sonuçların ne kadar geniş
+        bir aralığa yayıldığını** anlatır.
+
+        Aralık ne kadar genişse risk o kadar yüksektir. Aralık daraldıkça sonuç daha
+        öngörülebilir olur — ama hiçbir zaman tek bir noktaya inmez.
+        """, "uncertainty-fan"),
+
+        Ex("""
+        ## İki yol, aynı ortalama, farklı dalgalanma
+
+        İki kurgusal kalem düşün. Beş yıl sonra **ikisi de** aynı yere varıyor:
+        başlangıçtaki 100 ₺, 130 ₺ olmuş. Ortalama getirileri **eşit**.
+
+        - **A kalemi:** 100 → 106 → 112 → 118 → 124 → 130. Her yıl benzer, küçük
+          adımlar. Yolculuk sakin.
+        - **B kalemi:** 100 → 135 → 85 → 150 → 95 → 130. Aynı varışa, çok farklı bir
+          yoldan gidiyor. İkinci yılın sonunda elindeki 85 ₺ — başladığın noktanın
+          altında.
+
+        Sonuç aynı, **deneyim** tamamen farklı. B kalemini elinde tutan biri, ikinci
+        yılın sonunda paraya ihtiyaç duysaydı 85 ₺'ye satmak zorunda kalırdı; o
+        durumda "ortalama getiri" onu kurtarmazdı.
+
+        İşte "ortalama aynı" demek, "aynı şey" demek değildir. Aradaki farkın adı var.
+        """, "two-paths-same-average"),
+
+        Core("""
+        ## Oynaklık: yolun ne kadar inişli çıkışlı olduğu
+
+        **Oynaklık**, bir kalemin fiyatının zaman içinde **ne kadar dalgalandığını**
+        anlatır. Az önceki B kalemi yüksek oynaklığa, A kalemi düşük oynaklığa sahiptir.
+
+        Oynaklık riski ölçmenin en yaygın yollarından biridir, çünkü **sonuç aralığının
+        genişliğini** görünür kılar. Fiyatı geniş bir bantta gidip gelen bir kalemin
+        gelecekteki değeri de geniş bir aralığa yayılır.
+
+        İki şeyi karıştırmamak gerekir:
+
+        - **Oynaklık yön değildir.** Yukarı da aşağı da dalgalanma, aynı şekilde
+          oynaklıktır. Yüksek oynaklık, yönün aşağı olduğu anlamına gelmez.
+        - **Oynaklık tek başına kötü değildir.** Parana on yıl dokunmayacaksan
+          dalgalanma seni daha az ilgilendirir; altı ay sonra kullanacaksan çok
+          ilgilendirir. Önemli olan, dalgalanmanın **senin vadenle** ilişkisi —
+          buna bir sonraki derste döneceğiz.
+        """, "volatility-band"),
+
+        Trap("""
+        ## "Risk = kaybetmek" yanılgısı
+
+        En yaygın karıştırma budur: risk, kayıpla eş tutulur. Oysa ikisi farklı
+        şeylerdir ve karıştırmanın iki zararı vardır.
+
+        **Birincisi:** "Risk almak istemiyorum" cümlesi çoğu zaman "kaybetmek
+        istemiyorum" demektir — ama riski sıfırlamak sonucun belirsizliğini
+        sıfırlamak demektir ve bu mümkün değildir. Hiçbir şey yapmamak bile bir
+        sonuç üretir: bekleyen paranın enflasyon karşısında erimesi de belirsiz
+        bir sonuçtur.
+
+        **İkincisi:** Risk kayıpla eş tutulunca, **kazanma ihtimali** görünmez olur.
+        Sonuç aralığı iki yöne de açıktır; yalnız aşağı tarafı görmek, aralığın
+        yarısını yok saymaktır.
+
+        Doğru soru "risk var mı?" değildir — risk her zaman vardır. Doğru soru
+        **"bu riskin karşılığında ne alıyorum ve bunu taşıyabilir miyim?"**dir.
+        """),
+
+        Core("""
+        ## Getiri neden risksiz olmaz: risk primi
+
+        Şöyle düşün: bir tarafta sonucu neredeyse kesin, dar aralıklı bir seçenek var;
+        diğer tarafta sonucu geniş bir aralığa yayılan bir seçenek. İkisi de **aynı**
+        getiriyi vaat etse, kimse ikinciyi seçmez — belirsizliği bedavaya taşımak için
+        bir sebep yoktur.
+
+        Bu yüzden, belirsizliği daha yüksek olanın insanları ikna edebilmesi için
+        **daha fazlasını** vaat etmesi gerekir. Bu fazlalığa **risk primi** denir:
+        taşınan belirsizliğin karşılığı.
+
+        Buradan çıkan temel ilke şudur: **yüksek getiri beklentisi, yüksek
+        belirsizliğin fiyatıdır.** Beklenen getiri yükseldikçe sonuç aralığı da
+        genişler. Bu bir kural değil, bir **denge**dir: aksi olsaydı — yani düşük
+        belirsizlikli bir şey yüksek getiri verseydi — herkes ona yönelir, fiyatı
+        yükselir ve getirisi tekrar aşağı inerdi.
+
+        Bu ilkeyi aklında tut; bir sonraki adımda ona neden ihtiyacın olduğunu
+        göreceksin.
+        """, "risk-premium-step"),
+
+        Ex("""
+        ## "Yıllık %X garanti" — para nereden geliyor?
+
+        Diyelim biri sana şunu söylüyor: **"Yılda %40 getiri, garantili."** Bu cümleyi
+        değerlendirmenin en sağlam yolu, ahlaki bir yargı vermek değil, **paranın
+        yolunu takip etmektir.** Ödeme yapılacaksa bu para bir yerden gelmek zorundadır.
+        Üç ihtimal vardır:
+
+        - **Gerçek bir faaliyetten geliyor.** Bir iş yapılıyor, gelir üretiliyor ve
+          getiri bu gelirden ödeniyor. Bu durumda getiri, o faaliyetin **kendi
+          belirsizliğini** taşır — iş kötü giderse ödeme de etkilenir. Yani mümkündür,
+          ama "garanti" değildir.
+        - **Yeni gelenlerin parasından ödeniyor.** İlk katılanlara, sonradan
+          katılanların yatırdığı parayla ödeme yapılır. Bu düzen, yeni katılım
+          yavaşladığı anda durur. Getiri gerçek değildir; sıranın başında olmaktır.
+        - **Bir güvence veren var.** Ödemeyi bir kurum, bir sigorta ya da bir mevzuat
+          garanti ediyordur. O zaman soru şuna döner: **garantiyi veren kim ve bu
+          güvencenin sınırı ne?**
+
+        Bu üç yol dışında bir kaynak yoktur. "Garanti" kelimesi tek başına hiçbir şey
+        söylemez — parayı kimin, neyle ödediğini söyleyen cümle söyler.
+        """, "where-money-comes-from"),
+
+        Trap("""
+        ## "Garantili yüksek getiri" neden bir çelişkidir
+
+        Şimdi iki parçayı yan yana koyalım.
+
+        Bir önceki adımda gördün: **yüksek getiri beklentisi, yüksek belirsizliğin
+        karşılığıdır.** Risk primi, taşınan belirsizlik için ödenir.
+
+        "Garanti" ise tam tersini iddia eder: **belirsizlik yok.**
+
+        Bu ikisi aynı cümlede duramaz. Eğer gerçekten belirsizlik yoksa, ortada risk
+        primi ödenmesini gerektiren bir sebep de yoktur — o hâlde getiri neden yüksek
+        olsun? Eğer getiri yüksekse, karşılığında taşınan bir belirsizlik vardır — o
+        hâlde nasıl garanti edilebilir?
+
+        **"Garantili" ve "yüksek getiri" ifadeleri birbirini götürür.** Bir vaat bu
+        ikisini birlikte sunuyorsa, ya "garanti" gerçek bir güvenceye dayanmıyordur ya
+        da "yüksek getiri" sürdürülebilir değildir. Hangisi olduğunu anlamanın yolu,
+        bir önceki adımdaki soruyu sormaktır: **para nereden geliyor?**
+
+        Bu, bir kişi ya da kurum hakkında yargı değildir; **cümlenin kendi içindeki**
+        mantık çelişkisidir.
+        """, "guarantee-contradiction"),
+
+        Ctx("""
+        ## Üç soru
+
+        Bir getiri vaadiyle karşılaştığında, "güvenilir mi?" sorusunu cevaplamak zordur
+        — ama üç somut soru durumu hızla açar:
+
+        1. **Bu parayı kim ödüyor?** Getiri hangi faaliyetin gelirinden karşılanıyor?
+           Cevap "yeni katılanlardan" ise bu bir getiri değil, sıralamadır.
+        2. **Kaynağı ne?** Ödemeyi üreten gerçek bir iş, kira, faiz ya da kâr var mı?
+           Kaynağı adlandırılamayan bir getiri, açıklanmamış bir getiridir.
+        3. **Kim güvence veriyor ve sınırı ne?** "Garanti" diyen taraf kim? Bu güvence
+           bir kuruma mı, bir mevzuata mı dayanıyor, yoksa yalnızca bir **söze** mi?
+           Güvencenin kapsamı nereye kadar?
+
+        Üç sorunun da cevabı varsa, önünde değerlendirebileceğin bir şey vardır.
+        Cevaplardan biri bile boşsa, eksik olan senin bilgin değil, **vaadin
+        kendisidir.**
+        """, "three-questions"),
+
+        ExDeep("""
+        ## Aynı vaadin iki hâli
+
+        "Paran güvende" cümlesi, arkasındaki yapıya göre tamamen farklı iki şey olabilir.
+
+        **Birinci hâl — kurumsal güvence.** Bir mevduat hesabında paranın belirli bir
+        tutara kadar korunması, bir **kuruma** ve bir **mevzuata** dayanır. Güvenceyi
+        veren bellidir, kapsamı yazılıdır, sınırı bilinir. "Ne kadarı, hangi koşulda
+        korunuyor?" sorusunun yazılı bir cevabı vardır.
+
+        **İkinci hâl — kişisel söz.** Birisi "merak etme, paran bende güvende" der.
+        Güvence, o kişinin ödeme gücüne ve niyetine bağlıdır. Yazılı bir kapsam,
+        denetleyen bir merci, sınırı belirleyen bir kural yoktur.
+
+        İkisi de aynı kelimeyi kullanır: **güvence.** Ama birincisinde güvencenin
+        arkasında **denetlenebilir bir yapı**, ikincisinde yalnızca **bir kişi** vardır.
+
+        Buradaki ayrım, "kime güvenilir" değildir — **güvencenin nereye dayandığıdır.**
+        Üçüncü soru tam olarak bunu sorar.
+        """, "guaranteed-by-whom"),
+
+        Trap("""
+        ## "Herkes kazanıyor" — kalabalık bir kanıt değildir
+
+        Bir vaadi değerlendirirken en çok yanıltan işaretlerden biri, **başkalarının
+        kazandığını görmektir.** "Tanıdığım üç kişi kazandı" ya da "herkes buna
+        giriyor" cümleleri, yukarıdaki üç sorunun yerine geçmez.
+
+        İki sebepten:
+
+        - **Görünürlük çarpıktır.** Kazananlar anlatır, kaybedenler susar. Duyduğun
+          hikâyeler, gerçekleşen sonuçların temsilî bir örneği değildir.
+        - **Erken ödemeler, düzenin sağlamlığını kanıtlamaz.** Getirisi yeni
+          katılımdan ödenen bir düzende **ilk katılanlar gerçekten para alır** — bu,
+          düzenin çalıştığını değil, henüz sıranın sonuna gelinmediğini gösterir.
+
+        Kalabalığın yönü bir bilgi taşımaz; taşıdığı şey **acele duygusudur.** "Kaçırma"
+        hissi, üç soruyu sormadan karar vermeni sağlayan en etkili baskıdır. Bu kalıbın
+        adı var ve davranış setinde ayrıntısıyla ele alınacak.
+
+        Sen yine aynı yere dön: **para nereden geliyor, kaynağı ne, kim güvence veriyor?**
+        """),
+
+        Deep("""
+        ## Risk kişiye göre değişmez — taşınabilirliği değişir
+
+        Sık duyulan bir cümle: "Bu yatırım benim için riskli değil." Bu cümle, iki ayrı
+        şeyi birbirine karıştırır.
+
+        Bir kalemin **riski**, yani sonucunun ne kadar geniş bir aralığa yayıldığı, onu
+        kimin elinde tuttuğuna bağlı değildir. Aynı kalem, aynı dönemde, herkes için
+        aynı belirsizliği taşır. Risk **varlığın bir özelliğidir.**
+
+        Kişiye göre değişen şey, o belirsizliği **taşıyabilme kapasitesidir.** Bu
+        kapasiteyi belirleyen üç şey vardır:
+
+        - **Vade:** Paraya ne zaman ihtiyacın var? On yıl dokunmayacaksan, yoldaki bir
+          çukuru beklemeden geçebilirsin. Altı ay sonra lazımsa, aynı çukur seni tam
+          dipte satmaya zorlayabilir.
+        - **Tampon:** Acil durum fonun var mı? Varsa, düşüş anında elindeki kalemi
+          satmak zorunda kalmazsın.
+        - **Ağırlık:** O kalem portföyünün ne kadarı? Aynı dalgalanma, toplamın
+          %5'inde farklı, %80'inde tamamen farklı bir şeydir.
+
+        Yani "riskli değil" yerine doğru cümle şudur: **"bu riski taşıyabilecek
+        durumdayım."** İkisi arasındaki fark, bir sonraki dersin konusu olan **vade ve
+        hedef** meselesinin kalbidir.
+        """, "risk-carrying-capacity"),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Yatırımcı uyarıları ve yetkisiz faaliyetler.** Sermaye piyasalarında kimlerin
+        hangi faaliyeti yürütmeye yetkili olduğu ve yetkisiz faaliyetlere ilişkin
+        uyarılar **SPK** (Sermaye Piyasası Kurulu) tarafından kamuya duyurulur —
+        [spk.gov.tr](https://www.spk.gov.tr). Bir vaadin arkasındaki tarafın yetkili
+        olup olmadığı buradan kontrol edilebilir.
+
+        **Güvencenin kaynağı.** Mevduatın belirli bir tutara kadar sigorta kapsamında
+        olması ve bu kapsamın sınırları **TMSF** (Tasarruf Mevduatı Sigorta Fonu)
+        tarafından tanımlanır — [tmsf.org.tr](https://www.tmsf.org.tr). "Kurumsal
+        güvence" ile "kişisel söz" arasındaki farkın somut örneği budur.
+
+        **Örnek sayılar kurgusaldır.** 100 ₺, 130 ₺, %40 gibi rakamların tamamı ve
+        "A kalemi", "B kalemi" etiketleri mekanizmayı göstermek için **seçilmiş
+        örneklerdir**; gerçek bir varlığın, kurumun ya da ürünün verisi değildir.
+        Uygulamadaki tüm getiri ve oran hesapları **kodda** yapılır.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders riskin ne anlama geldiğini ve bir
+        vaadi değerlendirirken hangi soruların sorulacağını anlatır; hangi kalemin
+        riskli ya da güvenli olduğunu söylemez, bir ürün ya da kurum hakkında görüş
+        bildirmez. Karar senindir.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -3067,6 +3357,101 @@ internal static class EducationContent
                  ("Önemli olan ödemenin kaynağıdır (sürdürülebilir kâr mı?)", true),
                  ("Yüksek oran bazen fiyatın düşmüş olmasından kaynaklanır", true),
                  ("Yüksek temettü, bir varlığı her zaman daha iyi bir yatırım yapar", false)]),
+        ]);
+
+        // ── S0-L7 · Risk ne demek? (GD-001) ─────────────────────────────────
+        // ⚠ Çeldiriciler dahil hiçbir seçenekte kurum/kişi/platform/ürün adı YOK;
+        // yalnız kalıp tarif edilir (künye yasal notu, `15` §3.4).
+        yield return ("lesson-s0l7", "quiz-s0l7", "Risk Ne Demek? — Mini Test",
+        [
+            // ── Kolay: risk tanımı, kayıptan ayrımı ──────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Yatırımda \"risk\" en doğru şekilde nasıl tanımlanır?",
+                "Risk, sonucun önceden tam olarak bilinememesidir — sonuçların bir aralığa yayılmasıdır. " +
+                "Kayıp ise gerçekleşmiş bir sonuçtur. Risk, hangi sonucun çıkacağını değil, sonuç aralığının " +
+                "ne kadar geniş olduğunu anlatır.",
+                [("Paranın kaybedilmesi", false),
+                 ("Sonucun önceden tam olarak bilinememesi", true),
+                 ("Fiyatın düşmesi", false),
+                 ("Kötü bir karar verilmesi", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Risk almamak için en iyi yol parayı hiç değerlendirmeden bekletmektir; böylece hiçbir belirsizlik kalmaz.",
+                "Yanlış. Hiçbir şey yapmamak da bir sonuç üretir: bekleyen para enflasyon karşısında alım gücü " +
+                "kaybedebilir ve bu kayıp da önceden tam bilinemez. Belirsizliği sıfırlamak mümkün değildir; " +
+                "yalnızca hangi belirsizliği taşıdığın değişir.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "\"Oynaklık\" bir kalem için neyi anlatır?",
+                "Oynaklık, fiyatın zaman içinde ne kadar dalgalandığıdır — sonuç aralığının genişliğini görünür " +
+                "kılar. Yön bildirmez: yukarı da aşağı da dalgalanma aynı şekilde oynaklıktır.",
+                [("Fiyatın kesinlikle düşeceğini", false),
+                 ("Fiyatın zaman içinde ne kadar dalgalandığını", true),
+                 ("Kalemin ne kadar kâr getireceğini", false),
+                 ("Kalemin ne kadar sürede satılabileceğini", false)]),
+
+            // ── Orta: iki yolu karşılaştırma, üç sorunun uygulanması ────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "İki kalem de beş yılda 100 ₺'den 130 ₺'ye çıktı. A kalemi her yıl küçük adımlarla ilerledi; " +
+                "B kalemi 135 → 85 → 150 → 95 gibi geniş salınımlar yaptı. Bu karşılaştırma neyi gösterir?",
+                "Ortalama getirileri aynı olsa da sonuç aralıkları farklıdır: B daha yüksek oynaklığa sahiptir. " +
+                "Bu, B'yi \"kötü\" yapmaz — ama ikinci yılın sonunda paraya ihtiyaç duyan biri için 85 ₺'ye satmak " +
+                "zorunda kalmak gerçek bir farktır. \"Ortalama aynı\" ile \"aynı şey\" farklıdır.",
+                [("B kalemi kesinlikle daha kötü bir yatırımdır", false),
+                 ("Aynı ortalamaya rağmen B'nin oynaklığı ve sonuç aralığı daha geniştir", true),
+                 ("A kalemi risksizdir", false),
+                 ("İki kalem her açıdan birbirinin aynısıdır", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir getiri vaadiyle karşılaştığında sorulması önerilen üç soru hangileridir?",
+                "Üç soru: bu parayı kim ödüyor · getirinin kaynağı ne (hangi gerçek faaliyetin geliri) · kim " +
+                "güvence veriyor ve bu güvencenin sınırı ne. Cevaplardan biri bile boşsa eksik olan senin bilgin " +
+                "değil, vaadin kendisidir.",
+                [("Ne zaman zengin olurum · ne kadar kazanırım · ne zaman çıkarım", false),
+                 ("Parayı kim ödüyor · kaynağı ne · kim güvence veriyor ve sınırı ne", true),
+                 ("Kaç kişi katıldı · ne kadar sürede büyüdü · kim tavsiye etti", false),
+                 ("Ne kadar yatırmalıyım · ne zaman girmeliyim · kime sormalıyım", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Yüksek oynaklık, bir kalemin fiyatının düşeceği anlamına gelir.",
+                "Yanlış. Oynaklık yön bildirmez, genişlik bildirir: yukarı ve aşağı dalgalanmaların ikisi de " +
+                "oynaklıktır. Yüksek oynaklık, sonucun daha geniş bir aralıkta olabileceğini söyler — hangi yöne " +
+                "gideceğini değil.",
+                [("Doğru", false), ("Yanlış", true)]),
+
+            // ── Zor: garanti çelişkisi, güvencenin kaynağı, taşıma kapasitesi ─
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "\"Garantili yüksek getiri\" ifadesi neden kendi içinde bir çelişki taşır?",
+                "Yüksek getiri beklentisi, taşınan yüksek belirsizliğin karşılığıdır (risk primi). \"Garanti\" ise " +
+                "belirsizliğin olmadığını iddia eder. Belirsizlik yoksa yüksek getiriyi gerektiren bir sebep de " +
+                "yoktur; getiri yüksekse taşınan bir belirsizlik vardır ve garanti edilemez. Bu, bir kişi ya da " +
+                "kurum hakkında yargı değil, cümlenin kendi mantık çelişkisidir.",
+                [("Çünkü yüksek getiri her zaman imkânsızdır", false),
+                 ("Çünkü yüksek getiri belirsizliğin karşılığıdır; \"garanti\" ise belirsizlik yok demektir", true),
+                 ("Çünkü garanti veren taraflar her zaman yanılır", false),
+                 ("Çünkü getiri yalnızca uzun vadede oluşur", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "\"Paran güvende\" cümlesini değerlendirirken asıl belirleyici olan nedir?",
+                "Belirleyici olan, güvencenin NEREYE dayandığıdır: yazılı kapsamı, sınırı ve denetlenebilir bir " +
+                "yapısı olan kurumsal bir güvence mi, yoksa yalnızca bir kişinin ödeme gücüne ve niyetine bağlı " +
+                "bir söz mü? İkisi de aynı kelimeyi kullanır; arkalarındaki yapı farklıdır.",
+                [("Cümleyi söyleyen kişiye ne kadar güvendiğin", false),
+                 ("Güvencenin neye dayandığı: yazılı kapsamı ve sınırı olan bir yapı mı, yoksa yalnız bir söz mü", true),
+                 ("Vaat edilen getirinin ne kadar yüksek olduğu", false),
+                 ("Kaç kişinin aynı vaade katıldığı", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "\"Bu yatırım benim için riskli değil\" cümlesi hangi açılardan eksiktir? (Birden fazla doğru)",
+                "Bir kalemin riski — sonuç aralığının genişliği — varlığın özelliğidir; kimin elinde olduğuna göre " +
+                "değişmez. Kişiye göre değişen, o belirsizliği taşıyabilme kapasitesidir: vade, acil durum tamponu " +
+                "ve o kalemin portföydeki ağırlığı. Doğru cümle \"riskli değil\" değil, \"bu riski taşıyabilecek " +
+                "durumdayım\"dır.",
+                [("Riskin kendisi kişiye göre değişmez; varlığın özelliğidir", true),
+                 ("Değişen şey, belirsizliği taşıyabilme kapasitesidir (vade · tampon · ağırlık)", true),
+                 ("Doğru ifade \"bu riski taşıyabilecek durumdayım\" olmalıdır", true),
+                 ("Bir kalem, ona güvenen kişinin elinde daha az dalgalanır", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

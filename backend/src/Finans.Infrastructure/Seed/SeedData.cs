@@ -889,6 +889,74 @@ public static class SeedData
             }
         }
 
+        // ── S0-L7 · Risk ne demek? ──────────────────────────────────────────────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l7"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l7"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "risk-ne-demek",
+                OrderIndex = 7,
+                Title = "Risk ne demek?",
+                Summary = "Risk, kayıp değil sonucun belirsizliğidir; oynaklık bu belirsizliğin genişliğini " +
+                    "gösterir. Yüksek getiri beklentisi belirsizliğin karşılığıdır — bu yüzden \"garantili " +
+                    "yüksek getiri\" kendi içinde çelişkilidir.",
+                BodyMarkdown =
+                    "## Risk ne demek?\n\n" +
+                    "Yatırımda **risk**, sonucun önceden tam olarak bilinememesidir — sonuçların bir **aralığa** " +
+                    "yayılmasıdır; kaybın kendisi değildir. **Oynaklık** bu aralığın genişliğini gösterir ve yön " +
+                    "bildirmez. Belirsizliği taşımanın karşılığı **risk primi**dir: yüksek getiri beklentisi, " +
+                    "yüksek belirsizliğin fiyatıdır. Bu yüzden **\"garantili yüksek getiri\"** ifadesi kendi " +
+                    "içinde çelişir. Bir vaat karşısında üç soru sorulur: **parayı kim ödüyor · kaynağı ne · " +
+                    "kim güvence veriyor ve sınırı ne.** Ders hiçbir kurum, kişi, platform ya da ürün adı " +
+                    "anmaz; yalnız kalıpları tarif eder.",
+                EstimatedMinutes = 7,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L7, S0-L6'yı ister (track içi zincir).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l7") && p.PrerequisiteLessonId == Id("lesson-s0l6"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l7"),
+                PrerequisiteLessonId = Id("lesson-s0l6"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L7 üç kavram tanıtır (risk · oynaklık · "garantili yüksek getiri" çelişkisi).
+        var s0l7Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-risk", "risk", "Risk"),
+            ("tag-volatility", "volatility", "Oynaklık"),
+            ("tag-guaranteed-return-fallacy", "guaranteed-return-fallacy", "\"Garantili Getiri\" Çelişkisi"),
+        };
+        foreach (var (tagId, key, label) in s0l7Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l7") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l7"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -905,6 +973,7 @@ public static class SeedData
             (Id("lesson-s0l4"), EducationContent.LessonS0L4), // T6.16 — Set 0 Ders 4
             (Id("lesson-s0l5"), EducationContent.LessonS0L5), // T6.16 — Set 0 Ders 5
             (Id("lesson-s0l6"), EducationContent.LessonS0L6), // T6.16 — Set 0 Ders 6
+            (Id("lesson-s0l7"), EducationContent.LessonS0L7), // GD-001 — Set 0 Ders 7
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),
