@@ -7,9 +7,15 @@ namespace Finans.Application.Portfolio;
 
 /// <summary>
 /// Tek bir pozisyonun API gösterimi (04 §4 — GET /holdings kalemi). Birim alanlar
-/// (avgCost/currentPrice) varlığın kendi para biriminde; toplulaştırmalar
-/// (totalCost/currentValue/profit/weight) baz para biriminde (weight tutarlılığı).
-/// Hesaplanamayan alanlar null.
+/// (avgCost/currentPrice) varlığın kendi para biriminde (<see cref="Currency"/>);
+/// toplulaştırmalar (totalCost/currentValue/profit/weight) baz para biriminde
+/// (<see cref="BaseCurrency"/> — weight tutarlılığı). Hesaplanamayan alanlar null.
+///
+/// <para><b>⚠ Kalem İKİ para birimi taşır.</b> <see cref="BaseCurrency"/> bu yüzden
+/// yanıtta açıkça döner: istemci toplulaştırmaları hangi birimle etiketleyeceğini
+/// başka bir uca (özet) bakmadan bilmeli. Alan yokken web'in detay sayfası
+/// toplamları varlığın birimiyle etiketliyordu → USD kalemde TRY tutar "$" ile
+/// gösteriliyordu (kullanıcı bildirimi 2026-09-20).</para>
 /// </summary>
 public sealed record HoldingDto(
     Guid Id,
@@ -17,6 +23,7 @@ public sealed record HoldingDto(
     string Name,
     string? Symbol,
     CurrencyCode Currency,
+    CurrencyCode BaseCurrency,
     string Unit,
     decimal Quantity,
     decimal AvgCost,

@@ -225,6 +225,7 @@ public sealed class EducationSeedTests
             // bloksuzluk sözleşmeye UYGUNDUR; istisna sessiz bir boşluk değil, burada
             // adıyla ve gerekçesiyle duran, testle doğrulanan bir beyandır.
             if (LessonsWithoutLiveContext.TryGetValue(lesson.Slug, out var whyNoLiveContext))
+            // (İstisna listesinin kendisi aşağıda ayrıca denetlenir — RV-002.)
             {
                 own.Should().NotContain(s => s.Kind == SectionKind.LiveContext,
                     $"'{lesson.Slug}' künyesi LiveContext taşımıyor ({whyNoLiveContext}) — " +
@@ -238,6 +239,18 @@ public sealed class EducationSeedTests
             own.Select(s => s.OrderIndex).Should().BeInAscendingOrder();
             own.Select(s => s.OrderIndex).Should().Equal(Enumerable.Range(1, own.Count));
             own.Should().OnlyContain(s => s.BodyMarkdown.Length > 100); // boş/yer tutucu içerik yok
+        }
+
+        // REVIEW-001 · RV-002: istisna listesinin KENDİSİ denetlenir. Bir ders
+        // yeniden adlandırılır ya da kaldırılırsa `TryGetValue` sessizce hiç
+        // eşleşmez ve istisna ölü kalırdı — D-017 bu listeyi "testle doğrulanan
+        // beyan" sayıyor, dolayısıyla beyanın karşılığı olmalı.
+        var slugs = lessons.Select(l => l.Slug).ToHashSet();
+        foreach (var (slug, why) in LessonsWithoutLiveContext)
+        {
+            slugs.Should().Contain(slug,
+                $"LiveContext istisnası '{slug}' dersi için beyan edilmiş ({why}) ama böyle bir ders yok — " +
+                "ders yeniden adlandırıldıysa listeyi güncelle, kaldırıldıysa satırı sil (D-017)");
         }
     }
 
@@ -685,8 +698,14 @@ public sealed class EducationSeedTests
             "garanti getiri", "garantili getiri", "kesin kâr",
         };
         // Enstrüman sıralaması: "…'den/dan daha iyi/çok getiri/performans".
+        // ⚠ `-d[ae]n` ayrılma ekini arar ama kelime sınırı yoktur — bu yüzden sonu
+        // "den/dan" ile biten KELİMELERE de düşebiliyordu. RV-001 taraması ders
+        // özetlerine açılınca ilk kurban "**Ne**den yüksek getiri…" oldu (sıralama
+        // değil, meşru eğitim cümlesi). Çözüm: ekin ayrılma eki olması için soldaki
+        // yaygın çarpışmalar dışlanır; gerçek sıralama ("altın**dan** daha yüksek
+        // getiri") yakalanmaya devam eder.
         var ranking = new Regex(
-            @"(?:'?d[ae]n)\s+(?:daha\s+)?(?:iyi|çok|yüksek)\s+(?:getiri|performans|kazan)",
+            @"(?<!\b(?:ne|he))(?:'?d[ae]n)\s+(?:daha\s+)?(?:iyi|çok|yüksek)\s+(?:getiri|performans|kazan)",
             RegexOptions.IgnoreCase);
 
         foreach (var s in sections)
@@ -697,6 +716,25 @@ public sealed class EducationSeedTests
 
             ranking.IsMatch(s.BodyMarkdown).Should().BeFalse(
                 $"'{s.Kind}' bloğu enstrüman sıralaması yapmamalı (15 §3.4)");
+        }
+
+        // REVIEW-001 · RV-001: tarama önceden YALNIZ bölüm gövdelerini görüyordu.
+        // Oysa `Lesson.Summary` ders listesinde, `Lesson.BodyMarkdown` ise bölümsüz
+        // derslerde doğrudan kullanıcıya gösteriliyor — ikisi de D-002 kapsamında.
+        var lessons = await db.Lessons.ToListAsync();
+        lessons.Should().NotBeEmpty();
+
+        foreach (var l in lessons)
+        {
+            foreach (var field in new[] { ("Summary", l.Summary), ("BodyMarkdown", l.BodyMarkdown) })
+            {
+                foreach (var banned in predictions)
+                    field.Item2.Should().NotContainEquivalentOf(banned,
+                        $"'{l.Slug}' dersinin {field.Item1} alanı tahmin/garanti içermez (yasak: {banned})");
+
+                ranking.IsMatch(field.Item2).Should().BeFalse(
+                    $"'{l.Slug}' dersinin {field.Item1} alanı enstrüman sıralaması yapmamalı (15 §3.4)");
+            }
         }
     }
 

@@ -104,6 +104,23 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         aapl.CurrentValue.Should().Be(120960m);  // 12 × 210 × 48 (TRY)
         Math.Round(aapl.ReturnRatio!.Value, 2).Should().Be(0.20m);
 
+        // Kalem İKİ para birimi taşıyor; yanıt hangisinin hangisi olduğunu SÖYLEMELİ.
+        // (Kullanıcı bildirimi 2026-09-20: alan yokken web detay sayfası toplamları
+        // varlığın birimiyle etiketliyordu → USD kalemde TRY tutar "$" ile görünüyordu.)
+        aapl.BaseCurrency.Should().Be(CurrencyCode.TRY);
+        aapl.Currency.Should().NotBe(aapl.BaseCurrency, "bu kalem çapraz kur senaryosunu temsil ediyor");
+
+        // Tutarlılık: toplulaştırma = miktar × birim × kur. Birim alanlar ham kaldığı için
+        // totalCost ≠ quantity × avgCost olur — bu BEKLENEN, ama yalnız kur farkı kadar.
+        (aapl.TotalCost / (aapl.Quantity * aapl.AvgCost)).Should().Be(48m);
+
+        // TRY kalemde iki birim çakışır → çevrim kimliktir (regresyon: çapraz kurda
+        // bozulan hesap TRY kalemde görünmez, bu yüzden ikisi birlikte denetlenir).
+        var goldItem = holdings.Single(h => h.AssetType == AssetType.Gold);
+        goldItem.Currency.Should().Be(CurrencyCode.TRY);
+        goldItem.BaseCurrency.Should().Be(CurrencyCode.TRY);
+        goldItem.TotalCost.Should().Be(goldItem.Quantity * goldItem.AvgCost);
+
         // Zarardaki fon → negatif getiri.
         var fund = holdings.Single(h => h.AssetType == AssetType.Fund);
         fund.ReturnRatio!.Value.Should().BeNegative();

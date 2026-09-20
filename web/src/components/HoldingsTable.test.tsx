@@ -10,6 +10,7 @@ const gold: Holding = {
   name: "Altın",
   symbol: "XAU",
   currency: "TRY",
+  baseCurrency: "TRY",
   unit: "gram",
   quantity: 40,
   avgCost: 4546.275,

@@ -87,7 +87,7 @@ export function HoldingDetailPage() {
     return (
       <section className="detail">
         <p className="neg" role="alert">Pozisyon bulunamadı.</p>
-        <Link to="/" className="detail-back">← Portföye dön</Link>
+        <Link to="/varliklar" className="detail-back">← Varlıklarıma dön</Link>
       </section>
     );
   }
@@ -241,7 +241,7 @@ export function HoldingDetailPage() {
     remove.mutate(h.id, {
       onSuccess: () => {
         notify(`"${h.name}" silindi.`, "info");
-        navigate("/");
+        navigate("/varliklar");
       },
     });
   };
@@ -252,7 +252,7 @@ export function HoldingDetailPage() {
 
   return (
     <section className="detail">
-      <Link to="/" className="detail-back">← Portföy</Link>
+      <Link to="/varliklar" className="detail-back">← Varlıklarım</Link>
 
       <div className="detail-head">
         <div className="asset-ic" style={{ background: softBg(meta.color) }}>{meta.icon}</div>
@@ -271,13 +271,16 @@ export function HoldingDetailPage() {
         <div className="detail-col">
           <div className="detail-hero">
             <div className="dh-v tnum">
-              {h.currentValue === null ? "—" : <CountUpCurrency value={h.currentValue} currency={h.currency} />}
+              {/* Toplulaştırmalar BAZ para biriminde gelir (h.baseCurrency), birim alanlar
+                  varlığın kendi biriminde (h.currency). Önceden ikisi de h.currency ile
+                  etiketleniyordu → USD kalemde TRY tutar "$" ile görünüyordu. */}
+              {h.currentValue === null ? "—" : <CountUpCurrency value={h.currentValue} currency={h.baseCurrency} />}
             </div>
             <div className={`dh-g tnum ${tone(h.profit)}`}>
               {h.profit === null ? "—" : (
                 <>
                   {profitSign}
-                  <CountUpCurrency value={h.profit} currency={h.currency} />
+                  <CountUpCurrency value={h.profit} currency={h.baseCurrency} />
                 </>
               )}
               {h.returnRatio !== null && (
@@ -324,7 +327,7 @@ export function HoldingDetailPage() {
           <div className="drow"><span className="dk">Miktar</span><span className="dv tnum">{formatNumber(h.quantity)} {h.unit}</span></div>
           <div className="drow"><span className="dk">Ortalama maliyet</span><span className="dv tnum">{formatCurrency(h.avgCost, h.currency)}</span></div>
           <div className="drow"><span className="dk">Güncel fiyat</span><span className="dv tnum">{h.currentPrice === null ? "—" : formatCurrency(h.currentPrice, h.currency)}</span></div>
-          <div className="drow"><span className="dk">Toplam maliyet</span><span className="dv tnum">{formatCurrency(h.totalCost, h.currency)}</span></div>
+          <div className="drow"><span className="dk">Toplam maliyet</span><span className="dv tnum">{formatCurrency(h.totalCost, h.baseCurrency)}</span></div>
           <div className="drow"><span className="dk">Portföy ağırlığı</span><span className="dv tnum">{formatPercent(h.weight, 1, true, false)}</span></div>
 
           {h.bes && (

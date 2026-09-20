@@ -117,7 +117,7 @@ public class PortfolioAnonymizerTests
         AssetType type, string name, decimal cost, decimal? value, BesDto? bes = null) =>
         new(
             Id: Guid.NewGuid(), AssetType: type, Name: name, Symbol: null,
-            Currency: CurrencyCode.TRY, Unit: "adet", Quantity: 1m, AvgCost: cost,
+            Currency: CurrencyCode.TRY, BaseCurrency: CurrencyCode.TRY, Unit: "adet", Quantity: 1m, AvgCost: cost,
             CurrentPrice: value, TotalCost: cost, CurrentValue: value,
             Profit: value is null ? null : value - cost,
             ReturnRatio: value is null || cost == 0 ? null : (value - cost) / cost,
