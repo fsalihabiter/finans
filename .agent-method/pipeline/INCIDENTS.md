@@ -1,3 +1,4 @@
 # INCIDENTS — problems discovered outside planned work
 | ID | Date | Summary | Severity | Linked GD/D | Status |
 |---|---|---|---|---|---|
+| INC-001 | 2026-09-20 | **4 entegrasyon testi ortam hatasıyla kırmızı:** `HealthEndpointTests` (1) + `ObservabilitySecurityTests` (3) → `InvalidOperationException: The server has not been started or no web application was configured` (`WebApplicationFactory`/`TestServer` ayağa kalkmıyor). **Kapsam dışı ve önceden var:** aynı 4 test HEAD'de (`30c0bc9`, temiz worktree) de kırmızı — GD-001 değişiklikleriyle ilgisiz. TASKLOG 2026-07-26 girdisinde de aynı hata "bilinen ortam hatası" olarak geçiyor. ⚠ Bu **test borcu değildir** (INV-08): kapsam eksik değil, koşum ortamı bozuk. Sağlık/gözlemlenebilirlik uçları bu testlerle korunuyordu → şu an korumasız. | high | — | open |

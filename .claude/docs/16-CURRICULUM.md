@@ -703,7 +703,7 @@ soyut etiket kullanılır. Temettü anlatımı bir strateji önerisine dönüşm
 | 8 | Core/Trap | **"Garantili yüksek getiri" çelişkisi** | 🖼 `guarantee-contradiction` **(çok panelli)** |
 | 9 | Context/Explain | Üç soru: kim ödüyor · kaynağı ne · kim güvence veriyor | 🖼 `three-questions` |
 | 10 | Context/Example | Aynı vaadin iki hâli: kurumsal güvenceli ↔ güvencesiz | 🖼 `guaranteed-by-whom` |
-| 11 | Context/Trap | "Herkes kazanıyor" — sürü ve kaçırma korkusu (S4-L2 köprüsü) | — |
+| 11 | **Core**/Trap | "Herkes kazanıyor" — sürü ve kaçırma korkusu (S4-L2 köprüsü) | — |
 | 12 | Deep/Explain | Risk kişiye göre değişmez; **taşınabilirliği** değişir (vade → S0-L8) | 🖼 `risk-carrying-capacity` |
 | 13 | Core/Source | Bu bilgiler nereden geliyor? | — |
 
@@ -714,10 +714,17 @@ akışını takip etme: ödemeler kimin parasından yapılıyor.
 **Tuzaklar:** "Risk = kayıp" · "Garantili yüksek getiri mümkün" · "Herkes
 kazanıyorsa güvenlidir".
 
-**Figür planı (8):** `uncertainty-fan` · `two-paths-same-average`✳ ·
+**Figür planı (9):** `uncertainty-fan` · `two-paths-same-average`✳ ·
 `volatility-band` · `risk-premium-step` · `where-money-comes-from`✳ ·
 `guarantee-contradiction`✳ · `three-questions` · `guaranteed-by-whom` ·
 `risk-carrying-capacity`.
+
+> ⚠ **Düzeltme (2026-09-20, GD-001):** 11. aşama künyede `Context/Trap` yazıyordu;
+> kod tarafında **tuzak blokları Core katmanda kalır** (T6.7 kararı: tuzak
+> başlangıç seviyesinden gizlenmemeli) ve bu kural testle bağlı
+> (`Example_blocks_declare_a_figure_and_traps_stay_in_core_tier`). Künye satırı
+> `Core/Trap` olarak düzeltildi. Ayrıca figür sayısı 8 değil **9**'dur
+> (liste zaten dokuz anahtar sayıyordu).
 
 **Değerlendirme (9):** Easy — risk tanımı, kayıptan ayrımı · Medium — iki yolun
 oynaklığını karşılaştırma, üç sorunun uygulanması · Hard — garanti çelişkisini

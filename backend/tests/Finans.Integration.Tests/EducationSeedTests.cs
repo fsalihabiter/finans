@@ -95,6 +95,7 @@ public sealed class EducationSeedTests
                 "inflation", "purchasing-power", "price-index", // Set 0 Ders 4 "Bekleyen para neden erir"
                 "asset-class", "ownership-vs-lending", "liquidity", // Set 0 Ders 5 "Varlık türleri turu"
                 "return-source", "capital-gain", "cash-flow-return", // Set 0 Ders 6 "Getiri nereden gelir"
+                "risk", "volatility", "guaranteed-return-fallacy", // Set 0 Ders 7 "Risk ne demek"
             });
 
         // F/K dersi iki etikete bağlı (F/K + PD/DD); diğerleri tekil.
@@ -137,7 +138,7 @@ public sealed class EducationSeedTests
 
         // Bağımsız (derse bağlı olmayan) test yok — her quiz bir derse bağlı.
         // T6.1: 1→5 · T6.16 (Set 0 L1-L6): 5→11.
-        (await db.Quizzes.CountAsync()).Should().Be(11);
+        (await db.Quizzes.CountAsync()).Should().Be(12);
         (await db.Quizzes.CountAsync(q => q.LessonId == null)).Should().Be(0);
     }
 
@@ -164,16 +165,33 @@ public sealed class EducationSeedTests
         // T6.16 — Set 0: S0-L1..L6. +1 track, +6 ders, +16 kavram, +6 quiz
         // (54 soru, 192 seçenek), +78 bölüm, +5 ön-koşul (S0 zinciri).
         (await db.LearningTracks.CountAsync()).Should().Be(2);
-        (await db.Lessons.CountAsync()).Should().Be(11);
-        (await db.ConceptTags.CountAsync()).Should().Be(22);
-        (await db.LessonConceptTags.CountAsync()).Should().Be(22);
-        (await db.LessonPrerequisites.CountAsync()).Should().Be(9);
-        (await db.Quizzes.CountAsync()).Should().Be(11);
-        (await db.QuizQuestions.CountAsync()).Should().Be(81);    // + S0-L6 9
-        (await db.QuizOptions.CountAsync()).Should().Be(286);     // + S0-L6 32
-        (await db.LessonSections.CountAsync()).Should().Be(132);  // + S0-L6 13
+        (await db.Lessons.CountAsync()).Should().Be(12);
+        (await db.ConceptTags.CountAsync()).Should().Be(25);
+        (await db.LessonConceptTags.CountAsync()).Should().Be(25);
+        (await db.LessonPrerequisites.CountAsync()).Should().Be(10);
+        (await db.Quizzes.CountAsync()).Should().Be(12);
+        (await db.QuizQuestions.CountAsync()).Should().Be(90);    // + S0-L6 9
+        (await db.QuizOptions.CountAsync()).Should().Be(318);     // + S0-L7 32 (2 doğru-yanlış 2 şıklı)
+        (await db.LessonSections.CountAsync()).Should().Be(145);  // + S0-L6 13
         (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
+
+    /// <summary>
+    /// D-017 · <c>16-CURRICULUM.md</c>: "Senin portföyünde" (<see cref="SectionKind.LiveContext"/>)
+    /// bloğu, künyede tanımlı olan derslerde ZORUNLUDUR. Aşağıdaki derslerin künyesi
+    /// bilinçli olarak "LiveContext — yok" diyor; bu liste o beyanın makine karşılığıdır.
+    ///
+    /// <para><b>Liste büyüyorsa bu bir uyarı sinyalidir:</b> "Senin portföyünde" vaadi
+    /// (<c>14</c> §4-A1) aşınıyor demektir — gözden geçir (D-017 Consequences).</para>
+    ///
+    /// <para>Bir derse uygun bir bağlam metriği geldiğinde: künyeyi güncelle, bloğu ekle,
+    /// satırı BURADAN ÇIKAR. Test iki yönlü çalışır, unutulamaz.</para>
+    /// </summary>
+    private static readonly Dictionary<string, string> LessonsWithoutLiveContext = new()
+    {
+        ["risk-ne-demek"] = "S0-L7: risk kavramının karşılığı olan bir portföy metriği yok; "
+            + "mevcut 9 ContextKey'den hiçbiri dürüstçe bu dersin kavramına bağlanmıyor",
+    };
 
     // ── T6.1: katmanlı içerik (SC-E12) ───────────────────────────────────────
 
@@ -202,8 +220,21 @@ public sealed class EducationSeedTests
             own.Should().Contain(s => s.Kind == SectionKind.Example, $"'{lesson.Slug}' jenerik örnek taşımalı");
             own.Should().Contain(s => s.Kind == SectionKind.Trap, $"'{lesson.Slug}' tuzak bloğu taşımalı");
 
-            own.Should().Contain(s => s.Kind == SectionKind.LiveContext,
-                $"'{lesson.Slug}' \"Senin portföyünde\" bağlam bloğu taşımalı (T6.2)");
+            // D-017: "Senin portföyünde" bloğunun zorunluluğu KÜNYEDEN gelir (16-CURRICULUM).
+            // Künye bir ders için "LiveContext — yok (karşılığı bir metrik yok)" diyorsa
+            // bloksuzluk sözleşmeye UYGUNDUR; istisna sessiz bir boşluk değil, burada
+            // adıyla ve gerekçesiyle duran, testle doğrulanan bir beyandır.
+            if (LessonsWithoutLiveContext.TryGetValue(lesson.Slug, out var whyNoLiveContext))
+            {
+                own.Should().NotContain(s => s.Kind == SectionKind.LiveContext,
+                    $"'{lesson.Slug}' künyesi LiveContext taşımıyor ({whyNoLiveContext}) — " +
+                    "blok eklendiyse künye ve bu liste birlikte güncellenmeli (D-017)");
+            }
+            else
+            {
+                own.Should().Contain(s => s.Kind == SectionKind.LiveContext,
+                    $"'{lesson.Slug}' \"Senin portföyünde\" bağlam bloğu taşımalı (T6.2)");
+            }
             own.Select(s => s.OrderIndex).Should().BeInAscendingOrder();
             own.Select(s => s.OrderIndex).Should().Equal(Enumerable.Range(1, own.Count));
             own.Should().OnlyContain(s => s.BodyMarkdown.Length > 100); // boş/yer tutucu içerik yok
@@ -322,9 +353,9 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(132);
-        (await db.Quizzes.CountAsync()).Should().Be(11);
-        (await db.Lessons.CountAsync()).Should().Be(11); // dersler çoğaltılmadı
+        (await db.LessonSections.CountAsync()).Should().Be(145);
+        (await db.Quizzes.CountAsync()).Should().Be(12);
+        (await db.Lessons.CountAsync()).Should().Be(12); // dersler çoğaltılmadı
     }
 
     [Fact]
@@ -341,13 +372,13 @@ public sealed class EducationSeedTests
         live.Should().HaveCount(11);
         db.LessonSections.RemoveRange(live);
         await db.SaveChangesAsync();
-        (await db.LessonSections.CountAsync()).Should().Be(121); // diğer bloklar yerinde
+        (await db.LessonSections.CountAsync()).Should().Be(134); // diğer bloklar yerinde
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
         (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(11);
-        (await db.LessonSections.CountAsync()).Should().Be(132);
+        (await db.LessonSections.CountAsync()).Should().Be(145);
     }
 
     [Fact]
@@ -379,7 +410,7 @@ public sealed class EducationSeedTests
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
-        (await db.LessonSections.CountAsync()).Should().Be(132); // çoğaltma yok
+        (await db.LessonSections.CountAsync()).Should().Be(145); // çoğaltma yok
     }
 
     [Fact]
