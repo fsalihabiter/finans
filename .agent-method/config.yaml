@@ -1,0 +1,28 @@
+# ADM configuration — canonical behavior parameters.
+# Machine surface (keys, file names, IDs) is always English.
+schema_version: "2.0"
+
+method:
+  id: adm
+  # Human-facing output language ONLY (briefings, summaries, report bodies).
+  language: tr
+
+workflow:
+  max_active_phases: 1
+  phase_gd_warning_threshold: 15
+  require_human_acceptance: true
+  # v2 alpha assumption: one active writable ADM session per repository.
+  single_active_session: true
+
+git:
+  required: true
+
+review:
+  required_for_code_changes: true
+  allow_sequential_fallback: true
+
+generated:
+  # Generated projections are OPTIONAL in v2 alpha. The framework is fully
+  # functional with an empty list: adm-open builds the briefing directly from
+  # canonical sources. Deterministic generation returns with the CLI (V2.2).
+  projections: []

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADM review output (evidence/reviews/REVIEW-*.md frontmatter)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["review_id", "runtime", "timestamp", "scope", "base_ref", "head_ref", "active_gd", "reviewers", "findings"],
+  "properties": {
+    "review_id": { "type": "string", "pattern": "^REVIEW-[0-9A-Za-z-]+$" },
+    "runtime": { "type": "string" },
+    "timestamp": { "type": "string" },
+    "scope": { "type": "string" },
+    "base_ref": { "type": "string" },
+    "head_ref": { "type": "string" },
+    "active_gd": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^GD-[0-9]{3}$" }] },
+    "reviewers": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "severity", "evidence", "category", "file", "summary", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^RV-[0-9]{3}$" },
+          "severity": { "enum": ["critical", "high", "medium", "low"] },
+          "evidence": { "enum": ["proven", "strong", "heuristic"] },
+          "category": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "rule_or_decision": { "type": "string" },
+          "summary": { "type": "string" },
+          "rationale": { "type": "string" },
+          "status": { "enum": ["open", "resolved", "accepted", "false-positive"] },
+          "resolution": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "resolved_at": { "type": "string" },
+              "evidence_ref": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

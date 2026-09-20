@@ -1,3 +1,5 @@
+# (ADM v2 alpha: no ignored framework state. Add project-specific entries below.)
+
 # ───────────────────────────── Finans monorepo .gitignore ─────────────────────────────
 # Kural (CLAUDE.md §8, §13): build çıktıları ve SIRLAR asla commit edilmez.
 
@@ -95,7 +97,12 @@ compose/certs/
 .claude/skills/impeccable/
 .claude/skills/taste-skill/
 
-# Ajan araç zinciri dosyalari (Claude Code / Codex — yerel gelistirme araclari, urune ait degil, repoya girmez)
-.agents/
+# Ajan araç zinciri.
+# ⚠ `.agents/` ve `AGENTS.md` ARTIK YOK SAYILMAZ (2026-09-20, DOCTOR-001 · DR-001):
+# ADM'nin kanonik skill tanımları `.agents/skills/` altında, işletim sözleşmesi
+# `AGENTS.md`'de yaşar. Yok sayılırlarsa temiz bir klonda `.claude/skills/adm-*`
+# shim'leri olmayan dosyaları gösterir (INV-16) ve CLAUDE.md'nin `@AGENTS.md`
+# importu kırılır. Kanonik durum `.agent-method/` de versiyonlanır.
+# `.codex/` yalnızca üretilen adaptör shim'leri barındırdığından dışarıda kalır
+# (INV-14: adaptör silinince hiçbir alan verisi kaybolmaz).
 .codex/
-AGENTS.md

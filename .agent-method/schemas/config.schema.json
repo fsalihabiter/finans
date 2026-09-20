@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADM config (config.yaml) — v2 alpha",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "method", "workflow", "git", "review", "generated"],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "language"],
+      "properties": {
+        "id": { "const": "adm" },
+        "language": { "type": "string", "minLength": 2, "maxLength": 5 }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_active_phases", "phase_gd_warning_threshold", "require_human_acceptance", "single_active_session"],
+      "properties": {
+        "max_active_phases": { "type": "integer", "minimum": 1 },
+        "phase_gd_warning_threshold": { "type": "integer", "minimum": 1 },
+        "require_human_acceptance": { "type": "boolean" },
+        "single_active_session": { "const": true }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required"],
+      "properties": { "required": { "type": "boolean" } }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_for_code_changes", "allow_sequential_fallback"],
+      "properties": {
+        "required_for_code_changes": { "type": "boolean" },
+        "allow_sequential_fallback": { "type": "boolean" }
+      }
+    },
+    "generated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projections"],
+      "properties": {
+        "projections": {
+          "type": "array",
+          "items": { "enum": ["CURRENT_STATE", "DECISION_INDEX", "BACKLOG", "MASTER", "CHANGELOG"] },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

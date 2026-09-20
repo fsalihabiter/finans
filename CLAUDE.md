@@ -1,3 +1,14 @@
+@AGENTS.md
+
+# Claude Code Adapter
+
+This repository uses ADM (Agent Development Method).
+
+- Claude-specific skill shims live under `.claude/skills/`.
+- Canonical workflow definitions live under `.agents/skills/`.
+- Do not treat `.claude/` as framework state; canonical state is `.agent-method/`.
+- Each shim points at its canonical skill. Read and follow the canonical file exactly.
+
 # CLAUDE.md — Finans / Portföy Uygulaması
 
 > Bu dosya Claude Code tarafından otomatik okunur. Projenin vizyonunu, mimari
@@ -212,7 +223,8 @@ finans/                       ← monorepo (pnpm workspaces)
 
 **Faz 0-5 tamam (Faz 5 kapandı 2026-07-12: Değer Seyri + Senaryo v1 canlı).**
 Dalga 1 finali: **Faz 6 — Eğitim MVP + kavram sözlüğü** (vizyonun kalbi).
-Görev kırılımı: `.claude/docs/08-BACKLOG.md` · strateji: `.claude/docs/14-PRODUCT-STRATEGY.md`.
+Görev kırılımı: `.agent-method/pipeline/POOL.md` (kanonik) · fazlar:
+`.agent-method/charter/PHASES.md` · strateji: `.claude/docs/14-PRODUCT-STRATEGY.md`.
 
 ---
 
@@ -228,11 +240,17 @@ Görev kırılımı: `.claude/docs/08-BACKLOG.md` · strateji: `.claude/docs/14-
 
 ## 11. Görev Takibi Protokolü (OTOMATİK — her oturum)
 
-> Bu projede yapılan her anlamlı iş otomatik izlenir. Bu protokole **kullanıcı
-> hatırlatmadan** uy. Detay ve dosyalar: `.claude/tasks/README.md`.
+> **Bu proje 2026-09-20'den beri ADM (Agent Development Method) kullanır.**
+> Kanonik durum `.agent-method/` altındadır; işletim sözleşmesi `AGENTS.md`.
+> Bu protokole **kullanıcı hatırlatmadan** uy.
 
-**Oturum başında:** SessionStart hook'u (`.claude/settings.json`) aktif görevleri
-ve son worklog girdisini bağlama getirir. Bunu oku, "nerede kaldık"ı oradan al.
+**Oturum başında → `adm-open`.** Aktif fazı, aktif döngüyü (GD), engelleri ve
+son oturum kanıtını getirir. "Nerede kaldık" oradan okunur —
+`.agent-method/state.yaml` + `evidence/sessions/` içindeki **en yeni `closed_at`**
+dosyası (bir günlüğün "en üstü" değil).
+
+**Oturum sonunda → `adm-close`.** Oturum kanıtını yazar, durumu tazeler, sıradaki
+adımı bırakır. Runtime değiştirirken (Claude Code → Codex → ...) de bu çalışır.
 
 **Anlamlı bir iş yaptıktan sonra** (kod değişikliği, yeni doküman, kalıcı karar,
 şema/endpoint ekleme, düzeltme, bağımlılık ekleme), **yanıtı bitirmeden önce**:
@@ -240,18 +258,40 @@ ve son worklog girdisini bağlama getirir. Bunu oku, "nerede kaldık"ı oradan a
 1. **Testler yeşil mi?** Kod/davranış değiştiyse ilgili testler yazılmış ve
    geçiyor olmalı (yeşil-kapı, bkz. §12). Değilse görev "tamam" değildir.
    Ayrıca **güvenlik & gözlemlenebilirlik kapısı** (§13) karşılanmalı.
-2. **`.claude/tasks/TASKLOG.md`** → en üste bir girdi ekle (dosyadaki şablonla:
-   tarih, görev ID, ne yapıldı, dokunulan dosyalar, **test**, karar/not, durum,
-   sıradaki).
-3. **`.claude/docs/08-BACKLOG.md`** → ilgili görevin durumunu güncelle
-   (`[ ]→[~]→[x]`); varsa `09` §5 senaryo durumunu da güncelle.
-4. **`.claude/tasks/ACTIVE.md`** → sıradaki göreve göre tazele (kısa tut).
-5. Kalıcı bir **karar** verildiyse onu ilgili kalıcı dokümana da işle
-   (örn. veri modeli → `docs/03-DATA-MODEL.md`).
+   ⚠ Gerekli doğrulama kırmızıyken **GD tamamlanamaz** (INV-07); yalnızca
+   *kapsam borcu* `.agent-method/pipeline/TEST_DEBT.md`'ye yazılır (INV-08).
+2. **Aktif GD dosyası** (`.agent-method/cycles/GD-NNN.md`) → görev listesini ve
+   durumu güncelle; kabul kriterlerini **sen onaylamazsın**, kanıtı sunarsın
+   (insan onayı — bkz. `AGENTS.md` §4.3).
+3. **`.agent-method/pipeline/POOL.md`** → kalem GD'ye dönüştüyse veya kapandıysa
+   satırını güncelle. Plan dışı çıkan işler: `IDEAS.md` (ham fikir),
+   `INCIDENTS.md` (planlı iş dışında çıkan sorun).
+4. Kalıcı bir **karar** verildiyse `.agent-method/decisions/D-NNN-<slug>.md`
+   olarak yaz (bir karar = bir dosya, ID'ler tekil ve yeniden kullanılmaz —
+   INV-09) ve **Keywords** bölümünü doldur (Doctor'ın drift taraması bunu kullanır).
+   Kararın teknik karşılığını ilgili kalıcı dokümana da işle
+   (örn. veri modeli → `.claude/docs/03-DATA-MODEL.md`).
+5. Yeni/değişen bir yetenek çıktıysa `.agent-method/registry/CAPABILITIES.md`'yi
+   güncelle. **Kod yazmadan önce** bu dosya taranır: Reuse → Extend → Extract → New.
 
 **Kayıt GEREKMEZ:** salt soru-cevap, keşif/okuma, hiçbir şeyi değiştirmeyen turlar.
 
+**Diğer ADM komutları:** `adm-review` (kalite kapısı gerektiğinde),
+`adm-doctor` (bir şey ters geldiğinde / faz kapanışından önce),
+`adm-phase` (faz yönetişimi).
+
 > Bugünün tarihini sistemden al; göreceli tarih ("yarın") yazma, mutlak tarih yaz.
+> Tutarsızlık görürsen **sessizce düzeltme — bildir** ve kanonik kaynağı göster.
+
+### 11.1 Eski takip dosyaları (dondu, 2026-09-20)
+
+`.claude/tasks/TASKLOG.md` ve `ACTIVE.md` **tarihsel kayıttır; yeni girdi
+eklenmez.** Yeni oturum kanıtı `.agent-method/evidence/sessions/` altında birikir.
+`.claude/docs/` mühendislik dokümanları geçerliliğini korur; **tek istisna
+`08-BACKLOG.md`** — açık işler `.agent-method/pipeline/POOL.md`'ye taşındı, dosya
+oraya işaret eden bir yönlendiriciye indirgendi (INV-12: iki kanonik kaynak
+olamaz). Görev durumu **POOL'dan** okunur ve oraya yazılır. Kapanmış görevlerin
+uygulama notları TASKLOG'da ve git geçmişinde (`ac61b7e`) durmaya devam eder.
 
 ---
 

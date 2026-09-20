@@ -10,8 +10,9 @@
 
 Her geliştirme oturumunun başında:
 
-1. **Nerede olduğunu bul:** [`08-BACKLOG.md`](08-BACKLOG.md) → aktif fazın
-   "Sıradaki" görevini al. Görevler bağımlılık sırasına dizili.
+1. **Nerede olduğunu bul:** `adm-open` çalıştır → aktif faz, aktif döngü (GD) ve
+   son oturum kanıtı. Açık işler: [`POOL.md`](../../.agent-method/pipeline/POOL.md)
+   (kanonik backlog; görevler bağımlılık sırasına dizili).
 2. **Bağlamı tazele:** O görev hangi alana giriyorsa ilgili dokümanı aç
    (veritabanı → `03`, endpoint → `04`, ekran → `05`, LLM → `07`).
 3. **Kuralları doğrula:** Kod yazmadan önce `CLAUDE.md` § 2 ("tavsiye değil") ve
@@ -34,7 +35,7 @@ Her geliştirme oturumunun başında:
 | 05 | [Mobile Spec / Mobil Şartname](05-MOBILE-SPEC.md) | Taslaktan türetilmiş ekran ekran şartname, bileşen envanteri, navigasyon, durum yönetimi, tema. Ekran yazarken. |
 | 06 | [Dev Playbook / Geliştirme El Kitabı](06-DEV-PLAYBOOK.md) | Ortam kurulumu, konvansiyonlar, test stratejisi, git akışı, faz başına DoD. Oturum başında. |
 | 07 | [LLM Integration / LLM Entegrasyonu](07-LLM-INTEGRATION.md) | Prompt tasarımı, JSON şeması, "tavsiye değil" korkulukları, cache, sağlayıcı seçimi. Faz 3-4'te. |
-| 08 | [Backlog / Görev Listesi](08-BACKLOG.md) | Faz faz, bağımlılık sıralı, uygulanabilir görev kırılımı + "sıradaki adım". Her oturumda. |
+| 08 | [Backlog → taşındı](08-BACKLOG.md) | ⚠ Artık kanonik değil. Açık işler `.agent-method/pipeline/POOL.md`'de, fazlar `charter/PHASES.md`'de. Bu dosya yalnız yönlendirir. |
 | 09 | [Testing Strategy / Test Stratejisi](09-TESTING-STRATEGY.md) | Senaryo-önce/yeşil-kapı disiplini, test piramidi, senaryo kataloğu, görev başına test akışı. Kod/test yazarken. |
 | 10 | [Performance & Scalability / Performans](10-PERFORMANCE-SCALABILITY.md) | Performans bütçeleri, önbellekleme katmanları, stateless ölçeklenme, maliyet kontrolü. Hız/ölçek/maliyet konusunda. |
 | 11 | [Security / Güvenlik](11-SECURITY.md) | Tehdit modeli, kimlik & yetki (per-user izolasyon), veri koruması, sırlar, KVKK, güvenlik testleri. Her endpoint/PR'da. |
