@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADM canonical state (state.yaml) — single-state model (v2 alpha)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "active", "session", "blockers", "review"],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "name": { "type": "string" }
+      }
+    },
+    "active": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase_id", "gd_id"],
+      "properties": {
+        "phase_id": { "anyOf": [ { "type": "null" }, { "type": "string", "pattern": "^PHASE-[0-9]{3}$" } ] },
+        "gd_id":    { "anyOf": [ { "type": "null" }, { "type": "string", "pattern": "^GD-[0-9]{3}$" } ] }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "runtime", "started_at", "start_sha"],
+      "properties": {
+        "id": { "anyOf": [ { "type": "null" }, { "type": "string", "pattern": "^S-[0-9]{3,}$" } ] },
+        "runtime": { "anyOf": [ { "type": "null" }, { "enum": ["claude-code", "codex", "cursor", "antigravity", "other"] } ] },
+        "started_at": { "anyOf": [ { "type": "null" }, { "type": "string" } ] },
+        "start_sha": { "anyOf": [ { "type": "null" }, { "type": "string" } ] }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "summary"],
+        "properties": {
+          "id": { "type": "string" },
+          "summary": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["last_review_id", "status"],
+      "properties": {
+        "last_review_id": { "anyOf": [ { "type": "null" }, { "type": "string" } ] },
+        "status": { "enum": ["not-run", "pending", "clean", "findings"] }
+      }
+    }
+  }
+}

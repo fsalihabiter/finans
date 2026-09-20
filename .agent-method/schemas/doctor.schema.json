@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADM doctor output (evidence/doctor/DOCTOR-*.md frontmatter)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["doctor_run_id", "timestamp", "runtime", "mode", "scope", "findings", "status"],
+  "properties": {
+    "doctor_run_id": { "type": "string", "pattern": "^DOCTOR-[0-9A-Za-z-]+$" },
+    "timestamp": { "type": "string" },
+    "runtime": { "type": "string" },
+    "mode": { "enum": ["structural", "semantic", "full"] },
+    "scope": { "type": "string" },
+    "status": { "enum": ["clean", "findings", "blocked"] },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "severity", "evidence", "check", "summary", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^DR-[0-9]{3}$" },
+          "severity": { "enum": ["critical", "high", "medium", "low"] },
+          "evidence": { "enum": ["proven", "strong", "heuristic"] },
+          "check": {
+            "type": "string",
+            "description": "Invariant reference (e.g. INV-04) or named structural check (e.g. generated-drift). Canonical list: docs/INVARIANTS.md"
+          },
+          "file": { "type": "string" },
+          "summary": { "type": "string" },
+          "canonical_source": { "type": "string", "description": "When two files conflict: which one is truth." },
+          "status": { "enum": ["open", "resolved", "accepted", "false-positive"] },
+          "resolution": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "resolved_at": { "type": "string" },
+              "evidence_ref": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

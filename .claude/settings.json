@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/tasks/session-start.mjs"
+            "command": "node .claude/hooks/adm-session-start.mjs"
           }
         ]
       }
