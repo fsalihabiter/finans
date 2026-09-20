@@ -9,13 +9,13 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-001     # in-progress (açıldı: 2026-09-20, oturum S-001)
+  gd_id: GD-001     # status: review — kabul insan onayı bekliyor; önce adm-review (S-001)
 
 session:            # current open session; cleared by adm-close
-  id: S-001
-  runtime: claude-code
-  started_at: "2026-09-20T13:21:32Z"
-  start_sha: 30c0bc9
+  id: null          # S-001 kapandı → evidence/sessions/S-001.md
+  runtime: null
+  started_at: null
+  start_sha: null
 
 blockers: []
 # DOCTOR-001 bulguları DR-001..DR-006 hâlâ `open`; hiçbiri critical değil,
@@ -25,4 +25,6 @@ blockers: []
 
 review:
   last_review_id: null
-  status: not-run   # not-run | pending | clean | findings
+  # Kod değişti ve review koşmadı; config.review.required_for_code_changes: true
+  # → GD-001 `review` durumunda bekliyor.
+  status: pending   # not-run | pending | clean | findings
