@@ -725,10 +725,18 @@ public sealed class HoldingService(
             // ToBesDto bunu kullanarak her bir katkı için ayrı fon getirisi hesaplar (T-BES.10).
             var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow());
 
+            // Varlığın KENDİ birimindeki toplamlar: aynı saf formüller, ÇEVRİLMEMİŞ girdiler
+            // (h.AvgCost / h.CurrentPrice zaten varlığın biriminde). Detay ekranı bunları gösterir.
+            var costNative = PortfolioCalculationService.TotalCost(h.Quantity, h.AvgCost);
+            var valueNative = PortfolioCalculationService.CurrentValue(h.Quantity, h.CurrentPrice);
+
             dtos.Add(new HoldingDto(
                 h.Id, h.Asset.Type, h.Asset.Name, h.Asset.Symbol, h.Asset.PricingCurrency, baseCcy, h.Asset.Unit,
                 h.Quantity, h.AvgCost, h.CurrentPrice,
-                r.TotalCost, r.CurrentValue, r.Profit, r.ReturnRatio, r.Weight, bes));
+                r.TotalCost, r.CurrentValue, r.Profit, r.ReturnRatio, r.Weight, bes,
+                TotalCostNative: costNative,
+                CurrentValueNative: valueNative,
+                ProfitNative: PortfolioCalculationService.Profit(valueNative, costNative)));
         }
 
         return dtos;

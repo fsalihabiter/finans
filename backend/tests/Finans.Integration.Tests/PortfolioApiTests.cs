@@ -116,6 +116,14 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         // totalCost ≠ quantity × avgCost olur — bu BEKLENEN, ama yalnız kur farkı kadar.
         (aapl.TotalCost / (aapl.Quantity * aapl.AvgCost)).Should().Be(48m);
 
+        // Varlığın KENDİ birimindeki toplamlar (kullanıcı bildirimi 2026-09-21): detay ekranı
+        // "0,0603 × $740,84 = $44,67" görmeli, ₺ karşılığını değil. Çevrilmemiş, aynı formüller.
+        aapl.TotalCostNative.Should().Be(2100m);      // 12 × 175 (USD)
+        aapl.CurrentValueNative.Should().Be(2520m);   // 12 × 210 (USD)
+        aapl.ProfitNative.Should().Be(420m);
+        // Getiri oranı birimden bağımsız: maliyet ve değer aynı kurla çevrilir.
+        ((aapl.CurrentValueNative - aapl.TotalCostNative) / aapl.TotalCostNative).Should().Be(aapl.ReturnRatio);
+
         // TRY kalemde iki birim çakışır → çevrim kimliktir (regresyon: çapraz kurda
         // bozulan hesap TRY kalemde görünmez, bu yüzden ikisi birlikte denetlenir).
         var goldItem = holdings.Single(h => h.AssetType == AssetType.Gold);

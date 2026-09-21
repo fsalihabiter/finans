@@ -34,7 +34,17 @@ public sealed record HoldingDto(
     decimal? ReturnRatio,
     decimal Weight,
     BesDto? Bes,
-    IReadOnlyList<TransactionDto>? Transactions = null);
+    IReadOnlyList<TransactionDto>? Transactions = null,
+    // ── Varlığın KENDİ para birimindeki toplamlar (<see cref="Currency"/>) ──
+    // Kullanıcı bildirimi 2026-09-21: 0,0603 × $721,63 ile aldığı hisse için detayda
+    // $44,67 görmek istiyor — ₺2.179,98 değil. Liste satırları toplandığı için baz para
+    // biriminde kalır (yukarıdaki alanlar); detay ise varlığı KENDİ biriminde anlatır.
+    // Hesap aynı saf formüllerle (PortfolioCalculationService), çevrilmemiş girdilerle —
+    // istemci para hesaplamaz (D-001). Getiri oranı iki birimde de aynıdır (maliyet ve
+    // değer aynı güncel kurla çevrildiği için), ayrı alan gerekmez.
+    decimal? TotalCostNative = null,
+    decimal? CurrentValueNative = null,
+    decimal? ProfitNative = null);
 
 /// <summary>
 /// BES kalemi — devlet katkısı kendi katkısından AYRI (CLAUDE.md §1, 03 §A). Tüm toplamlar
