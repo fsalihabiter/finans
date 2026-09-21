@@ -129,7 +129,17 @@ public sealed class HoldingService(
         if (alreadyHeld)
             throw new ConflictException("Bu BES planında zaten bir pozisyonunuz var.");
 
+        if (request.OwnFundValue is < 0m || request.StateFundValue is < 0m)
+            throw new ValidationException("fundValue", "must_be_non_negative", "Fon değeri negatif olamaz.");
+
         var planActive = request.MonthlyAmount is > 0m && request.ContributionDay is not null;
+
+        // GD-002: iki havuz ayrı girildiyse onları kullan; yalnız toplam verildiyse katkı
+        // oranında böl. Girilen fon değeri ASLA yok sayılmaz (okuma yolu değeri artık bu iki
+        // alandan türetiyor — tek alana yazıp bırakmak değeri sessizce kaybettirirdi).
+        var (ownFund, stateFund) = request.OwnFundValue is not null || request.StateFundValue is not null
+            ? (request.OwnFundValue, request.StateFundValue)
+            : BesCalculator.SplitTotalFundValue(request.CurrentFundValue, request.OpeningOwn, request.OpeningState);
 
         var holding = new Holding
         {
@@ -152,6 +162,8 @@ public sealed class HoldingService(
             MonthlyAmount = request.MonthlyAmount,
             ContributionDay = request.ContributionDay,
             PlanActive = planActive,
+            OwnFundValue = ownFund,
+            StateFundValue = stateFund,
         };
         // Açılış bakiyesi = tek "Opening" katkı kaydı (başlangıç tarihli → yatırılmış sayılır).
         // Geçmiş tek tek girilmez; verilen güncel toplamlar bu satıra yazılır.
@@ -354,8 +366,18 @@ public sealed class HoldingService(
 
         if (request.ContributionDay is { } cd && cd is < 1 or > 28)
             throw new ValidationException("contributionDay", "out_of_range", "Ödeme günü 1–28 arasında olmalı.");
+        if (request.OwnFundValue is < 0m)
+            throw new ValidationException("ownFundValue", "must_be_non_negative", "Fon değeri negatif olamaz.");
+        if (request.StateFundValue is < 0m)
+            throw new ValidationException("stateFundValue", "must_be_non_negative", "Fon değeri negatif olamaz.");
 
         var bes = holding.BesDetails;
+
+        // GD-002: iki havuz ayrı ayrı güncellenir; verilmeyen alan korunur.
+        if (request.OwnFundValue is not null)
+            bes.OwnFundValue = request.OwnFundValue;
+        if (request.StateFundValue is not null)
+            bes.StateFundValue = request.StateFundValue;
 
         if (request.JoinedAtUtc is { } joined)
         {
@@ -554,7 +576,7 @@ public sealed class HoldingService(
     /// fon getirisi <c>r = fund / (own+state) − 1</c> bu değerden türetilir; her iki katkı için ayrı
     /// güncel değer + kâr/zarar hesaplanır (T-BES.10). Null veya taban 0 ise getiri alanları null/0.
     /// </param>
-    private static BesDto? ToBesDto(BesDetails? bes, ICollection<BesContribution> contributions, DateTime asOf, decimal? fundValue)
+    private static BesDto? ToBesDto(BesDetails? bes, ICollection<BesContribution> contributions, DateTime asOf)
     {
         if (bes is null)
             return null;
@@ -605,14 +627,20 @@ public sealed class HoldingService(
         // Fon getirisi (T-BES.10): saf hesap BesCalculator'da — fon hem own hem state birikimi üzerinde
         // büyür, aynı r ikisine işler. Taban = yatırılmış toplamlar (StatePending'in state kısmı "yolda",
         // tabana ve getiri hesabına girmez — kendi içinde tutarlı).
-        var fund = BesCalculator.FundReturnFor(ownDeposited, stateDeposited, fundValue);
+        // GD-002: iki havuz AYRI fon değerine sahip; her birinin getirisi kendi fonundan
+        // çıkar (orantılı bölme varsayımı kaldırıldı).
+        var fund = BesCalculator.FundReturnFor(
+            ownDeposited, stateDeposited, bes.OwnFundValue, bes.StateFundValue);
 
         return new BesDto(
             ownDeposited, stateDeposited, ownPending, statePending,
             BesCalculator.VestingStateFor(bes.JoinedAtUtc, asOf), vestedRate, vestedAmount,
             bes.JoinedAtUtc, bes.BirthYear, bes.ProviderName, list, due,
             bes.PlanActive, bes.MonthlyAmount, bes.ContributionDay,
-            fund.Rate, fund.OwnValue, fund.OwnProfit, fund.StateValue, fund.StateProfit);
+            fund.Rate, fund.OwnValue, fund.OwnProfit, fund.StateValue, fund.StateProfit,
+            fund.OwnRate, fund.StateRate, bes.OwnFundValue, bes.StateFundValue,
+            // Portföy değerine giren tutar — HoldingMapping ile AYNI kural (tek kaynak).
+            BesCalculator.VestedPortfolioValueFor(fund.OwnValue, fund.StateValue, vestedRate));
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -688,7 +716,7 @@ public sealed class HoldingService(
             // yaşanmasın (T-BES.9 fix; TR sabit UTC+3, DST yok).
             // Fon değeri (CurrentPrice) BES için "toplam birikimin piyasa değeri" — own+state'i içerir;
             // ToBesDto bunu kullanarak her bir katkı için ayrı fon getirisi hesaplar (T-BES.10).
-            var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow(), h.CurrentPrice);
+            var bes = ToBesDto(h.BesDetails, h.BesContributions, TrNow());
 
             dtos.Add(new HoldingDto(
                 h.Id, h.Asset.Type, h.Asset.Name, h.Asset.Symbol, h.Asset.PricingCurrency, baseCcy, h.Asset.Unit,

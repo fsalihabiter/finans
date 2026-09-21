@@ -77,7 +77,17 @@ public sealed record BesDto(
     /// <summary>Devlet katkısının güncel değeri ≈ state × (1+r); oran yoksa state.</summary>
     decimal StateValue = 0m,
     /// <summary>Devlet katkısının fon getiri kâr/zararı ≈ state × r; oran yoksa 0.</summary>
-    decimal StateProfit = 0m);
+    decimal StateProfit = 0m,
+    // ── GD-002: iki havuz ayrı fonlarda; getirileri de ayrı ──
+    /// <summary>Kendi katkı havuzunun fon getiri oranı (ownFund/own − 1). Değer girilmediyse null.</summary>
+    decimal? OwnFundRate = null,
+    /// <summary>Devlet katkısı havuzunun fon getiri oranı (stateFund/state − 1). Değer girilmediyse null.</summary>
+    decimal? StateFundRate = null,
+    /// <summary>Kullanıcının girdiği ham fon değerleri (düzenleme formunu doldurmak için).</summary>
+    decimal? OwnFundValue = null,
+    decimal? StateFundValue = null,
+    /// <summary>Portföy değerine giren tutar: ownValue + vestedRate × stateValue (GD-002).</summary>
+    decimal VestedPortfolioValue = 0m);
 
 /// <summary>
 /// Tek bir BES katkı ödemesi kaydı (T-BES.6). Source: "Opening" | "Manual" | "Plan".
@@ -175,14 +185,23 @@ public sealed record CreateBesRequest(
     CurrencyCode Currency,
     DateTime JoinedAtUtc,
     int? BirthYear,
-    /// <summary>Güncel toplam fon değeri (birikimin piyasa değeri).</summary>
+    /// <summary>
+    /// Güncel TOPLAM fon değeri (kendi + devlet). ⚠ Eski tek-değer girişi (GD-002 öncesi):
+    /// <see cref="OwnFundValue"/>/<see cref="StateFundValue"/> verilmemişse bu değer açılış
+    /// katkıları oranında İKİ HAVUZA BÖLÜNÜR (migration'daki geriye dönük taşımayla aynı
+    /// kural) — girilen değer asla yok sayılmaz.
+    /// </summary>
     decimal CurrentFundValue,
     /// <summary>Bugüne dek ödenmiş toplam kendi katkı (açılış maliyeti).</summary>
     decimal OpeningOwn,
     /// <summary>Bugüne dek yatmış toplam devlet katkısı.</summary>
     decimal OpeningState,
     decimal? MonthlyAmount = null,
-    int? ContributionDay = null);
+    int? ContributionDay = null,
+    /// <summary>Kendi katkı paylarının fonda değerlendirilmiş değeri (GD-002). Verilirse öncelikli.</summary>
+    decimal? OwnFundValue = null,
+    /// <summary>Devlet katkısının fonda değerlendirilmiş değeri (GD-002). Verilirse öncelikli.</summary>
+    decimal? StateFundValue = null);
 
 /// <summary>
 /// PUT /api/holdings/{id}/bes — BES sözleşme/plan alanlarını günceller (T-BES). Tüm alanlar
@@ -195,7 +214,14 @@ public sealed record UpdateBesRequest(
     int? BirthYear = null,
     decimal? MonthlyAmount = null,
     int? ContributionDay = null,
-    bool? PlanActive = null);
+    bool? PlanActive = null,
+    // ── Fon değerleri: İKİ AYRI HAVUZ (GD-002) ──
+    // Devlet katkısı ayrı fonda değerlendirilir; kullanıcı iki değeri ekstresinden
+    // ayrı girer. Verilmeyen alan DEĞİŞTİRİLMEZ (kısmi güncelleme).
+    /// <summary>Kendi katkı paylarının fonda değerlendirilmiş güncel değeri.</summary>
+    decimal? OwnFundValue = null,
+    /// <summary>Devlet katkısının fonda değerlendirilmiş güncel değeri.</summary>
+    decimal? StateFundValue = null);
 
 /// <summary>
 /// POST /api/holdings/{id}/bes/contributions — düzenli katkıyı tarih aralığından üretir (T-BES.6):

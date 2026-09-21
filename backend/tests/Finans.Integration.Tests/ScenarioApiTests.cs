@@ -91,8 +91,10 @@ public sealed class ScenarioApiTests : IClassFixture<SqliteWebApplicationFactory
         var scenario = await client.GetFromJsonAsync<ScenarioComparisonDto>(
             $"/api/portfolio/scenario/{BesHolding}", Json);
 
-        // BES: değer = fon (279.378), yatırılan = CEPTEN ödenen kendi katkı (120.000).
-        scenario!.Summary.CurrentValue.Should().Be(279378m);
+        // BES: değer = kendi katkının fon değeri + hak edilmiş devlet katkısı (GD-002).
+        // Katılım 2024-06 → 3 yıl dolmadı → hak ediş %0 → 53.700 devlet fonu değere GİRMEZ.
+        // Yatırılan taban değişmez: CEPTEN ödenen kendi katkı (120.000).
+        scenario!.Summary.CurrentValue.Should().Be(225678m);
         scenario.Summary.Invested.Should().Be(120000m);
     }
 

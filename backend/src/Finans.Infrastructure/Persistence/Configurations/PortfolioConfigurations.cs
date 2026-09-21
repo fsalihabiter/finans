@@ -91,6 +91,9 @@ internal sealed class BesDetailsConfiguration : IEntityTypeConfiguration<BesDeta
             t.HasCheckConstraint("CK_BesDetails_Own", "\"OwnContribution\" >= 0");
             t.HasCheckConstraint("CK_BesDetails_State", "\"StateContribution\" >= 0");
             t.HasCheckConstraint("CK_BesDetails_Vesting", Check.EnumIn<VestingState>("VestingState"));
+            // GD-002: fon değerleri negatif olamaz (girilmemişse NULL serbest).
+            t.HasCheckConstraint("CK_BesDetails_OwnFundValue", "\"OwnFundValue\" IS NULL OR \"OwnFundValue\" >= 0");
+            t.HasCheckConstraint("CK_BesDetails_StateFundValue", "\"StateFundValue\" IS NULL OR \"StateFundValue\" >= 0");
         });
         b.HasIndex(x => x.HoldingId).IsUnique();
 

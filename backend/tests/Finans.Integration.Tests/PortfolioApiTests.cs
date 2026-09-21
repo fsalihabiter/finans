@@ -65,10 +65,12 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         summary!.BaseCurrency.Should().Be(CurrencyCode.TRY);
         // BES maliyeti = kendi katkı (cepten); devlet katkısı maliyet değil → toplam maliyet 603.770→575.216.
         summary.TotalCost.Should().Be(575216m);
-        summary.TotalValue.Should().Be(839213m);
-        summary.NetProfit.Should().Be(263997m);
-        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.459m);
-        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(0.0572m); // enflasyon 0,38
+        // GD-002: BES değeri artık hak edilmemiş devlet katkısını içermez.
+        // 839.213 → 785.513 (−53.700 = hak edilmemiş devlet katkısının fon değeri).
+        summary.TotalValue.Should().Be(785513m);
+        summary.NetProfit.Should().Be(210297m);       // 785.513 − 575.216
+        Math.Round(summary.ReturnRatio!.Value, 3).Should().Be(0.366m);
+        Math.Round(summary.RealReturnRatio!.Value, 4).Should().Be(-0.0104m); // enflasyon 0,38 → reel getiri artık eksi
         summary.Allocation.Should().HaveCount(7);
         Math.Round(summary.Allocation.Sum(a => a.Weight), 6).Should().Be(1m);
     }
@@ -87,7 +89,7 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
         gold.TotalCost.Should().Be(181851m);
         gold.CurrentValue.Should().Be(260000m);
         Math.Round(gold.ReturnRatio!.Value, 2).Should().Be(0.43m); // +%43
-        Math.Round(gold.Weight, 3).Should().Be(0.310m);
+        Math.Round(gold.Weight, 3).Should().Be(0.331m); // BES değeri düştü → ağırlıklar kaydı
 
         // BES kalemi devlet katkısını AYRI taşır (03 §A).
         var bes = holdings.Single(h => h.AssetType == AssetType.Bes);
@@ -326,22 +328,33 @@ public sealed class PortfolioApiTests : IClassFixture<SqliteWebApplicationFactor
 
         var own = bes.Bes!.OwnContribution;        // 120.000 (seed)
         var state = bes.Bes.StateContribution;      // 28.554 (seed)
-        var fund = bes.CurrentPrice!.Value;         // 279.378 (seed)
+
+        // GD-002 — İKİ AYRI HAVUZ: her havuzun fon değeri ayrı girilir ve getirisi
+        // KENDİ fonundan çıkar. (Eski model tek fon değerini orantılı böler, iki havuza
+        // aynı oranı yazardı; devlet katkısı ayrı bir fonda değerlendiği için yanlıştı.)
+        bes.Bes.OwnFundValue.Should().Be(225678m);
+        bes.Bes.StateFundValue.Should().Be(53700m);
+
+        bes.Bes.OwnFundRate.Should().Be(225678m / own - 1m);
+        bes.Bes.StateFundRate.Should().Be(53700m / state - 1m);
+
+        bes.Bes.OwnValue.Should().Be(225678m);
+        bes.Bes.OwnProfit.Should().Be(225678m - own);
+        bes.Bes.StateValue.Should().Be(53700m);
+        bes.Bes.StateProfit.Should().Be(53700m - state);
+
+        // Birleşik oran toplamlardan (iki havuzun ortalaması değil).
         var costBase = own + state;                 // 148.554
-        var r = fund / costBase - 1m;               // ≈ 0,8806
-
-        // Fon getiri oranı tabandan (own+state) türetilir — saf aritmetik (yuvarlama yok).
-        bes.Bes.FundReturnRatio.Should().NotBeNull();
-        bes.Bes.FundReturnRatio!.Value.Should().Be(r);
-
-        // own ve state aynı r'yi paylaşır — her birinin kâr/zararı kendi tabanı × r.
-        bes.Bes.OwnProfit.Should().Be(Math.Round(own * r, 2));
-        bes.Bes.StateProfit.Should().Be(Math.Round(state * r, 2));
-        bes.Bes.OwnValue.Should().Be(Math.Round(own * (1m + r), 2));
-        bes.Bes.StateValue.Should().Be(Math.Round(state * (1m + r), 2));
-
-        // Birikim tabanı kontrolü: yatırılmış toplamlar (own+state) doğru taban.
         costBase.Should().Be(148554m);
+        bes.Bes.FundReturnRatio!.Value.Should().Be((225678m + 53700m) / costBase - 1m);
+
+        // ⚠ ASIL KURAL: pozisyonun portföy DEĞERİ hak edilmemiş devlet katkısını İÇERMEZ.
+        // Seed'de katılım 2024-06 → 3 yıl dolmadı → hak ediş %0 → değer yalnız kendi
+        // katkının fon değeri. Hak edilmemiş 53.700 bugün ayrılsan alamayacağın para.
+        bes.Bes.VestedRate.Should().Be(0m);
+        bes.Bes.VestedPortfolioValue.Should().Be(225678m);
+        bes.CurrentValue.Should().Be(225678m, "hak edilmemiş devlet katkısı değere girmez (GD-002)");
+        bes.CurrentValue.Should().NotBe(225678m + 53700m);
     }
 
     // ── İşlem düzenle / sil (T-TX.1) — miktar & ort. maliyet yeniden türetilir ──

@@ -860,7 +860,8 @@
 }
 .tx-row input,
 .tx-row select,
-.price-row input {
+.price-row input,
+.bes-funds-form input {
   background: var(--bg, #0b0f1e);
   border: 1px solid var(--line-strong, #42507e);
   border-radius: 13px;
@@ -872,7 +873,8 @@
   box-sizing: border-box;
 }
 .tx-row input:focus-visible,
-.price-row input:focus-visible {
+.price-row input:focus-visible,
+.bes-funds-form input:focus-visible {
   outline: 2px solid var(--accent, #8a94dc);
   outline-offset: 1px;
 }
@@ -893,6 +895,7 @@ input.date-input::-webkit-calendar-picker-indicator:hover {
 }
 .tx-row button,
 .price-row button,
+.bes-funds-form > button[type="submit"],
 .tx-form > button[type="submit"] {
   appearance: none;
   font: inherit;
@@ -910,6 +913,7 @@ input.date-input::-webkit-calendar-picker-indicator:hover {
 }
 .tx-row button:disabled,
 .price-row button:disabled,
+.bes-funds-form > button[type="submit"]:disabled,
 .tx-form > button[type="submit"]:disabled,
 .btn-danger:disabled {
   opacity: 0.55;
@@ -4111,3 +4115,24 @@ body.drawer-lock {
   align-items: center;
   gap: 12px;
 }
+
+/* GD-002 — Varlıklarım genel toplamı (backend özet ucundan; istemcide toplanmaz) */
+.holdings-total {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  justify-content: flex-end;
+  padding: 14px 16px 4px;
+  margin-top: 8px;
+  border-top: 1px solid var(--line, #26304f);
+}
+.holdings-total .ht-item { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.holdings-total .ht-k { font-size: 11px; color: var(--muted, #9aa6c4); text-transform: uppercase; letter-spacing: .04em; }
+.holdings-total .ht-v { font-size: 16px; font-weight: 700; color: var(--text, #e8ecf8); }
+.holdings-total .ht-v.up { color: var(--mint, #45d5a2); }
+.holdings-total .ht-v.down { color: var(--coral, #ef7a72); }
+
+/* GD-002 — BES iki havuzlu fon değeri formu + portföy değerine giren satır */
+.bes-funds-form { display: flex; flex-direction: column; gap: 8px; }
+.bes-funds-form label { font-size: 12px; color: var(--muted, #9aa6c4); margin-top: 4px; }
+.bes-portfolio-value { border-top: 1px dashed var(--line, #26304f); padding-top: 10px; }

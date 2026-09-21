@@ -96,4 +96,64 @@ describe("HoldingDetailPage — fiyat güncelleme görünürlüğü", () => {
     await waitFor(() => expect(screen.getByRole("heading", { name: /Altın/ })).toBeInTheDocument());
     expect(screen.getByRole("link", { name: /Varlıklarım/ })).toHaveAttribute("href", "/varliklar");
   });
+
+  // ── GD-002 (ürün sahibi kararı 2026-09-20): BES iki ayrı fon havuzu ──
+  const besHolding = {
+    ...base, assetType: "Bes", name: "Örnek BES", currency: "TRY", baseCurrency: "TRY", unit: "birim",
+    quantity: 1, avgCost: 100000, currentPrice: 131550, totalCost: 100000,
+    currentValue: 131550, profit: 31550, returnRatio: 0.3155,
+    bes: {
+      ownContribution: 100000, stateContribution: 30000, ownPending: 0, statePending: 0,
+      vestingState: "PartiallyVested", vestedRate: 0.35, vestedAmount: 10500,
+      joinedAtUtc: "2019-01-01T00:00:00Z", birthYear: 1990, providerName: null,
+      contributions: [], contributionDue: false, planActive: false,
+      monthlyAmount: null, contributionDay: null,
+      fundReturnRatio: 0.1769, ownValue: 120000, ownProfit: 20000, stateValue: 33000, stateProfit: 3000,
+      ownFundRate: 0.2, stateFundRate: 0.1, ownFundValue: 120000, stateFundValue: 33000,
+      vestedPortfolioValue: 131550,
+    },
+  };
+
+  it("BES: iki havuz AYRI getiriyle görünür; portföye yalnız hak edilmiş devlet katkısı girer", async () => {
+    mockHolding(besHolding);
+    renderDetail();
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: /Örnek BES/ })).toBeInTheDocument());
+
+    // Havuzlar kendi oranlarıyla (eski model ikisine AYNI oranı yazıyordu).
+    expect(screen.getByText(/%20,0/)).toBeInTheDocument();
+    expect(screen.getByText(/%10,0/)).toBeInTheDocument();
+
+    // Portföy değerine giren: 120.000 + 0,35 × 33.000 = 131.550 — gerekçesiyle.
+    expect(screen.getByText("Portföy değerine giren")).toBeInTheDocument();
+    expect(screen.getAllByText("₺131.550,00").length).toBeGreaterThan(0);
+    expect(screen.getByText(/bugün ayrılsan alamayacağın para/)).toBeInTheDocument();
+  });
+
+  it("BES: fon değeri formu iki ayrı alan gönderir", async () => {
+    const fetchMock = vi.fn((_url: string, init?: RequestInit) =>
+      Promise.resolve({
+        ok: true, status: 200,
+        json: async () => (init?.method === "PUT" ? besHolding : besHolding),
+      } as Response));
+    vi.stubGlobal("fetch", fetchMock);
+    renderDetail();
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: /Örnek BES/ })).toBeInTheDocument());
+    screen.getByRole("button", { name: "Fon değerini güncelle" }).click();
+
+    const own = await screen.findByLabelText("Kendi katkı paylarımın fondaki değeri");
+    const state = screen.getByLabelText("Devlet katkısının fondaki değeri");
+    const { fireEvent } = await import("@testing-library/react");
+    fireEvent.change(own, { target: { value: "125000" } });
+    fireEvent.change(state, { target: { value: "34000,50" } });
+    fireEvent.click(screen.getByRole("button", { name: "Güncelle" }));
+
+    await waitFor(() => {
+      const put = fetchMock.mock.calls.find(([, i]) => i?.method === "PUT");
+      expect(put).toBeDefined();
+      expect(put![0]).toMatch(/\/bes$/);
+      expect(JSON.parse(String(put![1]!.body))).toEqual({ ownFundValue: 125000, stateFundValue: 34000.5 });
+    });
+  });
 });

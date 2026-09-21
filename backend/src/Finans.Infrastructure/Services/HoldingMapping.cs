@@ -32,10 +32,25 @@ internal static class HoldingMapping
         if (h.BesDetails is not null)
         {
             // BES nominal hesap; miktar 1 sabit. Yalnız yatırılmış (≤ bugün) kendi katkılar.
-            var today = TrNow().Date;
-            h.AvgCost = h.BesContributions
-                .Where(c => c.PaidAtUtc.Date <= today)
-                .Sum(c => c.OwnAmount);
+            var asOf = TrNow();
+            // Tek taban tanımı (BesCalculator.DepositedTotals): kendi katkı ödendiyse fonda;
+            // devlet katkısı ancak YATMA tarihi geçtiyse fonda ("yolda" olan sayılmaz).
+            var (ownDeposited, stateDeposited) = BesCalculator.DepositedTotals(
+                h.BesContributions.Select(c => (c.PaidAtUtc, c.OwnAmount, c.StateAmount)), asOf);
+            h.AvgCost = ownDeposited;
+
+            // GD-002 — BES'in portföy DEĞERİ burada türetilir ki liste · özet · değer
+            // serisi · senaryo AYNI kuralı kullansın (beş yüzey, tek kaynak):
+            //   değer = kendi katkının fon değeri + hak ediş oranı × devlet katkısının fon değeri
+            // Fon değerleri girilmemişse havuzlar katkı tutarına eşit sayılır → değer yine
+            // hesaplanır (BES artık toplamdan düşmüyor). Hak edilmemiş devlet katkısı
+            // değere GİRMEZ: bugün ayrılsan alamayacağın para.
+            var fund = BesCalculator.FundReturnFor(
+                h.AvgCost, stateDeposited, h.BesDetails.OwnFundValue, h.BesDetails.StateFundValue);
+            var vestedRate = BesCalculator.VestedRateFor(
+                h.BesDetails.JoinedAtUtc, BesCalculator.AgeFor(h.BesDetails.BirthYear, asOf), asOf);
+
+            h.CurrentPrice = BesCalculator.VestedPortfolioValueFor(fund.OwnValue, fund.StateValue, vestedRate);
             return;
         }
 

@@ -62,6 +62,38 @@ public static class BesCalculator
             : BesContributionStatus.StatePending;
     }
 
+    /// <summary>
+    /// Fonda FİİLEN bulunan katkı toplamları — BES'in tek taban tanımı (GD-002).
+    /// Kendi katkı: ödeme tarihi geçmişse. Devlet katkısı: <b>yatma tarihi</b> de geçmişse
+    /// (<see cref="BesContributionStatus.Deposited"/>). "Yolda" olan devlet katkısı
+    /// (<see cref="BesContributionStatus.StatePending"/>) henüz fonda değildir → getirisi
+    /// olamaz, tabana girmez.
+    ///
+    /// <para>⚠ Değer, oran, bölme ve değer serisi HEPSİ bunu kullanmalı. Ayrı ayrı
+    /// "PaidAtUtc ≤ bugün" yazmak devlet tabanını yoldaki parayla şişirir ve iki havuzun
+    /// getirisini yapay olarak ayırır (canlı veride %39 ↔ %48 görüldü).</para>
+    /// </summary>
+    public static (decimal Own, decimal State) DepositedTotals(
+        IEnumerable<(DateTime PaidAtUtc, decimal OwnAmount, decimal StateAmount)> contributions,
+        DateTime asOfUtc)
+    {
+        decimal own = 0m, state = 0m;
+        foreach (var (paidAt, ownAmount, stateAmount) in contributions)
+        {
+            switch (ContributionStatusFor(paidAt, asOfUtc))
+            {
+                case BesContributionStatus.Deposited:
+                    own += ownAmount;
+                    state += stateAmount;
+                    break;
+                case BesContributionStatus.StatePending:
+                    own += ownAmount; // kendi katkı fonda; devlet katkısı yolda
+                    break;
+            }
+        }
+        return (own, state);
+    }
+
     /// <summary>Doğum yılından kaba yaş (asOf yılı − doğum yılı). Yıl yoksa null.</summary>
     public static int? AgeFor(int? birthYear, DateTime asOfUtc) =>
         birthYear is { } y ? asOfUtc.Year - y : null;
@@ -109,12 +141,91 @@ public static class BesCalculator
             Math.Round(state * (1m + r), 2),
             Math.Round(state * r, 2));
     }
+
+    /// <summary>
+    /// BES fon getirisi — <b>İKİ AYRI HAVUZ</b> (GD-002). Devlet katkısı ayrı bir fonda
+    /// değerlendirildiği için kendi katkının getirisiyle aynı olmak zorunda değildir:
+    /// her havuzun oranı kendi fon değerinden çıkar
+    /// (<c>rOwn = ownFund/own − 1</c>, <c>rState = stateFund/state − 1</c>).
+    ///
+    /// <para>Bir havuzun fon değeri girilmemişse o havuz <b>katkı tutarına eşit</b> kabul
+    /// edilir (kâr/zarar 0) — eksik veri uydurulmaz. <see cref="BesFundReturn.Rate"/>
+    /// birleşik orandır: <c>(ownValue+stateValue)/(own+state) − 1</c>; taban 0 ise null.</para>
+    ///
+    /// <para>Yuvarlama: tutarlar 2 ondalık (gösterim); oranlar yuvarlanmaz.</para>
+    /// </summary>
+    public static BesFundReturn FundReturnFor(
+        decimal own, decimal state, decimal? ownFundValue, decimal? stateFundValue)
+    {
+        var ownValue = ownFundValue is { } ofv && own > 0m ? Math.Round(ofv, 2) : own;
+        var stateValue = stateFundValue is { } sfv && state > 0m ? Math.Round(sfv, 2) : state;
+
+        var ownRate = own > 0m && ownFundValue is { } o ? o / own - 1m : (decimal?)null;
+        var stateRate = state > 0m && stateFundValue is { } s ? s / state - 1m : (decimal?)null;
+
+        var costBase = own + state;
+        var combined = costBase > 0m ? (ownValue + stateValue) / costBase - 1m : (decimal?)null;
+
+        return new BesFundReturn(
+            combined,
+            ownValue,
+            Math.Round(ownValue - own, 2),
+            stateValue,
+            Math.Round(stateValue - state, 2),
+            ownRate,
+            stateRate);
+    }
+
+    /// <summary>
+    /// Tek bir TOPLAM fon değerini iki havuza <b>katkı oranında</b> böler (GD-002 geriye
+    /// uyumluluk). Kullanıcı yalnız toplamı bildiğinde (eski giriş biçimi) veya eski kayıt
+    /// taşınırken kullanılır; iki değer ayrı girildiğinde bu bölme YAPILMAZ.
+    /// Taban 0 ise bölünemez → (null, null): veri uydurulmaz.
+    /// </summary>
+    public static (decimal? OwnFundValue, decimal? StateFundValue) SplitTotalFundValue(
+        decimal totalFundValue, decimal own, decimal state)
+    {
+        var costBase = own + state;
+        if (costBase <= 0m)
+            return (null, null);
+
+        var ownShare = Math.Round(totalFundValue * own / costBase, 2);
+        // Kalan devlet havuzuna — iki parça toplamı girilen değere KURUŞU KURUŞUNA eşit kalır.
+        return (ownShare, totalFundValue - ownShare);
+    }
+
+    /// <summary>
+    /// BES pozisyonunun <b>portföy değeri</b> (GD-002, ürün sahibi kararı 2026-09-20):
+    /// kendi katkının fon değeri + <paramref name="vestedRate"/> × devlet katkısının fon değeri.
+    ///
+    /// <para><b>Neden hak ediş oranı:</b> hak edilmemiş devlet katkısı bugün ayrılsan
+    /// alamayacağın paradır; portföy değerinde tam göstermek kullanıcıyı yanıltır.
+    /// Hak edildikçe değere girer (kademe: 0 / 0,15 / 0,35 / 0,60 / 1,00).</para>
+    ///
+    /// <para>⚠ Maliyet tabanı yalnız <b>kendi katkıdır</b> (devlet katkısı cepten çıkmadı),
+    /// dolayısıyla hak edilmiş devlet katkısı getiri oranını yükseltir — bu <b>kasıtlıdır</b>:
+    /// devlet katkısı gerçek bir kazançtır. Kırılım detay ekranında ayrı gösterilir
+    /// (<c>CLAUDE.md</c> §1: devlet katkısı ayrı satır).</para>
+    /// </summary>
+    public static decimal VestedPortfolioValueFor(decimal ownValue, decimal stateValue, decimal vestedRate)
+    {
+        if (vestedRate < 0m || vestedRate > 1m)
+            throw new ArgumentOutOfRangeException(nameof(vestedRate), vestedRate, "Hak ediş oranı 0–1 aralığında olmalı.");
+
+        return Math.Round(ownValue + vestedRate * stateValue, 2);
+    }
 }
 
-/// <summary>BES fonun her bir katkı kalemine yansıyan getirisi (T-BES.10).</summary>
+/// <summary>
+/// BES fonun her bir katkı kalemine yansıyan getirisi (T-BES.10).
+/// <see cref="OwnRate"/>/<see cref="StateRate"/> iki havuz ayrı girildiğinde dolar (GD-002);
+/// tek fon değerinin orantılı bölündüğü eski yolda null kalır.
+/// </summary>
 public readonly record struct BesFundReturn(
     decimal? Rate,
     decimal OwnValue,
     decimal OwnProfit,
     decimal StateValue,
-    decimal StateProfit);
+    decimal StateProfit,
+    decimal? OwnRate = null,
+    decimal? StateRate = null);

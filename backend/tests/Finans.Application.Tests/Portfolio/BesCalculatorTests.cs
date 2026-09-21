@@ -206,4 +206,108 @@ public sealed class BesCalculatorTests
         Assert.Equal(0m, r.OwnProfit);
         Assert.Equal(0m, r.StateProfit);
     }
+
+    // ── GD-002: iki ayrı fon havuzu (kendi katkı fonu ↔ devlet katkısı fonu) ──
+
+    [Fact]
+    public void FundReturnFor_two_pools_uses_each_pools_own_rate()
+    {
+        // Kendi katkı 100.000 → 120.000 (+%20); devlet katkısı 30.000 → 33.000 (+%10).
+        // Eski model tek fon değerinden ORANTILI bölerdi ve ikisine de aynı oranı
+        // yazardı — havuzlar farklı fonlarda olduğu için bu yanlıştı.
+        var r = BesCalculator.FundReturnFor(100_000m, 30_000m, 120_000m, 33_000m);
+
+        Assert.Equal(0.20m, r.OwnRate);
+        Assert.Equal(0.10m, r.StateRate);
+        Assert.Equal(120_000m, r.OwnValue);
+        Assert.Equal(20_000m, r.OwnProfit);
+        Assert.Equal(33_000m, r.StateValue);
+        Assert.Equal(3_000m, r.StateProfit);
+
+        // Birleşik oran toplamlardan: 153.000 / 130.000 − 1 ≈ %17,69 — iki havuzun
+        // ortalaması DEĞİL, ağırlıklı gerçek sonucu.
+        Assert.Equal(Math.Round(153_000m / 130_000m - 1m, 6), Math.Round(r.Rate!.Value, 6));
+    }
+
+    [Fact]
+    public void FundReturnFor_two_pools_missing_value_falls_back_to_contribution()
+    {
+        // Devlet katkısının fon değeri henüz girilmemiş → o havuz katkı tutarına eşit
+        // sayılır (kâr/zarar 0). Eksik veri UYDURULMAZ.
+        var r = BesCalculator.FundReturnFor(100_000m, 30_000m, 118_000m, null);
+
+        Assert.Equal(0.18m, r.OwnRate);
+        Assert.Null(r.StateRate);
+        Assert.Equal(30_000m, r.StateValue);
+        Assert.Equal(0m, r.StateProfit);
+    }
+
+    [Theory]
+    // Hak ediş kademeleri (BesRules): 0 · 0,15 · 0,35 · 0,60 · 1,00
+    [InlineData(0.00, 120_000)]       // hiç hak edilmedi → yalnız kendi katkının değeri
+    [InlineData(0.15, 124_950)]       // 120.000 + 0,15 × 33.000
+    [InlineData(0.60, 139_800)]
+    [InlineData(1.00, 153_000)]       // tamamı hak edildi → iki havuz toplamı
+    public void VestedPortfolioValueFor_adds_only_the_vested_share_of_state_fund(
+        double vestedRate, decimal expected)
+    {
+        // Kendi katkının fon değeri 120.000; devlet katkısının fon değeri 33.000.
+        var value = BesCalculator.VestedPortfolioValueFor(120_000m, 33_000m, (decimal)vestedRate);
+
+        Assert.Equal(expected, value);
+    }
+
+    [Fact]
+    public void DepositedTotals_excludes_state_contribution_still_in_transit()
+    {
+        // 2026-09-20 itibarıyla:
+        //  · Temmuz ödemesi → devlet yatma = Ağustos sonu (geçti)   → Deposited
+        //  · 10 Eylül ödemesi → devlet yatma = Ekim sonu (gelmedi)  → StatePending ("yolda")
+        //  · Ekim ödemesi → henüz ödenmedi                          → Future
+        var asOf = new DateTime(2026, 9, 20, 0, 0, 0, DateTimeKind.Utc);
+        var contributions = new[]
+        {
+            (new DateTime(2026, 7, 15, 0, 0, 0, DateTimeKind.Utc), 1_000m, 200m),
+            (new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc), 1_000m, 200m),
+            (new DateTime(2026, 10, 15, 0, 0, 0, DateTimeKind.Utc), 1_000m, 200m),
+        };
+
+        var (own, state) = BesCalculator.DepositedTotals(contributions, asOf);
+
+        // Kendi katkı: ödenmiş iki kayıt. Devlet: YALNIZ yatmış olan — yoldaki fonda değil,
+        // getirisi olamaz. (Canlı veride bu ayrım gözetilmeyince iki havuzun getirisi
+        // yapay olarak %39 ↔ %48 ayrışmıştı.)
+        Assert.Equal(2_000m, own);
+        Assert.Equal(200m, state);
+    }
+
+    [Fact]
+    public void SplitTotalFundValue_splits_by_contribution_share_and_preserves_total()
+    {
+        // 72.000 → 50/60 ve 10/60 → 60.000 + 12.000
+        var (own, state) = BesCalculator.SplitTotalFundValue(72_000m, 50_000m, 10_000m);
+        Assert.Equal(60_000m, own);
+        Assert.Equal(12_000m, state);
+
+        // Yuvarlama kalanı devlet havuzuna gider → toplam kuruşu kuruşuna korunur.
+        var (o2, s2) = BesCalculator.SplitTotalFundValue(100m, 1m, 2m);
+        Assert.Equal(100m, o2!.Value + s2!.Value);
+    }
+
+    [Fact]
+    public void SplitTotalFundValue_zero_base_returns_nulls_not_invented_values()
+    {
+        var (own, state) = BesCalculator.SplitTotalFundValue(5_000m, 0m, 0m);
+        Assert.Null(own);
+        Assert.Null(state);
+    }
+
+    [Fact]
+    public void VestedPortfolioValueFor_rejects_rate_outside_zero_one()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => BesCalculator.VestedPortfolioValueFor(100m, 10m, 1.5m));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => BesCalculator.VestedPortfolioValueFor(100m, 10m, -0.1m));
+    }
 }

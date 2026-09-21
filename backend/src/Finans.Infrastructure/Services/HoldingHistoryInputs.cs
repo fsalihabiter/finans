@@ -90,6 +90,18 @@ internal static class HoldingHistoryInputs
             }
         }
 
+        // GD-002: devlet katkısının yalnız HAK EDİLMİŞ kısmı değere girer — seri de
+        // özet/liste ile aynı kuralı kullanmalı, yoksa iki yüzey farklı toplam gösterir
+        // (History_last_point_matches_summary_totals bu çatlağı yakalar).
+        // Hak ediş oranı tarihe göre değişir (kademeli), o yüzden HER noktada yeniden
+        // hesaplanır — geçmiş, o günkü gerçeğiyle çizilir.
+        var bes = holding.BesDetails;
+        decimal VestedRateOn(DateOnly date)
+        {
+            var asOf = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            return BesCalculator.VestedRateFor(bes?.JoinedAtUtc, BesCalculator.AgeFor(bes?.BirthYear, asOf), asOf);
+        }
+
         var prices = new List<PricePoint>(changeDates.Count + 1);
         foreach (var date in changeDates)
         {
@@ -105,14 +117,23 @@ internal static class HoldingHistoryInputs
             }
 
             if (cumOwn > 0m)
-                prices.Add(new PricePoint(date, (cumOwn + cumState) / cumOwn));
+                prices.Add(new PricePoint(date, (cumOwn + VestedRateOn(date) * cumState) / cumOwn));
         }
 
-        // Bugünkü gerçek fon değeri (fon getirisi dahil) — yalnız bugün bilinir, geçmişe yayılmaz
-        // (geçmişi gösteriyoruz, uydurmuyoruz — CLAUDE.md §2).
+        // Bugünkü gerçek fon değeri — iki havuzun fon değerinden, hak edilişe göre (GD-002).
+        // Yalnız bugün bilinir, geçmişe yayılmaz (geçmişi gösteriyoruz, uydurmuyoruz — CLAUDE.md §2).
+        // Taban: fonda FİİLEN olan katkılar (yoldaki devlet katkısı hariç) — özet/liste ile
+        // aynı tanım (BesCalculator.DepositedTotals), yoksa son nokta özetten sapar.
         var totalOwn = contributions.Sum(c => c.OwnAmount);
-        if (holding.CurrentPrice is { } fundValue && totalOwn > 0m)
-            prices.Add(new PricePoint(today, fundValue / totalOwn));
+        var (_, totalState) = BesCalculator.DepositedTotals(
+            contributions.Select(c => (c.PaidAtUtc, c.OwnAmount, c.StateAmount)),
+            today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
+        if (totalOwn > 0m)
+        {
+            var fund = BesCalculator.FundReturnFor(totalOwn, totalState, bes?.OwnFundValue, bes?.StateFundValue);
+            var todayValue = BesCalculator.VestedPortfolioValueFor(fund.OwnValue, fund.StateValue, VestedRateOn(today));
+            prices.Add(new PricePoint(today, todayValue / totalOwn));
+        }
 
         return new AssetValueHistoryInput(
             holding.Asset.Name, holding.Asset.PricingCurrency, events, prices);

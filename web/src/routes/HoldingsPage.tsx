@@ -1,3 +1,4 @@
+import { formatCurrency, formatPercent } from "@finans/shared";
 import { HoldingsTable } from "../components/HoldingsTable";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
@@ -50,6 +51,30 @@ export function HoldingsPage() {
               <span className="mini">{list.length} pozisyon · Detay için satıra tıkla</span>
             </div>
             <HoldingsTable holdings={list} baseCurrency={baseCurrency} />
+            {/* Genel toplam (kullanıcı isteği 2026-09-20). İstemcide TOPLANMAZ — özet
+                ucunun backend'de hesapladığı değerler gösterilir (D-001: parasal hesap
+                kodda, tek yerde). Liste ile aynı kuralla (hak edilmiş BES dahil) hesaplandığı
+                için satırlarla tutarlıdır. */}
+            {summary.data && (
+              <div className="holdings-total" data-testid="holdings-total">
+                <div className="ht-item">
+                  <span className="ht-k">Toplam değer</span>
+                  <span className="ht-v tnum">{formatCurrency(summary.data.totalValue, baseCurrency)}</span>
+                </div>
+                <div className="ht-item">
+                  <span className="ht-k">Toplam maliyet</span>
+                  <span className="ht-v tnum">{formatCurrency(summary.data.totalCost, baseCurrency)}</span>
+                </div>
+                <div className="ht-item">
+                  <span className="ht-k">Kâr / zarar</span>
+                  <span className={`ht-v tnum ${summary.data.netProfit > 0 ? "up" : summary.data.netProfit < 0 ? "down" : ""}`}>
+                    {summary.data.netProfit > 0 ? "+" : ""}
+                    {formatCurrency(summary.data.netProfit, baseCurrency)}
+                    {summary.data.returnRatio !== null && <> · {formatPercent(summary.data.returnRatio, 1, true)}</>}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <EmptyState
