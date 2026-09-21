@@ -62,4 +62,18 @@ describe("HoldingsPage (Varlıklarım — kullanıcı isteği 2026-07-12)", () =
       expect(screen.getByText("Portföyün henüz boş")).toBeInTheDocument());
     expect(screen.getByRole("button", { name: /İlk varlığını ekle/ })).toBeInTheDocument();
   });
+
+  // Kullanıcı isteği 2026-09-20: Varlıklarım sayfasında genel toplam görünsün.
+  // Rakam istemcide toplanmaz — özet ucunun backend'de hesapladığı değer gösterilir (D-001).
+  it("genel toplamı özet ucundan gösterir (istemcide toplamaz)", async () => {
+    mockApi();
+    renderPage();
+
+    const total = await screen.findByTestId("holdings-total");
+    expect(total).toHaveTextContent("Toplam değer");
+    expect(total).toHaveTextContent("₺260.000,00");
+    expect(total).toHaveTextContent("₺181.851,00");
+    expect(total).toHaveTextContent("+₺78.149,00");
+    expect(total).toHaveTextContent("%43,0");
+  });
 });

@@ -65,6 +65,8 @@ export function HoldingDetailPage() {
   const { notify } = useToast();
 
   const [price, setPrice] = useState("");
+  const [besOwnFund, setBesOwnFund] = useState("");
+  const [besStateFund, setBesStateFund] = useState("");
   const [besDate, setBesDate] = useState("");
   const [besBirth, setBesBirth] = useState("");
   const [besDay, setBesDay] = useState("");
@@ -114,6 +116,30 @@ export function HoldingDetailPage() {
           setPrice("");
           closeModal();
           notify("Güncel fiyat güncellendi.", "success");
+        },
+      },
+    );
+  };
+
+  // GD-002: BES'te fon değeri İKİ AYRI havuzdur (devlet katkısı ayrı fonda işletilir).
+  // Boş bırakılan alan gönderilmez → backend o havuzu değiştirmez (kısmi güncelleme).
+  const onUpdateBesFunds = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Sayfadaki diğer tutar alanlarıyla AYNI kural (ondalık virgül → nokta). Binlik noktayı
+    // silmek "120000.50"yi 12.000.050 yapardı; sayfa genelinde tek kural kalmalı.
+    const parse = (s: string) => (s.trim() === "" ? null : Number(s.replace(",", ".")));
+    const own = parse(besOwnFund);
+    const state = parse(besStateFund);
+    if (own === null && state === null) return;
+    if ((own !== null && (!Number.isFinite(own) || own < 0)) || (state !== null && (!Number.isFinite(state) || state < 0))) return;
+    updateBes.mutate(
+      { ownFundValue: own, stateFundValue: state },
+      {
+        onSuccess: () => {
+          setBesOwnFund("");
+          setBesStateFund("");
+          closeModal();
+          notify("Fon değerleri güncellendi.", "success");
         },
       },
     );
@@ -344,13 +370,13 @@ export function HoldingDetailPage() {
               )}
               <div className="split">
                 <div className="sh"><span className="sl">Yatırılan Katkı Payı</span><span className="sr tnum">{formatCurrency(h.bes.ownContribution, h.currency)}</span></div>
-                {h.bes.fundReturnRatio !== null && (
+                {h.bes.ownFundRate !== null && (
                   <div className="bes-fund-row">
-                    <span className="muted">Güncel değer</span>
+                    <span className="muted">Fondaki değeri</span>
                     <span className="tnum">{formatCurrency(h.bes.ownValue, h.currency)}</span>
                     <span className={`tnum ${tone(h.bes.ownProfit)}`}>
                       {h.bes.ownProfit > 0 ? "+" : ""}{formatCurrency(h.bes.ownProfit, h.currency)}
-                      {" · "}{formatPercent(h.bes.fundReturnRatio)}
+                      {" · "}{formatPercent(h.bes.ownFundRate)}
                     </span>
                   </div>
                 )}
@@ -358,17 +384,31 @@ export function HoldingDetailPage() {
               </div>
               <div className="split">
                 <div className="sh"><span className="sl">Yatırılan devlet katkısı</span><span className="sr tnum up">{formatCurrency(h.bes.stateContribution, h.currency)}</span></div>
-                {h.bes.fundReturnRatio !== null && (
+                {h.bes.stateFundRate !== null && (
                   <div className="bes-fund-row">
-                    <span className="muted">Güncel değer</span>
+                    <span className="muted">Fondaki değeri</span>
                     <span className="tnum">{formatCurrency(h.bes.stateValue, h.currency)}</span>
                     <span className={`tnum ${tone(h.bes.stateProfit)}`}>
                       {h.bes.stateProfit > 0 ? "+" : ""}{formatCurrency(h.bes.stateProfit, h.currency)}
-                      {" · "}{formatPercent(h.bes.fundReturnRatio)}
+                      {" · "}{formatPercent(h.bes.stateFundRate)}
                     </span>
                   </div>
                 )}
-                <div className="sd">Devletin eklediği <b>sübvansiyon</b> (hesabına geçmiş kısım): katkı payının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — geriye dönük değil). Bu tutar <b>fonda işletilir</b>; getirisi ayrı kâr/zarar olarak yukarıda görünür.</div>
+                <div className="sd">Devletin eklediği <b>sübvansiyon</b> (hesabına geçmiş kısım): katkı payının <b>%20'si</b> (<b>2026-01-01'den</b>; öncesi %30 — geriye dönük değil). Bu tutar <b>ayrı bir fonda</b> işletilir — getirisi kendi katkınınkinden farklı olabilir.</div>
+              </div>
+              {/* GD-002 · ürün sahibi kararı: portföy değerine devlet katkısının yalnız
+                  HAK EDİLMİŞ kısmı girer. Kullanıcı neden toplamın fon toplamından düşük
+                  olduğunu burada görmeli — rakam sessizce değişmemeli. */}
+              <div className="split bes-portfolio-value">
+                <div className="sh">
+                  <span className="sl">Portföy değerine giren</span>
+                  <span className="sr tnum">{formatCurrency(h.bes.vestedPortfolioValue, h.currency)}</span>
+                </div>
+                <div className="sd">
+                  Kendi katkının fondaki değeri + devlet katkısının <b>hak edilmiş</b> kısmı
+                  (şu an <b>{formatPercent(h.bes.vestedRate, 0, true, false)}</b>). Hak edilmemiş devlet katkısı,
+                  bugün ayrılsan alamayacağın para olduğu için toplama <b>girmez</b>.
+                </div>
               </div>
               {(h.bes.ownPending > 0 || h.bes.statePending > 0) && (
                 <div className="split">
@@ -620,7 +660,41 @@ export function HoldingDetailPage() {
           </form>
         </Modal>
       )}
-      {modal === "price" && (
+      {modal === "price" && isBes && h.bes && (
+        <Modal title={`${priceLabel} (${h.currency})`} onClose={closeModal}>
+          <form className="price-form bare bes-funds-form" onSubmit={onUpdateBesFunds}>
+            <p className="muted">
+              BES ekstrende iki ayrı tutar görürsün: kendi katkılarının ve devlet katkısının
+              fondaki değeri. İkisi ayrı fonlarda işletilir; ayrı gir. Boş bıraktığın alan değişmez.
+            </p>
+            <label htmlFor="bes-own-fund">Kendi katkı paylarımın fondaki değeri</label>
+            <input
+              id="bes-own-fund"
+              inputMode="decimal"
+              autoFocus
+              placeholder={h.bes.ownFundValue === null ? "örn. 120000" : formatNumber(h.bes.ownValue)}
+              value={besOwnFund}
+              onChange={(e) => setBesOwnFund(e.target.value)}
+            />
+            <label htmlFor="bes-state-fund">Devlet katkısının fondaki değeri</label>
+            <input
+              id="bes-state-fund"
+              inputMode="decimal"
+              placeholder={h.bes.stateFundValue === null ? "örn. 33000" : formatNumber(h.bes.stateValue)}
+              value={besStateFund}
+              onChange={(e) => setBesStateFund(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={updateBes.isPending || (besOwnFund.trim() === "" && besStateFund.trim() === "")}
+            >
+              Güncelle
+            </button>
+            {updateBes.isError && <p className="neg">Güncelleme başarısız.</p>}
+          </form>
+        </Modal>
+      )}
+      {modal === "price" && !isBes && (
         <Modal title={`${priceLabel} (${h.currency})`} onClose={closeModal}>
           <form className="price-form bare" onSubmit={onUpdatePrice}>
             <div className="price-row">

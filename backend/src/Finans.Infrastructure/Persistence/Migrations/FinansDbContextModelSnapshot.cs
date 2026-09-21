@@ -700,6 +700,10 @@ namespace Finans.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("numeric(18,6)");
 
+                    b.Property<decimal?>("OwnFundValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
                     b.Property<bool>("PlanActive")
                         .HasColumnType("boolean");
 
@@ -707,6 +711,10 @@ namespace Finans.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("StateContribution")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<decimal?>("StateFundValue")
                         .HasPrecision(18, 6)
                         .HasColumnType("numeric(18,6)");
 
@@ -724,7 +732,11 @@ namespace Finans.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_BesDetails_Own", "\"OwnContribution\" >= 0");
 
+                            t.HasCheckConstraint("CK_BesDetails_OwnFundValue", "\"OwnFundValue\" IS NULL OR \"OwnFundValue\" >= 0");
+
                             t.HasCheckConstraint("CK_BesDetails_State", "\"StateContribution\" >= 0");
+
+                            t.HasCheckConstraint("CK_BesDetails_StateFundValue", "\"StateFundValue\" IS NULL OR \"StateFundValue\" >= 0");
 
                             t.HasCheckConstraint("CK_BesDetails_Vesting", "\"VestingState\" IN ('NotVested', 'PartiallyVested', 'Vested')");
                         });

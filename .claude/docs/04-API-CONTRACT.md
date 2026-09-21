@@ -86,7 +86,7 @@ Query: `baseCurrency` (ops., yoksa kullanıcı tercihi).
 [
   {
     "id": "…", "assetType": "Gold", "name": "Altın", "symbol": "XAU",
-    "currency": "TRY", "unit": "gram",
+    "currency": "TRY", "baseCurrency": "TRY", "unit": "gram",
     "quantity": 40.0, "avgCost": 4546.275, "currentPrice": 6500.00,
     "totalCost": 181851.00, "currentValue": 260000.00,
     "profit": 78149.00, "returnRatio": 0.43, "weight": 0.405,
@@ -94,10 +94,31 @@ Query: `baseCurrency` (ops., yoksa kullanıcı tercihi).
   }
 ]
 ```
-BES kalemi için `bes` alanı dolu döner:
+> **⚠ Kalem iki para birimi taşır (2026-09-20).** Birim alanlar (`avgCost`, `currentPrice`)
+> `currency` biriminde; toplulaştırmalar (`totalCost`, `currentValue`, `profit`)
+> **`baseCurrency`** biriminde. Çapraz kurda `totalCost ≠ quantity × avgCost` olur (kur farkı
+> kadar) — beklenen davranıştır. İstemci toplamları `baseCurrency` ile etiketlemeli.
+
+BES kalemi için `bes` alanı dolu döner (kısaltılmış):
 ```json
-"bes": { "ownContribution": 148500.00, "stateContribution": 44550.00, "vestingState": "PartiallyVested" }
+"bes": {
+  "ownContribution": 100000.00, "stateContribution": 30000.00,
+  "vestingState": "PartiallyVested", "vestedRate": 0.35,
+  "ownFundValue": 120000.00, "stateFundValue": 33000.00,
+  "ownFundRate": 0.20, "stateFundRate": 0.10,
+  "vestedPortfolioValue": 131550.00
+}
 ```
+> **BES değeri (D-019):** `currentValue` = `ownFundValue + vestedRate × stateFundValue`
+> (hak edilmemiş devlet katkısı girmez). İki havuz ayrı fonlarda → ayrı getiri.
+
+### `PUT /api/holdings/{id}/bes` — BES ayarları + fon değerleri
+Kısmi güncelleme: verilmeyen alan değişmez.
+```json
+{ "ownFundValue": 125000.00, "stateFundValue": 34000.50 }
+```
+`POST /api/holdings/bes` aynı iki alanı kabul eder; yalnız `currentFundValue` (toplam)
+verilirse katkı oranında bölünür — girilen değer yok sayılmaz.
 
 ### `GET /api/holdings/{id}`
 Tekil holding detayı (yukarıdaki şema + işlem listesi opsiyonel).

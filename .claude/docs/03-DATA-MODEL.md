@@ -124,6 +124,16 @@ Kısıt: **`UNIQUE(UserId, AssetId)` (IsDeleted=false)**, `Quantity >= 0`,
 | MonthlyAmount | numeric(18,6) | evet | Düzenli plan aylık tutarı (T-BES.6b) |
 | ContributionDay | int | evet | Plan ödeme günü (1–28) |
 | PlanActive | bool | hayır | Düzenli plan aktif mi (default false) |
+| OwnFundValue | numeric(18,6) | evet | **Kendi katkıların fondaki değeri** (GD-002 · D-019). CHECK ≥ 0 |
+| StateFundValue | numeric(18,6) | evet | **Devlet katkısının fondaki değeri** — ayrı fon, ayrı getiri. CHECK ≥ 0 |
+
+> **Modelleme kararı (BES değeri — D-019, 2026-09-20):** Fon değeri **iki havuzdur**;
+> devlet katkısı ayrı bir fonda işletildiği için getirisi kendi katkınınkiyle aynı değildir.
+> Portföy değeri = `OwnFundValue + hakEdişOranı × StateFundValue` — hak edilmemiş devlet
+> katkısı toplama **girmez**. Değer okuma anında `HoldingMapping.ApplyReadPosition`'da
+> türetilir (liste · özet · detay · değer serisi · senaryo aynı kural). Girilmemiş havuz =
+> katkı tutarı. `Holdings.CurrentPrice` BES için artık **türetilmiş** bir değerdir, kaynak
+> değildir. Migration `BesSeparateFundValues` eski tek değeri katkı oranında böldü.
 
 > **`BesContributions`** (T-BES.6, Holdings 1—*): `Id, HoldingId(FK), OwnAmount, StateAmount,
 > PaidAtUtc, Source("Manual"|"Plan"), CreatedAtUtc`. Tek tek katkı ödemeleri — işlem geçmişi +

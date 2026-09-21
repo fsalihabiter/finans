@@ -132,6 +132,83 @@ public sealed class PortfolioHistoryApiTests : IClassFixture<SqliteWebApplicatio
             .Should().Be("VALIDATION_ERROR");
     }
 
+    // ── GD-002: iki havuz · hak edişe göre değer · girilen fon değeri kaybolmaz ──
+
+    private async Task<HttpClient> FreshUserAsync(string name)
+    {
+        var userId = Guid.NewGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
+            db.Users.Add(new User
+            {
+                Id = userId, DisplayName = name, BaseCurrency = CurrencyCode.TRY,
+                IsActive = true, CreatedAtUtc = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+        return ClientAs(userId);
+    }
+
+    [Fact]
+    public async Task Bes_legacy_total_fund_value_is_split_not_lost()
+    {
+        // REGRESYON: GD-002'de okuma yolu değeri iki havuzdan türetmeye başladı; oluşturma
+        // hâlâ TEK toplamı eski alana yazıyordu → girilen değer sessizce yok sayılıyordu.
+        // Önceki test bunu yakalayamadı çünkü fon = katkı toplamıydı (getiri %0).
+        // Burada getiri %20: kayıp olsaydı değer 50.000'e düşerdi.
+        var client = await FreshUserAsync("BES Bölme Testi");
+
+        var resp = await client.PostAsJsonAsync("/api/holdings/bes",
+            new CreateBesRequest("BES Bölme", null, CurrencyCode.TRY,
+                JoinedAtUtc: DateTime.UtcNow.AddYears(-2), BirthYear: 1990,
+                CurrentFundValue: 72000m, OpeningOwn: 50000m, OpeningState: 10000m), Json);
+        resp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var bes = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+
+        // 72.000, katkı oranında (50/60 · 10/60) bölündü — toplam korunur.
+        bes!.Bes!.OwnFundValue.Should().Be(60000m);
+        bes.Bes.StateFundValue.Should().Be(12000m);
+        (bes.Bes.OwnFundValue + bes.Bes.StateFundValue).Should().Be(72000m);
+
+        // Hak ediş %0 (2 yıl) → değer yalnız kendi havuzu: 60.000 (katkı 50.000 değil).
+        bes.CurrentValue.Should().Be(60000m, "girilen fon değeri kaybolmamalı");
+    }
+
+    [Fact]
+    public async Task Bes_two_pools_value_counts_only_vested_state_share_across_surfaces()
+    {
+        // Ürün sahibi kuralı (2026-09-20): değer = kendi fon + hak ediş oranı × devlet fonu.
+        // 7 yıllık katılım → hak ediş %35 (6-10 yıl kademesi). İki havuz farklı getiride.
+        var client = await FreshUserAsync("BES İki Havuz Testi");
+
+        var resp = await client.PostAsJsonAsync("/api/holdings/bes",
+            new CreateBesRequest("BES İki Havuz", null, CurrencyCode.TRY,
+                JoinedAtUtc: DateTime.UtcNow.AddYears(-7), BirthYear: 1990,
+                CurrentFundValue: 0m, OpeningOwn: 100000m, OpeningState: 30000m,
+                OwnFundValue: 120000m, StateFundValue: 33000m), Json);
+        resp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var bes = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+
+        bes!.Bes!.OwnFundRate.Should().Be(0.20m);
+        bes.Bes.StateFundRate.Should().Be(0.10m);
+        bes.Bes.VestedRate.Should().Be(0.35m);
+
+        // 120.000 + 0,35 × 33.000 = 131.550
+        const decimal expected = 131550m;
+        bes.CurrentValue.Should().Be(expected);
+        bes.Bes.VestedPortfolioValue.Should().Be(expected);
+
+        // Tek kural, üç yüzey: liste = özet = değer serisinin son günü.
+        var summary = await client.GetFromJsonAsync<PortfolioSummaryDto>("/api/portfolio/summary", Json);
+        var history = await client.GetFromJsonAsync<PortfolioHistoryDto>("/api/portfolio/history?period=all", Json);
+        summary!.TotalValue.Should().Be(expected);
+        history!.Points[^1].Value.Should().Be(expected);
+
+        // Maliyet yalnız CEPTEN ödenen kendi katkı.
+        summary.TotalCost.Should().Be(100000m);
+    }
+
     // ── SC-34: ileri tarihli BES plan katkısı maliyete girmez (özet = seri) ──
 
     [Fact]
@@ -178,7 +255,10 @@ public sealed class PortfolioHistoryApiTests : IClassFixture<SqliteWebApplicatio
         // Maliyet = yalnız YATIRILMIŞ kendi katkı (50.000) — ileri tarihli 3.000 hariç
         // (özet saklanan bayat AvgCost'u değil, okuma anında türetilen tabanı kullanır).
         summary!.TotalCost.Should().Be(50000m);
-        summary.TotalValue.Should().Be(60000m); // fon değeri
+        // GD-002: değer = kendi katkının fon değeri + HAK EDİLMİŞ devlet katkısı.
+        // Toplam fon 60.000 katkı oranında bölündü → kendi 50.000 · devlet 10.000.
+        // Katılım 2 yıl önce → hak ediş %0 → devlet havuzu değere girmez.
+        summary.TotalValue.Should().Be(50000m);
 
         // Üç yüzey aynı sayıyı söyler: özet = değer serisi son günü (= pozisyon listesi kuralı).
         history!.Points.Should().NotBeEmpty();

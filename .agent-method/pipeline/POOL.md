@@ -102,6 +102,7 @@
 |---|---|---|---|---|
 | ~~SPIKE-001~~ | ~~Yerel açık ağırlıklı model denemesi~~ → **bitti 2026-09-20, sonuç: D-018** | — | — | Ölçüm: `qwen3:0.6b/8b`, `gemma3:4b/12b` · hepsi CPU (RTX 3060 sürücü 512.89 eski → Ollama GPU görmedi, `total_vram=0`) · en iyi başarılı koşu 281 sn (bütçe 150) · şema tutturma ~%50 · 0.6b **yanlış atıf** yaptı (guard yakalamaz). Raporlar: `tmp_diag/llm-trial/`. Düzenek repoda kalır (`LocalModelTrial.cs`) — donanım/model değişirse tekrarlanır. |
 | T-LLM.1 | **Deterministik yorum çekirdeği (D-018 uygulaması):** yorum kartları kural + şablon ile üretilir (`NudgeRuleEngine` deseni); LLM opsiyonel ve varsayılan kapalı; LLM açıkken çıktı çekirdeğin ÜSTÜNE gelir (başarısızlıkta kullanıcı tam yorum görür, "üretilemedi" kartı değil) | PHASE-006 sonrası | 2 | Şablon boşlukları hesaplanmış değerlerden dolar → yanlış atıf imkânsız. Çıktı deterministik olduğu için **birim testle kilitlenir** (D-015). Kapsam: `PortfolioController` yorum ucu + `StocksController` açıklama ucu. |
+| INC-003-FIX | **Nakit fiyatı NULL → değer toplama girmiyor** (bkz. INCIDENTS INC-003): okuma yolunda Cash için fiyat = 1; oluşturmada 1 yaz; mevcut NULL kayıtları düzelt | — | 1 | GD-002 canlı kontrolünde görüldü; yeni Varlıklarım toplamında kâr ~34 bin eksik görünüyor. Parasal doğruluk (NFR-1). |
 
 ## Çapraz-kesen kurallar (her GD için geçerli, POOL kalemi değil)
 

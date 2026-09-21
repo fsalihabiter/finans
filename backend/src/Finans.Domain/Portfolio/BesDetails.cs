@@ -35,5 +35,16 @@ public class BesDetails : Entity
     /// <summary>Düzenli katkı planı aktif mi? (Açıksa eksik aylar görüntülemede otomatik üretilir.)</summary>
     public bool PlanActive { get; set; }
 
+    // ── Fon değerleri: İKİ AYRI HAVUZ (GD-002, ürün sahibi kararı 2026-09-20) ──
+    // Türkiye'de devlet katkısı AYRI bir fonda değerlendirilir; getirisi kendi
+    // katkının fonuyla aynı olmak zorunda değildir. Önceki model tek bir fon değeri
+    // (own+state) alıp ikisini ORANTILI bölüyordu — bu, eşit getiri varsayımıdır ve
+    // yanlıştır. Kullanıcı iki değeri ekstresinden ayrı ayrı girer.
+    /// <summary>Kendi katkı paylarının fonda değerlendirilmiş güncel değeri. Girilmediyse null.</summary>
+    public decimal? OwnFundValue { get; set; }
+
+    /// <summary>Devlet katkısının fonda değerlendirilmiş güncel değeri. Girilmediyse null.</summary>
+    public decimal? StateFundValue { get; set; }
+
     public Holding Holding { get; set; } = null!;
 }

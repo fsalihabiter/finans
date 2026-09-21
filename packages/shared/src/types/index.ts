@@ -100,6 +100,16 @@ export interface Bes {
   stateValue: number;
   /** Devlet katkısının fon getiri kâr/zararı ≈ state × r. */
   stateProfit: number;
+  // ── GD-002: iki havuz ayrı fonlarda; getirileri de ayrı ──
+  /** Kendi katkı havuzunun getirisi (ownFund/own − 1); değer girilmediyse null. */
+  ownFundRate: number | null;
+  /** Devlet katkısı havuzunun getirisi (stateFund/state − 1); değer girilmediyse null. */
+  stateFundRate: number | null;
+  /** Kullanıcının girdiği ham fon değerleri (düzenleme formunu doldurmak için). */
+  ownFundValue: number | null;
+  stateFundValue: number | null;
+  /** Portföy değerine giren tutar: kendi fon değeri + hak ediş oranı × devlet fon değeri. */
+  vestedPortfolioValue: number;
 }
 
 /** Bir pozisyonun geçmiş işlemi (detayda gösterilir). */
@@ -611,6 +621,9 @@ export interface CreateBesInput {
   openingState: number;
   monthlyAmount?: number | null;
   contributionDay?: number | null;
+  /** İki havuz ayrı girilirse öncelikli (GD-002); yoksa currentFundValue katkı oranında bölünür. */
+  ownFundValue?: number | null;
+  stateFundValue?: number | null;
 }
 
 /** PUT /api/holdings/{id}/bes — BES sözleşme/plan alanları (patch). Verilen alan güncellenir. */
@@ -621,6 +634,10 @@ export interface UpdateBesInput {
   monthlyAmount?: number | null;
   contributionDay?: number | null;
   planActive?: boolean | null;
+  /** Kendi katkı paylarının fonda değerlendirilmiş değeri (GD-002). Verilmezse değişmez. */
+  ownFundValue?: number | null;
+  /** Devlet katkısının fonda değerlendirilmiş değeri (GD-002). Verilmezse değişmez. */
+  stateFundValue?: number | null;
 }
 
 /** POST /api/holdings/{id}/bes/contributions — düzenli katkıyı tarih aralığından üretir (T-BES.6). */

@@ -9,13 +9,15 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-001     # status: review — kabul insan onayı bekliyor; önce adm-review (S-001)
+  gd_id: GD-002     # in-progress. GD-001 → `review`, kabul onayı bekliyor (REVIEW-001 temiz: 0 critical/high)
 
 session:            # current open session; cleared by adm-close
-  id: null          # S-001 kapandı → evidence/sessions/S-001.md
-  runtime: null
-  started_at: null
-  start_sha: null
+  # ⚠ GERİYE DÖNÜK AÇILDI: iş (adm-review → hata düzeltmeleri → GD-002) S-001 kapandıktan
+  # sonra adm-open çalıştırılmadan başladı. start_sha = S-001'in kapanış commit'i.
+  id: S-002
+  runtime: claude-code
+  started_at: "2026-09-20T18:10:00Z"
+  start_sha: 929771a
 
 blockers: []
 # DOCTOR-001 bulguları DR-001..DR-006 hâlâ `open`; hiçbiri critical değil,

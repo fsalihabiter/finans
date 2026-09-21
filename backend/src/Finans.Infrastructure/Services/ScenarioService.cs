@@ -58,6 +58,7 @@ public sealed class ScenarioService(
             .Include(h => h.Asset)
             .Include(h => h.Transactions)
             .Include(h => h.BesContributions)
+            .Include(h => h.BesDetails)   // GD-002: fon değerleri + hak ediş için gerekli
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 

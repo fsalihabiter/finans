@@ -71,6 +71,7 @@ public sealed class PortfolioHistoryService(
             .Include(h => h.Asset)
             .Include(h => h.Transactions)
             .Include(h => h.BesContributions)
+            .Include(h => h.BesDetails)   // GD-002: fon değerleri + hak ediş için gerekli
             .ToListAsync(ct);
 
         List<DailyValuePoint> full = [];

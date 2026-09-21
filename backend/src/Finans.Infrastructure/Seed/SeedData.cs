@@ -153,6 +153,12 @@ public static class SeedData
             ProviderName = "Örnek BES",
             JoinedAtUtc = purchase,
             BirthYear = 1985,
+            // GD-002 — iki havuz ayrı fon değeri taşır. Eski tek değer (279.378 =
+            // Holdings.CurrentPrice) katkı oranında bölündü: 120.000/148.554 ve
+            // 28.554/148.554 → toplam korunur. Migration'daki geriye dönük taşımanın
+            // tohum karşılığı; havuzların getirileri artık BAĞIMSIZ güncellenebilir.
+            OwnFundValue = 225678.000000m,
+            StateFundValue = 53700.000000m,
         });
         // Açılış bakiyesi (T-BES.8): toplamlar artık katkı satırlarından türetilir; tek "Opening" kaydı
         // birikmiş kendi/devlet katkıyı taşır. 2024 tarihli → yatırılmış sayılır (own 120.000, devlet 28.554).
