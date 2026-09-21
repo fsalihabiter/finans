@@ -209,6 +209,45 @@ public sealed class PortfolioHistoryApiTests : IClassFixture<SqliteWebApplicatio
         summary.TotalCost.Should().Be(100000m);
     }
 
+    // ── INC-003: nakit fiyatı sabit 1 — toplam, görünen satırların toplamına eşit ──
+
+    [Fact]
+    public async Task Cash_created_via_api_is_valued_and_total_equals_visible_rows()
+    {
+        // REGRESYON: API'den oluşturulan nakit CurrentPrice=null başlıyordu → liste satırı
+        // "—", özet ise onu MALİYETİNDEN sayıyordu. Toplam doğruydu ama GÖRÜNEN satırların
+        // toplamına eşit değildi. Tohum 1 yazdığı için hiçbir test API yolunu denemiyordu.
+        var client = await FreshUserAsync("Nakit Testi");
+
+        var cashResp = await client.PostAsJsonAsync("/api/holdings",
+            new CreateHoldingRequest(AssetType.Cash, "Nakit (TL)", null, CurrencyCode.TRY, "TRY",
+                new TransactionRequest(TransactionType.Buy, 34349.50m, 1m)), Json);
+        cashResp.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // Karşılaştırma için fiyatlı ikinci bir kalem.
+        var fundResp = await client.PostAsJsonAsync("/api/holdings",
+            new CreateHoldingRequest(AssetType.Fund, "Test Fonu", null, CurrencyCode.TRY, "adet",
+                new TransactionRequest(TransactionType.Buy, 100m, 10m)), Json);
+        var fund = await fundResp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+        await client.PutAsJsonAsync($"/api/holdings/{fund!.Id}", new UpdateHoldingRequest(12m), Json);
+
+        var holdings = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json);
+        var cash = holdings!.Single(h => h.AssetType == AssetType.Cash);
+
+        cash.CurrentPrice.Should().Be(1m, "nakdin birim fiyatı tanım gereği 1");
+        cash.CurrentValue.Should().Be(34349.50m, "nakit satırı artık '—' göstermemeli");
+        cash.ReturnRatio.Should().Be(0m);
+
+        // ASIL DEĞİŞMEZ: özet toplamı = görünen satırların toplamı (kullanıcı ikisini yan yana görüyor).
+        var summary = await client.GetFromJsonAsync<PortfolioSummaryDto>("/api/portfolio/summary", Json);
+        summary!.TotalValue.Should().Be(holdings.Sum(h => h.CurrentValue ?? 0m));
+        summary.TotalValue.Should().Be(34349.50m + 1200m);
+
+        // Değer serisi de aynı sayıyı söyler.
+        var history = await client.GetFromJsonAsync<PortfolioHistoryDto>("/api/portfolio/history?period=all", Json);
+        history!.Points[^1].Value.Should().Be(summary.TotalValue);
+    }
+
     // ── SC-34: ileri tarihli BES plan katkısı maliyete girmez (özet = seri) ──
 
     [Fact]

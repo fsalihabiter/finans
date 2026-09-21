@@ -52,7 +52,9 @@ internal static class HoldingHistoryInputs
 
         // Güncel fiyat bugüne çapalanır: elle güncellenen fiyatların snapshot'ı yok; otomatik
         // fiyatlananlarda son snapshot'la aynıdır → serinin son günü özetle tutarlı kalır.
-        if (holding.CurrentPrice is { } current)
+        // Sabit fiyatlı türde (Nakit = 1) saklanan değere bakılmaz — liste/özet ile aynı kural
+        // (AssetPricing, INC-003); aksi halde seri özetten sapar.
+        if ((AssetPricing.FixedUnitPriceFor(holding.Asset.Type) ?? holding.CurrentPrice) is { } current)
             prices.Add(new PricePoint(today, current));
 
         return new AssetValueHistoryInput(holding.Asset.Name, holding.Asset.PricingCurrency, events, prices);

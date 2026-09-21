@@ -81,7 +81,14 @@ public sealed class HoldingService(
         if (alreadyHeld)
             throw new ConflictException("Bu varlıkta zaten bir pozisyonunuz var. Mevcut pozisyona işlem ekleyin.");
 
-        var holding = new Holding { UserId = userId, AssetId = asset.Id, CurrentPrice = null, CreatedAtUtc = now };
+        // Sabit fiyatlı türde (Nakit) fiyat baştan yazılır — okuma yolu zaten dayatıyor, ama
+        // saklanan veri de tutarlı kalsın (INC-003). Diğer türlerde fiyat dışarıdan gelir.
+        var holding = new Holding
+        {
+            UserId = userId, AssetId = asset.Id,
+            CurrentPrice = AssetPricing.FixedUnitPriceFor(asset.Type),
+            CreatedAtUtc = now,
+        };
         holding.Transactions.Add(ToEntity(request.Transaction, holding.Id, now));
         ApplyDerivedPosition(holding);
 
