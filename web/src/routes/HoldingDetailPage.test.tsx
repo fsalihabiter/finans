@@ -65,26 +65,36 @@ describe("HoldingDetailPage — fiyat güncelleme görünürlüğü", () => {
   // Kullanıcı bildirimi 2026-09-20: USD kalemde 0,0603 × 721,63 = 43,50 $ beklenirken
   // 2.089,22 $ görünüyordu. Sebep: toplulaştırmalar BAZ para biriminde (TRY) gelir ama
   // sayfa hepsini varlığın birimiyle ("$") etiketliyordu. Çapraz kurda iki alan ayrılır.
-  it("çapraz kur: birim alanlar varlığın biriminde, toplamlar baz para biriminde etiketlenir", async () => {
+  // Kullanıcı bildirimi 2026-09-21 (ilk bildirimin ASIL isteği): 0,0603 adet $721,63'ten
+  // alındı ($43,51), fiyat $740,84'e güncellendi → detay "$44,67 · +%2,7" göstermeli.
+  // İlk düzeltme etiketi ₺'ye çevirmişti (doğru etiket, yanlış birim) — kullanıcı DOLAR istiyor.
+  it("çapraz kur: detay varlığın KENDİ biriminde ($), ₺ karşılığı ikincil satırda", async () => {
     mockHolding({
       ...base, assetType: "Stock", name: "NASDAQ 100 Endeks Fonu", symbol: "QQQ",
       currency: "USD", baseCurrency: "TRY", unit: "adet",
-      quantity: 0.0603, avgCost: 721.63, currentPrice: 722.09,
-      // 0,0603 × 721,63 × 48 (kur) — backend baz para biriminde döner.
-      totalCost: 2087.89, currentValue: 2089.22, profit: 1.33, returnRatio: 0.001,
+      quantity: 0.0603, avgCost: 721.63, currentPrice: 740.84,
+      // Baz birim (TRY) alanlar — listede kullanılır.
+      totalCost: 2123.45, currentValue: 2179.98, profit: 56.53, returnRatio: 0.02662,
+      // Varlığın kendi birimi (USD) — backend hesaplar (D-001).
+      totalCostNative: 43.514289, currentValueNative: 44.672652, profitNative: 1.158363,
     });
     renderDetail();
 
     await waitFor(() => expect(screen.getByRole("heading", { name: /NASDAQ/ })).toBeInTheDocument());
 
-    // Birim alanlar: varlığın kendi birimi ($).
+    // Birim alanlar ve toplamlar aynı birimde ($).
     expect(screen.getByText("$721,63")).toBeInTheDocument();
-    expect(screen.getByText("$722,09")).toBeInTheDocument();
+    expect(screen.getByText("$740,84")).toBeInTheDocument();
+    expect(screen.getByText("$43,51")).toBeInTheDocument();             // toplam maliyet
+    await waitFor(() => expect(screen.getByText("$44,67")).toBeInTheDocument()); // değer (count-up)
+    expect(screen.getByText(/\+%2,7/)).toBeInTheDocument();
 
-    // Toplulaştırma: baz para birimi (₺) — "$2.087,89" ASLA görünmemeli.
-    expect(screen.getByText(/₺2\.087,89/)).toBeInTheDocument();
-    expect(screen.queryByText(/\$2\.087,89/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/\$2\.089,22/)).not.toBeInTheDocument();
+    // ₺ karşılığı ikincil satırda, KENDİ etiketiyle.
+    expect(screen.getByTestId("hero-base-equivalent")).toHaveTextContent("≈ ₺2.179,98");
+
+    // Etiket karışıklığı ASLA: TRY tutar "$" ile görünmez.
+    expect(screen.queryByText(/\$2\.179,98/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\$2\.123,45/)).not.toBeInTheDocument();
   });
 
   // Kullanıcı bildirimi 2026-09-20: geri linki anasayfaya (Genel Bakış) götürüyordu;

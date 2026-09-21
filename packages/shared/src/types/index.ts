@@ -144,6 +144,14 @@ export interface Holding {
   bes: Bes | null;
   /** Yalnızca tekil holding (GET /holdings/{id}) yanıtında dolu; listede null. */
   transactions?: Transaction[] | null;
+  /**
+   * Varlığın KENDİ para birimindeki (`currency`) toplamlar — detay ekranı bunları gösterir
+   * (örn. 0,0603 × $740,84 = $44,67). Liste satırları toplandığı için `baseCurrency` alanlarını
+   * kullanır. Getiri oranı iki birimde aynıdır.
+   */
+  totalCostNative?: number | null;
+  currentValueNative?: number | null;
+  profitNative?: number | null;
 }
 
 /** Dağılım dilimi (donut + legend). */

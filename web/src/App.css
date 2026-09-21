@@ -4136,3 +4136,10 @@ body.drawer-lock {
 .bes-funds-form { display: flex; flex-direction: column; gap: 8px; }
 .bes-funds-form label { font-size: 12px; color: var(--muted, #9aa6c4); margin-top: 4px; }
 .bes-portfolio-value { border-top: 1px dashed var(--line, #26304f); padding-top: 10px; }
+
+/* Detay hero'da çapraz kur ikincil satırı: varlık kendi biriminde, baz karşılığı sönük altta. */
+.detail-hero .dh-base {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted, #9aa6c4);
+}

@@ -273,7 +273,16 @@ export function HoldingDetailPage() {
   };
 
   const meta = ASSET_META[h.assetType];
-  const profitSign = h.profit !== null && h.profit > 0 ? "+" : "";
+  // Detay, varlığı KENDİ para biriminde anlatır (kullanıcı bildirimi 2026-09-21: $721,63'ten
+  // alıp $740,84'e güncellenen 0,0603 adet için "$44,67 · +%2,7" görmek istiyor, ₺ değil).
+  // Backend native alanları döner (D-001 — istemci para hesaplamaz); eski yanıt/önbellek
+  // için baz birim alanlarına düşülür. Çapraz kurda ₺ karşılığı ikincil satırda gösterilir.
+  const crossCurrency = h.currency !== h.baseCurrency;
+  const heroValue = h.currentValueNative ?? h.currentValue;
+  const heroProfit = h.profitNative ?? h.profit;
+  const heroCost = h.totalCostNative ?? h.totalCost;
+  const heroCurrency = h.currentValueNative != null ? h.currency : h.baseCurrency;
+  const profitSign = heroProfit !== null && heroProfit > 0 ? "+" : "";
   const priceLabel = isBes ? "Fon değerini güncelle" : "Fiyatı güncelle";
 
   return (
@@ -297,16 +306,15 @@ export function HoldingDetailPage() {
         <div className="detail-col">
           <div className="detail-hero">
             <div className="dh-v tnum">
-              {/* Toplulaştırmalar BAZ para biriminde gelir (h.baseCurrency), birim alanlar
-                  varlığın kendi biriminde (h.currency). Önceden ikisi de h.currency ile
-                  etiketleniyordu → USD kalemde TRY tutar "$" ile görünüyordu. */}
-              {h.currentValue === null ? "—" : <CountUpCurrency value={h.currentValue} currency={h.baseCurrency} />}
+              {/* Varlığın kendi biriminde (heroCurrency). Her tutar KENDİ birimiyle etiketlenir —
+                  hiçbir yerde TRY tutar "$" ile (veya tersi) gösterilmez. */}
+              {heroValue === null ? "—" : <CountUpCurrency value={heroValue} currency={heroCurrency} />}
             </div>
-            <div className={`dh-g tnum ${tone(h.profit)}`}>
-              {h.profit === null ? "—" : (
+            <div className={`dh-g tnum ${tone(heroProfit)}`}>
+              {heroProfit === null ? "—" : (
                 <>
                   {profitSign}
-                  <CountUpCurrency value={h.profit} currency={h.baseCurrency} />
+                  <CountUpCurrency value={heroProfit} currency={heroCurrency} />
                 </>
               )}
               {h.returnRatio !== null && (
@@ -316,6 +324,11 @@ export function HoldingDetailPage() {
                 </>
               )}
             </div>
+            {crossCurrency && h.currentValue !== null && heroCurrency !== h.baseCurrency && (
+              <div className="dh-base tnum" data-testid="hero-base-equivalent">
+                ≈ {formatCurrency(h.currentValue, h.baseCurrency)} · güncel kurla
+              </div>
+            )}
           </div>
 
           <div className="detail-actions">
@@ -353,7 +366,7 @@ export function HoldingDetailPage() {
           <div className="drow"><span className="dk">Miktar</span><span className="dv tnum">{formatNumber(h.quantity)} {h.unit}</span></div>
           <div className="drow"><span className="dk">Ortalama maliyet</span><span className="dv tnum">{formatCurrency(h.avgCost, h.currency)}</span></div>
           <div className="drow"><span className="dk">Güncel fiyat</span><span className="dv tnum">{h.currentPrice === null ? "—" : formatCurrency(h.currentPrice, h.currency)}</span></div>
-          <div className="drow"><span className="dk">Toplam maliyet</span><span className="dv tnum">{formatCurrency(h.totalCost, h.baseCurrency)}</span></div>
+          <div className="drow"><span className="dk">Toplam maliyet</span><span className="dv tnum">{formatCurrency(heroCost, heroCurrency)}</span></div>
           <div className="drow"><span className="dk">Portföy ağırlığı</span><span className="dv tnum">{formatPercent(h.weight, 1, true, false)}</span></div>
 
           {h.bes && (
