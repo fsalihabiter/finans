@@ -54,6 +54,12 @@ internal static class HoldingMapping
             return;
         }
 
+        // Sabit fiyatlı türler (Nakit = 1) — saklanan değerden BAĞIMSIZ, erken dönüşten ÖNCE
+        // (işlemsiz nakit de kapsansın). INC-003: nakit fiyatı null kalıyor, satır "—"
+        // gösterirken özet onu maliyetinden sayıyordu → toplam ≠ görünen satırlar.
+        if (AssetPricing.FixedUnitPriceFor(h.Asset.Type) is { } fixedPrice)
+            h.CurrentPrice = fixedPrice;
+
         // İşlem yoksa türetim 0/0 döner — saklanan değerleri SİLMEZ (örn. Nakit: doğrudan miktar
         // tutulur, alış/satış işlemi olmaz). Yalnız işlem varsa kaynaktan yeniden türetilir.
         if (h.Transactions.Count == 0)
