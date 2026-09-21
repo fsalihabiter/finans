@@ -22,7 +22,11 @@ findings:
     rule_or_decision: D-002
     summary: "Tavsiye/tahmin taraması (M7) ve markdown güvenlik taraması YALNIZ `LessonSections.BodyMarkdown` üzerinde koşuyor; `Lesson.Summary` ve `Lesson.BodyMarkdown` hiç taranmıyor — oysa ikisi de kullanıcıya görünür."
     rationale: "Ders listesinde her dersin `Summary`'si gösteriliyor (tarayıcıda teyit edildi) ve `Lesson.BodyMarkdown` bölümsüz derslerde geriye dönük içerik olarak render ediliyor. Bu iki alan D-002 kapsamındaki metin ama yasal guard'ın dışında: bugün içerik temiz, korumanın kendisi eksik. Bir sonraki ders yazarı (ya da topluluk katkısı, 14 §4-D2) buraya yönlendirme/tahmin cümlesi koyarsa hiçbir test uyarmaz."
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-09-20"
+      evidence_ref: "a09d089 · EducationSeedTests.No_block_including_sources_predicts_or_ranks_instruments"
+      note: "Kullanıcı kararı. Tarama Lesson.Summary ve Lesson.BodyMarkdown alanlarını da kapsıyor. Genişletilince mevcut içerikte bir false positive çıktı (\"Neden yüksek getiri\" — sıralama regexi kelime sınırı yoktu) → regex düzeltildi."
   - id: RV-002
     severity: medium
     evidence: proven
@@ -32,7 +36,11 @@ findings:
     rule_or_decision: D-017
     summary: "`LessonsWithoutLiveContext` istisna listesindeki slug'ın gerçekten var olduğu doğrulanmıyor; ders yeniden adlandırılır ya da kaldırılırsa istisna ÖLÜ kalır ve kimse fark etmez."
     rationale: "D-017 istisnayı 'sessiz boşluk değil, testle doğrulanan beyan' olarak tanımlıyor. Bugün kural iki yönlü çalışıyor (listedeki derste blok BULUNMAMALI) ama listenin kendisi denetlenmiyor: var olmayan bir slug için `TryGetValue` hiç eşleşmez, döngü o dersi görmez, test yeşil kalır. Liste zamanla gerçeklikten kopabilir — D-017'nin 'liste büyürse uyarı sinyalidir' maddesi de bu yüzden işlemez."
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-09-20"
+      evidence_ref: "a09d089 · EducationSeedTests (LiveContext istisna listesi denetimi)"
+      note: "Kullanıcı kararı (\"RV-001 ve RV-002yi şimdi kapat\"). Listedeki her slug için gerçek bir dersin varlığı doğrulanıyor; ders yeniden adlandırılırsa test kırmızıya döner."
   - id: RV-003
     severity: low
     evidence: proven
