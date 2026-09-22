@@ -67,6 +67,7 @@ public sealed class PortfolioHistoryService(
         var today = DateOnly.FromDateTime(nowUtc);
 
         var holdings = await db.Holdings
+            .AsNoTracking() // RV-010: salt okuma
             .Where(h => h.UserId == userId)
             .Include(h => h.Asset)
             .Include(h => h.Transactions)
