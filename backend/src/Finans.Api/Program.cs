@@ -92,8 +92,10 @@ try
     builder.Services.AddProblemDetails();
 
     // Veri katmanı (EF Core + Npgsql). Bağlantı dizesi env/User Secrets'tan gelebilir.
-    var connectionString = builder.Configuration.GetConnectionString("Postgres")
-        ?? throw new InvalidOperationException("ConnectionStrings:Postgres yapılandırılmamış.");
+    // Render/Railway URI biçimi (postgresql://...) de kabul edilir → anahtar=değere çevrilir.
+    var connectionString = PostgresConnectionString.Normalize(
+        builder.Configuration.GetConnectionString("Postgres")
+        ?? throw new InvalidOperationException("ConnectionStrings:Postgres yapılandırılmamış."));
     builder.Services.AddInfrastructure(connectionString,
         pricing => builder.Configuration.GetSection(PricingOptions.SectionName).Bind(pricing),
         builder.Configuration.GetConnectionString("Redis"),
