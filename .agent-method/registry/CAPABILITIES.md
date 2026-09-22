@@ -20,8 +20,29 @@ capabilities:
     entry_points: [BesCalculator, BesContributionPlanner, BesProjectionCalculator, BesRules, BesPlanCatchUpHostedService]
     status: healthy
     scope: all
-    notes: Devlet katkısı ayrı satır, hak ediş, katkı planı + arka plan telafi çalıştırıcısı. TR pazarına özgü derinlik (G-4).
-    last_verified_ref: ac61b7e
+    notes: >
+      Devlet katkısı ayrı satır, hak ediş, katkı planı + arka plan telafi çalıştırıcısı.
+      TR pazarına özgü derinlik (G-4). GD-002 (D-019) ile **iki fon havuzu**: kendi
+      katkının fon değeri ve devlet katkısının fon değeri ayrı girilir; portföy değeri
+      = kendi fon + hak ediş × devlet fon (hak edilmemiş kısım toplama girmez).
+      Tek tanım noktaları — `DepositedTotals` / `ContributionTotals` (katkı
+      sınıflandırması), `FundReturnFor` (iki havuz getirisi),
+      `VestedPortfolioValueFor` (değer), `SplitTotalFundValue` (eski tek değerin
+      bölünmesi). Bu kural beş yüzeyde aynı: liste · özet · detay · değer serisi · senaryo.
+    last_verified_ref: 6d5a399
+
+  - capability: Sabit birim fiyatlı varlıklar
+    location: backend/src/Finans.Application/Portfolio/AssetPricing.cs
+    entry_points: [AssetPricing.FixedUnitPriceFor]
+    status: healthy
+    scope: all
+    notes: >
+      Tanım gereği birim fiyatı sabit olan varlık türleri (şimdilik yalnız Cash = 1).
+      Okuma yolunda ve oluşturmada uygulanır; INC-003'ün kök nedeni buydu — nakit
+      pozisyonu fiyatsız kalıyor, toplam görünen satırların toplamına eşit olmuyordu.
+      Yeni sabit fiyatlı tür eklenecekse tek yer burasıdır.
+    tests: backend/tests/Finans.Integration.Tests/PortfolioHistoryApiTests.cs
+    last_verified_ref: 6d5a399
 
   - capability: Holdings & transactions CRUD
     location: backend/src/Finans.Infrastructure/Services/HoldingService.cs (+ HoldingMapping, PortfolioService)
