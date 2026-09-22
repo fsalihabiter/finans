@@ -281,7 +281,10 @@ export function HoldingDetailPage() {
   const heroValue = h.currentValueNative ?? h.currentValue;
   const heroProfit = h.profitNative ?? h.profit;
   const heroCost = h.totalCostNative ?? h.totalCost;
-  const heroCurrency = h.currentValueNative != null ? h.currency : h.baseCurrency;
+  // REVIEW-002 · RV-005: birim, NATIVE alanların VARLIĞINA göre seçilir — değerin dolu olup
+  // olmamasına göre değil. Fiyatı henüz girilmemiş yabancı kalemde değer null ama maliyet
+  // native (USD) gelir; eskiden birim ₺'ye düşüyor ve "$43,51" "₺43,51" görünüyordu.
+  const heroCurrency = h.totalCostNative != null ? h.currency : h.baseCurrency;
   const profitSign = heroProfit !== null && heroProfit > 0 ? "+" : "";
   const priceLabel = isBes ? "Fon değerini güncelle" : "Fiyatı güncelle";
 

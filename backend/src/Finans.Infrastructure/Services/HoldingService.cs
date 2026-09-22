@@ -37,6 +37,14 @@ public sealed class HoldingService(
     /// </summary>
     private static DateTime TrNow() => HoldingMapping.TrNow();
 
+    /// <summary>
+    /// BES'in eski tek fon alanının (<c>Holdings.CurrentPrice</c>) karşılığı: iki havuzun
+    /// toplamı (hak ediş UYGULANMAZ — eski alan "toplam fon değeri" anlamındaydı). İki havuzdan
+    /// biri bile girilmemişse null → çağıran mevcut değeri korur (RV-008).
+    /// </summary>
+    private static decimal? LegacyBesTotal(decimal? ownFund, decimal? stateFund) =>
+        ownFund is { } o && stateFund is { } s ? o + s : null;
+
     /// <summary>"Plan" türevli (otomatik üretilen) kaynaklar: düzenli plan dedup'unda kullanılır.</summary>
     private static bool IsPlanSource(string source) => source == "Plan";
 
@@ -154,7 +162,9 @@ public sealed class HoldingService(
             AssetId = asset.Id,
             Quantity = 1m,
             AvgCost = request.OpeningOwn,            // okuma yolunda yeniden türetilir; tutarlı başlat
-            CurrentPrice = request.CurrentFundValue, // BES "güncel fiyat" = toplam fon değeri (miktar 1)
+            // Eski tek alan = iki havuzun TOPLAMI (RV-008): okuma yolu bu alanı kullanmaz, ama
+            // migration geri alınırsa eski kod bunu okur — bayat değil güncel toplam görmeli.
+            CurrentPrice = LegacyBesTotal(ownFund, stateFund) ?? request.CurrentFundValue,
             CreatedAtUtc = now,
         };
         holding.BesDetails = new BesDetails
@@ -283,7 +293,22 @@ public sealed class HoldingService(
         if (request.CurrentPrice is < 0m)
             throw new ValidationException("currentPrice", "must_be_non_negative", "Güncel fiyat negatif olamaz.");
 
-        var holding = await LoadOwnedAsync(id, ct);
+        var holding = await db.Holdings
+            .Include(h => h.Asset)
+            .FirstOrDefaultAsync(h => h.Id == id && h.UserId == currentUser.UserId, ct)
+            ?? throw new NotFoundException();
+
+        // REVIEW-002 · RV-006: bu iki türde fiyat TÜRETİLİR (okuma yolu), yazılan değer
+        // sessizce yok sayılırdı — 200 dönüp hiçbir şey değiştirmemek sözleşmeyi yalanlar.
+        // Açık hata + doğru yol: istemci (mobil/eski sürüm) ne yapması gerektiğini öğrenir.
+        if (holding.Asset.Type == AssetType.Bes)
+            throw new ValidationException("currentPrice", "derived_for_bes",
+                "BES'te fon değeri tek fiyat olarak girilmez; kendi katkı ve devlet katkısı fon " +
+                "değerleri ayrı ayrı PUT /api/holdings/{id}/bes ile güncellenir.");
+        if (AssetPricing.FixedUnitPriceFor(holding.Asset.Type) is not null)
+            throw new ValidationException("currentPrice", "fixed_price",
+                "Bu varlığın fiyatı sabittir (nakit = 1) ve değiştirilemez.");
+
         holding.CurrentPrice = request.CurrentPrice;
         holding.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -385,6 +410,12 @@ public sealed class HoldingService(
             bes.OwnFundValue = request.OwnFundValue;
         if (request.StateFundValue is not null)
             bes.StateFundValue = request.StateFundValue;
+
+        // REVIEW-002 · RV-008: eski tek alan iki havuzun toplamıyla SENKRON kalır. Okuma yolu
+        // bu alanı kullanmaz; ama migration geri alınırsa eski kod bunu okur — kullanıcı aylar
+        // önceki donmuş fon değerini değil, son girdiği toplamı görmeli.
+        if (request.OwnFundValue is not null || request.StateFundValue is not null)
+            holding.CurrentPrice = LegacyBesTotal(bes.OwnFundValue, bes.StateFundValue) ?? holding.CurrentPrice;
 
         if (request.JoinedAtUtc is { } joined)
         {
@@ -603,25 +634,11 @@ public sealed class HoldingService(
         // katkı ile devlet katkısı için simetrik (kullanıcı geri bildirimi): geçmiş listesindeki
         // "Gelecek Ödeme" satırının değerleriyle birebir eşleşir. StatePending satır (kendi katkı
         // ödendi, devlet henüz yatmadı) "yolda" sayılır — tabloda görünür ama hiçbir toplama girmez.
-        decimal ownDeposited = 0m, stateDeposited = 0m, ownPending = 0m, statePending = 0m;
-        foreach (var c in list)
-        {
-            switch (c.Status)
-            {
-                case BesContributionStatus.Future:
-                    ownPending += c.OwnAmount;
-                    statePending += c.StateAmount;
-                    break;
-                case BesContributionStatus.Deposited:
-                    ownDeposited += c.OwnAmount;
-                    stateDeposited += c.StateAmount;
-                    break;
-                case BesContributionStatus.StatePending:
-                    ownDeposited += c.OwnAmount; // kendi katkı ödendi
-                    // devlet katkısı "yolda" — toplama dahil değil
-                    break;
-            }
-        }
+        // REVIEW-002 · RV-007: sınıflandırma TEK yerde (BesCalculator.ContributionTotals) —
+        // değer yolu, seri ve migration ile aynı tanım. Burada ayrı bir switch yazılı olması,
+        // canlıda iki havuzun getirisini %39 ↔ %48 ayıran hatanın kök nedeniydi.
+        var (ownDeposited, stateDeposited, ownPending, statePending) = BesCalculator.ContributionTotals(
+            contributions.Select(c => (c.PaidAtUtc, c.OwnAmount, c.StateAmount)), asOf);
 
         var vestedRate = BesCalculator.VestedRateFor(bes.JoinedAtUtc, BesCalculator.AgeFor(bes.BirthYear, asOf), asOf);
         var vestedAmount = Math.Round(vestedRate * stateDeposited, 2);
@@ -696,6 +713,7 @@ public sealed class HoldingService(
         var baseCcy = await HoldingMapping.ResolveBaseCurrencyAsync(db, userId, baseCurrency, ct);
 
         var holdings = await db.Holdings
+            .AsNoTracking() // RV-010: okuma yolu türetilmiş değerleri entity üstüne yazar — asla kalıcılaşmasın
             .Where(h => h.UserId == userId)
             .Include(h => h.Asset)
             .Include(h => h.BesDetails)

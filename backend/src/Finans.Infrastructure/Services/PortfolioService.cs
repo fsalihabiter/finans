@@ -24,6 +24,7 @@ public sealed class PortfolioService(
         var baseCcy = await HoldingMapping.ResolveBaseCurrencyAsync(db, userId, baseCurrency, ct);
 
         var holdings = await db.Holdings
+            .AsNoTracking() // RV-010: ApplyReadPosition türetilmiş değer yazar — kalıcılaşmasın
             .Where(h => h.UserId == userId)
             .Include(h => h.Asset)
             .Include(h => h.Transactions)

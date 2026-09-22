@@ -77,21 +77,43 @@ public static class BesCalculator
         IEnumerable<(DateTime PaidAtUtc, decimal OwnAmount, decimal StateAmount)> contributions,
         DateTime asOfUtc)
     {
-        decimal own = 0m, state = 0m;
+        var t = ContributionTotals(contributions, asOfUtc);
+        return (t.OwnDeposited, t.StateDeposited);
+    }
+
+    /// <summary>
+    /// Katkı toplamlarının TEK sınıflandırması (REVIEW-002 · RV-007) — fonda olan + bekleyen.
+    /// <list type="bullet">
+    ///   <item><b>Deposited:</b> kendi ve devlet katkısı fonda.</item>
+    ///   <item><b>StatePending:</b> kendi katkı fonda; devlet katkısı "yolda" → HİÇBİR toplama girmez.</item>
+    ///   <item><b>Future:</b> ödeme tarihi gelmedi → yalnız "bekleyen" toplamlara.</item>
+    /// </list>
+    /// ⚠ Detay DTO'su, değer yolu, seri ve migration hepsi bu sınıflandırmayı kullanır. Aynı
+    /// kavramın iki yerde ayrı yazılması canlı veride iki havuzun getirisini %39 ↔ %48 ayırmıştı.
+    /// </summary>
+    public static BesContributionTotals ContributionTotals(
+        IEnumerable<(DateTime PaidAtUtc, decimal OwnAmount, decimal StateAmount)> contributions,
+        DateTime asOfUtc)
+    {
+        decimal ownDep = 0m, stateDep = 0m, ownPend = 0m, statePend = 0m;
         foreach (var (paidAt, ownAmount, stateAmount) in contributions)
         {
             switch (ContributionStatusFor(paidAt, asOfUtc))
             {
                 case BesContributionStatus.Deposited:
-                    own += ownAmount;
-                    state += stateAmount;
+                    ownDep += ownAmount;
+                    stateDep += stateAmount;
                     break;
                 case BesContributionStatus.StatePending:
-                    own += ownAmount; // kendi katkı fonda; devlet katkısı yolda
+                    ownDep += ownAmount; // kendi katkı fonda; devlet katkısı yolda
+                    break;
+                case BesContributionStatus.Future:
+                    ownPend += ownAmount;
+                    statePend += stateAmount;
                     break;
             }
         }
-        return (own, state);
+        return new BesContributionTotals(ownDep, stateDep, ownPend, statePend);
     }
 
     /// <summary>Doğum yılından kaba yaş (asOf yılı − doğum yılı). Yıl yoksa null.</summary>
@@ -215,6 +237,13 @@ public static class BesCalculator
         return Math.Round(ownValue + vestedRate * stateValue, 2);
     }
 }
+
+/// <summary>BES katkı toplamlarının tek sınıflandırması (<see cref="BesCalculator.ContributionTotals"/>).</summary>
+public readonly record struct BesContributionTotals(
+    decimal OwnDeposited,
+    decimal StateDeposited,
+    decimal OwnPending,
+    decimal StatePending);
 
 /// <summary>
 /// BES fonun her bir katkı kalemine yansıyan getirisi (T-BES.10).

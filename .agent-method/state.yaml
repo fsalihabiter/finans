@@ -12,10 +12,10 @@ active:
   gd_id: GD-002     # status: review — adm-review bekliyor. GD-001 de `review`, kabul onayı bekliyor.
 
 session:            # current open session; cleared by adm-close
-  id: null          # S-002 kapandı → evidence/sessions/S-002.md
-  runtime: null
-  started_at: null
-  start_sha: null
+  id: S-003
+  runtime: claude-code
+  started_at: "2026-09-22T04:57:06Z"
+  start_sha: 1c74123
 
 blockers: []
 # DOCTOR-001 bulguları DR-001..DR-006 hâlâ `open`; hiçbiri critical değil,
@@ -24,7 +24,9 @@ blockers: []
 # DR-005 (iç içe finans/ klonu) ve DR-006 (kökteki ADM dağıtım dosyaları) açık.
 
 review:
-  last_review_id: REVIEW-001
-  # REVIEW-001 yalnız GD-001'i kapsar: RV-001/RV-002 resolved (kullanıcı kararı),
-  # RV-003/RV-004 (low) open. GD-002'de kod değişti ve review KOŞMADI → pending.
-  status: pending   # not-run | pending | clean | findings
+  last_review_id: REVIEW-002
+  # REVIEW-002 (GD-002): 6/6 resolved (kullanıcı kararı "hepsini kapat", 2026-09-22) —
+  # her düzeltme kendi testiyle; RV-005 ve RV-010 mutasyonla kanıtlı.
+  # REVIEW-001 (GD-001): RV-001/RV-002 resolved (kullanıcı kararı),
+  # RV-003/RV-004 (low) open.
+  status: findings  # REVIEW-001 low açık; REVIEW-002 temiz

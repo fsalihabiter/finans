@@ -282,6 +282,29 @@ public sealed class BesCalculatorTests
     }
 
     [Fact]
+    public void ContributionTotals_classifies_each_status_once()
+    {
+        // Aynı üç kayıt (Deposited · StatePending · Future) — REVIEW-002 · RV-007.
+        var asOf = new DateTime(2026, 9, 20, 0, 0, 0, DateTimeKind.Utc);
+        var contributions = new[]
+        {
+            (new DateTime(2026, 7, 15, 0, 0, 0, DateTimeKind.Utc), 1_000m, 200m),   // Deposited
+            (new DateTime(2026, 9, 10, 0, 0, 0, DateTimeKind.Utc), 1_000m, 200m),   // StatePending
+            (new DateTime(2026, 10, 15, 0, 0, 0, DateTimeKind.Utc), 1_000m, 200m),  // Future
+        };
+
+        var t = BesCalculator.ContributionTotals(contributions, asOf);
+
+        Assert.Equal(2_000m, t.OwnDeposited);
+        Assert.Equal(200m, t.StateDeposited);   // yoldaki devlet katkısı hiçbir toplamda yok
+        Assert.Equal(1_000m, t.OwnPending);
+        Assert.Equal(200m, t.StatePending);     // yalnız Future'ın devlet payı
+
+        // DepositedTotals aynı sınıflandırmanın alt kümesi — iki yol ayrışamaz.
+        Assert.Equal((t.OwnDeposited, t.StateDeposited), BesCalculator.DepositedTotals(contributions, asOf));
+    }
+
+    [Fact]
     public void SplitTotalFundValue_splits_by_contribution_share_and_preserves_total()
     {
         // 72.000 → 50/60 ve 10/60 → 60.000 + 12.000

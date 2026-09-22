@@ -248,6 +248,106 @@ public sealed class PortfolioHistoryApiTests : IClassFixture<SqliteWebApplicatio
         history!.Points[^1].Value.Should().Be(summary.TotalValue);
     }
 
+    // ── REVIEW-002 · RV-006: türetilmiş fiyat yazılamaz (sessiz yok sayma yerine 400) ──
+
+    [Fact]
+    public async Task Put_current_price_is_rejected_for_bes_and_cash_instead_of_silently_ignored()
+    {
+        var client = await FreshUserAsync("Türetilmiş Fiyat Testi");
+
+        var besResp = await client.PostAsJsonAsync("/api/holdings/bes",
+            new CreateBesRequest("BES Fiyat", null, CurrencyCode.TRY,
+                JoinedAtUtc: DateTime.UtcNow.AddYears(-1), BirthYear: 1990,
+                CurrentFundValue: 12000m, OpeningOwn: 10000m, OpeningState: 2000m), Json);
+        var bes = await besResp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+
+        var cashResp = await client.PostAsJsonAsync("/api/holdings",
+            new CreateHoldingRequest(AssetType.Cash, "Nakit (TL)", null, CurrencyCode.TRY, "TRY",
+                new TransactionRequest(TransactionType.Buy, 5000m, 1m)), Json);
+        var cash = await cashResp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+
+        // Eskiden ikisi de 200 dönüyor, hiçbir şey değişmiyordu.
+        var putBes = await client.PutAsJsonAsync($"/api/holdings/{bes!.Id}", new UpdateHoldingRequest(99999m), Json);
+        putBes.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await putBes.Content.ReadAsStringAsync()).Should().Contain("derived_for_bes");
+
+        var putCash = await client.PutAsJsonAsync($"/api/holdings/{cash!.Id}", new UpdateHoldingRequest(2m), Json);
+        putCash.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await putCash.Content.ReadAsStringAsync()).Should().Contain("fixed_price");
+
+        // Değerler bozulmadı.
+        var after = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json);
+        after!.Single(h => h.Id == cash.Id).CurrentValue.Should().Be(5000m);
+        after.Single(h => h.Id == bes.Id).CurrentValue.Should().Be(bes.CurrentValue);
+    }
+
+    // ── REVIEW-002 · RV-008 / RV-010: eski tek alan senkron, türetilmiş değer kalıcılaşmaz ──
+
+    private async Task<(HttpClient Client, Guid UserId)> FreshUserWithIdAsync(string name)
+    {
+        var userId = Guid.NewGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
+            db.Users.Add(new User
+            {
+                Id = userId, DisplayName = name, BaseCurrency = CurrencyCode.TRY,
+                IsActive = true, CreatedAtUtc = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+        return (ClientAs(userId), userId);
+    }
+
+    [Fact]
+    public async Task Bes_legacy_current_price_stays_in_sync_and_derived_value_is_never_persisted()
+    {
+        // 7 yıllık katılım → hak ediş %35 → TÜRETİLMİŞ değer (131.550) ≠ iki havuz toplamı (153.000).
+        // Bu fark sayesinde "hangi değer kalıcılaştı?" sorusu kesin cevaplanır.
+        var (client, userId) = await FreshUserWithIdAsync("Senkron Testi");
+        var resp = await client.PostAsJsonAsync("/api/holdings/bes",
+            new CreateBesRequest("BES Senkron", null, CurrencyCode.TRY,
+                JoinedAtUtc: DateTime.UtcNow.AddYears(-7), BirthYear: 1990,
+                CurrentFundValue: 0m, OpeningOwn: 100000m, OpeningState: 30000m,
+                OwnFundValue: 120000m, StateFundValue: 33000m), Json);
+        var bes = await resp.Content.ReadFromJsonAsync<HoldingDto>(Json);
+        bes!.CurrentValue.Should().Be(131550m);
+
+        async Task<decimal?> StoredPriceAsync()
+        {
+            using var s = _factory.Services.CreateScope();
+            var db = s.ServiceProvider.GetRequiredService<FinansDbContext>();
+            return (await db.Holdings.FindAsync(bes.Id))!.CurrentPrice;
+        }
+
+        // RV-008: iki havuz ayrı girildiğinde eski tek alan TOPLAMI taşır (CurrentFundValue 0 olsa bile).
+        (await StoredPriceAsync()).Should().Be(153000m);
+
+        // Güncelleme sonrası da senkron.
+        await client.PutAsJsonAsync($"/api/holdings/{bes.Id}/bes",
+            new UpdateBesRequest(OwnFundValue: 125000m, StateFundValue: 34000m), Json);
+        (await StoredPriceAsync()).Should().Be(159000m, "geri alma bayat değil son toplamı görmeli");
+
+        // RV-010: okuma yolu entity üstüne TÜRETİLMİŞ değeri (hak ediş uygulanmış) yazar. Aynı
+        // DbContext'te sonradan SaveChanges çalışsa bile bu değer kalıcılaşMAMALI.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FinansDbContext>();
+            var svc = ActivatorUtilities.CreateInstance<Finans.Infrastructure.Services.HoldingService>(
+                scope.ServiceProvider, new FixedUser(userId));
+            var list = await svc.GetAllAsync();
+            list.Single(h => h.Id == bes.Id).CurrentValue.Should().Be(125000m + 0.35m * 34000m);
+
+            await db.SaveChangesAsync(); // eski davranışta türetilmiş değer burada yazılırdı
+        }
+        (await StoredPriceAsync()).Should().Be(159000m, "türetilmiş (hak ediş uygulanmış) değer DB'ye sızmamalı");
+    }
+
+    private sealed class FixedUser(Guid id) : Finans.Application.Common.ICurrentUser
+    {
+        public Guid UserId => id;
+    }
+
     // ── SC-34: ileri tarihli BES plan katkısı maliyete girmez (özet = seri) ──
 
     [Fact]

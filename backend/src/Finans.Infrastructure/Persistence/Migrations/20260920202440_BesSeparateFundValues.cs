@@ -50,32 +50,55 @@ namespace Finans.Infrastructure.Persistence.Migrations
             // tabana giriyor, bölme devlet havuzuna fazla pay veriyordu (canlı veride iki havuzun
             // getirisi %39 ↔ %48 ayrıştı). Canlıda yakalanıp düzeltildi.
             // Katkı tabanı 0 ise (ya da fon değeri yoksa) alanlar NULL kalır: veri uydurulmaz.
+            // REVIEW-002 · RV-009: "bugün" UYGULAMA ile aynı saat diliminde (Türkiye; uygulama
+            // UTC+3 sabit kullanır, TR 2016'dan beri DST uygulamıyor) — konteynerin UTC'si değil.
+            // Kendi havuzu 2 ondalığa yuvarlanır, KALAN devlet havuzuna gider → iki parçanın
+            // toplamı eski tek değere kuruşu kuruşuna eşit (BesCalculator.SplitTotalFundValue ile aynı).
             migrationBuilder.Sql("""
-                WITH deposited AS (
+                WITH tr AS (SELECT (now() AT TIME ZONE 'UTC' + interval '3 hours')::date AS today),
+                deposited AS (
                     SELECT c."HoldingId",
                            SUM(c."OwnAmount") AS own_sum,
                            SUM(CASE
                                  WHEN (date_trunc('month', c."PaidAtUtc") + interval '2 months' - interval '1 day')::date
-                                      <= current_date
+                                      <= (SELECT today FROM tr)
                                  THEN c."StateAmount" ELSE 0 END) AS state_sum
                     FROM "BesContributions" c
-                    WHERE c."PaidAtUtc"::date <= current_date
+                    WHERE c."PaidAtUtc"::date <= (SELECT today FROM tr)
                     GROUP BY c."HoldingId"
+                ),
+                split AS (
+                    SELECT h."Id" AS holding_id, h."CurrentPrice" AS total,
+                           ROUND(h."CurrentPrice" * d.own_sum / (d.own_sum + d.state_sum), 2) AS own_part
+                    FROM "Holdings" h
+                    JOIN deposited d ON d."HoldingId" = h."Id"
+                    WHERE h."CurrentPrice" IS NOT NULL AND (d.own_sum + d.state_sum) > 0
                 )
                 UPDATE "BesDetails" b
-                SET "OwnFundValue"   = h."CurrentPrice" * d.own_sum   / (d.own_sum + d.state_sum),
-                    "StateFundValue" = h."CurrentPrice" * d.state_sum / (d.own_sum + d.state_sum)
-                FROM "Holdings" h
-                JOIN deposited d ON d."HoldingId" = h."Id"
-                WHERE b."HoldingId" = h."Id"
-                  AND h."CurrentPrice" IS NOT NULL
-                  AND (d.own_sum + d.state_sum) > 0;
+                SET "OwnFundValue"   = s.own_part,
+                    "StateFundValue" = s.total - s.own_part
+                FROM split s
+                WHERE b."HoldingId" = s.holding_id;
                 """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // REVIEW-002 · RV-008: kolonlar düşmeden ÖNCE iki havuzun toplamı eski tek alana
+            // geri yazılır. Aksi halde eski kod migration günündeki donmuş değeri okur —
+            // kullanıcı son girdiği fon değerini değil, aylar önceki bir sayıyı görürdü.
+            // (Hak ediş uygulanmaz: eski alan "toplam fon değeri" anlamındaydı.)
+            // ⚠ İki havuz AYRIMI yine kaybolur — bu model değişikliğinin doğası; toplam korunur.
+            migrationBuilder.Sql("""
+                UPDATE "Holdings" h
+                SET "CurrentPrice" = b."OwnFundValue" + b."StateFundValue"
+                FROM "BesDetails" b
+                WHERE b."HoldingId" = h."Id"
+                  AND b."OwnFundValue" IS NOT NULL
+                  AND b."StateFundValue" IS NOT NULL;
+                """);
+
             migrationBuilder.DropCheckConstraint(
                 name: "CK_BesDetails_OwnFundValue",
                 table: "BesDetails");

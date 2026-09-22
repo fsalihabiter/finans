@@ -54,6 +54,7 @@ public sealed class ScenarioService(
 
         // Per-user kapsam: başkasının kaydı yokmuş gibi davranır (404 — varlığı sızdırma).
         var holding = await db.Holdings
+            .AsNoTracking() // RV-010: salt okuma
             .Where(h => h.Id == holdingId && h.UserId == userId)
             .Include(h => h.Asset)
             .Include(h => h.Transactions)

@@ -97,6 +97,23 @@ describe("HoldingDetailPage — fiyat güncelleme görünürlüğü", () => {
     expect(screen.queryByText(/\$2\.123,45/)).not.toBeInTheDocument();
   });
 
+  // REVIEW-002 · RV-005: fiyatı HENÜZ girilmemiş yabancı kalem (hisse/fon fiyatsız başlar).
+  // Değer null, maliyet native USD — birim yine $ olmalı. Eskiden ₺'ye düşüyordu.
+  it("çapraz kur, fiyatsız: maliyet varlığın biriminde kalır ($, ₺ değil)", async () => {
+    mockHolding({
+      ...base, assetType: "Stock", name: "Yeni Hisse", symbol: "QQQ",
+      currency: "USD", baseCurrency: "TRY", unit: "adet",
+      quantity: 0.0603, avgCost: 721.63, currentPrice: null,
+      totalCost: 2088.69, currentValue: null, profit: null, returnRatio: null,
+      totalCostNative: 43.514289, currentValueNative: null, profitNative: null,
+    });
+    renderDetail();
+
+    await waitFor(() => expect(screen.getByRole("heading", { name: /Yeni Hisse/ })).toBeInTheDocument());
+    expect(screen.getByText("$43,51")).toBeInTheDocument();
+    expect(screen.queryByText("₺43,51")).not.toBeInTheDocument();
+  });
+
   // Kullanıcı bildirimi 2026-09-20: geri linki anasayfaya (Genel Bakış) götürüyordu;
   // detaya YALNIZ /varliklar listesinden gelinir, dönüş de oraya olmalı.
   it("geri linki varlık listesine döner (anasayfaya değil)", async () => {
