@@ -1,0 +1,52 @@
+# Render Blueprint — .NET API + PostgreSQL (web ön yüzü Vercel'de; /api'yi buraya yönlendirir).
+# Kullanım: Render Dashboard → New → Blueprint → bu repo. Sırlar (sync: false) kurulumda sorulur;
+# repoda YOK (11 §6).
+#
+# ⚠ Kimlik henüz yok (Faz 7): API'yi bilen herkes tek kullanıcının verisini görür/değiştirir.
+#    Gerçek portföy verisi girmeden önce kimlik gelmeli — şimdilik demo/seed verisiyle kullan.
+
+databases:
+  - name: finans-db
+    plan: free            # ⚠ Ücretsiz Postgres 30 gün sonra silinir; kalıcı kullanım için ücretli plana geç.
+    region: frankfurt
+    databaseName: finans
+    user: finans
+
+services:
+  - type: web
+    name: finans-api
+    runtime: docker
+    plan: free            # Ücretsiz katman 15 dk boşta kalınca uyur; ilk istek ~1 dk sürebilir.
+    region: frankfurt
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PORT                              # Render'a trafiği hangi porta yönlendireceğini söyler
+        value: "8080"
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__Postgres       # postgresql://... URI → PostgresConnectionString.Normalize
+        fromDatabase:
+          name: finans-db
+          property: connectionString
+      - key: Database__ApplyMigrationsOnStartup
+        value: "true"
+      - key: Database__Seed                    # İdempotent; seed kullanıcısı (Yatırımcı) + demo veri
+        value: "true"
+      - key: Auth__DevUserId                   # Kimlik gelene dek (Faz 7) tek kullanıcı = seed kullanıcısı
+        value: 62eb10dd-ea84-6141-89ca-8c412cfd9602
+      - key: Security__UseHttpsRedirection     # TLS Render'ın proxy'sinde sonlanır
+        value: "false"
+      - key: Security__ForwardedHeaders
+        value: "true"
+      - key: Llm__Provider
+        value: Anthropic
+      - key: Llm__Model
+        value: claude-haiku-4-5-20251001
+      - key: Llm__BaseUrl
+        value: https://api.anthropic.com/
+      - key: Llm__ApiKey                       # Boşsa yorum katmanı fallback metne düşer, çökme yok
+        sync: false
+      - key: Stocks__ApiKey                    # Finnhub; boşsa Hisse Analizi "yapılandırılmamış" der
+        sync: false
