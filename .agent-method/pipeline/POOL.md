@@ -10,7 +10,9 @@
 
 | ID | Title | Phase hint | Priority | Notes |
 |---|---|---|---|---|
-| T6.16/T6.17g-j | Set 0 dersleri 7-10 tam zenginlikte (Risk ne demek · Vade-hedef-portföy · Fiyat nereden çıkıyor · Bir alım nasıl gerçekleşir) | PHASE-006 | 1 | Sıradaki somut iş: **S0-L7 "Risk ne demek?"**. Künye `16` §S0-L7. LiveContext sorunu **D-017** ile çözüldü (künye kanonik; test istisna listesi taşır) — uygulaması GD-001 içinde. |
+| T6.16/T6.17h-j | Set 0 dersleri 8-10 tam zenginlikte (Vade-hedef-portföy · Fiyat nereden çıkıyor · Bir alım nasıl gerçekleşir) | PHASE-006 | 1 | **S0-L7 "Risk ne demek?" bitti** → GD-001 `done` (2026-09-22). Set 0 artık 7/10. Sıradaki somut iş: **S0-L8 "Vade, hedef ve portföy"**, künye `16` §S0-L8. LiveContext kuralı **D-017** (künye kanonik; test istisna listesi taşır). |
+| RV-003/RV-004 | REVIEW-001'in kapatılmayan iki düşük önemli bulgusu | PHASE-006 | 4 | GD-001 kabul edilirken kullanıcı kararıyla açık bırakıldı; ayrıntı `evidence/reviews/REVIEW-001.md`. |
+| T6.16v | S0-L4 kaydırıcısı + S0-L5/L6 figürlerinin bekleyen görsel teyidi | PHASE-006 | 4 | GD-001 kapsamı dışında bırakıldı (tarayıcı teyidi yapılmamıştı). |
 | T5E.4b | ConceptTag derin bağlantısı (Analiz/Hisse kartından `/lessons/by-concept`) | PHASE-006 | 2 | T5E.4'ün `[~]` kalan parçası. |
 | T6.11c | Set 1 dersleri 3-5 aynı zenginlikte (figür + 9 soru) | PHASE-006 | 2 | M3/M5 sayısal eşiklerinin global açılmasının önkoşulu. |
 | T6.3 | Kavram sözlüğü `/egitim/sozluk` (aranabilir InfoTip indeksi + çapraz bağlantı) | PHASE-006 | 2 | Faz 6 DoD'de. |

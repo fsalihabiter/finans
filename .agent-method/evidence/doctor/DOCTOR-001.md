@@ -4,7 +4,7 @@ timestamp: "2026-09-18"
 runtime: claude-code
 mode: full
 scope: "."
-status: findings
+status: resolved   # 2026-09-22: 6/6 bulgu kapandı (DR-001..004 → S-001, DR-005/006 → S-003)
 findings:
   - id: DR-001
     severity: high
@@ -59,15 +59,22 @@ findings:
     check: nested-repository
     file: finans/
     summary: "Kök altında izlenmeyen iç içe bir git klonu var (`finans/`, ~15 MB, aynı origin, eski HEAD 950e4a6 vs kök ac61b7e). Yanlışlıkla `git add .` ile gömülü repo olarak eklenme, yinelenen CLAUDE.md/AGENTS talimatları ve arama sonuçlarında eski kodun karışması riski."
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-09-22"
+      evidence_ref: "S-003 (dizin silindi; `git status` temiz)"
+      note: "Silmeden ÖNCE kayıp iş kontrolü yapıldı: çalışma ağacı temiz (`git status --porcelain` boş), stash yok, tek dal `main`, HEAD 30c0bc9 ve bu commit kök reponun main'inin ATASI (`git merge-base --is-ancestor` doğruladı). Yani klonda kökte bulunmayan hiçbir commit/değişiklik yoktu → 16 MB silindi."
   - id: DR-006
     severity: low
     evidence: strong
     check: broken-reference
     file: RUNTIME_TEST_PLAN.md
     summary: "ADM template dağıtım dosyaları proje köküne kopyalanmış (V2_REFACTOR_REPORT.md, MIGRATION_V1_TO_V2.md, RUNTIME_TEST_PLAN.md, KULLANIM.md, CONTRIBUTING.md 'Contributing to ADM', adapters/). RUNTIME_TEST_PLAN.md var olmayan `examples/minimal-project/`'e, V2_REFACTOR_REPORT.md repoda olmayan V2_* spec dosyalarına referans veriyor. CONTRIBUTING.md finans projesinin değil ADM'nin katkı rehberi."
-    status: open
----
+    status: resolved
+    resolution:
+      resolved_at: "2026-09-22"
+      evidence_ref: "S-003 · `.agent-method/docs/KULLANIM.md`"
+      note: "KULLANIM.md (ADM günlük kullanım rehberi, tr) `.agent-method/docs/` altına TAŞINDI — içerik değerli, yeri yanlıştı. Kırık referans taşıyan veya projeye ait olmayan dördü silindi: RUNTIME_TEST_PLAN.md (yok olan `examples/minimal-project/`), V2_REFACTOR_REPORT.md (repoda olmayan V2_* spec'leri), MIGRATION_V1_TO_V2.md (v1.4→v2 göçü — bu proje doğrudan v2), CONTRIBUTING.md (ADM'nin kendi katkı rehberi, finans projesinin değil). ⚠ `adapters/` SİLİNMEDİ: AGENTS.md §1 onu kanonik konum olarak listeliyor (runtime adaptörleri) ve izleniyor — bulgunun o kısmı geçersiz."
 
 # DOCTOR-001 — İlk ADM denetimi (2026-09-18)
 
@@ -77,11 +84,14 @@ findings:
 > Sırasıyla: `.gitignore` düzeltildi · alan verisi `.agent-method/`'a taşındı
 > (adm-analyze) + CLAUDE.md §11 ve SessionStart hook'u ADM'ye çevrildi ·
 > intent/kararlar/yetenekler dolduruldu · fazlar yazıldı.
-> **Açık kalanlar: DR-005** (iç içe `finans/` klonu) ve **DR-006** (kökteki ADM
-> dağıtım dosyaları). Ayrıca her çözümün `note` alanındaki **artakalan** notları
-> (08-BACKLOG↔POOL kanonik seçimi, intent açık soruları, geçmiş fazların kabul
-> kriterleri) karar bekliyor — bunlar bulgu değil, açık karardır.
-> Rapor durumu `findings` olarak kalır.
+> **İkinci çözüm turu (2026-09-22, kullanıcı onaylı — S-003):** DR-005 ve DR-006
+> `resolved`. İç içe `finans/` klonu (kayıp iş olmadığı kanıtlandıktan sonra)
+> silindi; kökteki ADM dağıtım dosyalarından biri `.agent-method/docs/`'a taşındı,
+> dördü silindi, `adapters/` kanonik olduğu için korundu.
+> **Altı bulgunun altısı da kapandı.** Geriye yalnız her çözümün `note` alanındaki
+> **artakalan** notları kalıyor (intent açık soruları, geçmiş fazların kabul
+> kriterleri) — bunlar bulgu değil, açık karardır. Bir sonraki `adm-doctor`
+> turuna kadar rapor durumu `resolved` sayılır.
 
 ## Geçen yapısal kontroller
 - **INV-16** (yerel): 7 kanonik skill ↔ 7 shim eşleşiyor, hedefler mevcut. *(Klonda bozulur → DR-001.)*
