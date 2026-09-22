@@ -14,6 +14,8 @@ active:
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
+  # S-004 (asgari kanıt notu, adm-open'sız) 2026-09-22T22:22:09Z → evidence/sessions/S-004.md
+  #   Canlı demo: Vercel + Render (D-020). Sıradaki: GD-003 (S0-L8).
   id: null
   runtime: null
   started_at: null
