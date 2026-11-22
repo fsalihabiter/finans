@@ -2454,8 +2454,11 @@ function SpreadCost() {
       caption="Fiyat hiç kıpırdamasa da alıp satmanın kendi bedeli vardır: makas."
       height={152}
     >
+      {/* RV-039: sayı çipin ÜSTÜNE yazılıyor; dolgu vurgu rengi (fig-seg-lead)
+          olduğunda metin okunmuyordu (tarayıcı doğrulaması, 2026-11-22). Üç panel
+          de aynı sessiz tonda: çip burada bilgi taşımıyor, sayıyı çerçeveliyor. */}
       <Panel x={6} y={14} w={96} h={96} title="Aldın" />
-      <rect x={24} y={48} width={60} height="20" rx="4" className="fig-seg-lead" />
+      <rect x={24} y={48} width={60} height="20" rx="4" className="fig-seg" />
       <text x={54} y={63} className="fig-value" textAnchor="middle">100,00 ₺</text>
       <text x={54} y={92} className="fig-label" textAnchor="middle">ödedin</text>
 

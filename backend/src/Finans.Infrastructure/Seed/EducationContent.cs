@@ -3459,14 +3459,12 @@ internal static class EducationContent
         ## Senin portföyünde
 
         Bu dersin anlattığı mekanizma — alıcı, satıcı, kotasyon, makas — en belirgin
-        biçimde **piyasada işlem gören** kalemlerde görünür.
+        biçimde **piyasada işlem gören** kalemlerde görünür. Bu kalemlerin fiyatı bir
+        kurum tarafından ilan edilmez; her biri yukarıdaki pazarlığın sonucudur.
 
         - Portföyünde hisse kalemlerinin ağırlığı **{{stock_weight}}**.
 
-        Bu ağırlıktaki kalemlerin fiyatı bir kurum tarafından ilan edilmez; her biri
-        yukarıdaki pazarlığın sonucudur.
-
-        Kalan kalemlerde de aynı mekanizma çalışır, farklı kılıklarda: **döviz ve
+        Portföyünün geri kalanında da aynı mekanizma çalışır, farklı kılıklarda: **döviz ve
         altında** gördüğün alış/satış kuru bu dersin kotasyonlarının ta kendisidir —
         tabeladaki iki sayı arasındaki fark da makastır. Bazı kalemlerde ise fiyat
         pazarlıkla değil **hesapla** oluşur (bir birim pay değeri gibi), bazılarında

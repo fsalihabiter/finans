@@ -13,6 +13,34 @@ reviewers:
   - ui-regression              # compliance incelemesinin figür katmanı
 partial: false
 findings:
+  # RV-039 ve RV-040 statik incelemede DEĞİL, compose + tarayıcı doğrulamasında
+  # bulundu (2026-11-22). İkisi de ancak çalışan yığında görülebilirdi.
+  - id: RV-039
+    severity: medium
+    evidence: proven
+    category: ui-regression
+    file: web/src/components/LessonFigure.tsx
+    line: 2461
+    summary: "spread-cost figürünün 'Aldın' panelinde 100,00 ₺ yazısı vurgu dolgulu çipin (fig-seg-lead) üzerinde okunmuyordu; diğer iki panel okunuyordu."
+    rationale: "Tarayıcı doğrulamasında ekran görüntüsüyle görüldü. Hiçbir otomatik test bunu yakalayamazdı (TD-001 tam olarak bu boşluk). Çip burada bilgi taşımıyor, sayıyı çerçeveliyor."
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-22"
+      evidence_ref: "compose yığını yeniden kuruldu, ekran görüntüsüyle teyit edildi"
+      note: "fig-seg-lead → fig-seg; üç panel de aynı sessiz tonda. Gerekçe kod yorumuna düşüldü."
+  - id: RV-040
+    severity: high
+    evidence: proven
+    category: content-correctness
+    file: backend/src/Finans.Infrastructure/Seed/EducationContent.cs
+    line: 3429
+    summary: "LiveContext bloğunda {{stock_weight}} satırı düştüğünde, hemen ardından gelen 'Bu ağırlıktaki kalemlerin…' cümlesi boşa işaret ediyordu — blok bozuk okunuyordu."
+    rationale: "Canlı doğrulamada görüldü: bu kullanıcının hisse kalemleri soft-delete edilmiş (IsDeleted), dolayısıyla token çözülmüyor ve satır TASARIM GEREĞİ düşüyor. Hissesi olmayan kullanıcı tamamen normal bir durumdur; ders o durumda da doğru okunmalıydı. M11 testi bunu yakalayamaz — seed'de karşılık var mı diye bakar, metnin satır düştüğünde ayakta kalıp kalmadığına bakmaz."
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-22"
+      evidence_ref: "API imajı yeniden kuruldu; çözülmüş gövde API'den okundu — satır düştü, kalan metin tutarlı"
+      note: "Blok yeniden kurgulandı: token taşıyan satır tek başına duran bir liste öğesi; çevresindeki iki paragraf ona bağımlı değil."
   - id: RV-019
     severity: high
     evidence: proven
@@ -318,11 +346,11 @@ Uydurma bulgu üretmemek için açıkça kaydediliyor:
 | Önem | Adet | Bulgular |
 |---|---:|---|
 | critical | 0 | — |
-| **high** | **2** | RV-019 (iki ders ters adlandırma) · RV-020 ("her zaman" + doğru/yanlış sorusu) |
-| medium | 8 | RV-021…RV-029 arası |
+| **high** | **3** | RV-019 (iki ders ters adlandırma) · RV-020 ("her zaman" + doğru/yanlış sorusu) · RV-040 (LiveContext satırı düşünce blok bozuluyor) |
+| medium | 9 | RV-021…RV-029 arası · RV-039 (figürde okunmayan sayı) |
 | low | 9 | RV-030…RV-038 arası |
 
-**TÜMÜ ÇÖZÜLDÜ (2026-11-22).** Ürün sahibi kararı: "Hepsini düzelt". 20/20 bulgu `resolved`; her birinin `resolution` bloğunda ne yapıldığı yazılı.
+**TÜMÜ ÇÖZÜLDÜ (2026-11-22).** Ürün sahibi kararı: "Hepsini düzelt". 22/22 bulgu `resolved` (20 statik inceleme + 2 canlı doğrulama); her birinin `resolution` bloğunda ne yapıldığı yazılı.
 İki high bulgu da düzeltildi: biri öğrenciye iki
 dersin çelişen tanımını gösteriyordu, diğeri doğru/yanlış sorusunda dikkatli
 öğrenciyi haksız yere yanlışlıyordu.
