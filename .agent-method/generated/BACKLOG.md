@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:47:01Z · **68 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:48:55Z · **68 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -26,7 +26,7 @@
 |---|---|---|---|---|---|---|---|
 | #8 | RV-017 — Eski derslerde sabit Türkçe ek hatası (7 satır) | Task | 3 | education | — | — | kind:debt |
 | #9 | RV-018 — Ön-koşul kilidi yazma yolunda uygulanmıyor | Task | 2 | backend | — | — | kind:debt |
-| #10 | T6.17i — Set 0 Ders 9: "Fiyat nereden çıkıyor?" (S0-L9) | Feature | 1 | education | — | — | — |
+| #10 | T6.17i — Set 0 Ders 9: "Fiyat nereden çıkıyor?" (S0-L9) | Feature | 1 | education | — | — | adm:gd |
 | #11 | T6.17j — Set 0 Ders 10: "Bir alım nasıl gerçekleşir?" (S0-L10) | Feature | 1 | education | — | #10 | — |
 | #12 | RV-003 — LocalModelTrial: HttpClient dispose + timeout env değişkeni | Task | 4 | backend | — | — | kind:debt |
 | #13 | RV-004 — İleri atıf deseni kararı (yayında olmayan derse gönderme) | Task | 4 | education | — | — | — |
