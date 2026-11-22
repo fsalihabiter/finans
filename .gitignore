@@ -84,18 +84,14 @@ postgres-data/
 docker-compose.override.yml
 compose/certs/
 
-# Üçüncü taraf skill kurulumları (uipro init — yerel gelistirme araci, repoya girmez)
-.claude/skills/ui-ux-pro-max/
-.claude/skills/banner-design/
-.claude/skills/brand/
-.claude/skills/design/
-.claude/skills/design-system/
-.claude/skills/slides/
-.claude/skills/ui-styling/
-# Tasarım "taste" skilleri (2026-07-16 kuruldu; kaynak: emilkowalski/skills · pbakaus/impeccable · Leonxlnx/taste-skill)
-.claude/skills/emil-design-eng/
+# Üçüncü taraf skill kurulumları (yerel gelistirme araclari, repoya girmez).
+# Kaynak: uipro init · emilkowalski/skills · pbakaus/impeccable · Leonxlnx/taste-skill
+# 2026-11-22: 8 tasarım skilli .claude/skills-disabled/ altına taşındı — oturum
+# başı skill listesini kısaltmak için. Geri almak: klasörü .claude/skills/ altına
+# taşı, yeni kurulum gerekmez. Aktif kalanlar: impeccable, ui-styling.
 .claude/skills/impeccable/
-.claude/skills/taste-skill/
+.claude/skills/ui-styling/
+.claude/skills-disabled/
 
 # Ajan araç zinciri.
 # ⚠ `.agents/` ve `AGENTS.md` ARTIK YOK SAYILMAZ (2026-09-20, DOCTOR-001 · DR-001):
