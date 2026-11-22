@@ -16,7 +16,8 @@ encyclopedia.
 | Development cycles (GD) | `.agent-method/cycles/GD-NNN.md` |
 | Decisions (one file each) | `.agent-method/decisions/D-NNN-*.md` |
 | Capability / reuse registry | `.agent-method/registry/CAPABILITIES.md` |
-| Work pipeline (pool, ideas, incidents, test debt) | `.agent-method/pipeline/` |
+| **Open work items (canonical backlog)** | **GitHub Issues** (D-022) — offline snapshot: `.agent-method/generated/BACKLOG.md` |
+| Work pipeline (ideas, incidents, test debt) | `.agent-method/pipeline/` (`POOL.md` is now a pointer) |
 | Session / review / doctor evidence | `.agent-method/evidence/` |
 | Canonical active state | `.agent-method/state.yaml` |
 | Schemas | `.agent-method/schemas/` |
@@ -30,6 +31,10 @@ encyclopedia.
 2. Cross-check: the active GD's own `status` must be `in-progress` (INV-04).
 3. Latest session context = file with the newest `closed_at` in
    `.agent-method/evidence/sessions/` — **never** "the top of a log".
+4. Open work items: `gh issue list --state open` (canonical since D-022).
+   Without network access, read the committed projection
+   `.agent-method/generated/BACKLOG.md` — it carries its generation timestamp;
+   treat it as possibly stale and never write to it (INV-12, INV-17).
 
 ## 3. Skills
 

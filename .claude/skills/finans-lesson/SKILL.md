@@ -138,6 +138,6 @@ cümleler tavsiye sayılır. Ders çerçeve kurar, karar kullanıcınındır.
 - [ ] Sayım testleri güncel ve yeşil; web build (`tsc -b`) temiz
 - [ ] M7/M7a/M7b taraması temiz
 - [ ] Tarayıcıda uçtan uca okundu (figürler render ediliyor)
-- [ ] GD dosyası + `.agent-method/pipeline/POOL.md` satırı güncellendi
+- [ ] GD dosyası güncellendi + ilgili GitHub issue'su (ders issue'su / alt-görev) kapatıldı ya da durumu yazıldı
 
 Son adım: `finans-green-gate`.

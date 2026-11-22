@@ -1,2 +1,2 @@
-# IDEAS — unqualified ideas; promotion to POOL requires a human decision
+# IDEAS — unqualified ideas; promotion to a GitHub issue requires a human decision (D-022)
 - 

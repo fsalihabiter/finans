@@ -128,9 +128,12 @@ alpha bunların hiçbirini gerektirmez.
 | `charter/`, `cycles/GD-*`, `decisions/*`, `pipeline/*`, `registry/CAPABILITIES.md`, `config.yaml` | `evidence/` (skill'ler yazar), `.claude/skills/` shim'leri |
 | `state.yaml` (nadiren; normalde skill'ler günceller) | varsa `generated/` (alpha varsayılanında yoktur) |
 
-Not: Alpha'da `generated/` klasörü ve CURRENT_STATE/BACKLOG/MASTER dosyaları
-**yoktur** — brifing doğrudan canonical kaynaklardan üretilir. Backlog =
-`pipeline/POOL.md` + GD status'ları; kronoloji = `evidence/sessions/`.
+Not: Alpha varsayılanında `generated/` klasörü **yoktur** — brifing doğrudan
+canonical kaynaklardan üretilir. **Bu projede istisna:** D-022 ile backlog
+GitHub Issues'a taşındı, bu yüzden `generated/BACKLOG.md` projeksiyonu etkin
+(`config.generated.projections: [BACKLOG]`) ve repoya commit'li. Backlog =
+**GitHub Issues** + GD status'ları; kronoloji = `evidence/sessions/`.
+`pipeline/POOL.md` artık yalnız bir işaretçidir.
 
 ## 8. Doğrulama projesi için kontrol listesi
 
@@ -164,9 +167,12 @@ yeni bir D-NNN olarak kaydet — V2 iterasyonu da kendi disipliniyle ilerlesin.
 bloğunu görür ve sorar: önce eski oturumu kanıt dosyasına dönüştürüp kapatmayı
 önerir. Sessizce üzerine yazmaz (INV-13).
 
-**BACKLOG/MASTER/CHANGELOG nerede?** Alpha'da üretilmiyor. Backlog =
-`pipeline/POOL.md` + GD status'ları; kronoloji = session evidence dosyaları.
-Deterministik generated görünümler CLI ile (V2.2) gelecek.
+**BACKLOG/MASTER/CHANGELOG nerede?** MASTER/CHANGELOG alpha'da üretilmiyor.
+**BACKLOG bu projede üretiliyor:** backlog GitHub Issues'a taşındığı için
+(D-022) `.github/scripts/gen-backlog.sh` + `adm-backlog-sync.yml` ikilisi
+`generated/BACKLOG.md`'yi tazeler — issue olaylarında otomatik, ayrıca günlük.
+Kronoloji = session evidence dosyaları. Diğer deterministik generated görünümler
+CLI ile (V2.2) gelecek.
 
 **Aynı anda iki GD'de iki agent çalıştırabilir miyim?** Alpha'da hayır — bir
 repo'da tek aktif oturum. Paralel çalışma V2.4 roadmap'indedir ve ancak gerçek

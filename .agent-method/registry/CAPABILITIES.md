@@ -137,6 +137,20 @@ capabilities:
     scope: web/education
     notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8) — yeni figür yazmadan önce bakılır.
     last_verified_ref: ac61b7e
+
+  - capability: Backlog projection (GitHub Issues -> generated/BACKLOG.md)
+    location: .github/scripts/gen-backlog.sh + .github/workflows/adm-backlog-sync.yml
+    entry_points: [gen-backlog.sh, adm-backlog-sync.yml, adm-session-start.mjs::openWork]
+    status: healthy
+    scope: adm/tooling
+    notes: >
+      D-022 — kanonik backlog GitHub Issues; bu üretici commit'li çevrimdışı
+      projeksiyonu yazar (INV-12/INV-17). gh'ın gömülü jq'sunu kullanır, harici
+      jq gerekmez. Issue olaylarında + günlük cron'da CI tazeler; adm-close de
+      projections listesi gereği yeniden üretir. Yeni bir ADM görünümü (ör.
+      CURRENT_STATE) gerekirse bu script'in kalıbı genişletilir, yenisi yazılmaz.
+      Oturum başı brifingi aynı dosyadan prio:1 satırlarını okur — ağ çağrısı yok.
+    last_verified_ref: HEAD
 ```
 
 ## Açık sorular

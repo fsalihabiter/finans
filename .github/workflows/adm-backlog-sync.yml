@@ -1,0 +1,56 @@
+name: ADM backlog projection
+
+# Keeps .agent-method/generated/BACKLOG.md in sync with GitHub Issues.
+# Issues are the canonical backlog source (D-022); this file is a projection
+# (INV-12 / INV-17) committed so the repo stays readable offline.
+
+on:
+  issues:
+    types:
+      - opened
+      - closed
+      - reopened
+      - deleted
+      - transferred
+      - edited
+      - labeled
+      - unlabeled
+      - milestoned
+      - demilestoned
+  workflow_dispatch:
+  schedule:
+    # Günlük güvenlik ağı: kaçan bir olay olursa projeksiyon en fazla 1 gün eskir.
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: adm-backlog-projection
+  cancel-in-progress: true
+
+jobs:
+  project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Projeksiyonu üret
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/scripts/gen-backlog.sh
+
+      - name: Değiştiyse commit'le
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- .agent-method/generated/BACKLOG.md; then
+            echo "değişiklik yok"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .agent-method/generated/BACKLOG.md
+          git commit -m "chore(adm): BACKLOG projeksiyonu tazelendi [skip ci]"
+          git push

@@ -26,6 +26,11 @@ At the start of every session; especially right after a runtime handoff.
 7. Latest closed session in `evidence/sessions/` (by `closed_at` metadata — never by file position)
 8. Latest doctor report in `evidence/doctor/` and latest review in `evidence/reviews/` (unresolved `status: open` critical findings)
 9. Git status: current branch, uncommitted changes, HEAD sha
+10. Open work items — from the backlog surface named in `AGENTS.md` §1/§2.
+    That surface is per-project: it may be a file under `pipeline/`, or an
+    external tracker declared there. If it is external and unreachable, fall
+    back to the committed projection under `generated/`, say so, and treat it
+    as possibly stale (never write to a projection — INV-12, INV-17).
 
 ## Canonical files written
 - `state.yaml → session` block only: if no session is open, start one
@@ -50,7 +55,8 @@ At the start of every session; especially right after a runtime handoff.
    - If `config.generated.projections` is non-empty: files under `generated/`
      exactly match that list and carry the GENERATED header (INV-17).
 3. Produce a short briefing (language: `config.method.language`):
-   project + active phase; active GD + its next unchecked plan item; blockers;
+   project + active phase; active GD + its next unchecked plan item; the highest
+   priority open work items and anything they are blocked by; blockers;
    previous session's runtime and "next step" note; review/doctor status; git state.
 4. If the user named a different GD than state: surface the mismatch, ask — do not silently switch.
 

@@ -131,5 +131,5 @@ listedir — numarayı yeniden kullanma.
 ## Bitirmeden önce
 
 `finans-green-gate` skill'ini çalıştır: testler, güvenlik/gözlemlenebilirlik
-kapıları ve ADM kayıtları (GD · POOL · karar · CAPABILITIES) tek geçişte
+kapıları ve ADM kayıtları (GD · GitHub issue · karar · CAPABILITIES) tek geçişte
 denetlenir. Kabul kriterlerini **sen onaylamazsın** — kanıt sunarsın (AGENTS.md §4.3).

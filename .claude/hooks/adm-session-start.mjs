@@ -66,6 +66,14 @@ try {
     out.push('\n— AKTİF GD: yok —' + (planned.length ? `\nHazır döngüler: ${planned.join(', ')}` : ''));
   }
 
+  // ── Sıradaki açık işler (BACKLOG projeksiyonundan — ağ gerekmez) ─────────
+  const backlog = openWork(join(A, 'generated', 'BACKLOG.md'));
+  if (backlog) {
+    out.push(`\n— SIRADAKİ AÇIK İŞLER (prio:1 · kanonik: GitHub Issues, D-022) —`);
+    out.push(backlog.rows.length ? backlog.rows.join('\n') : '(prio:1 etiketli açık issue yok)');
+    out.push(`Tümü: \`gh issue list --state open\` · projeksiyon: ${backlog.total} açık issue, üretim ${backlog.generatedAt || '?'}${backlog.stale ? ' ⚠ (7 günden eski — `bash .github/scripts/gen-backlog.sh`)' : ''}`);
+  }
+
   // ── Son oturum kanıtı (en yeni closed_at) ────────────────────────────────
   const last = newestSession(join(A, 'evidence', 'sessions'));
   out.push('\n— SON OTURUM KANITI —\n' + (last
@@ -177,6 +185,30 @@ function newestSession(dir) {
   const top = parsed[0];
   const excerpt = top.text.split(/\r?\n/).filter((l) => !/^(---|\s*$)/.test(l)).slice(0, 14).join('\n');
   return { name: top.name, closedAt: top.closedAt, excerpt };
+}
+
+// generated/BACKLOG.md — GitHub Issues projeksiyonu (D-022). Salt okunur,
+// ağ çağrısı yok: kanonik kaynak Issues, bu yalnız hızlı anlık görüntü.
+function openWork(file) {
+  const text = read(file);
+  if (!text) return null;
+  const generatedAt = text.match(/·\s*(\d{4}-\d{2}-\d{2}T[\d:]+Z)\s*·/)?.[1] ?? '';
+  const total = text.match(/\*\*(\d+) açık issue\*\*/)?.[1] ?? '?';
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    const c = line.split('|').map((s) => s.trim());
+    // | #N | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
+    if (c.length < 9 || !/^#\d+$/.test(c[1]) || c[4] !== '1') continue;
+    const blocked = c[7] !== '—' ? `  ⛔ ${c[7]}` : '';
+    rows.push(`  ${c[1]} ${c[2]}${blocked}`);
+    if (rows.length >= 6) break;
+  }
+  let stale = false;
+  if (generatedAt) {
+    const age = Date.now() - Date.parse(generatedAt);
+    stale = Number.isFinite(age) && age > 7 * 864e5;
+  }
+  return { rows, total, generatedAt, stale };
 }
 
 function newestDoctor(dir) {

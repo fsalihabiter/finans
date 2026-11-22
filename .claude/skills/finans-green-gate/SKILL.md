@@ -60,9 +60,12 @@ Sırayla, yalnız gerçekten değişenleri:
 
 1. **Aktif GD** (`.agent-method/cycles/GD-NNN.md`) — görev listesi ve durum
    güncel; kabul kriterleri **işaretlenmemiş** bırakılır, altına kanıt yazılır.
-2. **`.agent-method/pipeline/POOL.md`** — kalem GD'ye dönüştüyse ya da kapandıysa
-   satırı güncelle. Plan dışı çıkan iş: `IDEAS.md` (ham fikir) /
-   `INCIDENTS.md` (planlı iş dışında çıkan sorun).
+2. **GitHub Issues** (kanonik backlog — D-022) — kalem GD'ye dönüştüyse
+   `adm:gd` etiketi, kapandıysa issue kapanır (`Closes #N` commit mesajında).
+   Yeni iş: `gh issue create --type Task|Feature|Bug --milestone "<faz>"
+   --label "prio:N,area:X"`. Plan dışı çıkan iş: `IDEAS.md` (ham fikir) /
+   `INCIDENTS.md` (planlı iş dışında çıkan sorun + `Bug` issue'su).
+   ⚠ `generated/BACKLOG.md` **elle düzenlenmez** (INV-12/INV-17).
 3. **Karar** verildiyse `.agent-method/decisions/D-NNN-<slug>.md` (bir karar =
    bir dosya, ID tekil ve yeniden kullanılmaz — INV-09) + **Keywords** bölümü
    dolu (Doctor'ın drift taraması bunu kullanır). Teknik karşılığını ilgili
@@ -85,7 +88,7 @@ girmiyorsa oraya yazılmaz — oturum kanıtına bir satır yeter.
 **Testler:** <backend: N geçti / M başarısız> · <web: ...> · <koşulamayan: ...>
 **Güvenlik:** <izolasyon · sır · doğrulama · log — her biri ✓ / ⚠ + gerekçe>
 **Gözlemlenebilirlik:** <log/metrik/fallback — ✓ / gerekmedi>
-**ADM:** <GD · POOL · karar · CAPABILITIES — ne güncellendi>
+**ADM:** <GD · issue(#N) · karar · CAPABILITIES — ne güncellendi>
 **Eksik / doğrulanmayan:** <madde madde; yoksa "yok">
 **Kabul:** kanıt sunuldu — onay kullanıcıda (AC-N için insan kararı)
 ```

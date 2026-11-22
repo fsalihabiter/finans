@@ -223,7 +223,8 @@ finans/                       ← monorepo (pnpm workspaces)
 
 **Faz 0-5 tamam (Faz 5 kapandı 2026-07-12: Değer Seyri + Senaryo v1 canlı).**
 Dalga 1 finali: **Faz 6 — Eğitim MVP + kavram sözlüğü** (vizyonun kalbi).
-Görev kırılımı: `.agent-method/pipeline/POOL.md` (kanonik) · fazlar:
+Görev kırılımı: **[GitHub Issues](https://github.com/fsalihabiter/finans/issues)**
+(kanonik, D-022; çevrimdışı anlık görüntü `.agent-method/generated/BACKLOG.md`) · fazlar:
 `.agent-method/charter/PHASES.md` · strateji: `.claude/docs/14-PRODUCT-STRATEGY.md`.
 
 ---
@@ -263,9 +264,14 @@ adımı bırakır. Runtime değiştirirken (Claude Code → Codex → ...) de bu
 2. **Aktif GD dosyası** (`.agent-method/cycles/GD-NNN.md`) → görev listesini ve
    durumu güncelle; kabul kriterlerini **sen onaylamazsın**, kanıtı sunarsın
    (insan onayı — bkz. `AGENTS.md` §4.3).
-3. **`.agent-method/pipeline/POOL.md`** → kalem GD'ye dönüştüyse veya kapandıysa
-   satırını güncelle. Plan dışı çıkan işler: `IDEAS.md` (ham fikir),
-   `INCIDENTS.md` (planlı iş dışında çıkan sorun).
+3. **GitHub Issues** (kanonik backlog, D-022) → kalem GD'ye dönüştüyse `adm:gd`
+   etiketini ekle; iş bittiyse issue'yu kapat (commit mesajında `Closes #N`
+   yazmak yeterli). Yeni iş çıktıysa `gh issue create --type Task|Feature|Bug
+   --milestone "<faz>" --label "prio:N,area:X"`. Plan dışı çıkan işler:
+   `IDEAS.md` (ham fikir — issue'ya terfi insan kararı), `INCIDENTS.md` (planlı
+   iş dışında çıkan sorun; ayrıca `Bug` issue'su açılır).
+   ⚠ `.agent-method/generated/BACKLOG.md` **üretilmiş projeksiyondur** — elle
+   düzenlenmez (INV-12/INV-17); issue olaylarında CI tazeler.
 4. Kalıcı bir **karar** verildiyse `.agent-method/decisions/D-NNN-<slug>.md`
    olarak yaz (bir karar = bir dosya, ID'ler tekil ve yeniden kullanılmaz —
    INV-09) ve **Keywords** bölümünü doldur (Doctor'ın drift taraması bunu kullanır).
@@ -288,10 +294,13 @@ adımı bırakır. Runtime değiştirirken (Claude Code → Codex → ...) de bu
 `.claude/tasks/TASKLOG.md` ve `ACTIVE.md` **tarihsel kayıttır; yeni girdi
 eklenmez.** Yeni oturum kanıtı `.agent-method/evidence/sessions/` altında birikir.
 `.claude/docs/` mühendislik dokümanları geçerliliğini korur; **tek istisna
-`08-BACKLOG.md`** — açık işler `.agent-method/pipeline/POOL.md`'ye taşındı, dosya
-oraya işaret eden bir yönlendiriciye indirgendi (INV-12: iki kanonik kaynak
-olamaz). Görev durumu **POOL'dan** okunur ve oraya yazılır. Kapanmış görevlerin
-uygulama notları TASKLOG'da ve git geçmişinde (`ac61b7e`) durmaya devam eder.
+`08-BACKLOG.md`** — yönlendiriciye indirgendi (INV-12: iki kanonik kaynak olamaz).
+
+Backlog iki kez el değiştirdi: `08-BACKLOG.md` → `pipeline/POOL.md` (2026-09-20)
+→ **GitHub Issues** (2026-11-22, D-022). Bugün **POOL.md de bir işaretçidir**;
+görev durumu [GitHub Issues](https://github.com/fsalihabiter/finans/issues)'tan
+okunur ve oraya yazılır. Kapanmış görevlerin uygulama notları TASKLOG'da ve git
+geçmişinde (`ac61b7e`, POOL tablosu: `c584ba1`) durmaya devam eder.
 
 ---
 

@@ -49,7 +49,7 @@ does not manage them and gives no parallel-correctness guarantee in alpha.
 | Phases | `charter/PHASES.md` | progress is derived, never stored |
 | Active state (phase, GD, session) | `state.yaml` | current-only; cleared/updated by skills |
 | GD details | `cycles/GD-*.md` | GD `status` fields are the project-wide work truth |
-| Backlog | `pipeline/POOL.md` + GD statuses | no generated BACKLOG in alpha |
+| Backlog | GitHub Issues (D-022) + GD statuses | `generated/BACKLOG.md` = committed projection; `pipeline/POOL.md` = pointer |
 | Decisions | `decisions/D-*.md` | one decision = one file; flat layout, scope in frontmatter |
 | Sessions | `evidence/sessions/S-*.md` | permanent history; latest by `closed_at` |
 | Reviews | `evidence/reviews/REVIEW-*.md` | findings carry lifecycle status |

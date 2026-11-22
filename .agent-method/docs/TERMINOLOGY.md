@@ -16,7 +16,7 @@
 | Review | Gözden Geçirme | REVIEW-* / RV-NNN | Risk-based code review producing schema-conformant findings with a lifecycle. |
 | Doctor | Doktor | DOCTOR-* / DR-NNN | Drift & invariant violation detector; reports, never auto-fixes. |
 | Capability Registry | Yetenek Envanteri | CAPABILITIES.md | Reusable capability inventory scanned before building anything new (v1.4: ENVANTER). |
-| Pool | Havuz | POOL.md | Goal-driven work items not yet promoted to a GD. |
+| Pool | Havuz | GitHub Issues (was `POOL.md` until D-022) | Goal-driven work items not yet promoted to a GD. Since 2026-11-22 these live as GitHub Issues; `pipeline/POOL.md` is a pointer and `generated/BACKLOG.md` a projection. |
 | Test Debt | Test Borcu | TEST_DEBT.md | Coverage debt from completed work; NOT failing required validation. |
 | State | Durum | state.yaml | Single canonical active state (project, active phase/GD, current session). |
 | Finding Lifecycle | Bulgu Yaşam Döngüsü | status | open → resolved / accepted / false-positive, with optional resolution evidence. |
