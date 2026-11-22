@@ -38,7 +38,9 @@ session:            # current open session; cleared by adm-close
   #   origin/main'e push edildi; adm-backlog-sync.yml CI'da doğrulandı.
   #   ⚠ b55bc58 bu oturumun işi DEĞİL (başka oturum, GD-003 doğrulama kanıtı) —
   #   S-006 §"Gözlendi, bu oturuma ait değil".
-  #   Sıradaki: pano kurulumu (gh auth refresh -s project) → GD-003 kabulü.
+  #   Pano kuruldu: projects/2, 78 kalem, Status kolonları + durumlar gerçek
+#   veriden (Blocked 27 · In progress 1 · Backlog 50). Kalan: panoda görünümler
+#   + auto-add (arayüz). Sıradaki: GD-003 kabulü.
   id: null
   runtime: null
   started_at: null

@@ -12,6 +12,7 @@
 | Ne | Nerede | Kanonik mi? |
 |---|---|---|
 | **Açık iş kalemleri (görevler)** | [GitHub Issues](https://github.com/fsalihabiter/finans/issues) | ✅ **kanonik** |
+| Pano görünümü (Backlog/Blocked/In progress/Review/Done) | [Nirengi — Yol Haritası](https://github.com/users/fsalihabiter/projects/2) | ❌ yansıma (durumu issue verisinden türer) |
 | Fazlar | GitHub **Milestone**'ları ↔ `charter/PHASES.md` | PHASES.md kanonik (niyet), milestone yansıma |
 | Çevrimdışı anlık görüntü | `.agent-method/generated/BACKLOG.md` | ❌ üretilmiş projeksiyon (INV-12/17) |
 | Döngü gerekçesi + kabul kriterleri | `.agent-method/cycles/GD-NNN.md` | ✅ kanonik |
