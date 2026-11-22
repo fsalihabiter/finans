@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T11:17:15Z · **78 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:23:11Z · **76 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -20,14 +20,12 @@
 | #74 | INC-001 — 4 entegrasyon testi ortam hatasıyla kırmızı (health + observability) | Bug | 1 | infra | — | — | kind:debt |
 | #75 | INC-002 — INV-04 ile GD "review" durumu çelişiyor (ADM çerçeve sorunu) | Bug | 5 | adm | — | — | — |
 
-## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  44 açık
+## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  42 açık
 
 | # | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
 |---|---|---|---|---|---|---|---|
 | #4 | T6.16 — Set 0 Ders 8: "Vade, hedef ve portföy" (S0-L8) | Feature | 1 | education | — | — | adm:gd |
-| #5 | RV-014 — S0-L8: "en çok yükselen = en büyük kalem" ifadesi yanlış | Task | 1 | education | #4 | — | adm:gd |
 | #6 | RV-015 — S0-L8 tuzak bloğu örtük yönlendirme gibi okunabiliyor | Task | 2 | education | #4 | — | adm:gd |
-| #7 | RV-016 — three-goals figürü kazanç/kayıp renklerini yanlış anlamda kullanıyor | Task | 2 | web | #4 | — | adm:gd |
 | #8 | RV-017 — Eski derslerde sabit Türkçe ek hatası (7 satır) | Task | 3 | education | #4 | — | kind:debt |
 | #9 | RV-018 — Ön-koşul kilidi yazma yolunda uygulanmıyor | Task | 2 | backend | #4 | — | kind:debt |
 | #10 | T6.17i — Set 0 Ders 9: "Fiyat nereden çıkıyor?" (S0-L9) | Feature | 1 | education | — | #4 | — |
@@ -122,7 +120,7 @@
 
 ---
 
-## Tamamlananlar — 112 kapalı issue
+## Tamamlananlar — 114 kapalı issue
 
 > Faz 0-5 ve Faz 6'nın bitmiş kalemleri 2026-11-22'de **geriye dönük**
 > kapalı issue olarak girildi (D-022). Uygulama notları issue gövdelerinde;
@@ -137,7 +135,7 @@
 | PHASE-003 — LLM Yorum Katmanı | 12 |
 | PHASE-004 — Hisse Temel Analiz | 5 |
 | PHASE-005 — Değer Seyri + Senaryo v1 | 6 |
-| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 27 |
+| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 29 |
 
 Listelemek için:
 
