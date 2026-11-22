@@ -59,7 +59,11 @@ findings:
     line: 3091
     summary: "'En çok yükselen kalem, zamanla portföyün en büyük kalemi hâline gelir' genel kural olarak yanlış; en çok yükselen kalemin AĞIRLIĞI artar, en büyük olması gerekmez."
     rationale: "Dersin kendi örneğiyle karşı örnek: C (20.000 ₺) %50 yükselse 30.000 ₺ olur, A (50.000 ₺) hâlâ en büyüktür. Eğitim içeriğinde yanlış genelleme ürünün ana vaadine (doğru kavram) dokunuyor. Öneri: 'en çok yükselen kalemin ağırlığı büyür; yeterince uzun sürerse portföyün en büyük kalemi bile olabilir.'"
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-22"
+      evidence_ref: "EducationContent.cs (weights-move-by-themselves bloğu) · EducationSeedTests 22/22"
+      note: "Genelleme kaldırıldı: 'en çok yükselen kalemin AĞIRLIĞI büyür' + incelemenin kendi karşı örneği metne eklendi ('C %50 yükselip 30.000 ₺ olsaydı bile A hâlâ önde olurdu') + 'yeterince uzun sürerse en büyüğü hâline de gelebilir' koşullu ifadesi. Yanlış kural yerine doğru sezgi öğretiliyor."
   - id: RV-015
     severity: low
     evidence: heuristic
@@ -68,7 +72,7 @@ findings:
     line: 2921
     rule_or_decision: D-002
     summary: "Tuzak bloğunda 'yirmi beş yıl dokunulmayacak parayı kısa vadeli gibi tutmak da bir uyumsuzluktur — bedeli daha sessiz ödenir' cümlesi, uzun vadeli parayı dalgalı kalemlere yönlendiren örtük bir yönlendirme gibi okunabilir."
-    rationale: "Kişiye özel değil ve kavramsal; yine de 'bedel' vurgusu bir dağılım tercihini ima ediyor. Öneri: bedeli adlandırmak (ör. 'enflasyon karşısında alım gücü kaybı riski — Ders 4') ve yönlendirmeyi kaldırmak. İnsan kararı gerekli."
+    rationale: "Kişiye özel değil ve kavramsal; yine de 'bedel' vurgusu bir dağılım tercihini ima ediyor. Öneri: bedeli adlandırmak (ör. 'enflasyon karşısında alım gücü kaybı riski — Ders 4') ve yönlendirmeyi kaldırmak. İnsan kararı gerekli. || 2026-11-22: önerilen düzeltme UYGULANDI (EducationContent.cs, S0-L8 tuzak bloğu) — 'bedeli daha sessiz ödenir' kalktı; yerine bedel adlandırıldı ('bekleyen paranın ALIM GÜCÜ enflasyon karşısında zamanla erir; bunu daha önceki bir derste görmüştün') ve karar okura iade edildi ('hangisinin senin durumun olduğu, paraya ne zaman ihtiyacın olduğuna bağlıdır'). Ders numarası bilerek yazılmadı (OrderIndex kayabilir). M7 taraması temiz. STATUS AÇIK BIRAKILDI: bulgunun kendisi 'insan kararı gerekli' diyor — yeni metnin D-002 açısından yeterli olduğunu ürün sahibi onaylamalı."
     status: open
   - id: RV-016
     severity: low
@@ -78,7 +82,11 @@ findings:
     line: 2060
     summary: "three-goals figüründe acil durum fonu kırmızı (fig-bar-neg), emeklilik yeşil (fig-bar-pos); bu renkler uygulamada kazanç/kayıp anlamı taşıyor."
     rationale: "Figür vade uzunluğunu gösteriyor, iyi/kötü değil; acil durum fonunu 'olumsuz' renkle göstermek yanlış anlam yükler. Öneri: nötr ton skalası (fig-seg-lead / fig-seg / fig-bar-muted)."
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-22"
+      evidence_ref: "LessonFigure.tsx ThreeGoals · web 147/147 · tsc -b temiz"
+      note: "Önerilen nötr skala birebir uygulandı: fig-seg-lead / fig-seg / fig-bar-muted (yakın → uzak). fig-bar-neg ve fig-bar-pos kaldırıldı. Süreyi zaten çubuk UZUNLUĞU anlatıyor; renk artık bilgi taşımıyor. Kod yorumuna gerekçe düşüldü ki aynı hata tekrar yazılmasın."
   - id: RV-017
     severity: low
     evidence: proven

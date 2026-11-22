@@ -2057,9 +2057,12 @@ function TimeHorizonRuler() {
 /** S0-L8 · Üç hedef, üç vade (çok panelli): aynı kişi, aynı gün, farklı tarihler. */
 function ThreeGoals() {
   const goals = [
-    { x: 6, title: "Acil durum fonu", when: "her an", len: 6, cls: "fig-bar-neg" },
-    { x: 110, title: "Ev peşinatı", when: "~3 yıl", len: 34, cls: "fig-bar-muted" },
-    { x: 214, title: "Emeklilik", when: "~25 yıl", len: 80, cls: "fig-bar-pos" },
+    // Renk NÖTR ton skalası (yakın → uzak): süreyi çubuk UZUNLUĞU anlatır.
+    // fig-bar-neg/fig-bar-pos kullanılmaz — bu sınıflar uygulamada kazanç/kayıp
+    // anlamı taşır, oysa figür iyi/kötü değil vade uzunluğu gösteriyor (RV-016).
+    { x: 6, title: "Acil durum fonu", when: "her an", len: 6, cls: "fig-seg-lead" },
+    { x: 110, title: "Ev peşinatı", when: "~3 yıl", len: 34, cls: "fig-seg" },
+    { x: 214, title: "Emeklilik", when: "~25 yıl", len: 80, cls: "fig-bar-muted" },
   ];
   return (
     <Figure

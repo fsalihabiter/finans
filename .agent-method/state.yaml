@@ -56,8 +56,12 @@ blockers: []
 
 review:
   last_review_id: REVIEW-003
-  # REVIEW-003 (GD-003): 8 bulgu — RV-011/012/013 resolved; RV-014 (medium),
-  # RV-015..018 (low) açık, insan kararı bekliyor. Açık critical/high yok.
+  # REVIEW-003 (GD-003): 8 bulgu — 5 resolved (RV-011/012/013 + 2026-11-22'de
+  # RV-014 medium ve RV-016). Açık 3, hepsi low ve hiçbiri critical/high değil:
+  #   RV-015 → düzeltme UYGULANDI, status açık: bulgu "insan kararı gerekli"
+  #            diyor, yeni metnin D-002 yeterliliği ürün sahibinde (issue #6).
+  #   RV-017 → kapsam DIŞI (eski derslerde ek hatası, 7 satır) → issue #8.
+  #   RV-018 → kapsam DIŞI ("ayrı iş": ön-koşul kilidi yazma yolunda) → issue #9.
   # REVIEW-002 (GD-002): 6/6 resolved.
   # REVIEW-001 (GD-001): RV-003/RV-004 (low) açık → issue #12 / #13.
   status: findings

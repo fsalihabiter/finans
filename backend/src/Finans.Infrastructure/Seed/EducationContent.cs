@@ -2919,7 +2919,10 @@ internal static class EducationContent
         **uyumsuz** eşleştirmektir.
 
         Tersi de geçerlidir: yirmi beş yıl dokunulmayacak bir parayı kısa vadeli gibi
-        tutmak da bir uyumsuzluktur — sadece bedeli daha sessiz ödenir.
+        tutmak da bir uyumsuzluktur. Bu uyumsuzluk daha sessizdir, çünkü sonucu
+        hemen görünmez: bekleyen paranın **alım gücü** enflasyon karşısında zamanla
+        erir; bunu daha önceki bir derste görmüştün. Ders iki uyumsuzluğu da adlandırır;
+        hangisinin senin durumun olduğu, paraya ne zaman ihtiyacın olduğuna bağlıdır.
 
         Doğru soru "ne kadar beklemeliyim?" değil, **"bu paraya ne zaman ihtiyacım
         var?"**dır.
@@ -3089,8 +3092,11 @@ internal static class EducationContent
         artık A'nın hareketine çok daha bağlı.
 
         Bu kaymaya **ağırlık kayması** denir ve ilginç bir şeyi gösterir: en çok
-        yükselen kalem, zamanla portföyün en büyük kalemi hâline gelir. Bunun ne
-        anlama geldiğine çeşitlendirme dersinde döneceğiz.
+        yükselen kalemin **ağırlığı** büyür. Dikkat et — bu onu kendiliğinden en
+        büyük kalem yapmaz: C kalemi %50 yükselip 30.000 ₺ olsaydı bile A hâlâ
+        önde olurdu. Ama kayma yeterince uzun sürerse, bir kalem portföyün en
+        büyüğü hâline de gelebilir. Bunun ne anlama geldiğine çeşitlendirme
+        dersinde döneceğiz.
         """, "weights-move-by-themselves"),
 
         Live("""
