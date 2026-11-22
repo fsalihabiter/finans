@@ -9,7 +9,15 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: null       # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
+  gd_id: GD-007     # TD-001 — figür render kapısı; açıldı 2026-11-22.
+                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan kanıt sundu, insan onaylar.
+                    # Kapı kurulur kurulmaz **7 figürde DAHA** aynı ihlali buldu: desen iki
+                    # incelemede üç figürde yakalanmıştı, gerçek sayı ONdu ve yedisi zaten
+                    # kabul edilmiş derslerdeydi (S0-L8, S0-L9). Hepsi düzeltildi.
+                    # Kapsam dürüstlüğü: kaçan dört bulgunun İKİSİ bağlandı; kalan ikisi
+                    # (asimetrik vurgu, tek yönlü gösterim) NİYET sorusu → TD-003.
+                    # TD-001 KAPANDI. web 147 → 350 test.
+                    # Önceki durum notu:
                     # GD-006 (M12 + 10 künyenin toplu düzeltmesi) 2026-11-22'de KABUL EDİLDİ.
                     #   Künye başlığındaki figür sayısı artık TESTLE korunuyor; kuralın iki
                     #   kolda da kırmızıya düştüğü bilerek bozularak kanıtlandı.

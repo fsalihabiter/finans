@@ -2048,7 +2048,10 @@ function TimeHorizonRuler() {
     >
       {zones.map((z, i) => (
         <g key={z.name}>
-          <rect x={z.x} y={34} width={z.w} height="24" rx="4" className={i === 0 ? "fig-seg-lead" : "fig-seg"} opacity={1 - i * 0.2} />
+          {/* TD-001 (GD-007): ilk bölge fig-seg-lead ile vurgulanıyordu ve üzerindeki
+              yazı opak dolguda okunmuyordu (RV-039 deseni). Üç bölge de aynı sınıfta;
+              kısa→uzun geçişi opaklık basamağıyla korunuyor. */}
+          <rect x={z.x} y={34} width={z.w} height="24" rx="4" className="fig-seg" opacity={1 - i * 0.2} />
           <text x={z.x + z.w / 2} y={50} className="fig-label" textAnchor="middle">
             {z.name}
           </text>
@@ -2113,7 +2116,7 @@ function PortfolioAnatomy() {
           <path d={`M${38 + i * 61} 44 L160 96`} className="fig-line-flat" fill="none" />
         </g>
       ))}
-      <rect x={90} y={96} width={140} height="36" rx="6" className="fig-seg-lead" />
+      <rect x={90} y={96} width={140} height="36" rx="6" className="fig-seg" />
       <text x={160} y={119} className="fig-label" textAnchor="middle">portföy = toplam</text>
     </Figure>
   );
@@ -2619,7 +2622,7 @@ function TwoSidesOfATrade() {
       <text x={160} y={96} className="fig-label" textAnchor="middle">alırım”</text>
 
       <Panel x={218} y={14} w={96} h={100} title="Anlaşma" />
-      <rect x={236} y={46} width={60} height="22" rx="4" className="fig-seg-lead" />
+      <rect x={236} y={46} width={60} height="22" rx="4" className="fig-seg" />
       <text x={266} y={62} className="fig-big" textAnchor="middle">100</text>
       <text x={266} y={88} className="fig-label" textAnchor="middle">işlem oldu →</text>
       <text x={266} y={102} className="fig-label" textAnchor="middle">fiyat doğdu</text>
@@ -2640,7 +2643,7 @@ function BazaarToExchange() {
       <Panel x={6} y={14} w={146} h={104} title="Pazar" />
       <text x={79} y={48} className="fig-label" textAnchor="middle">“kilosu 100” → “80 olsun”</text>
       <text x={79} y={66} className="fig-label" textAnchor="middle">“90, son”</text>
-      <rect x={44} y={76} width={70} height="18" rx="4" className="fig-seg-lead" />
+      <rect x={44} y={76} width={70} height="18" rx="4" className="fig-seg" />
       <text x={79} y={89} className="fig-value" textAnchor="middle">90</text>
       <text x={79} y={108} className="fig-label" textAnchor="middle">iki kişi · dakikalar</text>
 
@@ -2648,7 +2651,7 @@ function BazaarToExchange() {
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <rect key={`b${i}`} x={176 + i * 22} y={44 + (i % 3) * 5} width={14} height={10} rx="2" className="fig-seg" opacity={0.85 - i * 0.07} />
       ))}
-      <rect x={210} y={76} width={70} height="18" rx="4" className="fig-seg-lead" />
+      <rect x={210} y={76} width={70} height="18" rx="4" className="fig-seg" />
       <text x={245} y={89} className="fig-value" textAnchor="middle">90</text>
       <text x={238} y={108} className="fig-label" textAnchor="middle">binlerce teklif · saniyenin altı</text>
     </Figure>
@@ -2683,7 +2686,7 @@ function LastPriceIsHistory() {
           </g>
         );
       })}
-      <rect x={252} y={40} width={58} height="24" rx="4" className="fig-seg-lead" />
+      <rect x={252} y={40} width={58} height="24" rx="4" className="fig-seg" />
       <text x={281} y={56} className="fig-value" textAnchor="middle">son</text>
       <text x={30} y={104} className="fig-label">geçmiş işlemler</text>
       <text x={300} y={104} className="fig-label" textAnchor="end">şimdi</text>
@@ -2700,7 +2703,7 @@ function PriceIsNotValue() {
       caption="Fiyat bir olgudur (anlaşma), değer bir yargıdır (kanaat). Alışveriş tam da bu fark yüzünden olur."
       height={146}
     >
-      <rect x={120} y={30} width={80} height="30" rx="6" className="fig-seg-lead" />
+      <rect x={120} y={30} width={80} height="30" rx="6" className="fig-seg" />
       <text x={160} y={51} className="fig-big" textAnchor="middle">100</text>
       <text x={160} y={76} className="fig-label" textAnchor="middle">FİYAT — anlaşma (olgu)</text>
 
@@ -2723,7 +2726,7 @@ function BidAskLadder() {
       height={154}
     >
       <text x={160} y={22} className="fig-label" textAnchor="middle">sen ALIRKEN ödediğin</text>
-      <rect x={70} y={30} width={180} height="26" rx="5" className="fig-seg-lead" />
+      <rect x={70} y={30} width={180} height="26" rx="5" className="fig-seg" />
       <text x={160} y={48} className="fig-value" textAnchor="middle">satış kotasyonu · 100,00 ₺</text>
 
       <line x1="70" y1="72" x2="250" y2="72" className="fig-axis" />
@@ -2999,6 +3002,15 @@ const FIGURES: Record<string, () => React.JSX.Element> = {
   "volatility-paths": VolatilityPaths,
   "compound-curve": CompoundCurve,
 };
+
+/**
+ * Kayıtlı figür anahtarlarının tamamı — **test dikişi** (GD-007, TD-001).
+ *
+ * Render testi her figürü tek tek çizip denetleyebilsin diye açıldı; kayıt
+ * defterinin kendisi kapalı kalır. Yeni figür eklendiğinde test otomatik olarak
+ * onu da kapsar — listeyi ayrıca güncellemek gerekmez, yani liste eskiyemez.
+ */
+export const FIGURE_KEYS = Object.keys(FIGURES);
 
 export function LessonFigure({ figureKey }: { figureKey: string | null }) {
   if (!figureKey) return null;
