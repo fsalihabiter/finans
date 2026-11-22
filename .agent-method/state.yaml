@@ -9,9 +9,12 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-003     # S0-L8 "Vade, hedef ve portföy" — açıldı 2026-11-14 (S-005)
-                    # S-005 kapanışında hâlâ in-progress: içerik + testler hazır,
-                    # kalan → compose seed doğrulaması + tarayıcı teyidi + kabul (INV-06).
+  gd_id: null       # GD-003 (S0-L8) 2026-11-22'de KABUL EDİLDİ ve kapandı → status: done.
+                    # Altı kriterin tamamı ürün sahibi onayıyla (AC-2 "Kabul, devam";
+                    # AC-1/3/4/5/6 "Hepsini onaylıyorum"). Set 0 artık 8/10.
+                    # INV-04/INV-05 gereği done bir GD aktif bırakılmaz → boşaltıldı.
+                    # Sıradaki aday: S0-L9 "Fiyat nereden çıkıyor?" (issue #10) —
+                    # GD-004 olarak açmak ürün sahibinin kararı, otomatik açılmadı.
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
