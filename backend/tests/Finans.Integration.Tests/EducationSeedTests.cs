@@ -517,6 +517,72 @@ public sealed class EducationSeedTests
         }
     }
 
+    /// <summary>
+    /// M11 (AC-2) — Token'ın <see cref="ContextKeys"/>'te TANIMLI olması yetmez:
+    /// seed portföyünde <b>karşılığı</b> da olmalı.
+    ///
+    /// <para><c>LessonContextService.AddTypeWeight</c> bir varlık türü portföyde hiç
+    /// yoksa token'ı sözlüğe <b>eklemez</b> — ve çözülemeyen token'ın satırı tamamen
+    /// düşer. Bu bilinçli bir tasarım ("uydurma %0 yazmayız"), ama yan etkisi
+    /// <b>sessizdir</b>: ders eksik bir "Senin portföyünde" bloğuyla yayına çıkar ve
+    /// ne seed testleri ne de yapısal sayımlar bunu görür.</para>
+    ///
+    /// <para>GD-003'ün AC-2 kriteri ("demo ve gerçek portföyde çözülüyor") tam olarak
+    /// bunu soruyordu ve makine karşılığı yoktu — bu test o boşluğu kapatır.</para>
+    /// </summary>
+    [Fact]
+    public async Task Type_weight_tokens_have_a_matching_holding_in_the_seed_portfolio()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        // Tür bazlı ağırlık token'ları: token → gerektirdiği varlık türü.
+        var typeTokens = new Dictionary<string, AssetType>
+        {
+            [ContextKeys.CashWeight] = AssetType.Cash,
+            [ContextKeys.StockWeight] = AssetType.Stock,
+        };
+
+        var seededTypes = await db.Holdings
+            .Join(db.Assets, h => h.AssetId, a => a.Id, (h, a) => a.Type)
+            .Distinct()
+            .ToListAsync();
+
+        var live = await db.LessonSections
+            .Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
+
+        foreach (var s in live)
+        {
+            var tokens = System.Text.RegularExpressions.Regex
+                .Matches(s.BodyMarkdown, @"\{\{\s*(?<key>[a-z0-9_]+)\s*\}\}")
+                .Select(m => m.Groups["key"].Value.ToLowerInvariant())
+                .Distinct();
+
+            foreach (var token in tokens)
+            {
+                if (!typeTokens.TryGetValue(token, out var needed))
+                    continue;
+
+                seededTypes.Should().Contain(needed,
+                    $"'{{{{{token}}}}}' token'ı {needed} türünde en az bir kalem gerektirir; "
+                    + "seed portföyünde yoksa o satır kullanıcıya hiç görünmez (sessiz kayıp)");
+
+                // Kalem var olması YETMEZ: PortfolioCalculationService dağılım dilimlerini
+                // `Value > 0` ile süzer (Value = güncel değer ?? maliyet, SC-40). Değeri
+                // sıfır olan bir kalem Allocation'a hiç girmez → token yine çözülmez.
+                var effective = await db.Holdings
+                    .Join(db.Assets, h => h.AssetId, a => a.Id, (h, a) => new { h, a.Type })
+                    .Where(x => x.Type == needed)
+                    .Select(x => x.h.Quantity * (x.h.CurrentPrice ?? x.h.AvgCost))
+                    .ToListAsync();
+
+                effective.Should().Contain(v => v > 0m,
+                    $"{needed} türünde DEĞERİ SIFIRDAN BÜYÜK bir kalem olmalı; aksi hâlde "
+                    + "dilim Allocation'dan süzülür ve '{{" + token + "}}' yine çözülmez");
+            }
+        }
+    }
+
     [Fact]
     public async Task Every_lesson_has_a_quiz_with_three_scorable_questions()
     {
