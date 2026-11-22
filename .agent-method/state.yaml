@@ -50,6 +50,18 @@ session:            # current open session; cleared by adm-close
   #   Pano tamamlandı: 4 görünüm (Pano/Faz/Sıradaki/Geçmiş) + 4 workflow açık
   #   (auto-add · added→Backlog · closed→Done · reopened) → kendi kendine döner.
   #   Sıradaki: GD-003 kabulü (AC-1..AC-6 → issue #76-#81).
+  # S-007 (asgari kanıt notu, adm-open'sız) 2026-11-22T19:40:00Z →
+  #   evidence/sessions/S-007.md
+  #   S-006 ile AYNI konuşmanın devamı; diff tabanı bf6da9e (S-006'nın anlatısının
+  #   bittiği yer), end_sha 3902e76. GD-003 kabulü → GD-004 (S0-L9) → GD-005 (S0-L10),
+  #   ikisi de açıldı, incelendi ve KABUL EDİLDİ. **Set 0 TAMAMLANDI (10/10).**
+  #   Geçmişteki ajan imzası kullanıcı talebiyle temizlendi (f713620); kural kalıcı.
+  #   REVIEW-004 (20 bulgu) + REVIEW-005 (24 bulgu), tümü resolved. D-023 açıldı.
+  #   Üç ders: (1) düzeltme turları da inceleme gerektiriyor (RV-041, RV-034'ün
+  #   düzeltmesinde girdi); (2) "testler yeşil" ≠ "kullanıcı düzelmiş hâli görüyor"
+  #   (RV-064 — ders metni çalışan kuruluma inmiyordu, UpsertLesson ile kapandı);
+  #   (3) figür katmanı otomatik testten sistematik kaçıyor (4 bulgu, hepsi gözle).
+  #   origin/main'e push edildi; issue #11 kapandı.
   id: null
   runtime: null
   started_at: null
