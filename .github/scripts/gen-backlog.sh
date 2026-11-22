@@ -22,7 +22,10 @@ def row:
   + " | " + (names("prio:") | dash)
   + " | " + (names("area:") | dash)
   + " | " + (if .parent then "#" + (.parent.number|tostring) else "—" end)
-  + " | " + (([(.blockedBy.nodes // [])[] | "#" + (.number|tostring)] | join(" ")) | dash)
+  # Engel = HÂLÂ AÇIK olan engelleyici. Kapanmış bir engelleyici ilişkide kalır
+  # ama artık iş başlamaya engel değildir; hepsini saymak işi sonsuza dek
+  # "engelli" gösterirdi.
+  + " | " + (([(.blockedBy.nodes // [])[] | select(.state == "OPEN") | "#" + (.number|tostring)] | join(" ")) | dash)
   + " | " + ([.labels[].name | select(startswith("gate:") or startswith("kind:") or . == "adm:gd")] | join(" ") | dash)
   + " |";
 sort_by(.number)

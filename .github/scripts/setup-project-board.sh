@@ -118,8 +118,11 @@ ACTIVE=$(gh issue list --repo "$REPO" --state open --limit 300 --label "adm:gd" 
 tmp_s=$(mktemp); tmp_i=$(mktemp)
 trap 'rm -f "$tmp_s" "$tmp_i"' EXIT
 # number \t state \t blocked?  — acik ve kapali hepsi
+# Engel = HÂLÂ AÇIK olan engelleyici. Kapanmis bir engelleyici iliskide kalir ama
+# artik is baslamaya engel degildir; hepsini saymak isi sonsuza dek "Blocked"
+# gosterirdi (S0-L9 ornegi: engeli S0-L8 kapandigi halde Blocked kalmisti).
 gh issue list --repo "$REPO" --state all --limit 1000 --json number,state,blockedBy \
-  --jq '.[] | "\(.number)\t\(.state)\t\((.blockedBy.nodes|length) > 0)"' | sort > "$tmp_s"
+  --jq '.[] | "\(.number)\t\(.state)\t\(([.blockedBy.nodes[] | select(.state == "OPEN")] | length) > 0)"' | sort > "$tmp_s"
 gh project item-list "$NUM" --owner "$OWNER" --format json --limit 1000 \
   --jq '.items[] | select(.content.number != null) | "\(.content.number)\t\(.id)"' | sort > "$tmp_i"
 
