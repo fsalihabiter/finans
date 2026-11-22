@@ -40,7 +40,9 @@ session:            # current open session; cleared by adm-close
   #   S-006 §"Gözlendi, bu oturuma ait değil".
   #   Pano kuruldu: projects/2, 190 kalem (78 açık + 112 kapalı), Status + durumlar
   #   gerçek veriden (In progress 1 · Blocked 27 · Backlog 50 · Done 112).
-  #   Kalan: panoda görünümler + auto-add (arayüz). Sıradaki: GD-003 kabulü.
+  #   Pano tamamlandı: 4 görünüm (Pano/Faz/Sıradaki/Geçmiş) + 4 workflow açık
+  #   (auto-add · added→Backlog · closed→Done · reopened) → kendi kendine döner.
+  #   Sıradaki: GD-003 kabulü (AC-1..AC-6 → issue #76-#81).
   id: null
   runtime: null
   started_at: null
