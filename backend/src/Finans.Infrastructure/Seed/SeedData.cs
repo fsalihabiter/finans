@@ -1103,6 +1103,82 @@ public static class SeedData
             }
         }
 
+        // ── S0-L10 · Bir alım nasıl gerçekleşir? (GD-005) ───────────────────────
+        // Set 0'ın SON dersi. ⚠ LiveContext bloğu YOK (künye kararı); beyan
+        // EducationSeedTests.LessonsWithoutLiveContext'te gerekçesiyle duruyor.
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l10"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l10"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "bir-alim-nasil-gerceklesir",
+                OrderIndex = 10,
+                Title = "Bir alım nasıl gerçekleşir?",
+                Summary = "Bir emir beş duraktan geçer: sen, aracı kurum, borsa, eşleşme, takas. Piyasa emri " +
+                    "gerçekleşmeyi, limit emri fiyatı garanti eder — ikisi bir takastır. Tur maliyeti komisyon " +
+                    "ve makasın toplamıdır; biri faturada, biri fiyatın içinde.",
+                BodyMarkdown =
+                    "## Bir alım nasıl gerçekleşir?\n\n" +
+                    "Bir alım emri beş duraktan geçer: **sen → aracı kurum → borsa → eşleşme → takas.** " +
+                    "**Borsa** fiyatı belirlemez, emirleri fiyat ve zaman önceliğiyle **eşleştirir**; " +
+                    "**aracı kurum** emri senin adına iletir ve karşılığında **komisyon** alır. İki temel " +
+                    "**emir türü** bir takas sunar: **piyasa emri** gerçekleşmeyi garanti eder ama fiyatı değil, " +
+                    "**limit emri** fiyatı garanti eder ama gerçekleşmeyi değil. Bir turun maliyeti **komisyon + " +
+                    "makastır**; komisyon faturada görünür, makas fiyatın içinde saklıdır. İşlemin gerçekleştiği " +
+                    "an ile **takasın** tamamlandığı an aynı değildir (**valör**). Seans kapalıyken biriken " +
+                    "arz-talep farkı açılışta **boşluk** olarak görünebilir. " +
+                    "⚠ Nirengi bir aracı kurum değildir, emir iletmez — yalnız kaydını tutar.",
+                EstimatedMinutes = 7,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L10, S0-L9'u ister (track içi zincir — Set 0'ın son halkası).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l10") && p.PrerequisiteLessonId == Id("lesson-s0l9"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l10"),
+                PrerequisiteLessonId = Id("lesson-s0l9"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L10 altı kavram tanıtır. `spread` (S0-L9) ve `liquidity`
+        // (S0-L5) PEKİŞTİRİLİR — burada yeniden eklenmez.
+        var s0l10Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-exchange", "exchange", "Borsa"),
+            ("tag-broker", "broker", "Aracı Kurum"),
+            ("tag-order", "order", "Emir"),
+            ("tag-order-type", "order-type", "Emir Türü"),
+            ("tag-settlement", "settlement", "Takas"),
+            ("tag-commission", "commission", "Komisyon"),
+        };
+        foreach (var (tagId, key, label) in s0l10Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l10") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l10"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -1122,6 +1198,7 @@ public static class SeedData
             (Id("lesson-s0l7"), EducationContent.LessonS0L7), // GD-001 — Set 0 Ders 7
             (Id("lesson-s0l8"), EducationContent.LessonS0L8), // GD-003 — Set 0 Ders 8
             (Id("lesson-s0l9"), EducationContent.LessonS0L9), // GD-004 — Set 0 Ders 9
+            (Id("lesson-s0l10"), EducationContent.LessonS0L10), // GD-005 — Set 0 Ders 10 (son)
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),

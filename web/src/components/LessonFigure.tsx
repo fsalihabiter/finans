@@ -2302,6 +2302,262 @@ function WeightsMoveByThemselves() {
 }
 
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
+/* ─── S0-L10 · Bir alım nasıl gerçekleşir? (GD-005) ──────────────────────────
+ * 🔴 Yasal: hiçbir figürde aracı kurum adı, tarifesi ya da karşılaştırması yok;
+ * komisyon oranı kurgusal (metinde öyle etiketli). Emir türleri yan yana bir
+ * TAKAS olarak çizilir — biri "daha iyi" gibi vurgulanmaz (künye yasal notu).
+ * Renkler nötr: fig-bar-pos / fig-bar-neg kazanç-kayıp anlamı taşır (RV-016).
+ */
+
+/** S0-L10 · Emrin beş durağı (çok panelli): sen → aracı kurum → borsa → eşleşme → takas. */
+function OrderJourney() {
+  const stops = [
+    { x: 6, t: "Sen", s: "emri verirsin" },
+    { x: 68, t: "Aracı kurum", s: "iletir" },
+    { x: 130, t: "Borsa", s: "eşleştirir" },
+    { x: 192, t: "Eşleşme", s: "işlem olur" },
+    { x: 254, t: "Takas", s: "el değiştirir" },
+  ];
+  return (
+    <Figure
+      label="Beş durak sırayla: sen, aracı kurum, borsa, eşleşme ve takas; emir soldan sağa ilerliyor"
+      caption="Beş durağın hepsi gerçek. Sonuncusu önemli: işlem oldu ile artık benim aynı an değil."
+      height={132}
+    >
+      {stops.map((p, i) => (
+        <g key={p.t}>
+          <rect x={p.x} y={34} width={54} height="40" rx="6" className={i === 4 ? "fig-seg-lead" : "fig-seg"} opacity={0.9} />
+          <text x={p.x + 27} y={28} className="fig-label" textAnchor="middle">{i + 1}</text>
+          <text x={p.x + 27} y={52} className="fig-value" textAnchor="middle">{p.t}</text>
+          <text x={p.x + 27} y={88} className="fig-label" textAnchor="middle">{p.s}</text>
+          {i < 4 && <path d={`M${p.x + 56} 54 L${p.x + 64} 54`} className="fig-line-flat" fill="none" />}
+        </g>
+      ))}
+      <text x={160} y={116} className="fig-label" textAnchor="middle">çoğu zaman saniyenin altında — ama her durak gerçek</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Borsa eşleştirir: fiyat ve zaman önceliği. */
+function MatchingEngine() {
+  return (
+    <Figure
+      label="Alış ve satış emirleri iki sütunda sıralanmış; en iyi fiyatlar ortada karşılaşıyor"
+      caption="Borsa fiyatı belirlemez, emirleri eşleştirir: önce fiyat, fiyat aynıysa zaman önceliği."
+      height={150}
+    >
+      <text x={70} y={26} className="fig-label" textAnchor="middle">almak isteyenler</text>
+      <text x={250} y={26} className="fig-label" textAnchor="middle">satmak isteyenler</text>
+      {[0, 1, 2].map((i) => (
+        <g key={`m${i}`}>
+          <rect x={20} y={36 + i * 26} width={100 - i * 18} height="18" rx="3" className={i === 0 ? "fig-seg-lead" : "fig-seg"} opacity={1 - i * 0.2} />
+          <rect x={200 + i * 18} y={36 + i * 26} width={100 - i * 18} height="18" rx="3" className={i === 0 ? "fig-seg-lead" : "fig-seg"} opacity={1 - i * 0.2} />
+        </g>
+      ))}
+      <line x1="160" y1="30" x2="160" y2="112" className="fig-axis" />
+      <text x={160} y={126} className="fig-label" textAnchor="middle">en iyi fiyat önde · fiyat aynıysa önce gelen önde</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Aracı kurumun rolü: ileten ve kaydı tutan taraf. */
+function BrokerRole() {
+  return (
+    <Figure
+      label="Sen, aracı kurum ve borsa üçlüsü; aracı kurum ortada, emri ileten ve kaydı tutan taraf"
+      caption="Borsa eşleştirir, aracı kurum iletir ve kaydı tutar. İkisi ayrı taraflardır."
+      height={140}
+    >
+      <Panel x={10} y={30} w={86} h={62} title="Sen" />
+      <text x={53} y={70} className="fig-label" textAnchor="middle">emri verirsin</text>
+
+      <Panel x={117} y={30} w={86} h={62} title="Aracı kurum" />
+      <text x={160} y={66} className="fig-label" textAnchor="middle">iletir · kaydı</text>
+      <text x={160} y={80} className="fig-label" textAnchor="middle">tutar</text>
+
+      <Panel x={224} y={30} w={86} h={62} title="Borsa" />
+      <text x={267} y={70} className="fig-label" textAnchor="middle">eşleştirir</text>
+
+      <path d="M98 60 L115 60" className="fig-line-flat" fill="none" />
+      <path d="M205 60 L222 60" className="fig-line-flat" fill="none" />
+      <text x={160} y={118} className="fig-label" textAnchor="middle">hizmetin karşılığı: komisyon (bu derste kurgusal bir oran)</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · İki emir türü (çok panelli): neyi garanti eder, neyi etmez. */
+function MarketVsLimit() {
+  return (
+    <Figure
+      label="İki panel yan yana: piyasa emri gerçekleşmeyi garanti eder, limit emri fiyatı garanti eder"
+      caption="İkisi bir takastır, bir üstünlük sırası değil: kesin gerçekleşme ile kesin fiyat arasında seçim."
+      height={156}
+    >
+      <Panel x={8} y={14} w={146} h={112} title="Piyasa emri" />
+      <text x={81} y={52} className="fig-label" textAnchor="middle">“şimdi al”</text>
+      <rect x={28} y={62} width={106} height="20" rx="4" className="fig-seg" />
+      <text x={81} y={76} className="fig-value" textAnchor="middle">gerçekleşme ✓</text>
+      <text x={81} y={104} className="fig-label" textAnchor="middle">fiyat önceden belli değil</text>
+
+      <Panel x={166} y={14} w={146} h={112} title="Limit emri" />
+      <text x={239} y={52} className="fig-label" textAnchor="middle">“en fazla şu fiyattan”</text>
+      <rect x={186} y={62} width={106} height="20" rx="4" className="fig-seg" />
+      <text x={239} y={76} className="fig-value" textAnchor="middle">fiyat ✓</text>
+      <text x={239} y={104} className="fig-label" textAnchor="middle">gerçekleşmeyebilir</text>
+
+      <text x={160} y={146} className="fig-label" textAnchor="middle">ikisini birden garanti etmek mümkün değil</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Aynı an, iki emir (çok panelli): biri gerçekleşti, biri bekliyor. */
+function TwoOrdersOneMoment() {
+  return (
+    <Figure
+      label="Aynı kotasyonda iki emir: piyasa emri hemen eşleşiyor, limit emri defterde bekliyor"
+      caption="Aynı an, aynı varlık, iki sonuç. Fark, neyin garanti edildiğinde."
+      height={158}
+    >
+      <text x={160} y={22} className="fig-label" textAnchor="middle">alış 99,85 ₺ · satış 100,15 ₺</text>
+
+      <Panel x={8} y={32} w={146} h={96} title="Piyasa emri" />
+      <rect x={28} y={66} width={106} height="20" rx="4" className="fig-seg" />
+      <text x={81} y={80} className="fig-value" textAnchor="middle">100,15 ₺</text>
+      <text x={81} y={108} className="fig-label" textAnchor="middle">hemen gerçekleşti</text>
+
+      <Panel x={166} y={32} w={146} h={96} title="Limit emri" />
+      <rect x={186} y={66} width={106} height="20" rx="4" className="fig-bar-muted" />
+      <text x={239} y={80} className="fig-value" textAnchor="middle">99,90 ₺</text>
+      <text x={239} y={108} className="fig-label" textAnchor="middle">defterde bekliyor</text>
+
+      <text x={160} y={148} className="fig-label" textAnchor="middle">bekleyen emir gerçekleşebilir de, hiç gerçekleşmeyebilir de</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Görünen ve görünmeyen maliyet (çok panelli). */
+function RoundTripCost() {
+  return (
+    <Figure
+      label="İki panel: faturada görünen komisyon ve fiyatın içinde saklı olan makas"
+      caption="İkisi de aynı cebe dokunur; biri ekstrede yazar, biri fiyatın içindedir."
+      height={150}
+    >
+      <Panel x={8} y={14} w={146} h={104} title="Görünen" />
+      <rect x={28} y={50} width={106} height="22" rx="4" className="fig-seg" />
+      <text x={81} y={65} className="fig-value" textAnchor="middle">komisyon</text>
+      <text x={81} y={92} className="fig-label" textAnchor="middle">ekstrede ayrı satır</text>
+      <text x={81} y={106} className="fig-label" textAnchor="middle">oranı belli</text>
+
+      <Panel x={166} y={14} w={146} h={104} title="Görünmeyen" />
+      <rect x={186} y={50} width={106} height="22" rx="4" className="fig-bar-muted" />
+      <text x={239} y={65} className="fig-value" textAnchor="middle">makas</text>
+      <text x={239} y={92} className="fig-label" textAnchor="middle">hiçbir yerde</text>
+      <text x={239} y={106} className="fig-label" textAnchor="middle">“masraf” diye yazmaz</text>
+
+      <text x={160} y={140} className="fig-label" textAnchor="middle">tur maliyeti = alış kom. + satış kom. + makas</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Maliyet yığını: 10.000 ₺'lik turun üç parçası (WeightStack yeniden kullanımı). */
+function CostStack() {
+  return (
+    <Figure
+      label="Toplam yetmiş liralık tur maliyeti üç orantılı banda bölünmüş: yirmi, yirmi ve otuz lira"
+      caption="Komisyon 40 ₺'nin tamamı görünür; 30 ₺'lik makas görünmez. Toplam 70 ₺ — yani %0,7."
+      height={150}
+    >
+      <text x={160} y={26} className="fig-label" textAnchor="middle">10.000 ₺’lik alım + satış turu</text>
+      <WeightStack
+        x={20}
+        y={44}
+        w={280}
+        parts={[
+          { name: "alış kom.", share: 20 / 70, label: "20 ₺" },
+          { name: "satış kom.", share: 20 / 70, label: "20 ₺" },
+          { name: "makas", share: 30 / 70, label: "30 ₺" },
+        ]}
+      />
+      <text x={160} y={110} className="fig-big" textAnchor="middle">toplam 70 ₺ · %0,7</text>
+      <text x={160} y={136} className="fig-label" textAnchor="middle">yalnız komisyona bakan %0,4 görür — toplamın yarısından biraz fazlası</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Takas saati: işlem günü ile takas günü aynı değil. */
+function SettlementClock() {
+  return (
+    <Figure
+      label="Bir zaman ekseninde işlem günü ve takas günü ayrı iki nokta olarak işaretli"
+      caption="İşlem anı ile mülkiyet anı aynı değildir. Aradaki süreye valör denir."
+      height={140}
+    >
+      <line x1="30" y1="74" x2="290" y2="74" className="fig-axis" />
+      <circle cx={70} cy={74} r="6" className="fig-dot-steady" />
+      <circle cx={240} cy={74} r="6" className="fig-dot-steady" />
+      <text x={70} y={54} className="fig-value" textAnchor="middle">işlem</text>
+      <text x={70} y={96} className="fig-label" textAnchor="middle">fiyat belli</text>
+      <text x={240} y={54} className="fig-value" textAnchor="middle">takas</text>
+      <text x={240} y={96} className="fig-label" textAnchor="middle">fiilen el değiştirir</text>
+      <rect x={76} y={70} width={158} height="8" rx="3" className="fig-seg" opacity={0.6} />
+      <text x={155} y={118} className="fig-label" textAnchor="middle">aradaki süre: valör (örnek — piyasaya göre değişir)</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Seans kapalıyken (çok panelli): biriken fark açılışta boşluk olur. */
+function AfterHoursWorld() {
+  return (
+    <Figure
+      label="Üç panel: kapanış, kapalıyken biriken fikir farkı ve açılışta oluşan fiyat boşluğu"
+      caption="Kapalıyken işlem olmaz ama fikirler değişir; açılışta fark tek seferde yansır."
+      height={152}
+    >
+      <Panel x={6} y={14} w={96} h={100} title="Kapanış" />
+      <line x1={20} y1={70} x2={88} y2={70} className="fig-line-steady" />
+      <circle cx={88} cy={70} r="4" className="fig-dot-steady" />
+      <text x={54} y={100} className="fig-label" textAnchor="middle">son işlem</text>
+
+      <Panel x={112} y={14} w={96} h={100} title="Kapalıyken" />
+      <text x={160} y={56} className="fig-label" textAnchor="middle">işlem yok</text>
+      <text x={160} y={74} className="fig-label" textAnchor="middle">ama fikirler</text>
+      <text x={160} y={88} className="fig-label" textAnchor="middle">değişiyor</text>
+
+      <Panel x={218} y={14} w={96} h={100} title="Açılış" />
+      <circle cx={236} cy={78} r="4" className="fig-dot-steady" opacity={0.45} />
+      <circle cx={262} cy={52} r="5" className="fig-dot-steady" />
+      <line x1={244} y1={74} x2={256} y2={58} className="fig-line-flat" />
+      <text x={266} y={100} className="fig-label" textAnchor="middle">boşluk</text>
+
+      <text x={160} y={140} className="fig-label" textAnchor="middle">boşluk “bir şey bozuldu” demek değil — biriken farkın yansıması</text>
+    </Figure>
+  );
+}
+
+/** S0-L10 · Nirengi zincirin neresinde: hiçbir durağında. */
+function NirengiIsNotABroker() {
+  return (
+    <Figure
+      label="Emir zinciri üstte, Nirengi ise zincirin dışında ayrı bir kutuda: yalnız kaydı tutar"
+      caption="Nirengi bir aracı kurum değildir, emir iletmez. Burada bir düğmeye basmak piyasada hiçbir şey yapmaz."
+      height={150}
+    >
+      <text x={160} y={24} className="fig-label" textAnchor="middle">piyasada olan</text>
+      {["aracı kurum", "borsa", "eşleşme", "takas"].map((t, i) => (
+        <g key={t}>
+          <rect x={10 + i * 76} y={34} width={68} height="26" rx="5" className="fig-seg" opacity={0.85} />
+          <text x={44 + i * 76} y={51} className="fig-label" textAnchor="middle">{t}</text>
+        </g>
+      ))}
+      <line x1="20" y1="78" x2="300" y2="78" className="fig-axis" />
+      <text x={160} y={100} className="fig-label" textAnchor="middle">senin tarafında olan</text>
+      <rect x={90} y={108} width={140} height="26" rx="5" className="fig-bar-muted" />
+      <text x={160} y={125} className="fig-value" textAnchor="middle">Nirengi — kaydı tutar</text>
+    </Figure>
+  );
+}
+
 /* ─── S0-L9 · Fiyat nereden çıkıyor? (GD-004) ────────────────────────────────
  * Ortak kural: alış/satış tarafları NÖTR tonla çizilir. fig-bar-pos / fig-bar-neg
  * uygulamada kazanç-kayıp anlamı taşır (RV-016); almak "iyi", satmak "kötü"
@@ -2612,6 +2868,17 @@ const FIGURES: Record<string, () => React.JSX.Element> = {
   "app-screen-map": AppScreenMap,
   "two-base-currencies": TwoBaseCurrencies,
   "weights-move-by-themselves": WeightsMoveByThemselves,
+  // S0-L10 · Bir alım nasıl gerçekleşir? (GD-005) — 10 figür, 5'i çok panelli
+  "order-journey": OrderJourney,
+  "matching-engine": MatchingEngine,
+  "broker-role": BrokerRole,
+  "market-vs-limit": MarketVsLimit,
+  "two-orders-one-moment": TwoOrdersOneMoment,
+  "round-trip-cost": RoundTripCost,
+  "cost-stack": CostStack,
+  "settlement-clock": SettlementClock,
+  "after-hours-world": AfterHoursWorld,
+  "nirengi-is-not-a-broker": NirengiIsNotABroker,
   // S0-L9 · Fiyat nereden çıkıyor? (GD-004) — 10 figür, 6'sı çok panelli
   "two-sides-of-a-trade": TwoSidesOfATrade,
   "bazaar-to-exchange": BazaarToExchange,

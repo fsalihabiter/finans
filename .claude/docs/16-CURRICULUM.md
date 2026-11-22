@@ -941,10 +941,20 @@ toplam maliyeti — **yüzde** olarak; (b) limit emrinin gerçekleşmediği sena
 **Tuzaklar:** "Limit emri her zaman daha iyidir" · "Sattım, para hesabımda" ·
 "Komisyon düşükse maliyet düşüktür" (makas unutulur).
 
-**Figür planı (9):** `order-journey`✳ · `matching-engine` · `broker-role` ·
+**Figür planı (10):** `order-journey`✳ · `matching-engine` · `broker-role` ·
 `market-vs-limit`✳ · `two-orders-one-moment`✳ · `round-trip-cost`✳ ·
 `cost-stack` · `settlement-clock` · `after-hours-world`✳ ·
 `nirengi-is-not-a-broker`.
+
+> ⚠ **Düzeltme (2026-11-22, GD-005):** başlık "Figür planı (**9**)" yazıyordu →
+> **10**. Listede 10 anahtar var ve aşama planı 10 figür gösteriyor
+> (aşama 2·3·4·5·6·8·9·10·12·13).
+>
+> **Bu hata dördüncü kez çıktı** (S0-L7 · S0-L8 · S0-L9 · S0-L10) ve her seferinde
+> ancak GD açılışında elle yakalandı. 2026-11-22 taraması müfredatın 16 dersinden
+> 11'inde aynı uyuşmazlığı bulmuştu. **M12 kuralı** (künye başlığındaki figür
+> sayısı ↔ aşama planındaki 🖼 sayısı) ve kalan derslerin toplu düzeltmesi hâlâ
+> açık iş — bkz. GD-004 §5.
 
 **Değerlendirme (9):** Easy — emir türü ve durak sırası · Medium — toplam maliyet
 hesabı, valör · Hard — limit emrinin bedeli, açılış boşluğunun nedeni.
