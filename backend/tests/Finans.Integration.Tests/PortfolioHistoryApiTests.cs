@@ -231,8 +231,13 @@ public sealed class PortfolioHistoryApiTests : IClassFixture<SqliteWebApplicatio
         var fund = await fundResp.Content.ReadFromJsonAsync<HoldingDto>(Json);
         await client.PutAsJsonAsync($"/api/holdings/{fund!.Id}", new UpdateHoldingRequest(12m), Json);
 
-        var holdings = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json);
-        var cash = holdings!.Single(h => h.AssetType == AssetType.Cash);
+        // CS8604: `holdings!` yalnız İLK kullanımı susturuyordu; aşağıdaki ikinci
+        // kullanım (holdings.Sum) yine olası-null uyarısı veriyordu. Yerel değişken
+        // doğrudan null-DEĞİL yapıldı — ayrıca boş yanıtta NullReferenceException
+        // yerine ne olduğunu söyleyen bir hata çıkıyor.
+        var holdings = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json)
+            ?? throw new InvalidOperationException("/api/holdings boş yanıt döndü");
+        var cash = holdings.Single(h => h.AssetType == AssetType.Cash);
 
         cash.CurrentPrice.Should().Be(1m, "nakdin birim fiyatı tanım gereği 1");
         cash.CurrentValue.Should().Be(34349.50m, "nakit satırı artık '—' göstermemeli");
@@ -276,8 +281,10 @@ public sealed class PortfolioHistoryApiTests : IClassFixture<SqliteWebApplicatio
         (await putCash.Content.ReadAsStringAsync()).Should().Contain("fixed_price");
 
         // Değerler bozulmadı.
-        var after = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json);
-        after!.Single(h => h.Id == cash.Id).CurrentValue.Should().Be(5000m);
+        // CS8604: aynı desen — `after!` ilk satırı susturuyor, ikincisi uyarıyordu.
+        var after = await client.GetFromJsonAsync<List<HoldingDto>>("/api/holdings", Json)
+            ?? throw new InvalidOperationException("/api/holdings boş yanıt döndü");
+        after.Single(h => h.Id == cash.Id).CurrentValue.Should().Be(5000m);
         after.Single(h => h.Id == bes.Id).CurrentValue.Should().Be(bes.CurrentValue);
     }
 
