@@ -2302,6 +2302,283 @@ function WeightsMoveByThemselves() {
 }
 
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
+/* ─── S0-L9 · Fiyat nereden çıkıyor? (GD-004) ────────────────────────────────
+ * Ortak kural: alış/satış tarafları NÖTR tonla çizilir. fig-bar-pos / fig-bar-neg
+ * uygulamada kazanç-kayıp anlamı taşır (RV-016); almak "iyi", satmak "kötü"
+ * olmadığı için bu figürlerde yalnız maliyet gösteren yerde kullanılır.
+ * Hiçbir figürde varlık, borsa veya aracı kurum adı geçmez (künye yasal notu).
+ */
+
+/** S0-L9 · İki taraf (çok panelli): fiyat ancak iki niyet buluşunca doğar. */
+function TwoSidesOfATrade() {
+  return (
+    <Figure
+      label="Üç panel: satıcı yüz istiyor, alıcı yüz veriyor, ikisi buluşunca yüz fiyatı oluşuyor"
+      caption="Fiyat ölçülmez, oluşur: iki taraf aynı sayıda anlaşınca doğar. Anlaşma yoksa fiyat da yok."
+      height={154}
+    >
+      <Panel x={6} y={14} w={96} h={100} title="Satıcı" />
+      <text x={54} y={58} className="fig-big" textAnchor="middle">100</text>
+      <text x={54} y={82} className="fig-label" textAnchor="middle">“bu kadara</text>
+      <text x={54} y={96} className="fig-label" textAnchor="middle">veririm”</text>
+
+      <Panel x={112} y={14} w={96} h={100} title="Alıcı" />
+      <text x={160} y={58} className="fig-big" textAnchor="middle">100</text>
+      <text x={160} y={82} className="fig-label" textAnchor="middle">“bu kadara</text>
+      <text x={160} y={96} className="fig-label" textAnchor="middle">alırım”</text>
+
+      <Panel x={218} y={14} w={96} h={100} title="Anlaşma" />
+      <rect x={236} y={46} width={60} height="22" rx="4" className="fig-seg-lead" />
+      <text x={266} y={62} className="fig-big" textAnchor="middle">100</text>
+      <text x={266} y={88} className="fig-label" textAnchor="middle">işlem oldu →</text>
+      <text x={266} y={102} className="fig-label" textAnchor="middle">fiyat doğdu</text>
+
+      <text x={160} y={136} className="fig-label" textAnchor="middle">iki niyet buluşmazsa ortada yalnızca niyet vardır</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Pazardan borsaya (çok panelli): aynı mekanizma, hızlandırılmış. */
+function BazaarToExchange() {
+  return (
+    <Figure
+      label="İki panel: pazarda iki kişi konuşarak pazarlık ediyor, borsada binlerce teklif sayı yazarak eşleşiyor"
+      caption="Pazarlık sesle, borsada sayı yazarak yapılır. Mekanizma aynı: verilen ile istenen buluşunca fiyat doğar."
+      height={150}
+    >
+      <Panel x={6} y={14} w={146} h={104} title="Pazar" />
+      <text x={79} y={48} className="fig-label" textAnchor="middle">“kilosu 100” → “80 olsun”</text>
+      <text x={79} y={66} className="fig-label" textAnchor="middle">“90, son”</text>
+      <rect x={44} y={76} width={70} height="18" rx="4" className="fig-seg-lead" />
+      <text x={79} y={89} className="fig-value" textAnchor="middle">90</text>
+      <text x={79} y={108} className="fig-label" textAnchor="middle">iki kişi · dakikalar</text>
+
+      <Panel x={162} y={14} w={152} h={104} title="Borsa" />
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <rect key={`b${i}`} x={176 + i * 22} y={44 + (i % 3) * 5} width={14} height={10} rx="2" className="fig-seg" opacity={0.85 - i * 0.07} />
+      ))}
+      <rect x={210} y={76} width={70} height="18" rx="4" className="fig-seg-lead" />
+      <text x={245} y={89} className="fig-value" textAnchor="middle">90</text>
+      <text x={238} y={108} className="fig-label" textAnchor="middle">binlerce teklif · saniyenin altı</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Son işlem fiyatı geçmişe aittir: bitmiş anlaşmaların sonuncusu. */
+function LastPriceIsHistory() {
+  const trades = [
+    { x: 40, y: 58 },
+    { x: 100, y: 48 },
+    { x: 160, y: 64 },
+    { x: 220, y: 52 },
+  ];
+  return (
+    <Figure
+      label="Bir zaman ekseni üzerinde dört gerçekleşmiş işlem; sonuncusu işaretli ve ekranda görünen sayı o"
+      caption="Ekrandaki sayı en son gerçekleşmiş anlaşmanın kaydıdır — şu an geçerli bir teklif değil."
+      height={140}
+    >
+      <line x1="20" y1="86" x2="300" y2="86" className="fig-axis" />
+      {trades.map((t, i) => (
+        <g key={`t${i}`}>
+          <circle cx={t.x} cy={t.y} r="5" className={i === trades.length - 1 ? "fig-dot-volatile" : "fig-dot-steady"} />
+          <line x1={t.x} y1={t.y + 6} x2={t.x} y2={86} className="fig-line-flat" />
+        </g>
+      ))}
+      <rect x={252} y={40} width={58} height="24" rx="4" className="fig-seg-lead" />
+      <text x={281} y={56} className="fig-value" textAnchor="middle">son</text>
+      <text x={30} y={104} className="fig-label">geçmiş işlemler</text>
+      <text x={300} y={104} className="fig-label" textAnchor="end">şimdi</text>
+      <text x={160} y={126} className="fig-label" textAnchor="middle">“en son kaçtan el değiştirdi?” ≠ “ben kaça alabilirim?”</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Fiyat bir anlaşma, değer bir yargı — aynı sayı, iki ayrı kanaat. */
+function PriceIsNotValue() {
+  return (
+    <Figure
+      label="Aynı yüz sayısının iki yanında iki farklı yargı: satan için az, alan için çok ediyor"
+      caption="Fiyat bir olgudur (anlaşma), değer bir yargıdır (kanaat). Alışveriş tam da bu fark yüzünden olur."
+      height={146}
+    >
+      <rect x={120} y={30} width={80} height="30" rx="6" className="fig-seg-lead" />
+      <text x={160} y={51} className="fig-big" textAnchor="middle">100</text>
+      <text x={160} y={76} className="fig-label" textAnchor="middle">FİYAT — anlaşma (olgu)</text>
+
+      <line x1="20" y1="92" x2="300" y2="92" className="fig-axis" />
+
+      <text x={78} y={112} className="fig-label" textAnchor="middle">satan için</text>
+      <text x={78} y={128} className="fig-value" textAnchor="middle">100’den az eder</text>
+      <text x={242} y={112} className="fig-label" textAnchor="middle">alan için</text>
+      <text x={242} y={128} className="fig-value" textAnchor="middle">100’den çok eder</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Kotasyon merdiveni: iki ayrı sayı ve aradaki makas. */
+function BidAskLadder() {
+  return (
+    <Figure
+      label="Üst üste iki kotasyon: satış kotasyonu yüz, alış kotasyonu doksan sekiz, arada iki birimlik makas"
+      caption="Sen alırken satış kotasyonunu ödersin, satarken alış kotasyonunu alırsın. Fark makastır."
+      height={154}
+    >
+      <text x={160} y={22} className="fig-label" textAnchor="middle">sen ALIRKEN ödediğin</text>
+      <rect x={70} y={30} width={180} height="26" rx="5" className="fig-seg-lead" />
+      <text x={160} y={48} className="fig-value" textAnchor="middle">satış kotasyonu · 100,00 ₺</text>
+
+      <line x1="70" y1="72" x2="250" y2="72" className="fig-axis" />
+      <text x={160} y={88} className="fig-big" textAnchor="middle">makas 2,00 ₺</text>
+      <line x1="70" y1="98" x2="250" y2="98" className="fig-axis" />
+
+      <rect x={70} y={108} width={180} height="26" rx="5" className="fig-seg" />
+      <text x={160} y={126} className="fig-value" textAnchor="middle">alış kotasyonu · 98,00 ₺</text>
+      <text x={160} y={148} className="fig-label" textAnchor="middle">sen SATARKEN aldığın</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Makasın maliyeti (çok panelli): al, hemen sat, fiyat kıpırdamadı. */
+function SpreadCost() {
+  return (
+    <Figure
+      label="Üç panel: yüz liradan alınıyor, doksan sekize satılıyor, aradaki iki lira yüzde iki maliyet olarak kalıyor"
+      caption="Fiyat hiç kıpırdamasa da alıp satmanın kendi bedeli vardır: makas."
+      height={152}
+    >
+      <Panel x={6} y={14} w={96} h={96} title="Aldın" />
+      <rect x={24} y={48} width={60} height="20" rx="4" className="fig-seg-lead" />
+      <text x={54} y={63} className="fig-value" textAnchor="middle">100,00 ₺</text>
+      <text x={54} y={92} className="fig-label" textAnchor="middle">ödedin</text>
+
+      <Panel x={112} y={14} w={96} h={96} title="Hemen sattın" />
+      <rect x={130} y={48} width={60} height="20" rx="4" className="fig-seg" />
+      <text x={160} y={63} className="fig-value" textAnchor="middle">98,00 ₺</text>
+      <text x={160} y={92} className="fig-label" textAnchor="middle">aldın</text>
+
+      <Panel x={218} y={14} w={96} h={96} title="Fark" />
+      <rect x={236} y={48} width={60} height="20" rx="4" className="fig-bar-neg" />
+      <text x={266} y={63} className="fig-value" textAnchor="middle">2,00 ₺</text>
+      <text x={266} y={92} className="fig-big" textAnchor="middle">%2</text>
+
+      <text x={160} y={134} className="fig-label" textAnchor="middle">piyasada hiçbir şey olmadı — bedel alıp satmanın kendisinde</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Arz-talep terazisi (çok panelli): baskı değişince anlaşma yeri kayar. */
+function SupplyDemandScale() {
+  const panels = [
+    { x: 6, title: "Denge", l: 20, r: 20, note: "anlaşma yerinde" },
+    { x: 112, title: "Talep ağır basar", l: 30, r: 14, note: "alıcılar daha yükseğe razı" },
+    { x: 218, title: "Arz ağır basar", l: 14, r: 30, note: "satıcılar daha düşüğe razı" },
+  ];
+  return (
+    <Figure
+      label="Üç panel: dengede, talebin ağır bastığı ve arzın ağır bastığı durumlarda anlaşma noktasının kayması"
+      caption="Fiyatı taraflardan birinin yok olması değil, razı olunan seviyenin değişmesi oynatır."
+      height={156}
+    >
+      {panels.map((p) => (
+        <g key={p.title}>
+          <Panel x={p.x} y={14} w={96} h={100} title={p.title} />
+          <line x1={p.x + 14} y1={62} x2={p.x + 82} y2={62} className="fig-axis" />
+          <rect x={p.x + 18} y={62 - p.l / 2} width={22} height={p.l} rx="3" className="fig-seg-lead" />
+          <rect x={p.x + 56} y={62 - p.r / 2} width={22} height={p.r} rx="3" className="fig-seg" />
+          <text x={p.x + 29} y={92} className="fig-label" textAnchor="middle">talep</text>
+          <text x={p.x + 67} y={92} className="fig-label" textAnchor="middle">arz</text>
+          <text x={p.x + 48} y={108} className="fig-label" textAnchor="middle">{p.note}</text>
+        </g>
+      ))}
+      <text x={160} y={140} className="fig-label" textAnchor="middle">her işlemde iki taraf vardır — “herkes almak istiyor” diye bir an olmaz</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Aynı varlık iki yerde: iki ayrı alıcı-satıcı kümesi, iki yakın sayı. */
+function SameAssetTwoVenues() {
+  return (
+    <Figure
+      label="İki yerde aynı varlığın birbirine yakın iki fiyatı ve farklı genişlikte makasları"
+      caption="Her yerde ayrı bir alıcı-satıcı kümesi pazarlık eder; fark büyürse kapatmak isteyenler devreye girer."
+      height={150}
+    >
+      <Panel x={10} y={14} w={140} h={98} title="Birinci yer" />
+      <text x={80} y={52} className="fig-big" textAnchor="middle">100,00 ₺</text>
+      <rect x={46} y={64} width={68} height="10" rx="3" className="fig-seg-lead" />
+      <text x={80} y={94} className="fig-label" textAnchor="middle">makas 0,20 ₺</text>
+
+      <Panel x={170} y={14} w={140} h={98} title="İkinci yer" />
+      <text x={240} y={52} className="fig-big" textAnchor="middle">100,40 ₺</text>
+      <rect x={206} y={64} width={68} height="10" rx="3" className="fig-bar-muted" />
+      <text x={240} y={94} className="fig-label" textAnchor="middle">makas 0,90 ₺</text>
+
+      <text x={160} y={134} className="fig-label" textAnchor="middle">“bir fiyat” diye tek bir sayı yoktur — hangi yer, hangi an, alış mı satış mı</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · Her satışın bir alıcısı var (çok panelli): tek taraflı işlem olmaz. */
+function EverySaleHasABuyer() {
+  return (
+    <Figure
+      label="İki panel: imkânsız olan tek taraflı satış ve gerçekte olan iki taraflı işlem"
+      caption="“Herkes sattı” diye bir an yoktur; satılan her birim birileri tarafından alınmıştır."
+      height={158}
+    >
+      <Panel x={6} y={14} w={146} h={110} title="Anlatılan" />
+      <text x={79} y={50} className="fig-label" textAnchor="middle">satanlar</text>
+      {[0, 1, 2, 3].map((i) => (
+        <rect key={`s${i}`} x={30 + i * 24} y={58} width={16} height={16} rx="3" className="fig-seg" />
+      ))}
+      <text x={79} y={92} className="fig-label" textAnchor="middle">alanlar: —</text>
+      <text x={79} y={112} className="fig-big" textAnchor="middle">işlem olmaz</text>
+
+      <Panel x={162} y={14} w={152} h={110} title="Olan" />
+      <text x={238} y={50} className="fig-label" textAnchor="middle">satanlar</text>
+      {[0, 1, 2, 3].map((i) => (
+        <rect key={`s2${i}`} x={188 + i * 24} y={58} width={16} height={16} rx="3" className="fig-seg" />
+      ))}
+      {[0, 1, 2, 3].map((i) => (
+        <rect key={`b2${i}`} x={188 + i * 24} y={82} width={16} height={16} rx="3" className="fig-seg-lead" />
+      ))}
+      <text x={238} y={116} className="fig-label" textAnchor="middle">alanlar — işlem gerçekleşir</text>
+
+      <text x={160} y={146} className="fig-label" textAnchor="middle">değişen taraf sayısı değil, razı olunan seviyedir</text>
+    </Figure>
+  );
+}
+
+/** S0-L9 · İnce piyasa (çok panelli): az anlaşma → gürültülü, az konuşan fiyat. */
+function ThinMarket() {
+  const many = [52, 48, 55, 50, 53, 49, 54, 51, 52, 50, 53, 51];
+  const few = [48, 70, 44];
+  return (
+    <Figure
+      label="İki panel: çok işlem gören piyasada fiyat noktaları birbirine yakın, az işlem görende dağınık ve sıçramalı"
+      caption="Az sayıda görüşün ortalaması, çok sayıda görüşün ortalamasından daha gürültülüdür."
+      height={158}
+    >
+      <Panel x={6} y={14} w={146} h={108} title="Çok işlem" />
+      <line x1="18" y1="104" x2="142" y2="104" className="fig-axis" />
+      {many.map((v, i) => (
+        <circle key={`m${i}`} cx={24 + i * 10} cy={v + 20} r="3" className="fig-dot-steady" />
+      ))}
+      <text x={79} y={118} className="fig-label" textAnchor="middle">makas dar · fiyat çok şey anlatır</text>
+
+      <Panel x={162} y={14} w={152} h={108} title="Az işlem (ince)" />
+      <line x1="174" y1="104" x2="302" y2="104" className="fig-axis" />
+      {few.map((v, i) => (
+        <circle key={`f${i}`} cx={200 + i * 40} cy={v + 20} r="4" className="fig-dot-volatile" />
+      ))}
+      <text x={238} y={118} className="fig-label" textAnchor="middle">makas geniş · fiyat sıçrar</text>
+
+      <text x={160} y={146} className="fig-label" textAnchor="middle">sıçrama varlık hakkında değil, anlaşma sayısı hakkında bilgi verir</text>
+    </Figure>
+  );
+}
+
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
   // S0-L8 · Vade, hedef ve portföy (GD-003)
@@ -2314,6 +2591,17 @@ const FIGURES: Record<string, () => React.JSX.Element> = {
   "app-screen-map": AppScreenMap,
   "two-base-currencies": TwoBaseCurrencies,
   "weights-move-by-themselves": WeightsMoveByThemselves,
+  // S0-L9 · Fiyat nereden çıkıyor? (GD-004) — 10 figür, 6'sı çok panelli
+  "two-sides-of-a-trade": TwoSidesOfATrade,
+  "bazaar-to-exchange": BazaarToExchange,
+  "last-price-is-history": LastPriceIsHistory,
+  "price-is-not-value": PriceIsNotValue,
+  "bid-ask-ladder": BidAskLadder,
+  "spread-cost": SpreadCost,
+  "supply-demand-scale": SupplyDemandScale,
+  "same-asset-two-venues": SameAssetTwoVenues,
+  "every-sale-has-a-buyer": EverySaleHasABuyer,
+  "thin-market": ThinMarket,
   // S0-L7 · Risk ne demek? (GD-001)
   "uncertainty-fan": UncertaintyFan,
   "two-paths-same-average": TwoPathsSameAverage,

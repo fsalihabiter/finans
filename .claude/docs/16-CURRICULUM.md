@@ -866,10 +866,22 @@ işlemle oluşan fiyattan neden farklı okunduğu.
 **Tuzaklar:** "Fiyat = değer" · "Ekrandaki fiyattan alırım" · "Fiyat düştü çünkü
 herkes sattı" (her işlemin iki tarafı vardır).
 
-**Figür planı (9):** `two-sides-of-a-trade`✳ · `bazaar-to-exchange`✳ ·
+**Figür planı (10):** `two-sides-of-a-trade`✳ · `bazaar-to-exchange`✳ ·
 `last-price-is-history` · `price-is-not-value` · `bid-ask-ladder` ·
 `spread-cost`✳ · `supply-demand-scale`✳ · `same-asset-two-venues` ·
 `every-sale-has-a-buyer`✳ · `thin-market`✳.
+
+> ⚠ **Düzeltme (2026-11-22, GD-004):** başlık "Figür planı (**9**)" yazıyordu →
+> **10**. Listede 10 anahtar var ve aşama planı 10 figür gösteriyor (aşama
+> 2·3·4·5·6·7·9·10·11·12); sayı listeyle çelişiyordu.
+>
+> **Bu hata üçüncü kez çıktı** (S0-L7: 8→9 · S0-L8: 8→9 · S0-L9: 9→10) ve
+> 2026-11-22 taraması müfredatın **16 dersinden 11'inde** aynı uyuşmazlığı
+> buldu — yani düzeltilen üç ders, tarandığı için düzelmiş olanlar. Sayı elle
+> tutuluyor, makineyle denetlenmiyor. **M12 kuralı adayı:** künye başlığındaki
+> figür sayısı ↔ aşama planındaki 🖼 sayısı eşitliği (doküman testi; seed testi
+> değil). Kalan 10 dersin toplu düzeltmesiyle birlikte ayrı iş olarak açılmalı —
+> GD-004 kapsamında yalnız bu ders düzeltildi.
 
 **Değerlendirme (9):** Easy — fiyat/kotasyon tanımı · Medium — makas hesabı,
 son işlem ↔ alınabilir fiyat ayrımı · Hard — "herkes sattı" tuzağı, ince

@@ -1031,6 +1031,78 @@ public static class SeedData
             }
         }
 
+        // ── S0-L9 · Fiyat nereden çıkıyor? (GD-004) ─────────────────────────────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l9"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l9"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "fiyat-nereden-cikiyor",
+                OrderIndex = 9,
+                Title = "Fiyat nereden çıkıyor?",
+                Summary = "Fiyat ölçülmez, oluşur: bir alıcı ile bir satıcının anlaştığı noktadır. Ekrandaki son " +
+                    "işlem fiyatı olmuş bir anlaşmanın kaydıdır; senin alabileceğin fiyat ayrı bir sayıdır. " +
+                    "Alış ile satış kotasyonu arasındaki makas, alıp satmanın kendi bedelidir.",
+                BodyMarkdown =
+                    "## Fiyat nereden çıkıyor?\n\n" +
+                    "Bir **fiyat**, bir alıcı ile bir satıcının aynı sayıda anlaştığı **noktadır** — ölçülen bir " +
+                    "büyüklük değil, oluşan bir sonuçtur. Alıcı ve satıcı niyetlerinin buluştuğu düzene **piyasa** " +
+                    "denir. Ekranda görünen **son işlem fiyatı** geçmişe ait bir kayıttır; senin alabileceğin sayı " +
+                    "**satış kotasyonu**, satabileceğin sayı **alış kotasyonudur.** İkisi arasındaki farka **makas** " +
+                    "denir ve bu fark, fiyat hiç kıpırdamasa bile alıp satmanın **bedelidir.** Fiyatı **arz ve talep** " +
+                    "hareket ettirir; her satışın karşısında bir alış olduğu için \"herkes sattı\" diye bir an olmaz. " +
+                    "Az işlem gören (**ince**) bir piyasada fiyat daha gürültülüdür ve daha az şey anlatır. " +
+                    "Ders mekanizmayı anlatır; nereden, ne zaman, neyi alıp satman gerektiğini söylemez.",
+                EstimatedMinutes = 7,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L9, S0-L8'i ister (track içi zincir).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l9") && p.PrerequisiteLessonId == Id("lesson-s0l8"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l9"),
+                PrerequisiteLessonId = Id("lesson-s0l8"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L9 beş kavram tanıtır. `liquidity` ve `volatility`
+        // PEKİŞTİRİLİR (S0-L5 ve S0-L7'de tanıtılmıştı) — burada yeniden eklenmez.
+        var s0l9Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-market", "market", "Piyasa"),
+            ("tag-supply-demand", "supply-demand", "Arz ve Talep"),
+            ("tag-last-price", "last-price", "Son İşlem Fiyatı"),
+            ("tag-bid-ask", "bid-ask", "Alış-Satış Kotasyonu"),
+            ("tag-spread", "spread", "Makas"),
+        };
+        foreach (var (tagId, key, label) in s0l9Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l9") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l9"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -1049,6 +1121,7 @@ public static class SeedData
             (Id("lesson-s0l6"), EducationContent.LessonS0L6), // T6.16 — Set 0 Ders 6
             (Id("lesson-s0l7"), EducationContent.LessonS0L7), // GD-001 — Set 0 Ders 7
             (Id("lesson-s0l8"), EducationContent.LessonS0L8), // GD-003 — Set 0 Ders 8
+            (Id("lesson-s0l9"), EducationContent.LessonS0L9), // GD-004 — Set 0 Ders 9
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),
