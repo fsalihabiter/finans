@@ -73,7 +73,11 @@ findings:
     rule_or_decision: D-002
     summary: "Tuzak bloğunda 'yirmi beş yıl dokunulmayacak parayı kısa vadeli gibi tutmak da bir uyumsuzluktur — bedeli daha sessiz ödenir' cümlesi, uzun vadeli parayı dalgalı kalemlere yönlendiren örtük bir yönlendirme gibi okunabilir."
     rationale: "Kişiye özel değil ve kavramsal; yine de 'bedel' vurgusu bir dağılım tercihini ima ediyor. Öneri: bedeli adlandırmak (ör. 'enflasyon karşısında alım gücü kaybı riski — Ders 4') ve yönlendirmeyi kaldırmak. İnsan kararı gerekli. || 2026-11-22: önerilen düzeltme UYGULANDI (EducationContent.cs, S0-L8 tuzak bloğu) — 'bedeli daha sessiz ödenir' kalktı; yerine bedel adlandırıldı ('bekleyen paranın ALIM GÜCÜ enflasyon karşısında zamanla erir; bunu daha önceki bir derste görmüştün') ve karar okura iade edildi ('hangisinin senin durumun olduğu, paraya ne zaman ihtiyacın olduğuna bağlıdır'). Ders numarası bilerek yazılmadı (OrderIndex kayabilir). M7 taraması temiz. STATUS AÇIK BIRAKILDI: bulgunun kendisi 'insan kararı gerekli' diyor — yeni metnin D-002 açısından yeterli olduğunu ürün sahibi onaylamalı."
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-22"
+      evidence_ref: "122be9e · EducationContent.cs (S0-L8 tuzak bloğu) · EducationSeedTests 22/22 (M7)"
+      note: "Ürün sahibi metni okuyup onayladı ('okudum metni ve iyi duruyor onaylıyorum'). Bulgunun gerektirdiği insan kararı budur: 'bedeli daha sessiz ödenir' yerine bedel adlandırıldı (alım gücü erimesi) ve karar okura iade edildi; D-002 açısından yeterli bulundu."
   - id: RV-016
     severity: low
     evidence: heuristic

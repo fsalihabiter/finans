@@ -9,12 +9,12 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: null       # GD-003 (S0-L8) 2026-11-22'de KABUL EDİLDİ ve kapandı → status: done.
-                    # Altı kriterin tamamı ürün sahibi onayıyla (AC-2 "Kabul, devam";
-                    # AC-1/3/4/5/6 "Hepsini onaylıyorum"). Set 0 artık 8/10.
-                    # INV-04/INV-05 gereği done bir GD aktif bırakılmaz → boşaltıldı.
-                    # Sıradaki aday: S0-L9 "Fiyat nereden çıkıyor?" (issue #10) —
-                    # GD-004 olarak açmak ürün sahibinin kararı, otomatik açılmadı.
+  gd_id: GD-004     # S0-L9 "Fiyat nereden çıkıyor?" — açıldı 2026-11-22, ürün
+                    # sahibinin "sonraki adımla devam et" talimatıyla. Issue #10.
+                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan önerdi, insan onaylar.
+                    # Künye düzeltmesi tespit edildi: figür sayısı 9 → 10 (üçüncü kez
+                    # aynı hata; M12 kuralı adayı §5'te).
+                    # GD-003 (S0-L8) 2026-11-22'de kabul edildi ve kapandı → Set 0 8/10.
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
@@ -61,8 +61,8 @@ review:
   last_review_id: REVIEW-003
   # REVIEW-003 (GD-003): 8 bulgu — 5 resolved (RV-011/012/013 + 2026-11-22'de
   # RV-014 medium ve RV-016). Açık 3, hepsi low ve hiçbiri critical/high değil:
-  #   RV-015 → düzeltme UYGULANDI, status açık: bulgu "insan kararı gerekli"
-  #            diyor, yeni metnin D-002 yeterliliği ürün sahibinde (issue #6).
+  #   RV-015 → RESOLVED 2026-11-22: metin düzeltildi ve ürün sahibi okuyup
+  #            onayladı (bulgunun istediği insan kararı buydu) — issue #6 kapandı.
   #   RV-017 → kapsam DIŞI (eski derslerde ek hatası, 7 satır) → issue #8.
   #   RV-018 → kapsam DIŞI ("ayrı iş": ön-koşul kilidi yazma yolunda) → issue #9.
   # REVIEW-002 (GD-002): 6/6 resolved.
