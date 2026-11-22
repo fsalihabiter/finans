@@ -9,13 +9,22 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: null       # GD-001 ve GD-002 kabul edildi (done, 2026-09-22).
-                    # Sıradaki iş POOL'da: S0-L8 "Vade, hedef ve portföy" → GD-003.
+  gd_id: GD-003     # S0-L8 "Vade, hedef ve portföy" — açıldı 2026-11-14 (S-005)
+                    # S-005 kapanışında hâlâ in-progress: içerik + testler hazır,
+                    # kalan → compose seed doğrulaması + tarayıcı teyidi + kabul (INV-06).
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
   # S-004 (asgari kanıt notu, adm-open'sız) 2026-09-22T22:22:09Z → evidence/sessions/S-004.md
   #   Canlı demo: Vercel + Render (D-020). Sıradaki: GD-003 (S0-L8).
+  # S-005 kapandı 2026-11-22T09:35:51Z → evidence/sessions/S-005.md
+  #   GD-003 içeriği + REVIEW-003 + ilk tam doğrulama turu (308/308 · 22/22 ·
+  #   184/188 [4 = INC-001] · web 147/147 · tsc temiz) + müfredatta sistemik
+  #   tuzak-katman düzeltmesi (18 yer, kural → 16 §2.4 + M10) + D-021.
+  #   Commit'lendi: cbfa9a6 (S0-L8 + müfredat) · 41dc9f0 (ajan araç zinciri) +
+  #   kapanış commit'i. main'de, push edilmedi.
+  #   Sıradaki: compose seed doğrulaması + tarayıcı teyidi →
+  #   REVIEW-003'ün 5 açık bulgusu + GD-003 kabulü (INV-06).
   id: null
   runtime: null
   started_at: null
@@ -28,9 +37,9 @@ blockers: []
 # çerçeve sorunu). INV-18 gereği ikisi de aktif işi durdurmuyor.
 
 review:
-  last_review_id: REVIEW-002
-  # REVIEW-002 (GD-002): 6/6 resolved — her düzeltme kendi testiyle;
-  # RV-005 ve RV-010 mutasyonla kanıtlı.
-  # REVIEW-001 (GD-001): RV-001/RV-002 resolved; RV-003/RV-004 (low) açık
-  # bırakıldı (kullanıcı kararı) ve POOL'a taşındı.
-  status: findings  # yalnız REVIEW-001'in iki düşük önemli bulgusu açık
+  last_review_id: REVIEW-003
+  # REVIEW-003 (GD-003): 8 bulgu — RV-011/012/013 resolved; RV-014 (medium),
+  # RV-015..018 (low) açık, insan kararı bekliyor. Açık critical/high yok.
+  # REVIEW-002 (GD-002): 6/6 resolved.
+  # REVIEW-001 (GD-001): RV-003/RV-004 (low) açık → POOL.
+  status: findings

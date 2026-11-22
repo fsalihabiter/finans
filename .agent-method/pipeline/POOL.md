@@ -10,7 +10,7 @@
 
 | ID | Title | Phase hint | Priority | Notes |
 |---|---|---|---|---|
-| T6.16/T6.17h-j | Set 0 dersleri 8-10 tam zenginlikte (Vade-hedef-portföy · Fiyat nereden çıkıyor · Bir alım nasıl gerçekleşir) | PHASE-006 | 1 | **S0-L7 "Risk ne demek?" bitti** → GD-001 `done` (2026-09-22). Set 0 artık 7/10. Sıradaki somut iş: **S0-L8 "Vade, hedef ve portföy"**, künye `16` §S0-L8. LiveContext kuralı **D-017** (künye kanonik; test istisna listesi taşır). |
+| T6.16/T6.17h-j | Set 0 dersleri 8-10 tam zenginlikte (Vade-hedef-portföy · Fiyat nereden çıkıyor · Bir alım nasıl gerçekleşir) | PHASE-006 | 1 | **S0-L8 "Vade, hedef ve portföy" → GD-003** (açıldı 2026-11-14; S-005 kapanışında `in-progress`): içerik + 9 figür + testler yeşil; kalan **compose seed doğrulaması + tarayıcı teyidi + kabul** (INV-06). Kabul edilince Set 0 **8/10**. Sıradaki iki ders: **S0-L9** (Fiyat nereden çıkıyor) · **S0-L10** (Bir alım nasıl gerçekleşir), künyeler `16` §S0-L9/§S0-L10. LiveContext kuralları: **D-017** (künye kanonik) + **D-021** (künye mevcut `ContextKeys` kümesinden seçer; yeni anahtar kendi işidir). |
 | RV-003/RV-004 | REVIEW-001'in kapatılmayan iki düşük önemli bulgusu | PHASE-006 | 4 | GD-001 kabul edilirken kullanıcı kararıyla açık bırakıldı; ayrıntı `evidence/reviews/REVIEW-001.md`. |
 | T6.16v | S0-L4 kaydırıcısı + S0-L5/L6 figürlerinin bekleyen görsel teyidi | PHASE-006 | 4 | GD-001 kapsamı dışında bırakıldı (tarayıcı teyidi yapılmamıştı). |
 | T5E.4b | ConceptTag derin bağlantısı (Analiz/Hisse kartından `/lessons/by-concept`) | PHASE-006 | 2 | T5E.4'ün `[~]` kalan parçası. |

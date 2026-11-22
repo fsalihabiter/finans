@@ -135,7 +135,7 @@ capabilities:
     location: web/src/components/MiniMarkdown.tsx + LessonFigure.tsx
     status: healthy
     scope: web/education
-    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012).
+    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8) — yeni figür yazmadan önce bakılır.
     last_verified_ref: ac61b7e
 ```
 
