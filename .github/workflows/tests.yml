@@ -39,20 +39,19 @@ jobs:
     name: web (vitest + tsc)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Sürüm verilmiyor: action, package.json'daki `packageManager: pnpm@11.5.0`
       # alanını okur. İkisini birden vermek çakışma hatası üretebilir.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       # ⚠ Node 22 ŞART: `packageManager: pnpm@11.5.0` en az Node v22.13 istiyor.
-      # İlk koşumda 20 yazılmıştı (package.json'daki `engines.node: ">=20"`den) ve
-      # iş akışı `cache: pnpm` adımında patladı: setup-node, pnpm store yolunu
+      # İlk koşumda 20 yazılmıştı (o sırada `engines.node` ">=20" diyordu) ve iş
+      # akışı `cache: pnpm` adımında patladı: setup-node, pnpm store yolunu
       # çözmek için pnpm'i çağırıyor, pnpm de Node 20'de olmayan `node:sqlite`
       # yerleşik modülünü arayıp ERR_UNKNOWN_BUILTIN_MODULE ile düşüyor.
-      # Not: package.json'daki `engines.node: ">=20"` bu yüzden artık GERÇEĞİ
-      # YANSITMIYOR — araç zinciri 20'de hiç çalışmıyor (ayrıca bildirildi).
-      - uses: actions/setup-node@v4
+      # `engines.node` artık ">=22.13" — iki kaynak aynı şeyi söylüyor.
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -74,9 +73,9 @@ jobs:
     name: backend (unit + seed/curriculum)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 

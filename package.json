@@ -5,7 +5,7 @@
   "description": "Nirengi — portfolio tracking & investment education app. Monorepo: .NET 10 API + React web (primary) + shared @finans/shared package (mobile later).",
   "packageManager": "pnpm@11.5.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "scripts": {
     "build": "pnpm -r build",
