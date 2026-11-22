@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:44:14Z · **69 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:47:01Z · **68 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -20,11 +20,10 @@
 | #74 | INC-001 — 4 entegrasyon testi ortam hatasıyla kırmızı (health + observability) | Bug | 1 | infra | — | — | kind:debt |
 | #75 | INC-002 — INV-04 ile GD "review" durumu çelişiyor (ADM çerçeve sorunu) | Bug | 5 | adm | — | — | — |
 
-## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  35 açık
+## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  34 açık
 
 | # | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
 |---|---|---|---|---|---|---|---|
-| #6 | RV-015 — S0-L8 tuzak bloğu örtük yönlendirme gibi okunabiliyor | Task | 2 | education | — | — | adm:gd |
 | #8 | RV-017 — Eski derslerde sabit Türkçe ek hatası (7 satır) | Task | 3 | education | — | — | kind:debt |
 | #9 | RV-018 — Ön-koşul kilidi yazma yolunda uygulanmıyor | Task | 2 | backend | — | — | kind:debt |
 | #10 | T6.17i — Set 0 Ders 9: "Fiyat nereden çıkıyor?" (S0-L9) | Feature | 1 | education | — | — | — |
@@ -113,7 +112,7 @@
 
 ---
 
-## Tamamlananlar — 121 kapalı issue
+## Tamamlananlar — 122 kapalı issue
 
 > Faz 0-5 ve Faz 6'nın bitmiş kalemleri 2026-11-22'de **geriye dönük**
 > kapalı issue olarak girildi (D-022). Uygulama notları issue gövdelerinde;
@@ -128,7 +127,7 @@
 | PHASE-003 — LLM Yorum Katmanı | 12 |
 | PHASE-004 — Hisse Temel Analiz | 5 |
 | PHASE-005 — Değer Seyri + Senaryo v1 | 6 |
-| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 36 |
+| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 37 |
 
 Listelemek için:
 
