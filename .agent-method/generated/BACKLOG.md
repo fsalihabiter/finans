@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:23:11Z · **76 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T13:34:57Z · **75 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -20,7 +20,7 @@
 | #74 | INC-001 — 4 entegrasyon testi ortam hatasıyla kırmızı (health + observability) | Bug | 1 | infra | — | — | kind:debt |
 | #75 | INC-002 — INV-04 ile GD "review" durumu çelişiyor (ADM çerçeve sorunu) | Bug | 5 | adm | — | — | — |
 
-## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  42 açık
+## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  41 açık
 
 | # | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
 |---|---|---|---|---|---|---|---|
@@ -61,7 +61,6 @@
 | #40 | T6.13 — Set 5 içerikleri: Türkiye Gerçekleri (4 ders) | Feature | 5 | education | — | #46 | — |
 | #41 | T6.14 — LLM ders yorumu katmanı (opsiyonel, D-018 ile düşük öncelik) | Feature | 6 | backend | — | — | — |
 | #76 | AC-1 — Ders künyeye uygun derinlikte yayında (14 bölüm · 9 figür · 9 soru) | Task | 1 | education | #4 | — | adm:gd |
-| #77 | AC-2 — LiveContext yalnız ContextKeys token’ları kullanıyor ve çözülüyor | Task | 1 | education | #4 | — | adm:gd |
 | #78 | AC-3 — M7 taraması temiz (tavsiye/tahmin/kişiye özel plan yok) | Task | 1 | education | #4 | — | adm:gd |
 | #79 | AC-4 — Source bloğu hesap yöntemini ve "sayılar LLM’den gelmez" ilkesini yazıyor | Task | 1 | education | #4 | — | adm:gd |
 | #80 | AC-5 — Backend + web testleri yeşil, tsc -b temiz | Task | 1 | education | #4 | — | adm:gd |
@@ -120,7 +119,7 @@
 
 ---
 
-## Tamamlananlar — 114 kapalı issue
+## Tamamlananlar — 115 kapalı issue
 
 > Faz 0-5 ve Faz 6'nın bitmiş kalemleri 2026-11-22'de **geriye dönük**
 > kapalı issue olarak girildi (D-022). Uygulama notları issue gövdelerinde;
@@ -135,7 +134,7 @@
 | PHASE-003 — LLM Yorum Katmanı | 12 |
 | PHASE-004 — Hisse Temel Analiz | 5 |
 | PHASE-005 — Değer Seyri + Senaryo v1 | 6 |
-| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 29 |
+| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 30 |
 
 Listelemek için:
 
