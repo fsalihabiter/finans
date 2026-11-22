@@ -9,12 +9,14 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: null       # GD-004 (S0-L9) 2026-11-22'de KABUL EDİLDİ ve kapandı → status: done.
-                    # Altı kriter de ürün sahibi onayıyla ("Hepsini onaylıyorum").
-                    # AC-4 bir çelişkiyle kabul edildi (kaynak teyidi) → issue #195.
-                    # Set 0 artık 9/10. INV-04/INV-05: done GD aktif bırakılmaz.
-                    # Sıradaki aday: S0-L10 "Bir alım nasıl gerçekleşir?" (issue #11)
-                    # — GD-005 olarak açmak ürün sahibinin kararı.
+  gd_id: GD-005     # S0-L10 "Bir alım nasıl gerçekleşir?" — açıldı 2026-11-22.
+                    # Issue #11. Bu ders kabul edilince Set 0 TAMAMLANIR (10/10).
+                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan önerdi, insan onaylar.
+                    # Künye tespitleri: figür sayısı 9 → 10 (DÖRDÜNCÜ kez aynı hata,
+                    # M12 adayı hâlâ açık) · ders LiveContext TAŞIMIYOR ve bu,
+                    # LessonsWithoutLiveContext listesinin İKİNCİ kaydı olacak
+                    # (testin kendi uyarı sinyali — GD-005 §3'te gerekçelendirildi).
+                    # GD-004 (S0-L9) 2026-11-22'de kabul edildi → Set 0 9/10.
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
