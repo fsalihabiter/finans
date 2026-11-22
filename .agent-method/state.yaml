@@ -58,7 +58,15 @@ blockers: []
 # çerçeve sorunu). INV-18 gereği ikisi de aktif işi durdurmuyor.
 
 review:
-  last_review_id: REVIEW-003
+  last_review_id: REVIEW-004
+  # REVIEW-004 (GD-004 · S0-L9): 20 bulgu — 0 critical · 2 high · 8 medium · 9 low.
+  # Hepsi status: open, insan kararı bekliyor. Açık critical yok → INV-18 gereği
+  # kapanışı bloke eden bulgu yok, ama iki high yayından önce düzeltilmeli:
+  #   RV-019 S0-L5 ile S0-L9 alış/satış kotasyonunu TERS adlandırıyor (kökü S0-L5'te)
+  #   RV-020 "her zaman yüksektir" mutlak iddiası + aynı iddia doğru/yanlış sorusu
+  # İçerik doğruluğu ve D-002 uyumu BAĞIMSIZ alt-ajanlara verildi; yazarın kendi
+  # "M7 taraması temiz" beyanı figür katmanını tamamen kaçırmıştı (RV-026..028, 031).
+  # TD-001 büyüdü: render testsiz figür sayısı 9 → 19.
   # REVIEW-003 (GD-003): 8 bulgu — 5 resolved (RV-011/012/013 + 2026-11-22'de
   # RV-014 medium ve RV-016). Açık 3, hepsi low ve hiçbiri critical/high değil:
   #   RV-015 → RESOLVED 2026-11-22: metin düzeltildi ve ürün sahibi okuyup
