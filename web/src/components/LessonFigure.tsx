@@ -2379,12 +2379,19 @@ function LastPriceIsHistory() {
       height={140}
     >
       <line x1="20" y1="86" x2="300" y2="86" className="fig-axis" />
-      {trades.map((t, i) => (
-        <g key={`t${i}`}>
-          <circle cx={t.x} cy={t.y} r="5" className={i === trades.length - 1 ? "fig-dot-volatile" : "fig-dot-steady"} />
-          <line x1={t.x} y1={t.y + 6} x2={t.x} y2={86} className="fig-line-flat" />
-        </g>
-      ))}
+      {/* RV-031: son işlem nötr bir OLGU — "oynak/olumsuz" renkle (fig-dot-volatile)
+          işaretlenemez. Vurgu renkle değil BİÇİMLE veriliyor: aynı sınıf, daha
+          büyük yarıçap + halka. Yanındaki "son" etiketi de ayrımı taşıyor. */}
+      {trades.map((t, i) => {
+        const isLast = i === trades.length - 1;
+        return (
+          <g key={`t${i}`}>
+            {isLast && <circle cx={t.x} cy={t.y} r="9" className="fig-seg" opacity={0.35} />}
+            <circle cx={t.x} cy={t.y} r={isLast ? 6 : 4} className="fig-dot-steady" />
+            <line x1={t.x} y1={t.y + 6} x2={t.x} y2={86} className="fig-line-flat" />
+          </g>
+        );
+      })}
       <rect x={252} y={40} width={58} height="24" rx="4" className="fig-seg-lead" />
       <text x={281} y={56} className="fig-value" textAnchor="middle">son</text>
       <text x={30} y={104} className="fig-label">geçmiş işlemler</text>
@@ -2457,8 +2464,11 @@ function SpreadCost() {
       <text x={160} y={63} className="fig-value" textAnchor="middle">98,00 ₺</text>
       <text x={160} y={92} className="fig-label" textAnchor="middle">aldın</text>
 
+      {/* RV-027: fark KAYIP rengiyle (fig-bar-neg) çizilemez — dersin bir sonraki
+          bloğu tam bunu düzeltiyor ("maliyet farkı, kayıp kaydı değil"). Bilgiyi
+          zaten "2,00 ₺ / %2" metni taşıyor; renk yalnız yargı taşırdı. */}
       <Panel x={218} y={14} w={96} h={96} title="Fark" />
-      <rect x={236} y={48} width={60} height="20" rx="4" className="fig-bar-neg" />
+      <rect x={236} y={48} width={60} height="20" rx="4" className="fig-seg" />
       <text x={266} y={63} className="fig-value" textAnchor="middle">2,00 ₺</text>
       <text x={266} y={92} className="fig-big" textAnchor="middle">%2</text>
 
@@ -2500,19 +2510,23 @@ function SupplyDemandScale() {
 function SameAssetTwoVenues() {
   return (
     <Figure
-      label="İki yerde aynı varlığın birbirine yakın iki fiyatı ve farklı genişlikte makasları"
-      caption="Her yerde ayrı bir alıcı-satıcı kümesi pazarlık eder; fark büyürse kapatmak isteyenler devreye girer."
+      label="İki yerde aynı varlığın alış-satış kotasyonları ve farklı genişlikte makasları"
+      caption="Her yerde ayrı bir alıcı-satıcı kümesi pazarlık eder. Açıklığın kapanması için iki yerin makasını aşması gerekir."
       height={150}
     >
+      {/* RV-026: çubuk genişliği makasla ORANTILI (0,20 → 16px · 0,90 → 72px);
+          önceden ikisi de 68px'ti, yani çubuk hiçbir bilgi taşımıyordu. Ayrıca
+          ikisi de aynı NÖTR sınıfta: vurgulu/soluk ayrımı dar makaslı yeri
+          öne çıkarıp "burası daha iyi" okuması üretiyordu (künye yasal notu). */}
       <Panel x={10} y={14} w={140} h={98} title="Birinci yer" />
-      <text x={80} y={52} className="fig-big" textAnchor="middle">100,00 ₺</text>
-      <rect x={46} y={64} width={68} height="10" rx="3" className="fig-seg-lead" />
-      <text x={80} y={94} className="fig-label" textAnchor="middle">makas 0,20 ₺</text>
+      <text x={80} y={46} className="fig-value" textAnchor="middle">99,90 — 100,10 ₺</text>
+      <rect x={72} y={56} width={16} height="10" rx="3" className="fig-seg" />
+      <text x={80} y={88} className="fig-label" textAnchor="middle">makas 0,20 ₺</text>
 
       <Panel x={170} y={14} w={140} h={98} title="İkinci yer" />
-      <text x={240} y={52} className="fig-big" textAnchor="middle">100,40 ₺</text>
-      <rect x={206} y={64} width={68} height="10" rx="3" className="fig-bar-muted" />
-      <text x={240} y={94} className="fig-label" textAnchor="middle">makas 0,90 ₺</text>
+      <text x={240} y={46} className="fig-value" textAnchor="middle">101,20 — 102,10 ₺</text>
+      <rect x={204} y={56} width={72} height="10" rx="3" className="fig-seg" />
+      <text x={240} y={88} className="fig-label" textAnchor="middle">makas 0,90 ₺</text>
 
       <text x={160} y={134} className="fig-label" textAnchor="middle">“bir fiyat” diye tek bir sayı yoktur — hangi yer, hangi an, alış mı satış mı</text>
     </Figure>
@@ -2560,19 +2574,23 @@ function ThinMarket() {
       caption="Az sayıda görüşün ortalaması, çok sayıda görüşün ortalamasından daha gürültülüdür."
       height={158}
     >
+      {/* RV-028: iki panel de NÖTR tonda. Önceden sol mint + olumlu altyazı,
+          sağ coral + olumsuz altyazıydı; bu, künyenin açıkça yasakladığı
+          "dar makas iyi" okumasını sözcük kullanmadan kuruyordu. Farkı zaten
+          nokta SAÇILIMI anlatıyor; altyazılar da yargısızlaştırıldı. */}
       <Panel x={6} y={14} w={146} h={108} title="Çok işlem" />
       <line x1="18" y1="104" x2="142" y2="104" className="fig-axis" />
       {many.map((v, i) => (
         <circle key={`m${i}`} cx={24 + i * 10} cy={v + 20} r="3" className="fig-dot-steady" />
       ))}
-      <text x={79} y={118} className="fig-label" textAnchor="middle">makas dar · fiyat çok şey anlatır</text>
+      <text x={79} y={118} className="fig-label" textAnchor="middle">çok anlaşma · dar makas · az saçılım</text>
 
       <Panel x={162} y={14} w={152} h={108} title="Az işlem (ince)" />
       <line x1="174" y1="104" x2="302" y2="104" className="fig-axis" />
       {few.map((v, i) => (
-        <circle key={`f${i}`} cx={200 + i * 40} cy={v + 20} r="4" className="fig-dot-volatile" />
+        <circle key={`f${i}`} cx={200 + i * 40} cy={v + 20} r="4" className="fig-dot-steady" />
       ))}
-      <text x={238} y={118} className="fig-label" textAnchor="middle">makas geniş · fiyat sıçrar</text>
+      <text x={238} y={118} className="fig-label" textAnchor="middle">az anlaşma · geniş makas · çok saçılım</text>
 
       <text x={160} y={146} className="fig-label" textAnchor="middle">sıçrama varlık hakkında değil, anlaşma sayısı hakkında bilgi verir</text>
     </Figure>

@@ -2238,11 +2238,15 @@ internal static class EducationContent
         ## Aynı varlık, iki fiyat: alış-satış makası
 
         Likiditenin somut bir yüzü **alış-satış makasıdır.** Bir varlığın aynı anda
-        iki fiyatı vardır: alabileceğin fiyat (alış) ve hemen satabileceğin fiyat
-        (satış). Aradaki fark **makastır.**
+        iki fiyatı vardır: alabileceğin fiyat (**satış kotasyonu**) ve hemen
+        satabileceğin fiyat (**alış kotasyonu**). Aradaki fark **makastır.**
 
-        Diyelim bir varlığı **102 ₺'ye** alabiliyorsun, ama aynı anda ancak **98 ₺'ye**
-        satabiliyorsun:
+        Adlandırma ilk bakışta ters gelir: bu iki sayı tabelalarda **kurumun**
+        gözünden yazılır. Kurumun "satış"ı senin **ödediğin**, "alış"ı senin
+        **aldığın** sayıdır.
+
+        Diyelim bir varlığı **102 ₺'ye** alabiliyorsun (satış kotasyonu), ama aynı
+        anda ancak **98 ₺'ye** satabiliyorsun (alış kotasyonu):
 
         - Alıp hemen geri satarsan: 102 ₺ verdin, 98 ₺ aldın → **4 ₺** kaybettin.
         - Oran olarak: 4 / 102 ≈ **%3,9**. Fiyat hiç hareket etmese bile, sırf
@@ -3243,8 +3247,8 @@ internal static class EducationContent
         - **Değer** bir **yargıdır** — bir şeyin ne ettiğine dair kanaat, ve kişiye
           göre değişir.
 
-        Zaten fiyatın oluşması için tarafların değer konusunda **anlaşmamış** olması
-        gerekir. Satan, elindeki şeyin kendisi için 100'den az ettiğini düşünür;
+        Zaten fiyatın oluşması için taraflar değer konusunda genellikle **anlaşmamış**
+        olur. Satan, elindeki şeyin kendisi için 100'den az ettiğini düşünür;
         alan, kendisi için 100'den çok ettiğini. İkisi de aynı sayıda buluşur ama
         aynı yargıya varmaz — **alışveriş tam da bu fark yüzünden olur.**
 
@@ -3260,13 +3264,23 @@ internal static class EducationContent
         aynı anda **iki sayı** durur:
 
         - **Satış kotasyonu:** satmaya razı olanların istediği en düşük fiyat.
-          **Sen alırken bu sayıyı ödersin.**
+          **Hemen almak istersen bu sayıyı ödersin.**
         - **Alış kotasyonu:** almaya razı olanların verdiği en yüksek fiyat.
-          **Sen satarken bu sayıyı alırsın.**
+          **Hemen satmak istersen bu sayıyı alırsın.**
 
-        Satış kotasyonu her zaman alış kotasyonundan **yüksektir.** Aksi olsaydı
-        işlem çoktan gerçekleşmiş olurdu — alan 100 vermeye razıyken satan 98'e
-        razıysa, o iki emir birbirini bulur ve ortadan kalkar.
+        Adlandırma kafa karıştırabilir, çünkü bu iki sayı tabelalarda **kurumun**
+        gözünden yazılır: kurumun "satış"ı senin ödediğin, "alış"ı senin aldığın
+        sayıdır. (Varlık türleri dersindeki makas örneği de aynı adlandırmayı
+        kullanır.)
+
+        **Sürekli işlem sırasında** satış kotasyonu alış kotasyonunun üstündedir.
+        Aksi olsaydı o iki emir birbirini bulur, işlem gerçekleşir ve ikisi de
+        ortadan kalkardı — alan 100 vermeye razıyken satan 98'e razıysa, orada
+        bekleyen bir kotasyon değil, olmuş bir işlem vardır.
+
+        > Emirlerin eşleşmeden **biriktiği** anlarda (açılış ve kapanış gibi tek
+        > fiyat seansları) bu geçici olarak bozulabilir: defterde alış, satışın
+        > üstüne çıkabilir. Fiyat tam da o birikimin dengelendiği yerde bulunur.
 
         Aradaki farka **makas** denir.
 
@@ -3275,7 +3289,9 @@ internal static class EducationContent
         Makas bir ölçüdür: tarafların ne kadar yaklaştığını gösterir. Dar olması
         "iyi", geniş olması "kötü" demek değildir — farklı varlıklarda ve farklı
         anlarda farklı olur, ve bu dersin konusu onu **görmek**, bir tercih kuralına
-        çevirmek değil.
+        çevirmek değil. Geniş makas "kötü varlık" demek değil; alıp satmanın o
+        varlıkta **daha pahalı** olduğu demek. Bu bir maliyet bilgisidir, bir seçim
+        kuralı değil.
         """, "bid-ask-ladder"),
 
         Ex("""
@@ -3303,8 +3319,9 @@ internal static class EducationContent
         **%2 geride** başladın. Bu, makasın **maliyet** tarafıdır: alıp satmanın
         kendisinin bir bedeli vardır ve bu bedel fiyat hareketinden bağımsızdır.
 
-        Makas ne kadar genişse bu bedel o kadar büyür. Sık alıp satan biri bu bedeli
-        **her turda** öder.
+        Makas ne kadar genişse bu bedel o kadar büyür. Ve bu bedel **işlem başına**
+        doğar: iki işlem iki kez, on işlem on kez ödenir. Kaç işlem yapacağın senin
+        kararın; buradaki tek nokta, her birinin bir bedeli olduğu.
         """, "spread-cost"),
 
         Trap("""
@@ -3319,8 +3336,9 @@ internal static class EducationContent
         Olan şu: ekranda gördüğün sayı (son işlem ya da alış kotasyonu) senin ödediğin
         sayıdan düşük. Bu bir **maliyet farkı**, bir kayıp kaydı değil.
 
-        Tersi de aynı derecede yanlıştır: makas yüzünden ekranda ödediğinden yüksek
-        bir sayı görmek "aldığım anda kârdayım" demek değildir.
+        Aynı karışma satarken de olur, ters yönde: sattıktan sonra ekranda aldığın
+        sayıdan **yüksek** bir rakam (satış kotasyonu) görmek "erken sattım,
+        kaybettim" demek değildir. O fark da fiyat hareketi değil, makasın kendisidir.
 
         Doğru okuma şudur: **makas, giriş ve çıkış arasındaki mesafedir.** Onu
         kâr-zarar olarak değil, alıp satmanın **ücreti** olarak düşünmek gerekir —
@@ -3341,8 +3359,9 @@ internal static class EducationContent
         Fiyat, bu iki baskının buluştuğu yerde durur ve baskı değiştikçe kayar.
         Bir terazi gibi düşünebilirsin: ağır basan taraf fiyatı kendi yönüne çeker.
 
-        Dikkat edilecek nokta şu: **"herkes almak istiyor" diye bir durum olamaz.**
-        Bir işlemin gerçekleşmesi için her zaman iki taraf gerekir. Talebin artması,
+        Dikkat edilecek nokta şu: **bir işlem tek taraflı olamaz.** Yalnızca alıcının
+        olduğu anlar gerçekten olur — o anlarda fiyat yükselmez, işlem **hiç
+        gerçekleşmez;** satmaya razı biri çıkana kadar bekler. Talebin artması,
         alıcıların **daha yüksek fiyat ödemeye razı olması** demektir — satıcıların
         yok olması değil.
 
@@ -3357,17 +3376,28 @@ internal static class EducationContent
         fiyatları olabilir. Çünkü her yerde ayrı bir alıcı-satıcı kümesi vardır ve
         her küme kendi pazarlığını yapar.
 
-        Diyelim bir A varlığı iki ayrı yerde işlem görüyor:
+        Diyelim bir A varlığı iki ayrı yerde işlem görüyor. Karşılaştırmayı
+        **kotasyonlarla** kuralım — çünkü alıp satan kişi son işlem fiyatından
+        değil, o anda duran kotasyondan işlem yapar:
 
         | | Birinci yer | İkinci yer |
         |---|---:|---:|
-        | Son işlem | 100,00 ₺ | 100,40 ₺ |
-        | Makas | 0,20 ₺ | 0,90 ₺ |
+        | Alış kotasyonu | 99,90 ₺ | 101,20 ₺ |
+        | Satış kotasyonu | 100,10 ₺ | 102,10 ₺ |
+        | **Makas** | **0,20 ₺** | **0,90 ₺** |
 
-        İki sayı da "yanlış" değildir; ikisi de kendi yerinde gerçekten olmuş
-        anlaşmalardır. Fark genellikle küçüktür ve küçük kalır — çünkü fark
-        büyüdükçe, ucuz yerden alıp pahalı yerde satmak isteyenler devreye girer ve
-        aradaki açıklığı kapatır.
+        İki yer de "yanlış" değildir; ikisi de kendi alıcı-satıcı kümesinin
+        pazarlığıdır. Makasların farklı olması da normaldir — ikinci yerde daha az
+        teklif duruyor olabilir.
+
+        Fark genellikle küçük kalır, ama kapanması **otomatik değildir:** açıklığın
+        iki yerin **makasını ve işlem masraflarını aşması** gerekir. Yukarıdaki
+        örnekte birinci yerden **100,10 ₺'ye** alıp ikinci yerde **101,20 ₺'ye**
+        satmak mümkün — aradaki 1,10 ₺ eşiği aşıyor. Fark bunun altında kalsaydı
+        kimsenin devreye girmesine değmezdi ve iki fiyat öylece yan yana durabilirdi.
+
+        Bu, bireysel bir kullanıcının izleyip uygulayacağı bir şey değil; fiyatların
+        neden genelde birbirine yakın durduğunu açıklayan bir **mekanizmadır.**
 
         Buradan çıkan ders: **"bir fiyat" diye tek bir sayı yoktur.** Hangi fiyattan
         söz ettiğin — hangi yer, hangi an, alış mı satış mı — sorunun bir parçasıdır.
@@ -3402,21 +3432,24 @@ internal static class EducationContent
 
         Şimdi bir adım derine inelim. Bir varlıkta **çok az** işlem oluyorsa ne olur?
 
-        Günde binlerce işlem olan bir varlıkta son fiyat, binlerce pazarlığın
-        ortalamasına yakın bir şeydir — bir tanesi tuhaf olsa bile resmi bozmaz.
+        Günde binlerce işlem olan bir varlıkta son fiyatın **etrafı kalabalıktır:**
+        o anda birbirine yakın yüzlerce alım ve satım teklifi durur. Bir işlem tuhaf
+        bir seviyede gerçekleşse bile, sıradaki teklifler onu hemen yerine çeker.
 
-        Günde beş işlem olan bir varlıkta ise son fiyat, **o beş anlaşmadan
-        sonuncusudur.** Belki acelesi olan tek bir satıcının, tek bir alıcıyla,
-        olağandışı bir sayıda anlaşmasıdır.
+        Günde beş işlem olan bir varlıkta ise son fiyatın **etrafı boştur** — o fiyat
+        beş anlaşmadan **sonuncusudur.** Belki acelesi olan tek bir satıcının, tek bir
+        alıcıyla, olağandışı bir sayıda anlaşmasıdır.
 
         Böyle bir piyasaya **ince** denir ve üç sonucu olur:
 
         - **Makas genişler** — az sayıda teklif olduğu için iki taraf birbirine uzak kalır.
         - **Fiyat sıçrar** — tek bir işlem fiyatı belirgin biçimde oynatabilir.
-        - **Fiyat daha az şey anlatır** — az sayıda görüşün ortalaması, çok sayıda
-          görüşün ortalamasından daha gürültülüdür.
+        - **Fiyat daha az şey anlatır** — arkasında az sayıda teklif varken fiyat,
+          piyasanın geniş bir kesiminin ne ödemeye razı olduğunu değil, yalnızca o son
+          iki tarafın anlaştığı yeri gösterir.
 
-        Burada **likidite** kavramına bağlanıyoruz (Ders 5): kolay el değiştiren bir
+        Burada **likidite** kavramına bağlanıyoruz — varlık türleri dersinde
+        tanışmıştın: kolay el değiştiren bir
         varlıkta fiyat daha çok bilgi taşır. Ve **dalgalanma** ile karıştırmamak
         gerekir: ince piyasadaki sıçrama, varlığın kendisi hakkında bir şey
         söylemeden de olabilir — sadece ortada az anlaşma vardır.
@@ -3431,9 +3464,13 @@ internal static class EducationContent
         - Portföyünde hisse kalemlerinin ağırlığı **{{stock_weight}}**.
 
         Bu ağırlıktaki kalemlerin fiyatı bir kurum tarafından ilan edilmez; her biri
-        yukarıdaki pazarlığın sonucudur. Kalan kısımda ise fiyat başka yollarla
-        oluşur — bazısında bir kur, bazısında bir hesaplama, bazısında sabit bir
-        değer. Hangi kaleminin fiyatının **nasıl** oluştuğunu bilmek, ekrandaki
+        yukarıdaki pazarlığın sonucudur.
+
+        Kalan kalemlerde de aynı mekanizma çalışır, farklı kılıklarda: **döviz ve
+        altında** gördüğün alış/satış kuru bu dersin kotasyonlarının ta kendisidir —
+        tabeladaki iki sayı arasındaki fark da makastır. Bazı kalemlerde ise fiyat
+        pazarlıkla değil **hesapla** oluşur (bir birim pay değeri gibi), bazılarında
+        ise sabittir. Hangi kaleminin fiyatının **nasıl** oluştuğunu bilmek, ekrandaki
         sayıyı doğru okumanın ilk adımıdır.
         """),
 
@@ -3441,10 +3478,15 @@ internal static class EducationContent
         ## Bu bilgiler nereden geliyor?
 
         **Kaynaklar.** Bu dersin anlattığı mekanizma — emir, işlem, kotasyon, pazar
-        yapısı — sermaye piyasası mevzuatında ve borsa işleyiş kurallarında tanımlıdır:
+        yapısı — sermaye piyasası mevzuatında ve borsa işleyiş kurallarında tanımlıdır.
+        Dersin dayandığı kurumsal kaynaklar şunlar:
 
         - **SPK** (Sermaye Piyasası Kurulu) — sermaye piyasası işleyişi, emir ve işlem tanımları
         - **Borsa İstanbul** — pazar yapısı ve seans bilgisi
+
+        > ⚠ Bu iki kaynağın **belge ve tarih düzeyinde teyidi henüz yapılmadı.**
+        > Ders metni genel işleyişi anlatıyor; belirli bir yönetmelik maddesine ya da
+        > seans saatine dayanmıyor. Teyit tamamlandığında bu not kalkacak.
 
         **Örnek sayılar kurgusaldır.** 100,00 ₺ / 98,00 ₺ kotasyonları, 100,40 ₺'lik
         ikinci yer ve "günde beş işlem" gibi rakamların tamamı mekanizmayı göstermek
@@ -4192,9 +4234,11 @@ internal static class EducationContent
                  ("Gün içindeki ortalama fiyatı", false)]),
 
             new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
-                "Satış kotasyonu her zaman alış kotasyonundan yüksektir.",
+                "Sürekli işlem sırasında satış kotasyonu alış kotasyonundan yüksektir.",
                 "Doğru. Aksi olsaydı o iki emir birbirini bulur, işlem gerçekleşir ve ikisi de ortadan kalkardı. " +
-                "Aradaki farka makas denir; makas bir ölçüdür, tarafların birbirine ne kadar yaklaştığını gösterir.",
+                "Aradaki farka makas denir; makas bir ölçüdür, tarafların birbirine ne kadar yaklaştığını gösterir. " +
+                "\"Sürekli işlem\" kaydı önemli: emirlerin eşleşmeden biriktiği açılış/kapanış gibi tek fiyat " +
+                "seanslarında defter geçici olarak çaprazlanabilir ve fiyat o birikimin dengelendiği yerde bulunur.",
                 [("Doğru", true), ("Yanlış", false)]),
 
             // ── Orta: makas hesabı · son işlem ↔ alınabilir fiyat ayrımı ─────
@@ -4203,15 +4247,15 @@ internal static class EducationContent
                 "Alırken satış kotasyonunu ödersin (100,00 ₺), satarken alış kotasyonunu alırsın (98,00 ₺). " +
                 "Fark 2,00 ₺, yani 2,00 ÷ 100,00 = %2. Fiyat hiç kıpırdamadığı hâlde bu fark oluşur; makas " +
                 "alıp satmanın kendi bedelidir.",
-                [("%2 geride başlarsın", true),
+                [("2,00 ₺ kaybedersin — ödediğinin %2'si", true),
                  ("Başa baş çıkarsın, çünkü fiyat değişmedi", false),
-                 ("%2 önde başlarsın", false),
+                 ("2,00 ₺ kazanırsın — makas senin lehine işler", false),
                  ("Sonuç kotasyonlara değil, son işlem fiyatına bağlıdır", false)]),
 
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
                 "Makas 0,20 ₺'den 0,90 ₺'ye çıktı. Bu neyi değiştirir?",
                 "Makas, giriş ile çıkış arasındaki mesafedir; genişlemesi alıp satmanın bedelinin artması demektir. " +
-                "Varlığın değeri ya da yönü hakkında bir şey söylemez. Sık işlem yapan biri bu bedeli her turda öder.",
+                "Varlığın değeri ya da yönü hakkında bir şey söylemez. Bu bedel işlem başına doğar: iki işlem iki kez ödenir.",
                 [("Alıp satmanın bedeli artar", true),
                  ("Varlığın değeri düşmüştür", false),
                  ("Fiyatın yükseleceğini gösterir", false),
@@ -4220,7 +4264,7 @@ internal static class EducationContent
             new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Medium,
                 "Ekranda 100,00 ₺ son işlem fiyatı görüyorsun. Bundan hangileri çıkarılabilir? (Birden fazla doğru)",
                 "Son işlem fiyatı olmuş bir anlaşmanın kaydıdır: o seviyede bir alıcı ve bir satıcı buluşmuştur. " +
-                "Senin alabileceğin fiyat ise satış kotasyonudur ve genellikle bundan biraz yüksektir. Fiyatın " +
+                "Senin alabileceğin fiyat ise satış kotasyonudur: bundan biraz yüksek ya da ona eşit olabilir. Fiyatın " +
                 "\"değer\" olduğu ya da bir sonraki işlemin aynı sayıda olacağı çıkarılamaz.",
                 [("O seviyede bir alıcı ile bir satıcı anlaşmış", true),
                  ("Senin alabileceğin fiyat biraz farklı olabilir", true),
@@ -4240,9 +4284,11 @@ internal static class EducationContent
 
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
                 "Günde beş işlem gören bir varlıkta son fiyat neden daha az şey anlatır?",
-                "Çok işlem gören bir varlıkta son fiyat, çok sayıda pazarlığın ortalamasına yakındır; biri tuhaf " +
-                "olsa bile resmi bozmaz. Az işlem görende ise son fiyat, o birkaç anlaşmadan sonuncusudur — tek " +
-                "bir acele eden tarafın izini taşıyabilir. Buna ince piyasa denir.",
+                "Çok işlem gören bir varlıkta son fiyatın ETRAFI KALABALIKTIR: o anda birbirine yakın yüzlerce " +
+                "teklif durur, tuhaf bir işlem olsa bile sıradakiler onu hemen yerine çeker. Az işlem görende ise " +
+                "son fiyat, o birkaç anlaşmadan sonuncusudur — tek bir acele eden tarafın izini taşıyabilir. " +
+                "Buna ince piyasa denir. Not: \"gerçek değerin altında/üstünde\" diye bir ölçü de yoktur — fiyat " +
+                "bir anlaşma, değer bir yargıdır (dersin \"fiyat = değer\" tuzağı).",
                 [("Az sayıda görüşün sonucudur; tek bir işlem fiyatı belirgin biçimde oynatabilir", true),
                  ("Az işlem gören varlıkların fiyatı hesaplanamaz", false),
                  ("Fiyat her zaman gerçek değerin altında kalır", false),
