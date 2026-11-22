@@ -72,6 +72,16 @@ session:            # current open session; cleared by adm-close
   #   (RV-064 — ders metni çalışan kuruluma inmiyordu, UpsertLesson ile kapandı);
   #   (3) figür katmanı otomatik testten sistematik kaçıyor (4 bulgu, hepsi gözle).
   #   origin/main'e push edildi; issue #11 kapandı.
+  # S-008 (asgari kanıt notu, adm-open'sız) 2026-11-22T20:55:00Z →
+  #   evidence/sessions/S-008.md
+  #   ⚠ S-007 KAPANDIKTAN SONRA geldi: S-007'nin açık bıraktığı iki karardan biri
+  #   kullanıcı tarafından hemen cevaplandı ve iş aynı konuşmada yapıldı.
+  #   start_sha a0918a7 (S-007'nin kanıt commit'i) · end_sha 9f70478.
+  #   GD-006: M12 kuralı + 10 künyenin toplu düzeltmesi, kabul edildi.
+  #   Ölçüm düzeltmesi: uyumsuz künye 11 değil 10 (S2-L2 doğruymuş).
+  #   M12'nin kırmızıya düştüğü iki kolda da bilerek bozularak kanıtlandı.
+  #   ⚠ adm-review ÇALIŞTIRILMADI (değişiklik tek test metodu) — sözleşme tam
+  #   karşılanmadı, S-008'de kayda geçti.
   id: null
   runtime: null
   started_at: null
