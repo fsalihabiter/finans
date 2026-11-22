@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T10:39:44Z · **78 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T11:09:53Z · **78 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -122,9 +122,34 @@
 
 ---
 
+## Tamamlananlar — 112 kapalı issue
+
+> Faz 0-5 ve Faz 6'nın bitmiş kalemleri 2026-11-22'de **geriye dönük**
+> kapalı issue olarak girildi (D-022). Uygulama notları issue gövdelerinde;
+> kaynak `git show ac61b7e:.claude/docs/08-BACKLOG.md` ve `.claude/tasks/TASKLOG.md`.
+
+| Faz | Kapalı |
+|---|---:|
+| Faz-dışı — Spike & Teknik borç | 4 |
+| PHASE-000 — Hazırlık & İskelet | 15 |
+| PHASE-001 — Portföy Takip MVP | 33 |
+| PHASE-002 — Canlı Fiyat & Bilgilendirme | 10 |
+| PHASE-003 — LLM Yorum Katmanı | 12 |
+| PHASE-004 — Hisse Temel Analiz | 5 |
+| PHASE-005 — Değer Seyri + Senaryo v1 | 6 |
+| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 27 |
+
+Listelemek için:
+
+```bash
+gh issue list --repo fsalihabiter/finans --state closed --limit 200
+```
+
+---
+
 ## Kapsam dışı (burada görünmez)
 
-- **Kapanmış işler** → GitHub Issues'ta `is:issue is:closed` ile aranır; tarihsel notlar `.claude/tasks/TASKLOG.md` ve git geçmişindedir.
+- **Kapanmış işlerin tam listesi** → `gh issue list --state closed` (yukarıda yalnız faz bazlı sayım var); tarihsel notlar `.claude/tasks/TASKLOG.md` ve git geçmişindedir.
 - **Kararlar** → `.agent-method/decisions/D-NNN-*.md` (kanonik, taşınmadı).
 - **Döngü gerekçesi / kabul kriterleri** → `.agent-method/cycles/GD-NNN.md` (kanonik).
 - **Fikirler** → `.agent-method/pipeline/IDEAS.md` (POOL'a yükseltme insan kararıdır).

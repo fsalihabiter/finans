@@ -17,6 +17,7 @@
 | Döngü gerekçesi + kabul kriterleri | `.agent-method/cycles/GD-NNN.md` | ✅ kanonik |
 | Kararlar | `.agent-method/decisions/D-NNN-*.md` | ✅ kanonik |
 | Oturum kanıtı | `.agent-method/evidence/sessions/` | ✅ kanonik |
+| **Tamamlanmış işler** | [Kapalı issue'lar](https://github.com/fsalihabiter/finans/issues?q=is%3Aissue+is%3Aclosed) (112 kalem, Faz 0-6) | ✅ **kanonik** (uygulama notları issue gövdesinde) |
 | Ham fikirler | `.agent-method/pipeline/IDEAS.md` | ✅ kanonik |
 | Test borcu | `.agent-method/pipeline/TEST_DEBT.md` | ✅ kanonik (INV-08) |
 | Incident'lar | `.agent-method/pipeline/INCIDENTS.md` + `Bug` issue'ları | INCIDENTS.md kanonik (kayıt), issue takip |
@@ -66,15 +67,26 @@ gh issue list --search "T6.3 in:title" --state all
 
 ## Taşıma kaydı (2026-11-22)
 
-POOL tablosundaki **50 açık kalem** GitHub Issues'a taşındı ve kırılımla birlikte
-**78 issue**'ya açıldı: birleşik satırlar ders bazında alt-görevlere ayrıldı
-(Set 1 ders 3-5, Set 2 ders 1-8), REVIEW-001/003'ün açık bulguları ve GD-003'ün
-6 kabul kriteri de izlenebilir kalemler hâline geldi. Faz bağımlılıkları 27
-`blocked by` ilişkisine çevrildi. Taşımadan önceki POOL tablosunun tam hâli git
-geçmişindedir:
+**Açık işler.** POOL tablosundaki **50 açık kalem** GitHub Issues'a taşındı ve
+kırılımla birlikte **78 issue**'ya açıldı: birleşik satırlar ders bazında
+alt-görevlere ayrıldı (Set 1 ders 3-5, Set 2 ders 1-8), REVIEW-001/003'ün açık
+bulguları ve GD-003'ün 6 kabul kriteri de izlenebilir kalemler hâline geldi.
+Faz bağımlılıkları 27 `blocked by` ilişkisine çevrildi.
+
+**Tamamlanmış işler (geriye dönük).** Faz 0-5 ve Faz 6'nın bitmiş kalemleri
+**112 kapalı issue** olarak girildi; PHASE-000…005 milestone'ları açıldı ve
+kapatıldı. Kaynak: eski backlog tablosu (makineyle çıkarıldı) + TASKLOG + ADM
+kanıt dosyaları. Uygulama notları issue gövdelerinde duruyor. T-BES çapraz epiği
+10 alt-görevli bir üst issue olarak kuruldu.
+
+Taşımadan önceki kaynakların tam hâli git geçmişindedir:
 
 ```bash
 git show c584ba1:.agent-method/pipeline/POOL.md
+```
+
+```bash
+git show ac61b7e:.claude/docs/08-BACKLOG.md
 ```
 
 Karar ve gerekçe: `.agent-method/decisions/D-022-github-issues-canonical-backlog.md`.

@@ -299,8 +299,13 @@ eklenmez.** Yeni oturum kanıtı `.agent-method/evidence/sessions/` altında bir
 Backlog iki kez el değiştirdi: `08-BACKLOG.md` → `pipeline/POOL.md` (2026-09-20)
 → **GitHub Issues** (2026-11-22, D-022). Bugün **POOL.md de bir işaretçidir**;
 görev durumu [GitHub Issues](https://github.com/fsalihabiter/finans/issues)'tan
-okunur ve oraya yazılır. Kapanmış görevlerin uygulama notları TASKLOG'da ve git
-geçmişinde (`ac61b7e`, POOL tablosu: `c584ba1`) durmaya devam eder.
+okunur ve oraya yazılır.
+
+**Tamamlanmış işler de orada:** Faz 0-5 ve Faz 6'nın bitmiş kalemleri 2026-11-22'de
+**112 kapalı issue** olarak geriye dönük girildi (`gh issue list --state closed`),
+uygulama notları gövdelerinde. TASKLOG tarih sıralı çalışma günlüğü olarak
+yerinde kalır (dondurulmuş); taşınmadan önceki tabloların tam hâli git
+geçmişindedir (`ac61b7e` → 08-BACKLOG, `c584ba1` → POOL).
 
 ---
 

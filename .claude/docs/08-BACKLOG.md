@@ -12,6 +12,7 @@
 | Aradığın | Yeri |
 |---|---|
 | **Açık işler** (Faz 6-9 + Faz M), bağımlılık ve kırılımıyla | **GitHub Issues** — `gh issue list --state open` |
+| **Tamamlanmış işler** (Faz 0-5 + Faz 6'nın biteni), uygulama notlarıyla | **Kapalı issue'lar** — `gh issue list --state closed` (112 kalem, 2026-11-22'de geriye dönük girildi) |
 | Çevrimdışı/ajan okuması için anlık görüntü | `.agent-method/generated/BACKLOG.md` (üretilmiş, elle düzenlenmez) |
 | Faz ↔ milestone eşlemesi, etiket sözlüğü, komutlar | `.agent-method/pipeline/POOL.md` (işaretçi) |
 | Aktif faz, faz durumları, DoD'ler | `.agent-method/charter/PHASES.md` |
@@ -19,7 +20,7 @@
 | Kalıcı kararlar | `.agent-method/decisions/D-NNN-*.md` (taşıma kararı: `D-022`) |
 | Ham fikirler / plan dışı çıkan sorunlar | `.agent-method/pipeline/IDEAS.md` · `INCIDENTS.md` |
 | Kapsam (test) borcu | `.agent-method/pipeline/TEST_DEBT.md` |
-| Tamamlanmış görevlerin uygulama notları (Faz 0-5) | `.claude/tasks/TASKLOG.md` (dondurulmuş tarihsel kayıt) |
+| Tamamlanmış görevlerin tarih sıralı çalışma günlüğü | `.claude/tasks/TASKLOG.md` (dondurulmuş; issue gövdeleri bunun özetini taşır) |
 | Bu dosyanın taşınmadan önceki tam hali | `git show ac61b7e:.claude/docs/08-BACKLOG.md` |
 | POOL tablosunun taşınmadan önceki tam hali | `git show c584ba1:.agent-method/pipeline/POOL.md` |
 

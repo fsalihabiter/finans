@@ -89,6 +89,18 @@ Reddedilen alternatifler:
   in:title"` ile bulunur.
 - Taşıma 50 POOL kalemini **78 issue**'ya açtı (ders bazlı kırılım + REVIEW
   bulguları + GD-003'ün 6 kabul kriteri) ve 27 `blocked by` ilişkisi kurdu.
+- **Tamamlanmış işler de geriye dönük girildi** (kullanıcı kararı, 2026-11-22):
+  Faz 0-5 ve Faz 6'nın bitmiş kalemleri **112 kapalı issue** oldu; PHASE-000…005
+  milestone'ları açılıp kapatıldı. Böylece "yapılan ve yapılacak işlerin tamamı"
+  tek yüzeyde izlenebiliyor. Kaynak eski backlog tablosundan **makineyle**
+  çıkarıldı (`git show ac61b7e:.claude/docs/08-BACKLOG.md`); tablo satırı olmayan
+  işler (Set 0 dersleri S0-L1…S0-L7, GD-002, D-020, SPIKE-001, S-005 işleri)
+  TASKLOG ve ADM kanıt dosyalarından elle eklendi. Her kapalı issue gövdesinde
+  "geriye dönük kayıt" dipnotu ve kaynağı yazılıdır — bu issue'lar o tarihte
+  açılmış gibi görünmemeli.
+  ⚠ Tür (`Feature`/`Bug`) ve `area:*` etiketi başlıktan **sezgisel** türetildi;
+  birkaç kalemde yanlış olabilir. Öncelik etiketi verilmedi (kapalı işte
+  anlamsız). TASKLOG **silinmedi** — uygulama günlüğü olarak kalıyor.
 - GD'ler issue'ya **dönüşmedi**: bir GD açıldığında ilgili issue'ya `adm:gd`
   etiketi gelir ve issue gövdesi `cycles/GD-NNN.md`'ye işaret eder. Kabul
   kriterleri alt-görev olarak izlenir ama **kutuyu insan işaretler** (INV-06).
