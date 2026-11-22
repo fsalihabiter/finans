@@ -97,38 +97,45 @@ else
 fi
 
 # ── Durumlari GERCEK veriden doldur ──────────────────────────────────────────
-# Blocked  = issue'nun `blocked by` ilişkisi var (GitHub'ın kendi verisi)
+# Done        = issue kapali (GitHub'in kendi state'i)
 # In progress = aktif GD'nin issue'su (`adm:gd` etiketli, ustu olmayan kalem)
-# Backlog  = gerisi.  Kapali kalemlerin durumu GitHub'da zaten "closed", elleme.
+# Blocked     = issue'nun `blocked by` iliskisi var (GitHub'in kendi verisi)
+# Backlog     = gerisi
+# Hicbiri tahmin degil; hepsi issue verisinden turer. Durumsuz kalem birakilmaz,
+# yoksa panoda "No Status" kolonunda birikirler.
 opt(){ gh api graphql -f query='
   query($p:ID!){ node(id:$p){ ... on ProjectV2 { field(name:"Status"){
     ... on ProjectV2SingleSelectField { options { id name } } } } } }' \
   -F p="$PID" --jq ".data.node.field.options[] | select(.name==\"$1\") | .id"; }
 
-O_BACKLOG=$(opt Backlog); O_BLOCKED=$(opt Blocked); O_PROG=$(opt "In progress")
+O_BACKLOG=$(opt Backlog); O_BLOCKED=$(opt Blocked)
+O_PROG=$(opt "In progress"); O_DONE=$(opt Done)
 FID_S="$FID"
 ACTIVE=$(gh issue list --repo "$REPO" --state open --limit 300 --label "adm:gd" \
          --json number,parent --jq 'first(.[] | select(.parent == null) | .number) // empty')
 [ -n "$ACTIVE" ] && echo "aktif GD issue'su: #$ACTIVE → In progress"
 
-tmp_b=$(mktemp); tmp_i=$(mktemp)
-trap 'rm -f "$tmp_b" "$tmp_i"' EXIT
-gh issue list --repo "$REPO" --state open --limit 300 --json number,blockedBy \
-  --jq '.[] | "\(.number)\t\((.blockedBy.nodes|length) > 0)"' | sort > "$tmp_b"
+tmp_s=$(mktemp); tmp_i=$(mktemp)
+trap 'rm -f "$tmp_s" "$tmp_i"' EXIT
+# number \t state \t blocked?  — acik ve kapali hepsi
+gh issue list --repo "$REPO" --state all --limit 1000 --json number,state,blockedBy \
+  --jq '.[] | "\(.number)\t\(.state)\t\((.blockedBy.nodes|length) > 0)"' | sort > "$tmp_s"
 gh project item-list "$NUM" --owner "$OWNER" --format json --limit 1000 \
   --jq '.items[] | select(.content.number != null) | "\(.content.number)\t\(.id)"' | sort > "$tmp_i"
 
-np=0; nb=0; nk=0
-while IFS=$'\t' read -r num iid isblocked; do
-  [ -z "${isblocked:-}" ] && continue          # kapali kalem: engel verisi yok, atla
-  if [ "$num" = "$ACTIVE" ];      then o="$O_PROG";    np=$((np+1))
+np=0; nb=0; nk=0; nd=0; nerr=0
+while IFS=$'\t' read -r num iid istate isblocked; do
+  [ -z "${istate:-}" ] && continue
+  if   [ "$istate" = "CLOSED" ];  then o="$O_DONE";    nd=$((nd+1))
+  elif [ "$num" = "$ACTIVE" ];    then o="$O_PROG";    np=$((np+1))
   elif [ "$isblocked" = "true" ]; then o="$O_BLOCKED"; nb=$((nb+1))
   else                                 o="$O_BACKLOG"; nk=$((nk+1)); fi
   gh project item-edit --id "$iid" --project-id "$PID" --field-id "$FID_S" \
-    --single-select-option-id "$o" >/dev/null 2>&1 || echo "  durum yazılamadı: #$num" >&2
-done < <(join -t"$(printf '\t')" "$tmp_i" "$tmp_b")
+    --single-select-option-id "$o" >/dev/null 2>&1 \
+    || { nerr=$((nerr+1)); echo "  durum yazılamadı: #$num" >&2; }
+done < <(join -t"$(printf '\t')" "$tmp_i" "$tmp_s")
 
-echo "durumlar: In progress $np · Blocked $nb · Backlog $nk"
+echo "durumlar: In progress $np · Blocked $nb · Backlog $nk · Done $nd$([ "$nerr" -gt 0 ] && echo " · yazılamadı $nerr" || true)"
 echo
 cat <<MSG
 Pano: https://github.com/users/$OWNER/projects/$NUM
