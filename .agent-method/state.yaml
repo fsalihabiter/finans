@@ -103,6 +103,16 @@ session:            # current open session; cleared by adm-close
   #   Ama hook yalnız OKUR: session bloğunu açmaz, started_at/start_sha yazmaz;
   #   her kapanışta diff tabanı elle seçiliyor ve INV-13 işletilmiyor.
   #   Bildirildi, düzeltilmedi — insan kararı (S-009 §"Süreç gözlemi").
+  #   → 2026-11-22 AKŞAMI ÇÖZÜLDÜ (kullanıcı kararı "Hook'a uyarı ekle"):
+  #     hook artık açık oturum yoksa `adm-open` hatırlatıyor.
+  #     ⚠ Düzeltirken PRE-EXISTING bir hata çıktı: hook'un YAML dilimleyicisi
+  #     `^session:\s*$` arıyordu, ama satırda sonda açıklama var
+  #     ("session:   # current open session...") → blok HİÇ bulunamıyordu,
+  #     openSessionId her zaman boş dönüyordu ve **INV-13'ün "açık oturum var"
+  #     uyarısı hiçbir zaman çalışamamıştı** (ölü kod). Kalıp
+  #     `^key:\s*(#.*)?$` yapıldı; uyarı ilk kez çalıştı (S-TEST benzetimiyle
+  #     doğrulandı). Yalnız `session:` etkileniyordu — project/active/review
+  #     satırlarında sonda açıklama yok.
   id: null
   runtime: null
   started_at: null

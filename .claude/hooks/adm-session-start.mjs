@@ -89,7 +89,22 @@ try {
 
   // ── Uyarılar ─────────────────────────────────────────────────────────────
   const warn = [];
-  if (openSessionId) warn.push(`⚠ INV-13: state.yaml'da açık bir oturum var (${openSessionId}). Eskimişse adm-close ile kapat — sessizce ÜZERİNE YAZMA, bildir.`);
+  if (openSessionId) {
+    warn.push(`⚠ INV-13: state.yaml'da açık bir oturum var (${openSessionId}). Eskimişse adm-close ile kapat — sessizce ÜZERİNE YAZMA, bildir.`);
+  } else {
+    // S-009 süreç bulgusu: bu brifing "nerede kaldık" sorusunu cevapladığı için
+    // adm-open gereksiz GÖRÜNÜYOR ve dört oturum üst üste atlandı. Oysa hook
+    // yalnız OKUR — oturumu açmaz, started_at/start_sha yazmaz. Sonuç: her
+    // kapanışta diff tabanı elle seçiliyor ve INV-13'ün "tek açık oturum"
+    // sözleşmesi hiç işletilmiyor. Hook oturumu KENDİSİ açamaz: koşulsuz
+    // çalıştığı için salt soru-cevap turlarında da açardı. O yüzden uyarır.
+    warn.push(
+      '📌 Açık ADM oturumu YOK (state.yaml → session boş). Bu brifing yalnız OKUR: ' +
+      'oturumu açmaz, started_at/start_sha yazmaz. İş yapacaksan `adm-open` çalıştır — ' +
+      'yoksa kapanışta diff tabanı elle seçilmek zorunda kalır (son dört oturumda böyle oldu). ' +
+      'Salt soru-cevap / keşif turuysa gerekmez.',
+    );
+  }
   if (blockers.length) warn.push('⛔ Engeller: ' + blockers.join(' · '));
   if (reviewStatus && reviewStatus !== 'not-run' && reviewStatus !== 'clean') warn.push(`⚠ Review durumu: ${reviewStatus}`);
   if (warn.length) out.push('\n' + warn.join('\n'));
@@ -120,7 +135,11 @@ function findRoot(start) {
 // `key:` altındaki girintili bloğu döndürür (küçük, bağımlılıksız YAML dilimi).
 function block(text, key) {
   const lines = text.split(/\r?\n/);
-  const start = lines.findIndex((l) => new RegExp(`^${key}:\\s*$`).test(l));
+  // ⚠ Anahtar satırında SONDA AÇIKLAMA olabilir (`session:   # ...`). Önceki
+  // kalıp `^key:\s*$` idi ve bu yüzden `session:` bloğu HİÇ bulunamıyordu:
+  // openSessionId her zaman boş dönüyor, dolayısıyla INV-13'ün "açık oturum
+  // var" uyarısı hiçbir zaman çalışamıyordu (ölü kod). 2026-11-22'de bulundu.
+  const start = lines.findIndex((l) => new RegExp(`^${key}:\\s*(#.*)?$`).test(l));
   if (start < 0) return '';
   const body = [];
   for (let i = start + 1; i < lines.length; i++) {
