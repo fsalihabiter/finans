@@ -96,6 +96,12 @@ kavram (Explain) → işlenmiş örnek (Example) → tuzak (Trap) → sonraki ka
 - **İşlenmiş örnek** = adımları görünen örnek. "Şöyle olur" değil, "şu sayıdan
   şu sayıya nasıl gidildi".
 - **Tuzak** = yaygın yanılgı; testin çeldiricileri buradan türer (§7).
+- **Tuzak bloğu her zaman `Core` katmandadır** — künye tablosunda `Core/Trap`.
+  Yanılgı düzeltmesinin en çok ulaşması gereken kitle, o yanılgıyı taşıyan
+  başlangıç seviyesidir; bu yüzden tuzak hiçbir seviyede katlanmaz (T6.7).
+  `Context/Trap` ya da `Deep/Trap` **geçersizdir** ve testi kırar (M10).
+  Tuzağın okuma akışında nerede durduğu ayrı bir şeydir: sıralamayı aşama
+  numarası belirler, katman sütunu yalnız `DepthTier`'ı anlatır.
 
 ### 2.5 Ders iskeleti (sabit)
 
@@ -331,7 +337,7 @@ rozetiyle yapılır.
 | 6 | Core/Trap | "Yatırım = kazanç garantisi" yanılgısı | 🖼 `no-guarantee` |
 | 7 | Context/Explain | Yatırım · spekülasyon · şans oyunu: kazanç nereden geliyor | 🖼 `value-vs-zero-sum` **(çok panelli)** |
 | 8 | Context/Example | Aynı varlık, iki davranış: 10 yıl tutmak vs 2 gün tutmak | 🖼 `hold-vs-flip` |
-| 9 | Context/Trap | "Kısa vadede çok kazanan = iyi yatırımcı" (sonuç ≠ süreç) | — |
+| 9 | Core/Trap | "Kısa vadede çok kazanan = iyi yatırımcı" (sonuç ≠ süreç) | — |
 | 10 | Deep/Explain | Getiri neden var: fırsat maliyeti + risk primi | 🖼 `risk-premium-intro` |
 | 11 | Deep/Example | Aynı işe iki finansman: ortak olmak vs borç vermek → S0-L5 köprüsü | — |
 | 12 | Core/LiveContext | "Senin portföyünde" — kaç kalem var / demo | — |
@@ -394,7 +400,7 @@ değil **davranışı** tarif eder.
 | 6 | Core/Trap | "Önce harca, kalanı biriktir" → kalan kalmaz | 🖼 `leftover-trap` |
 | 7 | Context/Explain | Sırayı ters çevirmek: önce ayır | 🖼 `pay-yourself-first` |
 | 8 | Context/Example | Düzensiz gelir (serbest çalışan): oran yerine aralık | — |
-| 9 | Context/Trap | "Zam alınca birikim kendiliğinden artar" (yaşam tarzı enflasyonu) | 🖼 `lifestyle-creep` |
+| 9 | Core/Trap | "Zam alınca birikim kendiliğinden artar" (yaşam tarzı enflasyonu) | 🖼 `lifestyle-creep` |
 | 10 | Deep/Explain | Oran mı, getiri mi: erken dönemin kaldıracı | 🖼 `rate-vs-return-lever` **(çok panelli)** |
 | 11 | Deep/Example | 10 yılda: oranı ikiye katlamak vs getiriyi ikiye katlamak | — |
 | 12 | Core/LiveContext | Portföyünün ne kadarı nakitte | — |
@@ -455,7 +461,7 @@ ve *hangi çerçeveler var* der. Karar okuyucunundur.
 | 7 | Core/Example | İşlenmiş örnek: aylık orandan yıllık bileşik maliyete (aritmetik) | 🖼 `debt-cost-ladder` |
 | 8 | Context/Explain | Fırsat maliyeti: bir lira iki işi aynı anda yapamaz | 🖼 `one-lira-two-jobs` **(çok panelli)** |
 | 9 | Context/Example | Karşılaştırma **çerçevesi** — kesin maliyet ↔ belirsiz getiri | — |
-| 10 | Context/Trap | "Getiri faizden yüksekse borç iyidir" → belirsizlik unutulur | 🖼 `certain-vs-uncertain` **(çok panelli)** |
+| 10 | Core/Trap | "Getiri faizden yüksekse borç iyidir" → belirsizlik unutulur | 🖼 `certain-vs-uncertain` **(çok panelli)** |
 | 11 | Deep/Explain | Nakit tutmanın iki maliyeti: erime **ve** likidite değeri | 🖼 `two-costs-of-cash` |
 | 12 | Core/LiveContext | Portföyünün nakit ağırlığı | — |
 | 13 | Core/Source | Bu bilgiler nereden geliyor? | — |
@@ -519,7 +525,7 @@ oran/limit verilmez; verilen her kurumsal rakam kaynaklı ve tarihlidir.
 | 6 | Core/Example | **Etkileşimli:** enflasyon kaydırıcısı (T6.18) | 🖼 `inflation-slider` *(fallback `erosion-curve`)* |
 | 7 | Context/Explain | Fiyat endeksi nedir, sepet nasıl kurulur | 🖼 `index-basket` |
 | 8 | Context/Example | Kişisel sepet farkı: kirada oturan ↔ ev sahibi | 🖼 `personal-basket` |
-| 9 | Context/Trap | "Resmî oran = benim enflasyonum" | — |
+| 9 | Core/Trap | "Resmî oran = benim enflasyonum" | — |
 | 10 | Deep/Explain | Bileşik erime: üst üste yıllar | 🖼 `compounded-erosion` **(çok panelli)** |
 | 11 | Deep/Example | Alım gücünün yarıya inmesi kaç yıl sürer (aritmetik) | — |
 | 12 | Core/LiveContext | Son 12 ayın TÜFE'si | — |
@@ -581,7 +587,7 @@ oran tahmini yapılmaz. Kaydırıcı "şu oran **olursa**" der, "olacak" demez
 | 9 | Context/Explain | Ortaklık ↔ alacaklılık ekseni | 🖼 `ownership-lending-axis` **(çok panelli)** |
 | 10 | Context/Explain | Likidite ekseni | 🖼 `liquidity-axis` |
 | 11 | Context/Example | Aynı varlık, iki likidite: hızlı satış ↔ makas | 🖼 `bid-ask-spread` |
-| 12 | Context/Trap | "Her varlık her an satılır" | — |
+| 12 | Core/Trap | "Her varlık her an satılır" | — |
 | 13 | Deep/Explain | Sınıf içi tür farkı (S5-L2 altın köprüsü) | — |
 | 14 | Core/LiveContext + Source | Sınıf dağılımın · kaynaklar | — |
 
@@ -644,7 +650,7 @@ bir **kalite** sıralaması değildir; metinde bu açıkça yazılır.
 | 7 | Core/Trap | "Temettü bedava para" — fiyattan düşer | 🖼 `dividend-not-free` **(çok panelli)** |
 | 8 | Context/Explain | Getirinin karşılığı: sermayeni kim kullanıyor, hangi riski alıyorsun | 🖼 `who-uses-your-capital` |
 | 9 | Context/Example | Aynı şirkete ortak olmak ↔ borç vermek: getirinin şekli değişir | 🖼 `equity-vs-debt-return` **(çok panelli)** |
-| 10 | Context/Trap | "Yüksek temettü her zaman iyi" — kaynağı kâr mı | — |
+| 10 | Core/Trap | "Yüksek temettü her zaman iyi" — kaynağı kâr mı | — |
 | 11 | Deep/Explain | Kâğıt üstünde kâr ↔ nakde dönen kâr (S3-L2 köprüsü) | 🖼 `paper-vs-realized` |
 | 12 | Core/LiveContext | Portföyündeki 12 aylık fiyat değişimi | — |
 | 13 | Core/Source | Bu bilgiler nereden geliyor? | — |
@@ -750,7 +756,7 @@ yalnız SPK kaynağına bağlıysa yazılır.
 | **Ön bilgi** | `asset-class` (S0-L5) · `risk` (S0-L7) · `liquidity` (S0-L5) |
 | **Tanıtılan** | `time-horizon` · `portfolio` · `position` · `weight` |
 | **Pekiştirilen** | `emergency-fund` · `liquidity` · `risk` |
-| **LiveContext** | `holding_count` · `asset_class_weights` · `concentration_top2` |
+| **LiveContext** | `holding_count` · `asset_class_count` · `cash_weight` · `stock_weight` · `concentration_top2` |
 
 **Öğrenme çıktıları:**
 1. Zaman ufkunu **tanımlar** ve bir hedefe vade **atar**.
@@ -772,7 +778,7 @@ yalnız SPK kaynağına bağlıysa yazılır.
 | 8 | Core/Trap | "Kalem sayısı çoksa çeşitlenmiştir" (S1-L2 köprüsü) | 🖼 `many-but-same` |
 | 9 | Context/Explain | Nirengi ekranı: hangi sayı nerede | 🖼 `app-screen-map` **(çok panelli)** |
 | 10 | Context/Example | Aynı portföy iki baz para biriminde (S3-L3 köprüsü) | 🖼 `two-base-currencies` |
-| 11 | Context/Trap | "Toplam değer arttıysa her kalem kazandırdı" | — |
+| 11 | Core/Trap | "Toplam değer arttıysa her kalem kazandırdı" | — |
 | 12 | Deep/Explain | Portföy statiktir sanılır: fiyat hareketi ağırlığı kaydırır | 🖼 `weights-move-by-themselves` **(çok panelli)** |
 | 13 | Core/LiveContext | Kaç kalem · sınıf dağılımı · en büyük iki ağırlık | — |
 | 14 | Core/Source | Bu bilgiler nereden geliyor? | — |
@@ -783,9 +789,18 @@ yüzdeye çevirme); (b) fiyat hareketiyle ağırlığın işlem yapılmadan değ
 **Tuzaklar:** "Uzun vade = beklemek" · "Kalem sayısı = çeşitlilik" · "Toplam
 arttıysa her kalem kazandı".
 
-**Figür planı (8):** `time-horizon-ruler` · `three-goals`✳ · `portfolio-anatomy` ·
+**Figür planı (9):** `time-horizon-ruler` · `three-goals`✳ · `portfolio-anatomy` ·
 `position-fields`✳ · `weight-share` · `many-but-same` · `app-screen-map`✳ ·
 `two-base-currencies` · `weights-move-by-themselves`✳.
+
+> ⚠ **Düzeltme (2026-11-22, GD-003):** 11. aşama künyede `Context/Trap` yazıyordu →
+> `Core/Trap` olarak düzeltildi. Sebep S0-L7'dekiyle aynı (yukarı, GD-001 notu):
+> **tuzak blokları Core katmanda kalır** (T6.7 kararı — tuzak başlangıç seviyesinden
+> gizlenmemeli) ve kural testle bağlı
+> (`Example_blocks_declare_a_figure_and_traps_stay_in_core_tier`). Kod zaten doğruydu;
+> yanlış olan künye hücresiydi. Aynı hata künyede **18 yerde daha** vardı (16 tablo
+> hücresi + 2 liste satırı, Set 0–Set 3); hepsi aynı gün düzeltildi. Tekrar etmemesi
+> için kural yazıya bağlandı: **§2.4** (aşama kalıbı) + **M10** (makineyle doğrulanan).
 
 **Değerlendirme (9):** Easy — portföy/kalem/ağırlık tanımları · Medium — ağırlık
 hesabı, vade atama · Hard — kalem sayısı ≠ çeşitlilik çıkarımı, ağırlık kayması.
@@ -839,7 +854,7 @@ verir.
 | 8 | Core/Trap | "Aldığım anda kârdayım/zarardayım" — makas kâr-zarar değil, **maliyet** | — |
 | 9 | Context/Explain | Arz ve talep: fiyatı kim hareket ettirir | 🖼 `supply-demand-scale` **(çok panelli)** |
 | 10 | Context/Example | Aynı varlık, iki farklı yerde biraz farklı fiyat | 🖼 `same-asset-two-venues` |
-| 11 | Context/Trap | "Fiyat düştü çünkü herkes sattı" — her satışın karşısında bir **alış** vardır | 🖼 `every-sale-has-a-buyer` **(çok panelli)** |
+| 11 | Core/Trap | "Fiyat düştü çünkü herkes sattı" — her satışın karşısında bir **alış** vardır | 🖼 `every-sale-has-a-buyer` **(çok panelli)** |
 | 12 | Deep/Explain | İnce piyasa: az anlaşma → gürültülü fiyat | 🖼 `thin-market` **(çok panelli)** |
 | 13 | Core/LiveContext | Portföyünün ne kadarı fiyatı **piyasada oluşan** varlıklarda | — |
 | 14 | Core/Source | Bu bilgiler nereden geliyor? | — |
@@ -903,7 +918,7 @@ makas bir **ölçü** olarak tanıtılır.
 | 8 | Context/Explain | Görünen ve görünmeyen maliyet: komisyon + makas | 🖼 `round-trip-cost` **(çok panelli)** |
 | 9 | Context/Example | 10.000 ₺'lik bir alım-satım turunun toplam maliyeti (aritmetik) | 🖼 `cost-stack` |
 | 10 | Context/Explain | Takas ve valör: işlem anı ≠ mülkiyet anı | 🖼 `settlement-clock` |
-| 11 | Context/Trap | "Sattım, para hemen hesabımda" | — |
+| 11 | Core/Trap | "Sattım, para hemen hesabımda" | — |
 | 12 | Deep/Explain | Seans kapalıyken dünya durmaz → açılış boşluğu | 🖼 `after-hours-world` **(çok panelli)** |
 | 13 | Core/Explain | Nirengi bu adımların **hiçbirini** yapmaz — yalnız kaydını tutarsın | 🖼 `nirengi-is-not-a-broker` |
 | 14 | Core/Source | Bu bilgiler nereden geliyor? | — |
@@ -1082,7 +1097,7 @@ Hiçbir oran için "şu değerin altı ucuzdur" eşiği verilmez.
 7. `Core/Trap` — "Geçmiş getiri geleceği gösterir" *(tahmin yasağı ile birebir)*
 8. `Context/Explain` — Düşüşün derinliği: geri dönüş matematiği 🖼 `recovery-math` **(çok panelli)**
 9. `Context/Example` — −%50 sonrası başa dönmek için gereken artış (aritmetik)
-10. `Context/Trap` — "Düşen her şey geri gelir"
+10. `Core/Trap` — "Düşen her şey geri gelir"
 11. `Deep/Explain` — Sıra önemlidir: aynı getiriler farklı sırayla 🖼 `sequence-matters` **(çok panelli)**
 12. `Deep/Example` — Aynı yıllık getiriler, iki farklı sıra → farklı deneyim
 13. `Core/Source` — Bu bilgiler nereden geliyor?
@@ -1124,7 +1139,7 @@ aritmetik gösterilir. Geçmiş getiri anlatımı gelecek çıkarımına dönü�
 6. `Core/Example` — Katlanma süresi: kaç yılda ikiye katlar 🖼 `doubling-time`
 7. `Context/Explain` — Yeniden yatırım: zinciri kırmamak 🖼 `withdraw-breaks-chain` **(çok panelli)**
 8. `Context/Example` — Aynı getiri, biri çekiyor biri bırakıyor
-9. `Context/Trap` — "Küçük tutarla başlamanın anlamı yok" 🖼 `time-beats-amount` **(çok panelli)**
+9. `Core/Trap` — "Küçük tutarla başlamanın anlamı yok" 🖼 `time-beats-amount` **(çok panelli)**
 10. `Deep/Explain` — Reel bileşik: enflasyon aynı mekanizmayla çalışır 🖼 `real-compound`
 11. `Deep/Example` — Nominal bileşik ↔ reel bileşik yan yana
 12. `Core/LiveContext` — Portföyündeki 12 aylık değişim
@@ -1194,7 +1209,7 @@ istemcide saftır, hiçbir enstrüman adı geçmez.
 | 7 | Core/Explain | Kapanış nedir, neden onu birleştiriyoruz | 🖼 `why-close` |
 | 8 | Context/Explain | Grafiğin dört sorusu: hangi varlık · hangi para birimi · hangi dönem · hangi sıklık | 🖼 `chart-checklist` **(çok panelli)** |
 | 9 | Context/Example | Tatil/hafta sonu: eksende olmayan günler | 🖼 `missing-days` |
-| 10 | Context/Trap | "Grafik yatay ⇒ hiçbir şey olmadı" (ölçek sorusu → S2-L2) | — |
+| 10 | Core/Trap | "Grafik yatay ⇒ hiçbir şey olmadı" (ölçek sorusu → S2-L2) | — |
 | 11 | Deep/Explain | Veri sıklığı: aynı seri, günlük ve haftalık | 🖼 `same-data-daily-weekly` **(çok panelli)** |
 | 12 | Deep/Example | Sıklık düşünce kaybolan gün içi hareket | — |
 | 13 | Core/LiveContext | Nirengi'deki **Değer Seyri** grafiğin: eksenlerinde ne var | — |
@@ -1261,7 +1276,7 @@ grafik yönü yorumlanmaz — ders yalnız **okuma** öğretir.
 | 8 | Core/Trap | "En iyi görünen dönemi seçmek" (kiraz toplama) | — |
 | 9 | Context/Explain | Logaritmik ölçek: eşit **oran** = eşit mesafe | 🖼 `log-vs-linear` **(çok panelli)** |
 | 10 | Context/Example | 100→200 ve 200→400 aynı yükseklikte | 🖼 `doubling-steps` |
-| 11 | Context/Trap | "Uzun vadeli grafik hep patlama gibi görünür" (doğrusal ölçek etkisi) | — |
+| 11 | Core/Trap | "Uzun vadeli grafik hep patlama gibi görünür" (doğrusal ölçek etkisi) | — |
 | 12 | Context/Explain | ⭐ **Ölçek oynatıcısı** — kendin dene | 🎛 `chart-scale-playground` **(etkileşimli)** |
 | 13 | Deep/Explain | Karşılaştırma için tek dürüst eksen: yüzde (=100'e çekme) | 🖼 `percent-vs-absolute` **(çok panelli)** |
 | 14 | Core/LiveContext | Kendi getirinin **iki farklı dönemdeki** değeri | — |
@@ -1326,7 +1341,7 @@ kurulduğunu gösterir. Oynatıcı **gelecek üretmez** — mevcut seriyi yenide
 | 9 | Context/Explain | Renk neyi söyler: yalnız açılış ↔ kapanış | 🖼 `candle-color-is-relative` **(çok panelli)** |
 | 10 | Context/Example | Yeşil mum, dünden düşük kapanış (aynı anda mümkün) | 🖼 `green-but-lower` **(çok panelli)** |
 | 11 | Context/Explain | Çizgi ile mum yan yana | 🖼 `line-vs-candle` **(çok panelli)** |
-| 12 | Context/Trap | "Aynı kapanış ⇒ aynı gün" | 🖼 `same-close-different-day` **(çok panelli)** |
+| 12 | Core/Trap | "Aynı kapanış ⇒ aynı gün" | 🖼 `same-close-different-day` **(çok panelli)** |
 | 13 | Deep/Explain | Açılış = kapanış durumu (kararsız mum): **tanım**, kehanet değil | 🖼 `equal-open-close` |
 | 14 | Core/Explain | Nirengi mum grafiği **yorumlamaz** — neden | — |
 | 15 | Core/Source | Bu bilgiler nereden geliyor? | — |
@@ -1388,7 +1403,7 @@ Borsa İstanbul — seans açılış/kapanış tanımları ⟨doğrulanacak⟩.
 | 6 | Core/Explain | İşlem saatleri: piyasa kapalıyken de dünya döner | 🖼 `market-hours-clock` |
 | 7 | Core/Example | Kapanış 100, ertesi gün açılış 94: boşluk | 🖼 `overnight-gap` **(çok panelli)** |
 | 8 | Context/Explain | Boşluk neden "kaçırılmış hareket" değildir | 🖼 `gap-is-not-a-move` |
-| 9 | Context/Trap | "Boşluk kapanır" — bu bir **tahmin cümlesidir**, ders bunu üretmez | — |
+| 9 | Core/Trap | "Boşluk kapanır" — bu bir **tahmin cümlesidir**, ders bunu üretmez | — |
 | 10 | Context/Explain | Farklı borsalar, farklı saatler | 🖼 `world-clock-markets` **(çok panelli)** |
 | 11 | Deep/Explain | Gürültü ve işaret: dilim küçüldükçe oran bozulur | 🖼 `noise-vs-signal` **(çok panelli)** |
 | 12 | Deep/Example | Aynı hafta: 5 dakikalık ve haftalık görünüm | 🖼 `zoom-in-zoom-out` **(çok panelli)** |
@@ -1452,7 +1467,7 @@ kalıpları** derste **tuzak** olarak işlenir — üretilmez.
 | 7 | Core/Explain | Derinlik: 1.000 ₺ ile 1.000.000 ₺ aynı fiyattan alınmaz | 🖼 `thin-vs-deep-market` **(çok panelli)** |
 | 8 | Context/Example | Makasın yüzde maliyeti (aritmetik) | 🖼 `spread-as-cost` **(çok panelli)** |
 | 9 | Context/Explain | Likidite = "vazgeçmeden çıkabilme" | 🖼 `exit-without-discount` |
-| 10 | Context/Trap | "Fiyat var ⇒ o fiyattan satabilirim" | — |
+| 10 | Core/Trap | "Fiyat var ⇒ o fiyattan satabilirim" | — |
 | 11 | Deep/Explain | Hacim yorumu neden kolayca hikâyeye dönüşür (S2-L6 köprüsü) | 🖼 `volume-story-trap` **(çok panelli)** |
 | 12 | Deep/Example | Aynı hacim iki karşıt hikâyeyle anlatılır | — |
 | 13 | Core/Explain | Nirengi hacim **göstermez** — neden (veri ve iddia sınırı) | — |
@@ -1520,7 +1535,7 @@ yasak ve **tuzak** olarak işlenir.
 | 8 | Context/Explain | Geçmişe uydurma: çizgiyi olaydan **sonra** çizmek | 🖼 `line-drawn-after` **(çok panelli)** |
 | 9 | Context/Example | Aynı kural, iki dönemde iki farklı sonuç | 🖼 `rule-breaks-out-of-sample` |
 | 10 | Context/Explain | Teknik ve temel yaklaşım **nedir** (tanım, hüküm yok) | 🖼 `two-approaches` **(çok panelli)** |
-| 11 | Context/Trap | "Biri doğru, diğeri yanlış" — ders **taraf tutmaz** | — |
+| 11 | Core/Trap | "Biri doğru, diğeri yanlış" — ders **taraf tutmaz** | — |
 | 12 | Deep/Explain | Bir iddiayı sorgulamanın dört sorusu: örneklem · dönem · maliyet · yanlışlanabilirlik | 🖼 `four-questions` **(çok panelli)** |
 | 13 | Deep/Example | "Yıllardır işe yarıyor" cümlesini bu dört soruyla sınamak | — |
 | 14 | Core/Explain | **Nirengi neden sinyal üretmez** (`CLAUDE.md` §2 · §3.1) | 🖼 `nirengi-shows-not-predicts` |
@@ -1586,7 +1601,7 @@ kesinlik iddiası taşıyan her cümle sorgulanmalıdır ve **bu uygulama tahmin
 | 7 | Core/Example | Yanlış ölçüt seçimi: altını hisse endeksiyle ölçmek | — |
 | 8 | Context/Explain | Sektör: aynı işi yapanların alt sepeti | 🖼 `sector-slices` |
 | 9 | Context/Example | Endeks yatay, sektörler zıt yönde | 🖼 `index-flat-sectors-split` **(çok panelli)** |
-| 10 | Context/Trap | "Endeks düştüyse her kalem düştü" | — |
+| 10 | Core/Trap | "Endeks düştüyse her kalem düştü" | — |
 | 11 | Deep/Explain | Ağırlıklandırma: birkaç dev sepeti taşır | 🖼 `index-weights` **(çok panelli)** |
 | 12 | Deep/Example | En büyük üç kalem çıkarılınca endeks ne olurdu | 🖼 `few-giants-move-index` |
 | 13 | Core/LiveContext | Portföyünde kaç varlık sınıfı var → kaç ölçüt gerekir | — |
@@ -1656,7 +1671,7 @@ M7 taraması bu ayrımı beyaz listeyle uygular (§9.1).
 | 8 | Core/Trap | 🔴 "Ölçütün gerisinde ⇒ değiştirmeli" — bu bir **karar cümlesi**; ders karar vermez | — |
 | 9 | Context/Explain | Piyasayla birlikte mi, kendine özgü mü | 🖼 `market-vs-specific` **(çok panelli)** |
 | 10 | Context/Example | Aynı gün: tüm sepet düştü ↔ yalnız bu kalem düştü | 🖼 `all-fell-vs-only-this` **(çok panelli)** |
-| 11 | Context/Trap | "Ölçütü yenmek" bir amaç sanılır — amacı **sen** koyarsın (S0-L8 köprüsü) | — |
+| 11 | Core/Trap | "Ölçütü yenmek" bir amaç sanılır — amacı **sen** koyarsın (S0-L8 köprüsü) | — |
 | 12 | Context/Explain | Para birimi gözlüğü: karşılaştırma aynı para biriminde | 🖼 `same-currency-lens` |
 | 13 | Deep/Explain | Karşılaştırmanın dört ön koşulu: aynı dönem · aynı para birimi · aynı ölçek · uygun ölçüt | 🖼 `four-preconditions` **(çok panelli)** |
 | 14 | Core/LiveContext | Kendi kalemin ve ölçüt, seçtiğin dönemde | — |
@@ -2415,6 +2430,7 @@ yeşil = içerik doğru" yanılsaması yaratılmaz.
 | **M7b** 🆕 | **Ölçüt beyaz listesi** (§12-K3): metinde geçebilen tek özel ad **geniş endeks** adlarıdır (beyaz liste dosyada tutulur). Tek şirket · fon · aracı kurum adı **hâlâ yasak**; endeks adı geçen cümlede **eylem fiili** (al/sat/geç/kaydır) bulunamaz |
 | **M8** | MiniMarkdown alt kümesi dışına çıkılmaz *(link, T6.8 indikten sonra izinli)* |
 | **M9** | Ön-koşul zinciri **track içinde** kalır; **setler arası sert kilit yok** (`15` §6.3) |
+| **M10** 🆕 | **Tuzak blokları `DepthTier.Core`** — başlangıç seviyesinde katlanmaz (§2.4; `Example_blocks_declare_a_figure_and_traps_stay_in_core_tier`) |
 
 ### 9.2 İnsan gözden geçirmesi (İ) — test edilemez
 

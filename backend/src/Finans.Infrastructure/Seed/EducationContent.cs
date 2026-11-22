@@ -2838,6 +2838,303 @@ internal static class EducationContent
         bildirmez. Karar senindir.
         """));
 
+    /// <summary>
+    /// S0-L8 · <b>Vade, hedef ve portföy</b> (künye: <c>16-CURRICULUM.md</c> §S0-L8, GD-003).
+    /// Tanıtılan kavramlar: <c>time-horizon</c> · <c>portfolio</c> · <c>position</c> · <c>weight</c>.
+    ///
+    /// <para>⚠ <b>Yasal (künye yasal notu):</b> hedef ve vade anlatımı <b>kişiye özel plan
+    /// üretmez</b> — "senin vaden şu olmalı" yok. Ders yalnız <i>vade nasıl belirlenir</i>
+    /// sorusunun çerçevesini verir.</para>
+    ///
+    /// <para><b>LiveContext:</b> künye (GD-003 düzeltmesiyle) mevcut anahtarları kullanır —
+    /// <c>holding_count</c> · <c>asset_class_count</c> · <c>cash_weight</c> ·
+    /// <c>stock_weight</c> · <c>concentration_top2</c>. Yeni hesap yok.</para>
+    /// </summary>
+    public static IEnumerable<LessonSection> LessonS0L8(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Önceki derste riskin kişiye göre değişmediğini, değişenin onu **taşıyabilme
+        kapasitesi** olduğunu gördük. Bu kapasitenin ilk ayağı **vade**dir. Bu ders
+        vadeyi bir hedefe bağlar, sonra bütün kalemlerin toplamına — **portföye** —
+        bakmayı öğretir. Bitirdiğinde şunları yapabileceksin:
+
+        - **Zaman ufkunu** tanımlamak ve bir hedefe vade atamak
+        - Bir portföyü **kalem · miktar · maliyet · değer · ağırlık** alanlarıyla okumak
+        - Bir portföyün **ağırlıklarını** elle hesaplamak
+        - Fiyat hareketinin ağırlıkları **hiç işlem yapmadan** nasıl değiştirdiğini göstermek
+
+        Bu ders sana hangi hedefe hangi vadeyi vermen gerektiğini söylemez; vadenin
+        **nasıl belirlendiğini** anlatır. Sonunda kısa bir test var.
+        """),
+
+        Core("""
+        ## Vade: parayı ne zaman kullanacaksın?
+
+        **Vade** (zaman ufku), bir parayı **ne zaman kullanmayı planladığına** kadar
+        geçecek süredir. Bir hedef için ayırdığın paranın vadesi, o hedefin tarihidir.
+
+        Vadeyi kabaca üç bölgeye ayırmak işe yarar:
+
+        - **Kısa vade:** birkaç ay ile bir yıl arası. Bu para yakında lazım olacak.
+        - **Orta vade:** bir ile beş yıl arası.
+        - **Uzun vade:** beş yıl ve ötesi.
+
+        Bu sınırlar bir kural değil, düşünmeye yardım eden **kaba bir cetveldir.**
+        Asıl önemli olan sayı değil, şu sorunun cevabıdır: **bu paraya ne zaman
+        ihtiyacım var?** Cevap ne kadar yakınsa, yoldaki bir dalgalanmayı beklemeye
+        o kadar az zamanın vardır.
+        """, "time-horizon-ruler"),
+
+        Ex("""
+        ## Üç hedef, üç vade
+
+        Kurgusal bir kişi düşün; aynı anda üç ayrı hedefi var:
+
+        - **Acil durum fonu:** beklenmedik bir masraf için. Ne zaman lazım olacağı
+          bilinmez — **yarın da olabilir.** Vadesi en kısadır: her an.
+        - **Ev peşinatı:** yaklaşık **üç yıl** sonra. Orta vade.
+        - **Emeklilik birikimi:** **yirmi beş yıl** sonra. Uzun vade.
+
+        Aynı kişi, aynı gün, üç farklı vadeye sahip. Yani vade **kişinin** bir
+        özelliği değildir; **her hedefin** ayrı bir vadesi vardır. "Ben uzun vadeli
+        bir yatırımcıyım" cümlesi bu yüzden eksiktir — doğrusu "**bu hedefim** uzun
+        vadeli" demektir.
+
+        Bir hedefin vadesini öğrenmenin yolu basittir: hedefin **tarihini** sor.
+        """, "three-goals"),
+
+        Trap("""
+        ## "Uzun vade = beklemek" yanılgısı
+
+        Sık duyulan bir öneri: "Uzun vadeli düşün, bekle." Bu cümle vadeyi bir
+        **tercih** gibi gösterir — sanki istersen her parayı uzun vadeye
+        çevirebilirmişsin gibi.
+
+        Oysa vade **ihtiyaçtan** gelir, tercihten değil. Altı ay sonra ödenecek bir
+        okul taksiti için ayrılmış para, sen ne kadar sabırlı olursan ol, kısa
+        vadelidir: altı ay sonra o para **orada olmak zorundadır.** O parayı "uzun
+        vade" diye geniş dalgalanan bir kaleme koymak sabır değil, vade ile kalemi
+        **uyumsuz** eşleştirmektir.
+
+        Tersi de geçerlidir: yirmi beş yıl dokunulmayacak bir parayı kısa vadeli gibi
+        tutmak da bir uyumsuzluktur — sadece bedeli daha sessiz ödenir.
+
+        Doğru soru "ne kadar beklemeliyim?" değil, **"bu paraya ne zaman ihtiyacım
+        var?"**dır.
+        """),
+
+        Core("""
+        ## Portföy = kalemlerin toplamı
+
+        **Portföy**, sahip olduğun bütün yatırım kalemlerinin **toplamıdır.**
+        Mevduat, altın, döviz, hisse, fon, bireysel emeklilik — hangisini tutuyorsan
+        hepsi aynı resmin parçasıdır.
+
+        Portföyün içindeki her bir parçaya **kalem** (pozisyon) denir. "5 gram altın"
+        bir kalemdir; "bir vadeli mevduat hesabı" bir kalemdir; "bir fondaki paylar"
+        bir kalemdir.
+
+        Bu bakışın önemi şudur: önceki derslerde tek tek kalemlerin riskine ve
+        getirisine baktık. Ama senin hayatını etkileyen tek bir kalem değil,
+        **hepsinin birlikte nasıl davrandığıdır.** Bir kalem düşerken diğeri
+        yükseliyorsa, toplamda olan biten tek tek kalemlere bakarak anlaşılmaz.
+        """, "portfolio-anatomy"),
+
+        Core("""
+        ## Bir kalemin beş alanı
+
+        Bir kalemi tam okumak için beş alana bakılır:
+
+        | Alan | Ne anlatır? | Örnek |
+        | --- | --- | --- |
+        | Kalem | Neye sahipsin? | B kalemi |
+        | Miktar | Ne kadar? | 10 birim |
+        | Maliyet | Ödediğin toplam | 25.000 ₺ |
+        | Değer | Bugün ne ediyor? | 30.000 ₺ |
+        | Ağırlık | Toplamın ne kadarı? | %30 |
+
+        **Maliyet** geçmişte ödediğin tutardır ve değişmez (yeni alım yapmadıkça).
+        **Değer** bugünkü fiyattan hesaplanır ve her fiyat hareketinde değişir.
+        İkisi arasındaki fark, o kalemin **kâğıt üzerindeki** kazancı ya da kaybıdır.
+
+        **Ağırlık** ise kalemin kendisi hakkında değil, **portföy içindeki yeri**
+        hakkında bilgi verir: bu kalem toplamın ne kadarını oluşturuyor?
+        """, "position-fields"),
+
+        Ex("""
+        ## Üç kalemlik portföyün ağırlıkları
+
+        Kurgusal bir portföyde üç kalem var. Bugünkü değerleri:
+
+        - **A kalemi:** 50.000 ₺
+        - **B kalemi:** 30.000 ₺
+        - **C kalemi:** 20.000 ₺
+
+        **1. Toplamı bul:** 50.000 + 30.000 + 20.000 = **100.000 ₺**
+
+        **2. Her kalemi toplama böl:**
+
+        - A: 50.000 ÷ 100.000 = 0,50 → **%50**
+        - B: 30.000 ÷ 100.000 = 0,30 → **%30**
+        - C: 20.000 ÷ 100.000 = 0,20 → **%20**
+
+        **3. Kontrol et:** %50 + %30 + %20 = **%100.** Ağırlıkların toplamı her zaman
+        %100'dür; değilse bir kalem unutulmuş ya da yanlış toplanmıştır.
+
+        Ağırlık **değer** üzerinden hesaplanır, maliyet üzerinden değil — çünkü
+        sorduğumuz soru "bugün portföyün ne kadarı bu kalemde?" sorusudur.
+        """, "weight-share"),
+
+        Trap("""
+        ## "Kalem sayısı çoksa çeşitlenmiştir" yanılgısı
+
+        On kalemi olan bir portföy, üç kalemi olandan daha "dağıtılmış" görünür.
+        Ama kalem **sayısı** tek başına bir şey söylemez.
+
+        Kurgusal iki portföy düşün:
+
+        - **Birinci portföy:** beş kalem — ama beşi de aynı varlık sınıfından ve
+          aynı sektörden. Hepsi aynı haberden, aynı yönde etkilenir.
+        - **İkinci portföy:** üç kalem — her biri farklı bir varlık sınıfından.
+
+        Birinci portföyde kalem çok, **farklılık** az. Kötü bir gün geldiğinde beş
+        kalem birlikte hareket eder; pratikte tek bir büyük kalem gibi davranırlar.
+
+        Çeşitlendirmeyi belirleyen, kaç kalem tuttuğun değil, kalemlerin **birbirinden
+        ne kadar farklı davrandığıdır.** Bu konuya bir sonraki sette ayrıntısıyla
+        döneceğiz; şimdilik akılda kalacak cümle: **çok kalem ≠ çeşitlilik.**
+        """, "many-but-same"),
+
+        Ctx("""
+        ## Nirengi ekranı: hangi sayı nerede?
+
+        Bu dersteki kavramların her biri uygulamada bir yere karşılık gelir:
+
+        - **Genel Bakış** sayfası portföyün **toplamını** gösterir: toplam değer,
+          toplam getiri ve varlık sınıflarına göre **dağılım** halkası. Halkadaki her
+          dilim, o sınıfın **ağırlığıdır.**
+        - **Varlıklarım** sayfasındaki tablo, her **kalemi** tek satırda gösterir.
+          Sütunlar bu dersteki beş alanın karşılığıdır: **Varlık · Miktar · Maliyet ·
+          Değer · Ağırlık** — yanında da kalemin getirisi.
+        - Kalem adının altındaki küçük satır **ortalama birim maliyettir**: o kaleme
+          birden fazla kez alım yaptıysan, ödediğin fiyatların ağırlıklı ortalaması.
+
+        Bu sayıların hiçbirini bir dil modeli üretmez; hepsi uygulamanın kodunda,
+        senin girdiğin işlemlerden ve güncel fiyatlardan **hesaplanır.**
+        """, "app-screen-map"),
+
+        ExDeep("""
+        ## Aynı portföy, iki baz para birimi
+
+        Nirengi'de toplamı hangi para biriminde göreceğini sen seçersin: TL, USD ya
+        da EUR. Bu seçime **baz para birimi** denir. Kurgusal bir örnek:
+
+        Portföyde iki kalem var — **60.000 ₺** mevduat ve **1.000 $** döviz. Kur
+        40 ₺ iken:
+
+        | | TL bazında | USD bazında |
+        | --- | --- | --- |
+        | Mevduat | 60.000 ₺ | 1.500 $ |
+        | Döviz | 40.000 ₺ | 1.000 $ |
+        | Toplam | 100.000 ₺ | 2.500 $ |
+
+        Ağırlıklar iki bazda da **aynıdır:** %60 ve %40. Aynı an, aynı resim.
+
+        Şimdi bir yıl sonra kur **50 ₺** olmuş, kalemlere hiç dokunulmamış olsun
+        (mevduatın faizini bu örnekte bir kenara bırakalım).
+        TL bazında toplam 60.000 + 50.000 = **110.000 ₺** (+%10). USD bazında ise
+        1.200 + 1.000 = **2.200 $** (−%12). Kalemler aynı; değişen yalnızca kur —
+        ve "portföyüm büyüdü mü?" sorusunun cevabı **hangi birimle ölçtüğüne** göre
+        farklıdır. Bu konuya portföyünü okumak setinde döneceğiz.
+        """, "two-base-currencies"),
+
+        Trap("""
+        ## "Toplam değer arttıysa her kalem kazandırdı" yanılgısı
+
+        Portföyün toplam değeri bir ayda %5 yükseldi diyelim. Bu, kalemlerin
+        hepsinin yükseldiği anlamına gelmez.
+
+        Toplam, kalemlerin **ağırlıklı** sonucudur. Büyük ağırlıklı bir kalemin
+        güçlü yükselişi, küçük ağırlıklı bir kalemin sert düşüşünü toplamda
+        **gizleyebilir.** Kurgusal örnek: %80 ağırlıklı kalem %10 yükseldi, %20
+        ağırlıklı kalem %15 düştü. Toplam: 0,80 × %10 + 0,20 × (−%15) = %8 − %3 =
+        **+%5.** Toplam yeşil; ama kalemlerden biri kırmızı.
+
+        Bunun tersi de olur: toplam düşerken bir kalem yükselmiş olabilir.
+
+        Bu yüzden toplam rakama bakmak yetmez; **kalem tablosuna da** bakılır.
+        Toplam "ne oldu?" sorusunu, tablo "**nerede** oldu?" sorusunu cevaplar.
+        """),
+
+        Deep("""
+        ## Portföy statik değildir: fiyat ağırlığı kaydırır
+
+        Ağırlıklar bir kez belirlenip öyle kalmaz. Hiç alım satım yapmasan bile
+        **fiyatlar değiştikçe ağırlıklar da değişir.**
+
+        Az önceki üç kalemlik portföye dön: A %50, B %30, C %20 (toplam 100.000 ₺).
+        Bir süre sonra A kaleminin değeri 50.000 ₺'den **80.000 ₺**'ye çıktı; B ve C
+        yerinde saydı. Yeni toplam: 80.000 + 30.000 + 20.000 = **130.000 ₺.**
+
+        Yeni ağırlıklar:
+
+        - A: 80.000 ÷ 130.000 → **%61,5**
+        - B: 30.000 ÷ 130.000 → **%23,1**
+        - C: 20.000 ÷ 130.000 → **%15,4**
+
+        Hiçbir işlem yapılmadı — ama portföyün yarısı olan A, artık **%61,5**'i.
+        Bu, portföyün **riskinin de** sessizce değiştiği anlamına gelir: toplam
+        artık A'nın hareketine çok daha bağlı.
+
+        Bu kaymaya **ağırlık kayması** denir ve ilginç bir şeyi gösterir: en çok
+        yükselen kalem, zamanla portföyün en büyük kalemi hâline gelir. Bunun ne
+        anlama geldiğine çeşitlendirme dersinde döneceğiz.
+        """, "weights-move-by-themselves"),
+
+        Live("""
+        ## Senin portföyünde
+
+        Bu dersin alanlarıyla kendi portföyüne bak:
+
+        - Portföyünde **{{holding_count}}** kalem var.
+        - Bu kalemler **{{asset_class_count}}** farklı varlık sınıfına dağılmış.
+        - Nakit kalemlerin ağırlığı **{{cash_weight}}**.
+        - Hisse kalemlerinin ağırlığı **{{stock_weight}}**.
+        - En büyük iki kalemin portföydeki payı: **{{concentration_top2}}**.
+
+        Bu sayılar bir değerlendirme değil, bir **okuma**dır: hangi kalemin büyük ya da
+        küçük olması gerektiğini söylemez. Ama bir önceki adımı hatırla — bu ağırlıklar,
+        sen hiçbir şey yapmasan da fiyatlarla birlikte **kayar.** Ara ara tabloya
+        bakmanın sebebi budur.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Hesap yöntemi.** Bu ders uygulamanın kendi ekranını anlattığı için kaynağı
+        bir kurum değil, **hesabın kendisidir:**
+
+        - **Değer** = miktar × güncel birim fiyat (baz para birimine çevrilmiş)
+        - **Ağırlık** = kalemin değeri ÷ portföyün toplam değeri
+        - **Ortalama maliyet** = alımların toplam tutarı ÷ toplam miktar
+
+        Bu formüllerin hepsi uygulamanın **kodunda, deterministik olarak** çalışır.
+        **Sayılar bir dil modeli tarafından üretilmez**; dil modeli varsa yalnız
+        hesaplanmış sonuçları açıklar.
+
+        **Örnek sayılar kurgusaldır.** 50.000 ₺, 100.000 ₺, 40 ₺ kur, üç yıl, yirmi
+        beş yıl gibi rakamların tamamı ve "A/B/C kalemi" etiketleri mekanizmayı
+        göstermek için **seçilmiş örneklerdir**; gerçek bir varlığın ya da kişinin
+        verisi değildir. Vade bölgelerinin sınırları da düşünmeye yardım eden kaba
+        bir ayrımdır, bir kural değildir.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders vadenin nasıl belirlendiğini ve bir
+        portföyün nasıl okunduğunu anlatır; senin hedeflerine hangi vadenin uyduğunu,
+        hangi kalemin ne ağırlıkta olması gerektiğini söylemez. Karar senindir.
+        """));
+
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
     // Ders 1'inki T5E.2'de geldi. Her soruda eğitici `Explanation` var; doğru şık
     // ve açıklama YALNIZCA deneme sonucunda açılır (T5E.3 sözleşmesi).
@@ -3452,6 +3749,92 @@ internal static class EducationContent
                  ("Değişen şey, belirsizliği taşıyabilme kapasitesidir (vade · tampon · ağırlık)", true),
                  ("Doğru ifade \"bu riski taşıyabilecek durumdayım\" olmalıdır", true),
                  ("Bir kalem, ona güvenen kişinin elinde daha az dalgalanır", false)]),
+        ]);
+
+        // ── S0-L8 · Vade, hedef ve portföy (GD-003) ─────────────────────────
+        // ⚠ Hiçbir seçenek kişiye özel vade ya da ağırlık önermez (künye yasal notu).
+        yield return ("lesson-s0l8", "quiz-s0l8", "Vade, Hedef ve Portföy — Mini Test",
+        [
+            // ── Kolay: portföy · kalem · ağırlık · vade tanımları ────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Bir kalemin \"ağırlığı\" neyi anlatır?",
+                "Ağırlık, kalemin bugünkü değerinin portföyün toplam değerine oranıdır — yani o kalemin " +
+                "toplamın ne kadarını oluşturduğu. Kalemin kendi getirisi ya da maliyeti hakkında değil, " +
+                "portföy içindeki yeri hakkında bilgi verir.",
+                [("Kalemin ne kadar getiri sağladığını", false),
+                 ("Kalemin bugünkü değerinin portföy toplamına oranını", true),
+                 ("Kalem için ödenen toplam tutarı", false),
+                 ("Kalemin kaç birimden oluştuğunu", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Bir portföydeki bütün kalemlerin ağırlıkları toplandığında sonuç her zaman %100'dür.",
+                "Doğru. Her ağırlık, kalem değerinin aynı toplama bölünmesiyle bulunur; bu yüzden hepsinin " +
+                "toplamı toplamın kendisine, yani %100'e eşittir. Toplam %100 çıkmıyorsa bir kalem unutulmuş " +
+                "ya da yanlış hesaplanmıştır.",
+                [("Doğru", true), ("Yanlış", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "\"Vade\" (zaman ufku) bir hedef için neyi ifade eder?",
+                "Vade, o hedef için ayrılan parayı ne zaman kullanmayı planladığına kadar geçecek süredir. " +
+                "Bir hedefin vadesini öğrenmenin yolu, hedefin tarihini sormaktır.",
+                [("Paranın bir kalemde ne kadar süredir durduğunu", false),
+                 ("Paranın ne zaman kullanılacağına kadar geçecek süreyi", true),
+                 ("Bir yatırımın ne kadar sürede kâra geçtiğini", false),
+                 ("Kişinin yaşına göre belirlenen sabit bir süreyi", false)]),
+
+            // ── Orta: ağırlık hesabı, vade atama ─────────────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir portföyde üç kalem var: 45.000 ₺, 35.000 ₺ ve 20.000 ₺. Birinci kalemin ağırlığı nedir?",
+                "Önce toplam bulunur: 45.000 + 35.000 + 20.000 = 100.000 ₺. Sonra kalem toplama bölünür: " +
+                "45.000 ÷ 100.000 = 0,45 → %45.",
+                [("%33", false), ("%45", true), ("%55", false), ("%60", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Biri sekiz ay sonra ödenecek bir okul taksiti için para ayırıyor. Bu paranın vadesi hakkında ne söylenebilir?",
+                "Vade ihtiyaçtan gelir: para sekiz ay sonra orada olmak zorunda, dolayısıyla vadesi kısadır. " +
+                "Kişi ne kadar sabırlı olursa olsun, bu paranın vadesini tercihle uzatamaz.",
+                [("Kişi isterse uzun vadeli olarak düşünebilir", false),
+                 ("Kısa vadelidir; çünkü para sekiz ay sonra lazım", true),
+                 ("Vadesi, kişinin diğer hedeflerinin ortalamasıdır", false),
+                 ("Okul taksitlerinin vadesi her zaman beş yıldır", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Medium,
+                "Ağırlık, kalemin maliyeti üzerinden değil bugünkü değeri üzerinden hesaplanır.",
+                "Doğru. Ağırlık \"bugün portföyün ne kadarı bu kalemde?\" sorusunu cevaplar; bu yüzden güncel " +
+                "değer kullanılır. Maliyet geçmişte ödenen tutardır ve bugünkü dağılımı göstermez.",
+                [("Doğru", true), ("Yanlış", false)]),
+
+            // ── Zor: kalem sayısı ≠ çeşitlilik, ağırlık kayması, toplam yanılgısı ─
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Birinci portföyde beş kalem var ve hepsi aynı varlık sınıfından, aynı sektörden. İkinci portföyde " +
+                "üç kalem var ve her biri farklı bir sınıftan. Hangi çıkarım doğrudur?",
+                "Çeşitlendirmeyi kalem sayısı değil, kalemlerin birbirinden ne kadar farklı davrandığı belirler. " +
+                "Birinci portföyün beş kalemi aynı haberden aynı yönde etkilenir; pratikte tek bir büyük kalem " +
+                "gibi davranırlar. Çok kalem ≠ çeşitlilik.",
+                [("Birinci portföy daha çeşitlidir, çünkü daha çok kalemi var", false),
+                 ("Kalem sayısı tek başına çeşitliliği göstermez; birinci portföyün kalemleri birlikte hareket eder", true),
+                 ("İki portföy eşit derecede çeşitlidir", false),
+                 ("Çeşitlilik yalnızca toplam değere bakılarak anlaşılır", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Ağırlıkları %50 · %30 · %20 olan 100.000 ₺'lik bir portföyde yalnız birinci kalemin değeri " +
+                "50.000 ₺'den 80.000 ₺'ye çıkıyor; hiç alım satım yapılmıyor. Birinci kalemin yeni ağırlığı yaklaşık kaçtır?",
+                "Yeni toplam 80.000 + 30.000 + 20.000 = 130.000 ₺. Birinci kalem: 80.000 ÷ 130.000 ≈ %61,5. " +
+                "Hiç işlem yapılmadan ağırlık %50'den %61,5'e kaydı — fiyat hareketi ağırlıkları kendi başına değiştirir.",
+                [("%50 — işlem yapılmadığı için ağırlık değişmez", false),
+                 ("Yaklaşık %61,5", true),
+                 ("%80", false),
+                 ("%65", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
+                "Bir ayda portföyün toplam değeri %5 yükseldi. Bundan hangileri çıkarılabilir? (Birden fazla doğru)",
+                "Toplam, kalemlerin ağırlıklı sonucudur: büyük ağırlıklı bir kalemin yükselişi, küçük ağırlıklı bir " +
+                "kalemin düşüşünü gizleyebilir. Bu yüzden toplamdan her kalemin yükseldiği sonucu çıkmaz; kalem " +
+                "tablosuna bakmak gerekir. Ayrıca fiyatlar değiştiği için ağırlıklar da büyük olasılıkla kaymıştır.",
+                [("Kalemlerden bazıları düşmüş olabilir", true),
+                 ("Hangi kalemde ne olduğunu görmek için kalem tablosuna bakmak gerekir", true),
+                 ("Fiyatlar değiştiği için kalemlerin ağırlıkları da kaymış olabilir", true),
+                 ("Portföydeki her kalem en az %5 yükselmiştir", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

@@ -1986,9 +1986,331 @@ function RiskCarryingCapacity() {
   );
 }
 
+/** S0-L8 · Yatay yığılmış çubuk: ağırlık figürlerinin ortak çizimi (yalnız statik örnek veri). */
+function WeightStack({
+  x,
+  y,
+  w,
+  parts,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  parts: { name: string; share: number; label: string }[];
+}) {
+  const classes = ["fig-seg-lead", "fig-seg", "fig-bar-muted"];
+  // Başlangıç noktaları önceden hesaplanır (render sırasında değişken mutasyonu yok).
+  const starts = parts.map((_, i) => x + parts.slice(0, i).reduce((sum, q) => sum + w * q.share, 0));
+  return (
+    <g>
+      {parts.map((p, i) => {
+        const pw = w * p.share;
+        const x0 = starts[i];
+        return (
+          <g key={p.name}>
+            <rect x={x0} y={y} width={Math.max(pw - 2, 2)} height="22" rx="3" className={classes[i % classes.length]} />
+            <text x={x0 + pw / 2} y={y + 15} className="fig-label" textAnchor="middle">
+              {p.name}
+            </text>
+            <text x={x0 + pw / 2} y={y + 36} className="fig-value" textAnchor="middle">
+              {p.label}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+/** S0-L8 · Vade cetveli: kısa · orta · uzun — kaba bölgeler, kural değil. */
+function TimeHorizonRuler() {
+  const zones = [
+    { x: 20, w: 70, name: "kısa", span: "aylar – 1 yıl" },
+    { x: 92, w: 96, name: "orta", span: "1 – 5 yıl" },
+    { x: 190, w: 110, name: "uzun", span: "5 yıl ve ötesi" },
+  ];
+  return (
+    <Figure
+      label="Bir zaman cetveli üç bölgeye ayrılmış: kısa vade birkaç ay ile bir yıl, orta vade bir ile beş yıl, uzun vade beş yıl ve ötesi"
+      caption="Vade, paraya ne zaman ihtiyaç duyacağına kadar geçecek süredir. Bölge sınırları kabadır; asıl soru 'ne zaman lazım?'"
+      height={132}
+    >
+      {zones.map((z, i) => (
+        <g key={z.name}>
+          <rect x={z.x} y={34} width={z.w} height="24" rx="4" className={i === 0 ? "fig-seg-lead" : "fig-seg"} opacity={1 - i * 0.2} />
+          <text x={z.x + z.w / 2} y={50} className="fig-label" textAnchor="middle">
+            {z.name}
+          </text>
+          <text x={z.x + z.w / 2} y={76} className="fig-value" textAnchor="middle">
+            {z.span}
+          </text>
+        </g>
+      ))}
+      <text x={20} y={24} className="fig-value">bugün</text>
+      <line x1="20" y1="96" x2="300" y2="96" className="fig-axis" />
+      <path d="M294 91 L302 96 L294 101" className="fig-line-flat" fill="none" />
+      <text x={160} y={118} className="fig-label" textAnchor="middle">paranın kullanılacağı ana kadar geçen süre</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Üç hedef, üç vade (çok panelli): aynı kişi, aynı gün, farklı tarihler. */
+function ThreeGoals() {
+  const goals = [
+    { x: 6, title: "Acil durum fonu", when: "her an", len: 6, cls: "fig-bar-neg" },
+    { x: 110, title: "Ev peşinatı", when: "~3 yıl", len: 34, cls: "fig-bar-muted" },
+    { x: 214, title: "Emeklilik", when: "~25 yıl", len: 80, cls: "fig-bar-pos" },
+  ];
+  return (
+    <Figure
+      label="Üç panel: acil durum fonunun vadesi her an, ev peşinatının yaklaşık üç yıl, emeklilik birikiminin yaklaşık yirmi beş yıl"
+      caption="Vade kişinin değil, hedefin özelliğidir. Bir hedefin vadesini öğrenmek için tarihini sor."
+      height={150}
+    >
+      {goals.map((g) => (
+        <g key={g.title}>
+          <Panel x={g.x} y={16} w={100} h={106} title={g.title} />
+          <rect x={g.x + 10} y={62} width={g.len} height="14" rx="3" className={g.cls} />
+          <text x={g.x + 50} y={100} className="fig-big" textAnchor="middle">
+            {g.when}
+          </text>
+        </g>
+      ))}
+      <text x={160} y={142} className="fig-label" textAnchor="middle">aynı kişi · üç hedef · üç vade</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Portföyün anatomisi: tek tek kalemler → tek bir toplam. */
+function PortfolioAnatomy() {
+  const items = ["mevduat", "altın", "döviz", "fon", "BES"];
+  return (
+    <Figure
+      label="Beş ayrı kalem kutusu oklarla tek bir portföy toplamı kutusunda birleşiyor"
+      caption="Portföy, sahip olduğun bütün kalemlerin toplamıdır. Seni etkileyen tek bir kalem değil, hepsinin birlikte davranışı."
+      height={150}
+    >
+      {items.map((name, i) => (
+        <g key={name}>
+          <rect x={10 + i * 61} y={16} width={56} height="26" rx="4" className="fig-card" />
+          <text x={38 + i * 61} y={33} className="fig-value" textAnchor="middle">
+            {name}
+          </text>
+          <path d={`M${38 + i * 61} 44 L160 96`} className="fig-line-flat" fill="none" />
+        </g>
+      ))}
+      <rect x={90} y={96} width={140} height="36" rx="6" className="fig-seg-lead" />
+      <text x={160} y={119} className="fig-label" textAnchor="middle">portföy = toplam</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Bir kalemin beş alanı (çok panelli): kalemin kendisi ↔ portföy içindeki yeri. */
+function PositionFields() {
+  const own = [
+    { k: "Kalem", v: "B kalemi" },
+    { k: "Miktar", v: "10 birim" },
+    { k: "Maliyet", v: "25.000 ₺" },
+    { k: "Değer", v: "30.000 ₺" },
+  ];
+  return (
+    <Figure
+      label="İki panel: solda kalemin kendisine ait dört alan — kalem, miktar, maliyet, değer; sağda portföy içindeki yeri — ağırlık yüzde otuz"
+      caption="Dört alan kalemin kendisini anlatır; ağırlık ise o kalemin portföy içindeki yerini. Örnek sayılar kurgusaldır."
+      height={160}
+    >
+      <Panel x={6} y={16} w={184} h={124} title="kalemin kendisi" />
+      {own.map((f, i) => (
+        <g key={f.k}>
+          <text x={18} y={50 + i * 22} className="fig-label">
+            {f.k}
+          </text>
+          <text x={180} y={50 + i * 22} className="fig-value" textAnchor="end">
+            {f.v}
+          </text>
+        </g>
+      ))}
+      <Panel x={198} y={16} w={116} h={124} title="portföydeki yeri" />
+      <text x={256} y={72} className="fig-label" textAnchor="middle">Ağırlık</text>
+      <text x={256} y={98} className="fig-big" textAnchor="middle">%30</text>
+      <rect x={214} y={112} width={84} height="8" rx="3" className="fig-bar-muted" />
+      <rect x={214} y={112} width={25} height="8" rx="3" className="fig-seg-lead" />
+      <text x={160} y={154} className="fig-value pos" textAnchor="middle">değer − maliyet = 5.000 ₺ kâğıt üzerinde</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Ağırlık payı: 50.000 / 30.000 / 20.000 ₺ → %50 · %30 · %20. */
+function WeightShare() {
+  return (
+    <Figure
+      label="Toplamı 100.000 lira olan portföy çubuğu: A kalemi yüzde elli, B yüzde otuz, C yüzde yirmi"
+      caption="Ağırlık = kalemin değeri ÷ toplam değer. Ağırlıkların toplamı her zaman %100'dür."
+      height={128}
+    >
+      <text x={160} y={22} className="fig-label" textAnchor="middle">50.000 + 30.000 + 20.000 = 100.000 ₺</text>
+      <WeightStack
+        x={20}
+        y={34}
+        w={280}
+        parts={[
+          { name: "A", share: 0.5, label: "%50" },
+          { name: "B", share: 0.3, label: "%30" },
+          { name: "C", share: 0.2, label: "%20" },
+        ]}
+      />
+      <text x={160} y={110} className="fig-value" textAnchor="middle">%50 + %30 + %20 = %100</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Çok kalem ≠ çeşitlilik: beş benzer kalem ↔ üç farklı kalem. */
+function ManyButSame() {
+  const kinds = ["fig-seg-lead", "fig-bar-pos", "fig-bar-muted"];
+  return (
+    <Figure
+      label="İki panel: solda aynı türden beş kalem birlikte hareket ediyor, sağda üç farklı türden kalem farklı davranıyor"
+      caption="Kalem sayısı değil, kalemlerin birbirinden ne kadar farklı davrandığı belirleyicidir."
+      height={156}
+    >
+      <Panel x={6} y={16} w={150} h={114} title="5 kalem · tek tür" />
+      {[0, 1, 2, 3, 4].map((i) => (
+        <g key={i}>
+          <circle cx={30 + i * 26} cy="60" r="9" className="fig-seg-lead" />
+          <path d={`M${22 + i * 26} 98 L${30 + i * 26} 84 L${38 + i * 26} 98`} className="fig-line-volatile" fill="none" />
+        </g>
+      ))}
+      <text x={81} y={122} className="fig-value neg" textAnchor="middle">hep birlikte hareket</text>
+
+      <Panel x={164} y={16} w={150} h={114} title="3 kalem · üç tür" />
+      {[0, 1, 2].map((i) => (
+        <circle key={i} cx={199 + i * 40} cy="60" r="11" className={kinds[i]} />
+      ))}
+      <path d="M189 98 L199 84 L209 98" className="fig-line-volatile" fill="none" />
+      <path d="M229 91 L249 91" className="fig-line-flat" />
+      <path d="M269 86 L279 96 L289 86" className="fig-line-steady" fill="none" />
+      <text x={239} y={122} className="fig-value pos" textAnchor="middle">farklı davranış</text>
+
+      <text x={160} y={148} className="fig-label" textAnchor="middle">çok kalem ≠ çeşitlilik</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Nirengi ekran haritası (çok panelli): Genel Bakış ↔ Varlıklarım. */
+function AppScreenMap() {
+  const cols = ["Varlık", "Miktar", "Maliyet", "Değer", "Ağırlık"];
+  return (
+    <Figure
+      label="İki panel: Genel Bakış sayfasında toplam değer ve dağılım halkası; Varlıklarım sayfasında Varlık, Miktar, Maliyet, Değer, Ağırlık sütunlu kalem tablosu"
+      caption="Genel Bakış toplamı ve sınıf ağırlıklarını, Varlıklarım her kalemin beş alanını gösterir. Sayıların hepsi kodda hesaplanır."
+      height={168}
+    >
+      <Panel x={6} y={16} w={112} h={130} title="Genel Bakış" />
+      <rect x={18} y={34} width={88} height="22" rx="3" className="fig-seg" />
+      <text x={62} y={49} className="fig-value" textAnchor="middle">toplam değer</text>
+      <circle cx="62" cy="98" r="24" className="fig-line-flat" fill="none" strokeWidth="10" opacity="0.5" />
+      <path d="M62 74 A24 24 0 0 1 84 106" className="fig-line-steady" fill="none" strokeWidth="10" />
+      <text x={62} y={138} className="fig-value" textAnchor="middle">dağılım = ağırlık</text>
+
+      <Panel x={126} y={16} w={188} h={130} title="Varlıklarım" />
+      {cols.map((c, i) => (
+        <text key={c} x={138 + i * 36} y={46} className="fig-value">
+          {c}
+        </text>
+      ))}
+      <line x1="134" y1="52" x2="306" y2="52" className="fig-line-flat" />
+      {[0, 1, 2].map((r) => (
+        <g key={r}>
+          <rect x={138} y={60 + r * 22} width={30} height="8" rx="2" className="fig-bar-muted" />
+          <rect x={174} y={60 + r * 22} width={22} height="8" rx="2" className="fig-bar-muted" />
+          <rect x={210} y={60 + r * 22} width={26} height="8" rx="2" className="fig-bar-muted" />
+          <rect x={246} y={60 + r * 22} width={26} height="8" rx="2" className="fig-bar-muted" />
+          <rect x={282} y={60 + r * 22} width={[22, 14, 8][r]} height="8" rx="2" className="fig-seg-lead" />
+        </g>
+      ))}
+      <text x={220} y={138} className="fig-value" textAnchor="middle">her satır bir kalem</text>
+      <text x={160} y={162} className="fig-label" textAnchor="middle">toplam ↔ kalemler</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Aynı portföy, iki baz para birimi: kur 40 → 50, kalemler aynı. */
+function TwoBaseCurrencies() {
+  return (
+    <Figure
+      label="İki sütun: TL bazında toplam 100.000 liradan 110.000 liraya yüzde on artıyor; USD bazında aynı portföy 2.500 dolardan 2.200 dolara yüzde on iki azalıyor"
+      caption="Kalemlere dokunulmadı, yalnız kur değişti. 'Portföyüm büyüdü mü?' sorusunun cevabı ölçü birimine bağlı. Örnek kurgusaldır."
+      height={156}
+    >
+      <text x={90} y={20} className="fig-label" textAnchor="middle">TL bazında</text>
+      <text x={230} y={20} className="fig-label" textAnchor="middle">USD bazında</text>
+      <text x={20} y={52} className="fig-value">kur 40</text>
+      <rect x={60} y={40} width={60} height="18" rx="3" className="fig-bar-muted" />
+      <text x={128} y={53} className="fig-value">100.000 ₺</text>
+      <rect x={200} y={40} width={60} height="18" rx="3" className="fig-bar-muted" />
+      <text x={268} y={53} className="fig-value">2.500 $</text>
+
+      <text x={20} y={96} className="fig-value">kur 50</text>
+      <rect x={60} y={84} width={66} height="18" rx="3" className="fig-bar-pos" />
+      <text x={132} y={97} className="fig-value pos">+%10</text>
+      <rect x={200} y={84} width={53} height="18" rx="3" className="fig-bar-neg" />
+      <text x={258} y={97} className="fig-value neg">−%12</text>
+      <text x={90} y={118} className="fig-value" textAnchor="middle">110.000 ₺</text>
+      <text x={230} y={118} className="fig-value" textAnchor="middle">2.200 $</text>
+
+      <text x={160} y={146} className="fig-label" textAnchor="middle">aynı kalemler · farklı ölçü</text>
+    </Figure>
+  );
+}
+
+/** S0-L8 · Ağırlık kendi kendine kayar (çok panelli): işlem yok, fiyat değişti. */
+function WeightsMoveByThemselves() {
+  return (
+    <Figure
+      label="İki panel: önce A yüzde elli, B yüzde otuz, C yüzde yirmi; A'nın değeri 80.000 liraya çıkınca hiç işlem yapılmadan A yüzde 61,5, B 23,1, C 15,4 oluyor"
+      caption="Hiç alım satım yapılmadı; yalnız A'nın fiyatı değişti. Ağırlıklar — ve portföyün riski — sessizce kaydı."
+      height={176}
+    >
+      <Panel x={6} y={16} w={308} h={64} title="önce · toplam 100.000 ₺" />
+      <WeightStack
+        x={18}
+        y={36}
+        w={284}
+        parts={[
+          { name: "A", share: 0.5, label: "%50" },
+          { name: "B", share: 0.3, label: "%30" },
+          { name: "C", share: 0.2, label: "%20" },
+        ]}
+      />
+      <Panel x={6} y={88} w={308} h={64} title="sonra · toplam 130.000 ₺" />
+      <WeightStack
+        x={18}
+        y={108}
+        w={284}
+        parts={[
+          { name: "A", share: 0.615, label: "%61,5" },
+          { name: "B", share: 0.231, label: "%23,1" },
+          { name: "C", share: 0.154, label: "%15,4" },
+        ]}
+      />
+      <text x={160} y={170} className="fig-label" textAnchor="middle">işlem yok · ağırlık değişti</text>
+    </Figure>
+  );
+}
+
 /** Anahtar → figür kayıt defteri. Bilinmeyen anahtar `null` (içerik bozulmaz). */
 const FIGURES: Record<string, () => React.JSX.Element> = {
   // Set 0 — İlk Adımlar (T6.16)
+  // S0-L8 · Vade, hedef ve portföy (GD-003)
+  "time-horizon-ruler": TimeHorizonRuler,
+  "three-goals": ThreeGoals,
+  "portfolio-anatomy": PortfolioAnatomy,
+  "position-fields": PositionFields,
+  "weight-share": WeightShare,
+  "many-but-same": ManyButSame,
+  "app-screen-map": AppScreenMap,
+  "two-base-currencies": TwoBaseCurrencies,
+  "weights-move-by-themselves": WeightsMoveByThemselves,
   // S0-L7 · Risk ne demek? (GD-001)
   "uncertainty-fan": UncertaintyFan,
   "two-paths-same-average": TwoPathsSameAverage,

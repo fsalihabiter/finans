@@ -963,6 +963,74 @@ public static class SeedData
             }
         }
 
+        // ── S0-L8 · Vade, hedef ve portföy (GD-003) ─────────────────────────────
+        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l8"), ct))
+        {
+            db.Lessons.Add(new Lesson
+            {
+                Id = Id("lesson-s0l8"),
+                TrackId = Id("track-ilk-adimlar"),
+                Slug = "vade-hedef-ve-portfoy",
+                OrderIndex = 8,
+                Title = "Vade, hedef ve portföy",
+                Summary = "Vade, paraya ne zaman ihtiyaç duyulacağından gelir; her hedefin kendi vadesi vardır. " +
+                    "Portföy kalemlerin toplamıdır ve her kalem miktar, maliyet, değer ve ağırlık alanlarıyla " +
+                    "okunur. Ağırlıklar fiyatlarla birlikte, işlem yapılmadan da kayar.",
+                BodyMarkdown =
+                    "## Vade, hedef ve portföy\n\n" +
+                    "**Vade**, bir parayı ne zaman kullanmayı planladığına kadar geçecek süredir; tercihten değil " +
+                    "**ihtiyaçtan** gelir ve her hedefin ayrı bir vadesi vardır. **Portföy**, bütün kalemlerin " +
+                    "toplamıdır. Her kalem beş alanla okunur: **kalem · miktar · maliyet · değer · ağırlık.** " +
+                    "**Ağırlık** = kalemin değeri ÷ portföyün toplam değeri; tüm ağırlıkların toplamı %100'dür. " +
+                    "Fiyatlar değiştikçe ağırlıklar hiç işlem yapılmadan da **kayar.** Kalem sayısının çok olması " +
+                    "çeşitlilik demek değildir. Ders kişiye özel bir vade ya da dağılım önermez.",
+                EstimatedMinutes = 8,
+                Level = LessonLevel.Beginner,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // Ön-koşul: S0-L8, S0-L7'yi ister (track içi zincir).
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s0l8") && p.PrerequisiteLessonId == Id("lesson-s0l7"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s0l8"),
+                PrerequisiteLessonId = Id("lesson-s0l7"),
+            });
+            changed = true;
+        }
+
+        // Kavramlar: S0-L8 dört kavram tanıtır (vade · portföy · kalem · ağırlık).
+        var s0l8Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-time-horizon", "time-horizon", "Vade (Zaman Ufku)"),
+            ("tag-portfolio", "portfolio", "Portföy"),
+            ("tag-position", "position", "Kalem (Pozisyon)"),
+            ("tag-weight", "weight", "Ağırlık"),
+        };
+        foreach (var (tagId, key, label) in s0l8Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s0l8") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s0l8"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
         if (changed)
             await db.SaveChangesAsync(ct);
     }
@@ -980,6 +1048,7 @@ public static class SeedData
             (Id("lesson-s0l5"), EducationContent.LessonS0L5), // T6.16 — Set 0 Ders 5
             (Id("lesson-s0l6"), EducationContent.LessonS0L6), // T6.16 — Set 0 Ders 6
             (Id("lesson-s0l7"), EducationContent.LessonS0L7), // GD-001 — Set 0 Ders 7
+            (Id("lesson-s0l8"), EducationContent.LessonS0L8), // GD-003 — Set 0 Ders 8
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),
