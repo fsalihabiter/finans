@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T14:58:44Z · **69 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T15:00:50Z · **70 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -20,7 +20,7 @@
 | #74 | INC-001 — 4 entegrasyon testi ortam hatasıyla kırmızı (health + observability) | Bug | 1 | infra | — | — | kind:debt |
 | #75 | INC-002 — INV-04 ile GD "review" durumu çelişiyor (ADM çerçeve sorunu) | Bug | 5 | adm | — | — | — |
 
-## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  35 açık
+## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  36 açık
 
 | # | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
 |---|---|---|---|---|---|---|---|
@@ -59,6 +59,7 @@
 | #40 | T6.13 — Set 5 içerikleri: Türkiye Gerçekleri (4 ders) | Feature | 5 | education | — | #46 | — |
 | #41 | T6.14 — LLM ders yorumu katmanı (opsiyonel, D-018 ile düşük öncelik) | Feature | 6 | backend | — | — | — |
 | #194 | T6.28 — LiveContext token'ları düz metin içinde: satır düşünce cümle bozuluyor (11 ders) | Bug | 2 | education | — | — | kind:debt |
+| #195 | T6.29 — S0-L9 kaynaklarının belge+tarih teyidi (SPK · Borsa İstanbul) | Task | 3 | education | — | — | kind:debt |
 
 ## PHASE-007 — Kişiselleşme & Erişim  ·  9 açık
 
