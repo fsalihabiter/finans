@@ -90,6 +90,19 @@ session:            # current open session; cleared by adm-close
   #   M12'nin kırmızıya düştüğü iki kolda da bilerek bozularak kanıtlandı.
   #   ⚠ adm-review ÇALIŞTIRILMADI (değişiklik tek test metodu) — sözleşme tam
   #   karşılanmadı, S-008'de kayda geçti.
+  # S-009 (asgari kanıt notu, adm-open'sız) 2026-11-22T21:20:00Z →
+  #   evidence/sessions/S-009.md
+  #   start_sha 37aaaf0 · end_sha 8d64939. GD-007: figür render + okunabilirlik
+  #   kapısı; TD-001 KAPANDI, TD-003 açıldı. web 147 → 350 test.
+  #   Kapı kurulur kurulmaz 7 figürde DAHA aynı ihlali buldu — hepsi zaten kabul
+  #   edilmiş derslerde (S0-L8, S0-L9). Desen 3 sanılıyordu, 10 çıktı.
+  #   ⚠ adm-review yine çalıştırılmadı (değişiklik bir test dikişi + 8 sınıf adı).
+  #   📌 SÜREÇ BULGUSU: adm-open dört oturumdur çalıştırılmıyor. Kök neden
+  #   .claude/hooks/adm-session-start.mjs — her oturumda ADM brifingi basıyor,
+  #   dolayısıyla "nerede kaldık" cevaplanmış oluyor ve komut gereksiz görünüyor.
+  #   Ama hook yalnız OKUR: session bloğunu açmaz, started_at/start_sha yazmaz;
+  #   her kapanışta diff tabanı elle seçiliyor ve INV-13 işletilmiyor.
+  #   Bildirildi, düzeltilmedi — insan kararı (S-009 §"Süreç gözlemi").
   id: null
   runtime: null
   started_at: null
