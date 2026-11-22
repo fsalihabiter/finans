@@ -75,8 +75,12 @@ function RealVsNominal() {
             <text x={AXIS - 6} y={y + 11} className="fig-value" textAnchor="end">
               %{r.nominal}
             </text>
+            {/* RV-065: reel getiri NEGATİFKEN çubuk eksenin SOLUNA uzuyor ve
+                etiketin durduğu yere giriyordu; coral yazı coral dolgu üstünde
+                ≈1:1 ile görünmüyordu. Negatifte etiket çubuğun sol kenarının
+                soluna alınır, pozitifte eksenin solunda kalır. */}
             <text
-              x={AXIS - 6}
+              x={r.real >= 0 ? AXIS - 6 : AXIS - realW - 6}
               y={y + 26}
               className={r.real >= 0 ? "fig-value pos" : "fig-value neg"}
               textAnchor="end"
@@ -634,8 +638,14 @@ function MoneyAtWork() {
         const x = 8 + i * 78;
         return (
           <g key={s}>
-            <rect x={x} y={40} width={64} height={34} rx="7" className={i === steps.length - 1 ? "fig-bar-pos" : "fig-card"} />
-            <text x={x + 32} y={61} className="fig-value" textAnchor="middle">{s}</text>
+            {/* RV-065: son adım opak mint dolguydu ve "sana pay" yazısı ≈1,31:1 ile
+                okunmuyordu. Vurgu KORUNDU ama dolgudan YAZI RENGİNE taşındı:
+                dört kutu aynı, pay mint yazıyla işaretli (fig-card üstünde
+                ≈7,2:1). Zincirin mint okları da aynı anlamı taşımayı sürdürüyor. */}
+            <rect x={x} y={40} width={64} height={34} rx="7" className="fig-card" />
+            <text x={x + 32} y={61}
+              className={i === steps.length - 1 ? "fig-value pos" : "fig-value"}
+              textAnchor="middle">{s}</text>
             {i < steps.length - 1 && (
               <path d={`M${x + 64} 57 L${x + 78} 57`} className="fig-line-steady" fill="none" />
             )}
@@ -658,10 +668,15 @@ function NoGuarantee() {
       <text x={41} y={65} className="fig-value" textAnchor="middle">yatırım</text>
       <path d="M72 58 L150 26" className="fig-line-steady" fill="none" />
       <path d="M72 62 L150 96" className="fig-line-volatile" fill="none" />
+      {/* RV-065: iki etiket de opak dolgunun ÜZERİNDEYDİ — "kazanç" mint üstünde
+          ≈1,31:1, "kayıp" coral üstünde ≈1,03:1 (neredeyse görünmez). Burada
+          dolgu renginin KENDİSİ figürün konusu (aynı başlangıçtan iki sonuç),
+          o yüzden mint/coral kaldı ve etiketler kutuların SAĞINA çıktı. İki kol
+          simetrik kaldı: aynı genişlik, aynı yerleşim, aynı yazı sınıfı. */}
       <rect x={152} y={14} width={64} height={26} rx="6" className="fig-bar-pos" />
-      <text x={184} y={31} className="fig-value" textAnchor="middle">kazanç</text>
+      <text x={222} y={31} className="fig-label">kazanç</text>
       <rect x={152} y={84} width={64} height={26} rx="6" className="fig-bar-neg" />
-      <text x={184} y={101} className="fig-value" textAnchor="middle">kayıp</text>
+      <text x={222} y={101} className="fig-label">kayıp</text>
       <text x={124} y={66} className="fig-big" textAnchor="middle">?</text>
     </Figure>
   );
@@ -815,7 +830,11 @@ function TwoSavers() {
       <text x={80} y={108} className="fig-value" textAnchor="middle">36.000 ₺</text>
 
       <Panel x={166} y={20} w={148} h={106} title="B · %20" />
-      <rect x={190} y={70} width={100} height={44} rx="3" className="fig-bar-pos" />
+      {/* RV-065: dolgu opak mint idi (yazı ≈1,31:1). İki panel AKRAN — aynı gelir,
+          aynı süre, yalnız oran farklı — ve dersin kendisi tutarın İKİYE
+          KATLANMASI. Fark zaten YÜKSEKLİKLE kodlu (22 ↔ 44), o yüzden iki panel
+          aynı deyime indirildi; asimetrik vurgu da böylece kalktı. */}
+      <rect x={190} y={70} width={100} height={44} rx="3" className="fig-bar-muted" />
       <text x={240} y={97} className="fig-value" textAnchor="middle">72.000 ₺</text>
     </Figure>
   );
@@ -848,8 +867,11 @@ function PayYourselfFirst() {
     >
       <text x={16} y={48} className="fig-label">gelir</text>
       <rect x={70} y={32} width={228} height={26} rx="4" className="fig-bar-muted" />
+      {/* RV-065: "önce" opak mint dilimin ÜZERİNDEYDİ (≈1,31:1). Dilim figürün
+          tamamı — gelirin başından ayrılan birikim — o yüzden mint kaldı ve
+          etiket dilimin üstüne çıktı. */}
       <rect x={70} y={32} width={46} height={26} rx="4" className="fig-bar-pos" />
-      <text x={93} y={50} className="fig-value" textAnchor="middle">önce</text>
+      <text x={93} y={26} className="fig-value" textAnchor="middle">önce</text>
       <text x={207} y={49} className="fig-label" textAnchor="middle">kalanla yaşa</text>
       <text x={70} y={80} className="fig-value pos">birikim = öncelik, artık değil</text>
     </Figure>
@@ -924,8 +946,11 @@ function WithWithoutBuffer() {
       height={150}
     >
       <Panel x={6} y={20} w={148} h={116} title="Tamponlu" />
+      {/* RV-065: etiket opak mint dolgunun ÜZERİNDEYDİ (≈1,31:1). Dolgu anlam
+          taşıyor (tampon = işini gören para), o yüzden mint KALDI ve yazı
+          kutunun ÜSTÜNE çıktı — RV-039'un verdiği çözümün ilk kolu. */}
       <rect x={30} y={92} width={44} height={28} rx="4" className="fig-bar-pos" />
-      <text x={52} y={110} className="fig-value" textAnchor="middle">tampon</text>
+      <text x={52} y={86} className="fig-value" textAnchor="middle">tampon</text>
       <path d="M78 106 L112 106" className="fig-line-steady" fill="none" />
       <text x={128} y={100} className="fig-label" textAnchor="middle">şok</text>
       <text x={90} y={132} className="fig-label" textAnchor="middle">yatırım korunur</text>
@@ -1015,7 +1040,10 @@ function DebtCostLadder() {
           className={i === bars.length - 1 ? "fig-bar-neg" : "fig-bar-muted"} />
       ))}
       <text x={20} y={122} className="fig-label">1. ay → 12. ay (bileşik)</text>
-      <text x={276} y={40} className="fig-value neg" textAnchor="end">≈%60</text>
+      {/* RV-065: bu etiket son (coral) çubuğun ÜZERİNE düşüyordu — coral yazı
+          coral dolgu üstünde ≈1:1, yani görünmez. Çubuk figürün doruğu olduğu
+          için KALDI; etiket çubuğun soluna alındı. */}
+      <text x={258} y={40} className="fig-value neg" textAnchor="end">≈%60</text>
     </Figure>
   );
 }
@@ -1049,8 +1077,11 @@ function CertainVsUncertain() {
       height={140}
     >
       <Panel x={6} y={20} w={148} h={106} title="Borç — KESİN" />
-      <rect x={40} y={70} width={80} height={26} rx="3" className="fig-bar-neg" />
-      <text x={80} y={88} className="fig-value" textAnchor="middle">%60 · olur</text>
+      {/* RV-065: dolgu opak coral idi ve yazı ≈1,03:1 ile görünmüyordu. Sağ panel
+          zaten saydam dolgu + RENKLİ YAZI deyimini kullanıyor; sol panel de ona
+          uyduruldu, "kesin maliyet" anlamı yazı renginde taşınıyor. */}
+      <rect x={40} y={70} width={80} height={26} rx="3" className="fig-bar-muted" />
+      <text x={80} y={88} className="fig-value neg" textAnchor="middle">%60 · olur</text>
 
       <Panel x={166} y={20} w={148} h={106} title="Yatırım — BELİRSİZ" />
       <rect x={196} y={62} width={90} height={44} rx="4" className="fig-bar-muted" opacity="0.4" />
@@ -1113,7 +1144,10 @@ function BasketPriceUp() {
       height={100}
     >
       <text x={16} y={40} className="fig-label">geçen yıl</text>
-      <rect x={92} y={26} width={200} height={20} rx="3" className="fig-bar-pos" />
+      {/* RV-065: dolgu `fig-bar-pos` (opak mint) idi ve üzerindeki yazı ≈1,31:1
+          okunmuyordu. "Geçen yılın tam sepeti" bir kazanç değil, ölçü çizgisi —
+          saydam tona indi; iki satır arasındaki fark zaten GENİŞLİKLE kodlu. */}
+      <rect x={92} y={26} width={200} height={20} rx="3" className="fig-bar-muted" />
       <text x={192} y={41} className="fig-value" textAnchor="middle">tam sepet (%100)</text>
       <text x={16} y={80} className="fig-label">bu yıl</text>
       <rect x={92} y={66} width={200} height={20} rx="3" className="fig-bar-muted" />
@@ -2049,9 +2083,14 @@ function TimeHorizonRuler() {
       {zones.map((z, i) => (
         <g key={z.name}>
           {/* TD-001 (GD-007): ilk bölge fig-seg-lead ile vurgulanıyordu ve üzerindeki
-              yazı opak dolguda okunmuyordu (RV-039 deseni). Üç bölge de aynı sınıfta;
-              kısa→uzun geçişi opaklık basamağıyla korunuyor. */}
-          <rect x={z.x} y={34} width={z.w} height="24" rx="4" className="fig-seg" opacity={1 - i * 0.2} />
+              yazı opak dolguda okunmuyordu (RV-039 deseni) → üç bölge de aynı sınıfa indi.
+              RV-074 (REVIEW-006): o düzeltme `opacity={1 - i * 0.2}` basamağını
+              "geçişi koruyor" diye bıraktı, ama üç bölge aynı sınıfa indikten sonra
+              basamağın komşu kontrastı 1,13:1 — algısal olarak ölü. Dahası opaklık
+              o bölgelerde kalan TEK ayırt edici kodlamaydı ve kayıt defteri bunu
+              yasaklıyor ("durum renkle değil BİÇİMLE kodlanır"). Geçiş zaten
+              biçimde: genişlikler 70 → 96 → 110 büyüyor. Opaklık kaldırıldı. */}
+          <rect x={z.x} y={34} width={z.w} height="24" rx="4" className="fig-seg" />
           <text x={z.x + z.w / 2} y={50} className="fig-label" textAnchor="middle">
             {z.name}
           </text>
@@ -2643,16 +2682,21 @@ function BazaarToExchange() {
       <Panel x={6} y={14} w={146} h={104} title="Pazar" />
       <text x={79} y={48} className="fig-label" textAnchor="middle">“kilosu 100” → “80 olsun”</text>
       <text x={79} y={66} className="fig-label" textAnchor="middle">“90, son”</text>
-      <rect x={44} y={76} width={70} height="18" rx="4" className="fig-seg" />
-      <text x={79} y={89} className="fig-value" textAnchor="middle">90</text>
+      {/* RV-075 + RV-086: çip içi yazı `fig-value` ile 3,54:1 veriyordu → `fig-label`.
+          Ayrıca anlaşılan fiyat çipi, borsa panelindeki altı teklif karesiyle AYNI
+          dolguya düşmüştü (1,09:1) — altyazı "fiyat doğar" diye söz verirken figür
+          doğan şeyi işaretlemiyordu. Ayrım KONTURLA geri geldi (fig-seg-strong),
+          opak dolguya dönülmeden. */}
+      <rect x={44} y={76} width={70} height="18" rx="4" className="fig-seg-strong" />
+      <text x={79} y={89} className="fig-label" textAnchor="middle">90</text>
       <text x={79} y={108} className="fig-label" textAnchor="middle">iki kişi · dakikalar</text>
 
       <Panel x={162} y={14} w={152} h={104} title="Borsa" />
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <rect key={`b${i}`} x={176 + i * 22} y={44 + (i % 3) * 5} width={14} height={10} rx="2" className="fig-seg" opacity={0.85 - i * 0.07} />
       ))}
-      <rect x={210} y={76} width={70} height="18" rx="4" className="fig-seg" />
-      <text x={245} y={89} className="fig-value" textAnchor="middle">90</text>
+      <rect x={210} y={76} width={70} height="18" rx="4" className="fig-seg-strong" />
+      <text x={245} y={89} className="fig-label" textAnchor="middle">90</text>
       <text x={238} y={108} className="fig-label" textAnchor="middle">binlerce teklif · saniyenin altı</text>
     </Figure>
   );
@@ -2686,8 +2730,9 @@ function LastPriceIsHistory() {
           </g>
         );
       })}
+      {/* RV-075: çip içi `fig-value` 3,95:1 veriyordu → `fig-label` (≈8,8:1). */}
       <rect x={252} y={40} width={58} height="24" rx="4" className="fig-seg" />
-      <text x={281} y={56} className="fig-value" textAnchor="middle">son</text>
+      <text x={281} y={56} className="fig-label" textAnchor="middle">son</text>
       <text x={30} y={104} className="fig-label">geçmiş işlemler</text>
       <text x={300} y={104} className="fig-label" textAnchor="end">şimdi</text>
       <text x={160} y={126} className="fig-label" textAnchor="middle">“en son kaçtan el değiştirdi?” ≠ “ben kaça alabilirim?”</text>
@@ -2726,15 +2771,18 @@ function BidAskLadder() {
       height={154}
     >
       <text x={160} y={22} className="fig-label" textAnchor="middle">sen ALIRKEN ödediğin</text>
+      {/* RV-075: çip içi yazı `fig-value` (gri-mavi, 10px) ile 3,95:1 veriyordu —
+          küçük yazı için AA eşiği 4,5:1. Çipi taşıyan yazı `fig-label`a yükseldi
+          (near-white → ≈8,8:1). İki kol simetrik kalıyor. */}
       <rect x={70} y={30} width={180} height="26" rx="5" className="fig-seg" />
-      <text x={160} y={48} className="fig-value" textAnchor="middle">satış kotasyonu · 100,00 ₺</text>
+      <text x={160} y={48} className="fig-label" textAnchor="middle">satış kotasyonu · 100,00 ₺</text>
 
       <line x1="70" y1="72" x2="250" y2="72" className="fig-axis" />
       <text x={160} y={88} className="fig-big" textAnchor="middle">makas 2,00 ₺</text>
       <line x1="70" y1="98" x2="250" y2="98" className="fig-axis" />
 
       <rect x={70} y={108} width={180} height="26" rx="5" className="fig-seg" />
-      <text x={160} y={126} className="fig-value" textAnchor="middle">alış kotasyonu · 98,00 ₺</text>
+      <text x={160} y={126} className="fig-label" textAnchor="middle">alış kotasyonu · 98,00 ₺</text>
       <text x={160} y={148} className="fig-label" textAnchor="middle">sen SATARKEN aldığın</text>
     </Figure>
   );

@@ -125,7 +125,56 @@ blockers: []
 # çerçeve sorunu). INV-18 gereği ikisi de aktif işi durdurmuyor.
 
 review:
-  last_review_id: REVIEW-005
+  last_review_id: REVIEW-006
+  # REVIEW-006 (GD-006 + GD-007 inceleme borcu · a0918a7..HEAD): 24 bulgu —
+  # 0 critical · 5 high · 9 medium · 10 low. Açık critical yok → INV-18 gereği
+  # hiçbir GD tamamlanması bloke değil.
+  # 📌 ÜRÜN SAHİBİ KARARI "Hepsini düzelt" (2026-11-22) → **24/24 RESOLVED.**
+  # RV-069 (CI) ayrı soruldu çünkü düzeltmesi dışa dönük: karar "yeşil paketler
+  # için CI" → **.github/workflows/tests.yml** eklendi (web: vitest+tsc · backend:
+  # Application 308 + Integration). INC-001'in 4 testi TEK TEK ADLARIYLA dışlandı —
+  # sınıf adıyla dışlamak ölçülerek yanlış bulundu (3 YEŞİL test de düşüyordu,
+  # 189 yerine 186). Filtre #74 kapanınca silinecek; gerekçe iş akışının başında.
+  # Düzeltme sonrası doğrulama: web 350/350 · tsc temiz · Application 308/308 ·
+  # Integration 189/193 (4 kırmızı = INC-001, ortam, issue #74) · EducationSeed 27/27.
+  # Kapılar üç mutasyonla kırmızıya düşürülerek kanıtlandı.
+  # ⚠ DÜZELTMELER BEŞ BİRİKMİŞ SAPMA DAHA ÇIKARDI (kapsam genişletmenin sonucu):
+  #   · fig-bar-pos/neg üzerinde 10 okunmaz yazı (9 figür) → düzeltildi
+  #   · S1-L3 künyesi 7 ilan ↔ 9 anahtar → düzeltildi; GD-006'nın düzelttiği on
+  #     künyeyle AYNI hata, yalnız M12'nin tanımadığı lehçede duruyordu
+  #   · S3-L2'de eksik 🖼 işareti → düzeltildi
+  #   · 9 künyede planın son figürü aşamaya bağsız → **TD-005** (editöryal karar)
+  #   · figürlerde görsel bozulma denetlenmiyor → **TD-004** (tarayıcı düzeyi)
+  # Yeni kural: **M13** (seed → künye yönü) — kırmızı bir M12'yi planı küçülterek
+  # yeşile çevirmek artık mümkün değil. TD-002 kapanmadı ama DARALDI.
+  # Bu inceleme bir BORCUN ödenmesiydi: config.review.required_for_code_changes
+  # true olduğu hâlde GD-006 ve GD-007 adm-review koşmadan kapandı (RV-078).
+  # Diff tabanı insan kararıyla seçildi (açık oturum yoktu → start_sha yoktu).
+  # Ana sonuç: iki kapı da GERÇEK (RV-039/053/055'in özgün kodu geri alındığında
+  # üçünde de kırmızıya düşüyor — mutasyonla kanıtlandı) ama ikisi de kendi
+  # kayıtlarının söylediğinden DAR ve aradan aynı kusur geçiyor:
+  #   RV-065 (high) okunabilirlik kuralı ÜÇ opak dolgu sınıfından birine yazılı;
+  #          fig-bar-pos/fig-bar-neg üzerinde RV-039 geometrisinin 8 CANLI örneği
+  #          bugün yeşil geçiyor (no-guarantee ≈1,31:1 ve ≈1,03:1). GD-007 §3.1'in
+  #          "44 figür bu renkleri kullanıyor" ölçümü doğru ama yanlış popülasyon:
+  #          üzerine YAZI YAZAN yüzey 8-10 çift, yani yapılan işin boyutunda.
+  #   RV-066 (high) M12, 35 künye bloğunun 17'si için hiçbir şey iddia etmiyor;
+  #          ikisi (S1-L1, S1-L2) YAYINDA. Kaçış yolu: künyede "Figür planı (N)"
+  #          yerine "Mevcut figürler (N)" yazmak.
+  #   RV-067 (high) kırmızı M12 planı KÜÇÜLTEREK yeşile çevrilebiliyor: yayındaki
+  #          hold-vs-flip'in D-017 kanonik dokümanından sessizce silinebildiği
+  #          kanıtlandı. TD-002'nin TERS yönü — hiçbir borçta yazılı değil.
+  #   RV-068 (high) kayıt defteri 101 figür tutuyor, bütün kayıtlar 100 diyor
+  #          (tırnaksız `concentration`); ">= 100" tabanı bir birim boşluklu ve
+  #          GD-007 §7'nin dökümü (100+100+1=201) kendi toplamıyla (203) çelişiyor.
+  #   RV-069 (high) HİÇBİR CI testi koşturmuyor — tek workflow backlog senkronu.
+  #          "Makine kapısına geçtik" iddiası yerelde insan disiplinine bağlı.
+  #          ⚠ Önceden var olan durum; kabul gerekçesini taşıdığı için yazıldı.
+  # RV-076: CAPABILITIES.md "İlk kural artık TESTLİ" diyor — CLAUDE.md §11.5'in
+  # *kod yazmadan önce taranır* dediği dosyada, 8 canlı karşı örnekle.
+  # Doğrulama (orkestratör doğrudan koşturdu): web 350/350 · tsc temiz ·
+  # EducationSeedTests 26/26 · 10 künye düzeltmesi elle sayıldı, tutuyor.
+  # Önceki kayıt:
   # REVIEW-005 (GD-005 · S0-L10): 24 bulgu — 0 critical · 3 high · 13 medium · 8 low.
   # TÜMÜ RESOLVED (2026-11-22, ürün sahibi kararı "Hepsini düzelt"). Açık bulgu yok.
   #   RV-041 (high) makasın birimi S0-L9 "işlem başına" ↔ S0-L10 "tur başına";
@@ -159,4 +208,6 @@ review:
   #   RV-018 → kapsam DIŞI ("ayrı iş": ön-koşul kilidi yazma yolunda) → issue #9.
   # REVIEW-002 (GD-002): 6/6 resolved.
   # REVIEW-001 (GD-001): RV-003/RV-004 (low) açık → issue #12 / #13.
+  # REVIEW-006'nın 24 bulgusu kapandıktan sonra `clean`e döndü; REVIEW-001'in iki
+  # low bulgusu issue olarak takip ediliyor (#12/#13), review kuyruğunda değil.
   status: clean

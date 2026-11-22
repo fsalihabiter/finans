@@ -214,14 +214,11 @@ public sealed class LocalModelTrial(ITestOutputHelper output)
         return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
     }
 
-    /// <summary>bin/ içinden repo köküne yürür (EducationSeedTests'teki desenle aynı).</summary>
-    private static string RepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, ".agent-method")))
-            dir = dir.Parent;
-        return dir?.FullName ?? Directory.GetCurrentDirectory();
-    }
+    /// <summary>
+    /// Repo kökü — RV-088 ile <see cref="RepoPaths"/>'e çıkarıldı. Önceki hâli
+    /// bulamadığında SESSİZCE çalışma dizinine düşüyordu; artık hata veriyor.
+    /// </summary>
+    private static string RepoRoot() => RepoPaths.Root;
 
     /// <summary>Guard'ın kaç kart düşürdüğünü servisin kendi metrik portundan okur.</summary>
     private sealed class RecordingMetrics : ILlmMetrics

@@ -359,6 +359,107 @@ public sealed class EducationSeedTests
     }
 
     /// <summary>
+    /// <b>M13 — seed'deki figür künyede DE var mı?</b> (REVIEW-006 · RV-067).
+    /// <para>
+    /// M4 tek yönlüdür: seed'deki her figür anahtarı web kayıt defterinde tanımlı
+    /// olmalı. Ters yön denetlenmiyordu ve M12 de yalnız künyenin KENDİ içinde
+    /// tutarlılık istiyordu — iki taraf da düzenlenebilir olduğu için kırmızı bir
+    /// M12'yi <b>planı küçülterek</b> yeşile çevirmek mümkündü: plan girdisi silinir,
+    /// başlıktaki sayaç bir azaltılır, test yeşil kalır. Sonuç: yayında olan,
+    /// kullanıcıya görünen bir figür D-017'nin kanonik ilan ettiği dokümandan
+    /// <b>sessizce kaybolur</b> ve sonraki GD gerçeği eksik gösteren bir künyeden
+    /// planlamaya başlar — GD-006'nın durdurmak için kurulduğu hatanın ters yönü.
+    /// </para>
+    /// <para>
+    /// ⚠ Bu kural TD-002'nin <b>kapatılabilen yarısıdır.</b> "Planlandı ama hiç
+    /// yazılmadı" yönü (plan → seed) bugün yazılamaz: Set 2-5'in künyelerinde
+    /// planlı ama henüz yazılmamış figürler var ve böyle bir test meşru biçimde
+    /// kırmızı olurdu. "Yazıldı, yayınlandı, sonra plandan düştü" yönü (seed →
+    /// plan) ise hiçbir şeye bağlı değil, çünkü seed'deki her figür zaten yazılmış
+    /// bir derse ait. TD-002 bu yüzden <b>daraldı</b>, kapanmadı.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Every_seeded_figure_appears_in_its_lesson_blueprint()
+    {
+        var path = Path.Combine(RepoRoot(), ".claude", "docs", "16-CURRICULUM.md");
+        var doc = File.ReadAllText(path);
+        var blocks = Regex.Split(doc, @"(?m)^#### ").Skip(1).ToList();
+
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var dersler = await db.Lessons.Select(l => new { l.Id, l.Slug }).ToListAsync();
+        var bolumler = await db.LessonSections
+            .Where(s => s.FigureKey != null)
+            .Select(s => new { s.LessonId, Key = s.FigureKey! })
+            .ToListAsync();
+
+        bolumler.Should().NotBeEmpty("seed figür taşıyan bölümler içermeli");
+        var eksikler = new List<string>();
+        var denetlenenDers = 0;
+
+        foreach (var ders in dersler)
+        {
+            var figurler = bolumler.Where(b => b.LessonId == ders.Id)
+                .Select(b => b.Key).Distinct().ToList();
+            if (figurler.Count == 0) continue;
+
+            // Künye bloğu: slug'ı İÇEREN blok. Slug biçimi künyeden künyeye değişiyor
+            // (Set 0 tabloda `| **Slug** | `x` |`, Set 3 satır içinde), slug ise tekil.
+            var blok = blocks.FirstOrDefault(b => b.Contains($"`{ders.Slug}`", StringComparison.Ordinal));
+            if (blok is null)
+            {
+                eksikler.Add($"{ders.Slug}: künyesi bulunamadı (16-CURRICULUM.md'de `{ders.Slug}` yok)");
+                continue;
+            }
+            denetlenenDers++;
+
+            var baslik = Regex.Match(blok,
+                @"\*\*(?:Figür planı|Mevcut figürler|Figürler) \((?<n>\d+)(?:\s*\+\s*(?<m>\d+)\s*etkileşimli)?\)");
+            if (!baslik.Success)
+            {
+                eksikler.Add($"{ders.Slug}: künyede figür başlığı yok");
+                continue;
+            }
+
+            var kalan = blok[baslik.Index..];
+            var bosSatir = Regex.Match(kalan, @"\r?\n\r?\n");
+            var plan = bosSatir.Success ? kalan[..bosSatir.Index] : kalan;
+            var planAnahtarlari = Regex.Matches(plan, @"`(?<k>[a-z0-9-]+)`")
+                .Select(m => m.Groups["k"].Value).ToHashSet();
+
+            foreach (var k in figurler.Where(k => !planAnahtarlari.Contains(k)))
+                eksikler.Add($"{ders.Slug}: `{k}` seed'de VAR, künye planında YOK");
+        }
+
+        denetlenenDers.Should().BeGreaterThan(0, "en az bir ders künyesi eşleşmeli");
+        eksikler.Should().BeEmpty(
+            "kullanıcıya görünen her figür, D-017 gereği kanonik olan künyede de yazılı " +
+            "olmalı. Bir figür seed'de varken künye planında yoksa künye gerçeği EKSİK " +
+            "gösteriyor ve sonraki GD yanlış plandan başlar. Kırmızı bir M12'yi plan " +
+            "girdisini silerek yeşile çevirmek bu kuralla artık mümkün değil (M13 · RV-067)");
+    }
+
+    /// <summary>
+    /// Aşama planına bağlanmamış, henüz yazılmamış ders künyelerindeki figürler —
+    /// <b>TD-005</b> (REVIEW-006 · RV-066). Daralan bir kıskaç: çözüldükçe silinir,
+    /// yeni kalem eklenmesi M12'yi kırar. Hangi aşamaya bağlanacağı editöryal karar.
+    /// </summary>
+    private static readonly string[] BilinenBagsizPlanFigurleri =
+    [
+        "S3-L3:currency-drift",
+        "S3-L4:flows-change-measurement",
+        "S4-L1:opportunity-of-waiting",
+        "S4-L2:who-tells-the-story",
+        "S4-L3:breakeven-illusion",
+        "S5-L1:bes-timeline-summary",
+        "S5-L2:gold-decomposition",
+        "S5-L3:rate-vs-basket",
+        "S5-L4:name-vs-content",
+    ];
+
+    /// <summary>
     /// <b>M12 — künye figür sayısı ↔ figür planı mutabakatı</b> (GD-006).
     /// <para>
     /// `16-CURRICULUM.md` D-017 gereği <b>kanonik kaynaktır</b>: ders yazımı oradan
@@ -370,10 +471,37 @@ public sealed class EducationSeedTests
     /// birikmiş uyumsuzluk buldu.
     /// </para>
     /// <para>
-    /// ⚠ Bu test künyenin <b>kendi iç tutarlılığını</b> denetler, künye ↔ kod
-    /// mutabakatını değil. İkincisini M4 yapar (seed'deki her `FigureKey` web
-    /// kayıt defterinde tanımlı olmalı). Künyede planlanıp henüz yazılmamış
-    /// dersler (Set 2) bu testi kırmaz — bilinçli kapsam sınırı.
+    /// ⚠ Bu test künyenin <b>kendi iç tutarlılığını</b> denetler, künye ↔ seed
+    /// mutabakatını değil (o hâlâ açık: <b>TD-002</b>). Koddaki figürün kayıtta
+    /// tanımlı olmasını M4 yapar. Künyede planlanıp henüz yazılmamış dersler
+    /// (Set 2-5) bu testi kırmaz — bilinçli kapsam sınırı. Tek istisna
+    /// <c>*(mevcut)*</c> işaretli anahtarlar: "bu figür zaten var" diyen bir
+    /// künye yanlış söylüyorsa yakalanır.
+    /// </para>
+    /// <para>
+    /// <b>REVIEW-006 ile sağlamlaştırıldı</b> (RV-066 · RV-067 · RV-072 · RV-073 ·
+    /// RV-079 · RV-080). İlk hâlindeki beş kaçış yolu:
+    /// <list type="number">
+    /// <item>Yalnız <c>**Figür planı (N)**</c> lehçesini tanıyordu. Künye ÜÇ
+    /// lehçe kullanıyor — <c>Figür planı</c> (Set 0/2), <c>Mevcut figürler</c>
+    /// (S1-L1/L2), <c>Figürler</c> (Set 1/3/4/5) — dolayısıyla 35 bloğun yalnız
+    /// 18'i denetleniyordu ve kalan 17'si <b>sessizce</b> atlanıyordu. Lehçeler
+    /// birleştirilince S1-L3'te gerçek bir sapma çıktı (7 ilan, 9 anahtar).</item>
+    /// <item>Başlığı olmayan blok <c>continue</c> ile düşüyordu; artık her
+    /// <c>####</c> bloğunun başlık taşıması ŞART.</item>
+    /// <item>"İşaretli mi" kontrolü anahtardan sonraki <b>26 karakterlik
+    /// pencereye</b> bakıyordu ve pencere bir sonraki kalemin açıklamasına
+    /// taşabiliyordu; artık plan <c>·</c> ile KALEMLERE bölünüp her anahtar
+    /// kendi kaleminde aranıyor.</item>
+    /// <item>Aşama bölümü başlıktan sonra duruyorsa kuralın yarısı sessizce
+    /// düşüyordu ama künye yine "denetlendi" sayılıyordu; artık aşama taşıyan
+    /// blok sayısı da sayılıp eşiğe bağlanıyor.</item>
+    /// <item><c>.Distinct()</c> yinelenen anahtarı maskeliyordu (ham 9, distinct
+    /// 8, beyan 8 → yeşil); artık HAM sayım karşılaştırılıyor ve yineleme ayrı
+    /// bir iddiayla yakalanıyor.</item>
+    /// </list>
+    /// Eşikler <c>>=</c> değil <b>eşitlik</b>: "en az N" koruması içerik N'i
+    /// geçtiği anda korumayı bırakır (RV-080).
     /// </para>
     /// </summary>
     [Fact]
@@ -384,38 +512,87 @@ public sealed class EducationSeedTests
             $"müfredat künyeleri kanonik kaynaktır (D-017) ve bu kural onları denetler: {path}");
 
         var doc = File.ReadAllText(path);
+        var kayitliFigurler = WebFigureRegistryKeys();
+
         // Künyeler "#### <ders-id> · <başlık>" ile başlar.
         var blocks = Regex.Split(doc, @"(?m)^#### ").Skip(1).ToList();
-        var denetlenen = 0;
+        var asamaTasiyan = 0;
+        var asamasizlar = new List<string>();
+        var bagsizlar = new List<string>();
 
         foreach (var block in blocks)
         {
             var ders = block.Split('\n')[0].Split('·')[0].Trim();
 
-            // Başlık: "**Figür planı (N):**" ya da "**Figür planı (N + M etkileşimli):**"
+            // Üç lehçenin hepsi: "Figür planı" · "Mevcut figürler" · "Figürler".
+            // "(N)" ya da "(N + M etkileşimli)".
             var baslik = Regex.Match(block,
-                @"\*\*Figür planı \((?<n>\d+)(?:\s*\+\s*(?<m>\d+)\s*etkileşimli)?\)");
-            if (!baslik.Success) continue; // künye değil (bölüm girişi vb.)
-            denetlenen++;
+                @"\*\*(?<tur>Figür planı|Mevcut figürler|Figürler) " +
+                @"\((?<n>\d+)(?:\s*\+\s*(?<m>\d+)\s*etkileşimli)?\)");
+
+            baslik.Success.Should().BeTrue(
+                $"'{ders}' künyesi figür başlığı taşımıyor. Üç biçimden biri olmalı: " +
+                "`**Figür planı (N):**`, `**Figürler (N):**` ya da `**Mevcut figürler (N):**`. " +
+                "Başlıksız künye M12'nin TAMAMININ dışında kalır ve figür sayısı sessizce " +
+                "kayabilir — ilk hâlinde 35 bloğun 17'si böyle atlanıyordu (RV-066).");
 
             var beyan = int.Parse(baslik.Groups["n"].Value)
                       + (baslik.Groups["m"].Success ? int.Parse(baslik.Groups["m"].Value) : 0);
+            // "Mevcut figürler" = ders YAYINDA; anahtarlarının kayıtta olması şart.
+            var yayinda = baslik.Groups["tur"].Value == "Mevcut figürler";
 
-            // Plan paragrafı: başlıktan sonraki İLK boş satıra kadar.
+            // Plan paragrafı: başlıktan sonraki İLK boş satıra kadar (CRLF de olabilir).
             var kalan = block[baslik.Index..];
-            var son = kalan.IndexOf("\n\n", StringComparison.Ordinal);
-            var plan = son < 0 ? kalan : kalan[..son];
+            var bosSatir = Regex.Match(kalan, @"\r?\n\r?\n");
+            var plan = bosSatir.Success ? kalan[..bosSatir.Index] : kalan;
 
-            var anahtarlar = Regex.Matches(plan, @"`(?<k>[a-z0-9-]+)`")
-                .Select(m => m.Groups["k"].Value).Distinct().ToList();
+            // Kalemler `·` ile ayrılır; her anahtar KENDİ kaleminde değerlendirilir,
+            // böylece komşu kalemin açıklaması yanlışlıkla okunmaz (RV-072).
+            var kalemler = plan.Split('·');
+            var hamAnahtarlar = new List<string>();
+            var kalemiyle = new List<(string Key, string Item)>();
+            foreach (var kalem in kalemler)
+            {
+                foreach (var mm in Regex.Matches(kalem, @"`(?<k>[a-z0-9-]+)`").Cast<Match>())
+                {
+                    hamAnahtarlar.Add(mm.Groups["k"].Value);
+                    kalemiyle.Add((mm.Groups["k"].Value, kalem));
+                }
+            }
+            var anahtarlar = hamAnahtarlar.Distinct().ToList();
 
-            anahtarlar.Count.Should().Be(beyan,
+            // RV-079: yineleme `.Distinct()` tarafından maskeleniyordu.
+            hamAnahtarlar.Count.Should().Be(anahtarlar.Count,
+                $"'{ders}' figür planı aynı anahtarı birden fazla listeliyor " +
+                $"({string.Join(", ", hamAnahtarlar.GroupBy(k => k).Where(g => g.Count() > 1).Select(g => g.Key))}) — " +
+                "yinelenen kalem başlıktaki sayacı doğru gösterip planı yanlış gösterir (M12)");
+
+            hamAnahtarlar.Count.Should().Be(beyan,
                 $"'{ders}' künyesinin başlığı {beyan} figür ilan ediyor ama figür planı " +
-                $"{anahtarlar.Count} anahtar listeliyor — başlıktaki sayaç eskimiş olabilir (M12)");
+                $"{hamAnahtarlar.Count} anahtar listeliyor — başlıktaki sayaç eskimiş olabilir (M12)");
+
+            // RV-067'nin kapatılabilen yarısı: "bu figür zaten var" diyen künye
+            // doğru söylemeli. Yazılmamış dersler bu iddiada bulunmaz, kırılmaz.
+            foreach (var (k, kalem) in kalemiyle)
+            {
+                var mevcutIddiasi = yayinda || kalem.Contains("*(mevcut)*", StringComparison.Ordinal);
+                if (!mevcutIddiasi) continue;
+                kayitliFigurler.Should().Contain(k,
+                    $"'{ders}' künyesi `{k}` figürünü MEVCUT diye işaretliyor ama web kayıt " +
+                    "defterinde (LessonFigure.tsx) böyle bir figür yok. Künye var olmayan bir " +
+                    "figürü varmış gibi gösteriyor; sonraki GD onu yazılmış sayıp atlar (M12)");
+            }
 
             // Aşama planındaki 🖼 anahtarları: başlıktan ÖNCEKİ "Aşama planı" bölümü.
             var asamaBas = block.IndexOf("**Aşama planı", StringComparison.Ordinal);
-            if (asamaBas < 0 || asamaBas > baslik.Index) continue;
+            if (asamaBas < 0 || asamaBas > baslik.Index)
+            {
+                // RV-073: sessizce atlamak yerine sayılır; aşağıdaki eşitlik tutar.
+                asamasizlar.Add(ders);
+                continue;
+            }
+            asamaTasiyan++;
+
             var asama = block[asamaBas..baslik.Index];
             var asamaAnahtar = Regex.Matches(asama, @"🖼\s*`(?<k>[a-z0-9-]+)`")
                 .Select(m => m.Groups["k"].Value).Distinct().ToList();
@@ -431,24 +608,42 @@ public sealed class EducationSeedTests
             // 🎛 (etkileşimli, kendi satırı yok) ya da *(fallback)* (başka figürün yerine geçer).
             foreach (var k in anahtarlar.Except(asamaAnahtar))
             {
-                var yer = plan.IndexOf($"`{k}`", StringComparison.Ordinal);
-                var once = plan[Math.Max(0, yer - 4)..yer];
-                var sonra = plan[Math.Min(plan.Length, yer + k.Length + 2)
-                                ..Math.Min(plan.Length, yer + k.Length + 28)];
+                // Anahtarın KENDİ kalemi — 26 karakterlik pencere değil (RV-072).
+                var kalem = kalemiyle.First(p => p.Key == k).Item;
                 // 🎛 BMP dışı bir karakter (surrogate çifti) — char sabiti olamaz, string aranır.
-                var isaretli = once.Contains("🎛", StringComparison.Ordinal)
-                               || sonra.Contains("fallback", StringComparison.OrdinalIgnoreCase)
-                               || sonra.Contains("etkileşimli", StringComparison.OrdinalIgnoreCase);
-                isaretli.Should().BeTrue(
-                    $"'{ders}' figür planında `{k}` var ama hiçbir aşamaya bağlı değil; " +
-                    "kendi aşaması olmayan figür 🎛 (etkileşimli) ya da *(fallback)* diye " +
-                    "işaretlenmeli, yoksa plan ile aşamalar sessizce ayrışır (M12)");
+                var isaretli = kalem.Contains("🎛", StringComparison.Ordinal)
+                               || kalem.Contains("fallback", StringComparison.OrdinalIgnoreCase)
+                               || kalem.Contains("etkileşimli", StringComparison.OrdinalIgnoreCase);
+                if (!isaretli) bagsizlar.Add($"{ders}:{k}");
             }
         }
 
-        denetlenen.Should().BeGreaterThanOrEqualTo(18,
-            "müfredatta en az 18 ders künyesi figür planı taşıyor; daha azı ayrıştırmanın " +
-            "bozulduğunu gösterir (künye biçimi değiştiyse bu testin regex'i de güncellenmeli)");
+        // RV-066'nın genişletmesi Set 1/3/4/5 künyelerinde DOKUZ birikmiş plan borcu
+        // ortaya çıkardı: her birinde planın SON figürü hiçbir aşamaya bağlı değil.
+        // Hepsi YAZILMAMIŞ derslerde ve çoğunda aşama metni figürü tarif ediyor ama
+        // 🖼 işareti eksik (örn. S4-L1'in "fırsat maliyeti köprüsü" tuzağı tam olarak
+        // `opportunity-of-waiting`). Hangi aşamaya bağlanacakları EDİTÖRYAL bir karar;
+        // ajan onu tek başına veremez (yanlış bağlama kanonik kaynağa yanlış plan
+        // gömer — RV-067'nin uyardığı hata). Bu yüzden liste SAYILI bir istisna:
+        // mevcut dokuzu belgeler, YENİ bir bağsız figür kırmızıya düşer.
+        // → Borç: TD-005. Çözüldükçe bu listeden silinir.
+        bagsizlar.Should().BeEquivalentTo(BilinenBagsizPlanFigurleri,
+            "aşamaya bağlanmamış figür listesi DEĞİŞTİ. Yeni bir kalem eklendiyse: " +
+            "figürü bir aşamaya 🖼 ile bağla, ya da 🎛/*(fallback)* diye işaretle. " +
+            "Bir kalem çözüldüyse BilenenBagsizPlanFigurleri listesinden de sil — " +
+            "liste daralan bir kıskaçtır, genişlemez (M12 · TD-005)");
+
+        // Eşitlik, "en az" değil: içerik eşiği geçtiğinde koruma bitmesin (RV-080).
+        blocks.Should().HaveCount(35,
+            "müfredatta 35 ders künyesi var. Ders eklendiğinde/çıkarıldığında bu sayı " +
+            "BİLİNÇLİ olarak güncellenir; eşitlik, yeni künyelerin sessizce denetimsiz " +
+            "kalmasını engeller (künye biçimi değiştiyse bu testin regex'i de güncellenmeli)");
+
+        asamaTasiyan.Should().Be(33,
+            "35 künyenin 33'ü aşama planı taşır ve aşama ↔ figür planı çapraz kontrolüne " +
+            $"girer. Aşama planı olmayanlar: {string.Join(", ", asamasizlar)} (S1-L1/S1-L2 " +
+            "yayında olan ve farklı biçimde belgelenen iki ders). Bu sayı düşerse bir künye " +
+            "kuralın YARISINI sessizce kaybetmiş demektir (RV-073)");
     }
 
     /// <summary>
@@ -832,16 +1027,11 @@ public sealed class EducationSeedTests
     // yeşil olan DEĞİŞMEZLERİ. Set bazlı sayısal eşikler, her setin içeriği
     // indikçe (T6.11c/T6.16/T6.22) bu dosyada açılır.
 
-    /// <summary>Repo kökü — testler bin/ altından koşar; web dosyalarını bulmak için yukarı yürünür.</summary>
-    private static string RepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null &&
-               !File.Exists(Path.Combine(dir.FullName, "web", "src", "components", "LessonFigure.tsx")))
-            dir = dir.Parent;
-        dir.Should().NotBeNull("repo kökü (web/src/components/LessonFigure.tsx içeren) bulunmalı");
-        return dir!.FullName;
-    }
+    /// <summary>
+    /// Repo kökü. RV-088: iki ayrı uygulama vardı, <see cref="RepoPaths"/> olarak
+    /// tek yere çıkarıldı. Bu sarmalayıcı çağrı yerlerini olduğu gibi bırakır.
+    /// </summary>
+    private static string RepoRoot() => RepoPaths.Root;
 
     /// <summary>
     /// <c>LessonFigure.tsx</c> içindeki <c>FIGURES</c> kayıt defterinin anahtarları.

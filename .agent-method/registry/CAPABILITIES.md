@@ -2,7 +2,12 @@
 
 > GD yeniden kullanım analizi ÖNCE bu dosyayı tarar. İlk sürüm `adm-analyze`
 > taramasından geldi (2026-09-20). Konumlar gerçek dosya yollarıdır; `status`
-> değerleri **çıkarımdır**. `last_verified_ref`: ac61b7e.
+> değerleri **çıkarımdır**. Dosya genelinde taban `last_verified_ref`: ac61b7e.
+>
+> ⚠ `last_verified_ref` **girdi başınadır** ve yalnız o yetenek gerçekten yeniden
+> doğrulandığında güncellenir (REVIEW-006/RV-082). Hepsini birden ileri almak
+> doğrulanmamış girdiler için **yanlış bir tazelik iddiası** olur; bu yüzden
+> ac61b7e'de duran satırlar bilinçli olarak öyle bırakılır.
 
 ```yaml
 capabilities:
@@ -95,10 +100,17 @@ capabilities:
       `16-CURRICULUM.md` yalnız insan dokümanı değil, **testi olan bir sözleşme**;
       künye biçimi değişirse (`**Figür planı (N):**`, 🖼, 🎛, `*(fallback)*`)
       `Curriculum_figure_counts_match_their_own_figure_plans` regex'i de güncellenmeli.
-      ⚠ Künye ↔ seed mutabakatı hâlâ **açık** (TD-002): planlanıp yazılmamış figür
-      ne M12'ye ne M4'e takılır.
+      ⚠ Künye ↔ seed mutabakatının **plan → seed** yönü hâlâ açık (TD-002):
+      planlanıp yazılmamış figür ne M12'ye ne M4'e takılır. Ters yön (seed → künye)
+      **M13** ile kapandı (REVIEW-006/RV-067): kullanıcıya görünen her figür kanonik
+      künyede de yazılı olmak zorunda, yani kırmızı bir M12'yi *planı küçülterek*
+      yeşile çevirmek artık mümkün değil.
+      📌 M12 REVIEW-006'da **üç lehçeyi** birden tanıyacak şekilde genişletildi
+      (`Figür planı` · `Figürler` · `Mevcut figürler`); ilk hâli 35 künyenin yalnız
+      18'ini görüyordu. Genişletme dört birikmiş sapma buldu (S1-L3 sayacı, S3-L2
+      eksik 🖼) ve dokuz bağsız figürü **TD-005** olarak kayda geçirdi.
     tests: backend/tests/Finans.Integration.Tests/EducationSeedTests.cs (+ EducationApiTests)
-    last_verified_ref: ac61b7e
+    last_verified_ref: HEAD   # REVIEW-006 (2026-11-22) ile yeniden doğrulandı
 
   - capability: Nudge rule engine (educational notes)
     location: backend/src/Finans.Application/Portfolio/NudgeRuleEngine.cs + Infrastructure/Services/NudgeService.cs
@@ -151,8 +163,8 @@ capabilities:
     location: web/src/components/MiniMarkdown.tsx + LessonFigure.tsx
     status: healthy
     scope: web/education
-    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8, S0-L10'da `cost-stack` olarak yeniden kullanıldı) — yeni figür yazmadan önce bakılır. ⚠ **Ton kuralı:** yazı taşıyan dolgu OPAK olmaz (`fig-seg-lead` üzerine metin okunmuyor — RV-039, RV-053, RV-055) ve bir seçenek/kalem diğerinden daha vurgulu çizilmez (RV-016/026/027/028, RV-054). Durum bilgisi renkle değil **biçimle** kodlanır (kesikli çerçeve gibi). 📌 **İlk kural artık TESTLİ** (GD-007): `LessonFigure.test.tsx` kayıttaki 100 figürün her birini çizip hem render ediyor mu (svg · aria-label · şekil · altyazı) hem de opak dolgunun üzerine yazı düşmüş mü diye bakar; liste `FIGURE_KEYS` ile kayıt defterinden **türetilir**, elle tutulmaz, yani yeni figür otomatik kapsanır. İkinci kural (vurgu/niyet) hâlâ insan incelemesinde — **TD-003**.
-    last_verified_ref: ac61b7e
+    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8, S0-L10'da `cost-stack` olarak yeniden kullanıldı) — yeni figür yazmadan önce bakılır. ⚠ **Ton kuralı:** yazı taşıyan dolgu OPAK olmaz (RV-039, RV-053, RV-055, RV-065) ve bir seçenek/kalem diğerinden daha vurgulu çizilmez (RV-016/026/027/028, RV-054). Durum bilgisi renkle değil **biçimle** kodlanır (kesikli çerçeve, kontur — `fig-seg-strong`). 📌 **İlk kural testli, ama SINIRLI** (GD-007 + REVIEW-006): `LessonFigure.test.tsx` kayıttaki **101** figürün her birini çizip hem render ediyor mu (svg · aria-label · şekil · altyazı) hem de opak dolgunun üzerine yazı düşmüş mü diye bakar; liste `FIGURE_KEYS` ile kayıt defterinden **türetilir**, elle tutulmaz, yani yeni figür otomatik kapsanır. **Kapının sınırlarını bilerek yaz:** yalnız *tam opak* üç dolgu sınıfı (`fig-seg-lead` · `fig-bar-pos` · `fig-bar-neg`) ve yalnız `opacity ≥ 0,9`; yalnız `rect` ve `circle` (`path`/`polygon` DEĞİL); yazının **tahmini** kapladığı alan (jsdom `getBBox` vermez) ve **gerçek kontrast oranı ölçülmez**. ⚠ Bu satır REVIEW-006'dan önce kuralı *genel* olarak "TESTLİ" ilan ediyordu; o sırada `fig-bar-pos`/`fig-bar-neg` üzerinde **10 canlı ihlal** vardı ve kapı onları göremiyordu (RV-065/RV-076). Bu dosya CLAUDE.md §11.5 gereği **kod yazmadan önce** okunur, bu yüzden kapsam burada abartılmaz. Vurgu/niyet kuralı hâlâ insan incelemesinde — **TD-003**; görsel bozulma — **TD-004**.
+    last_verified_ref: HEAD   # REVIEW-006 (2026-11-22) ile yeniden doğrulandı
 
   - capability: Backlog projection (GitHub Issues -> generated/BACKLOG.md)
     location: .github/scripts/gen-backlog.sh + .github/workflows/adm-backlog-sync.yml
@@ -166,6 +178,28 @@ capabilities:
       projections listesi gereği yeniden üretir. Yeni bir ADM görünümü (ör.
       CURRENT_STATE) gerekirse bu script'in kalıbı genişletilir, yenisi yazılmaz.
       Oturum başı brifingi aynı dosyadan prio:1 satırlarını okur — ağ çağrısı yok.
+    last_verified_ref: HEAD
+
+  - capability: Test CI (gates actually run)
+    location: .github/workflows/tests.yml
+    entry_points: [web (vitest + tsc), backend (Application unit + Integration)]
+    status: healthy
+    scope: all
+    notes: >
+      REVIEW-006/RV-069 — bu iş akışından ÖNCE depoda hiçbir CI testi
+      koşturmuyordu (tek iş akışı backlog senkronuydu). Yani GD-006/GD-007'nin
+      kurduğu "makine kapıları" yerini almak için kuruldukları insan disiplinine
+      bağlı kalıyordu. Kapılar artık burada koşar: **SC-E30** (figür render +
+      okunabilirlik) web işinde, **SC-E31** (künye sözleşmesi M12 + M13) backend
+      işinde. Parasal hesap birim testleri (NFR-1) de backend işinde.
+      ⚠ INC-001'in DÖRT testi tek tek ADLARIYLA dışlanmış (issue #74). Sınıf
+      adıyla dışlamak ölçülerek yanlış bulundu: `ObservabilitySecurityTests`
+      altı test taşıyor, yalnız üçü kırmızı — sınıfı dışlamak üç YEŞİL testi de
+      düşürüyordu (189 yerine 186). #74 kapandığında `--filter` satırı silinir.
+      Yeni bir paket/test projesi eklenirse buraya da bir adım eklenir; yoksa
+      testi olan ama hiç koşmayan bir paket oluşur — bu yeteneğin varlık sebebi o.
+      Required check olarak işaretlenmedi: birleştirmeyi engellemez, görünür kılar.
+    tests: (kendisi bir kapı — doğrulaması koşum günlüğü)
     last_verified_ref: HEAD
 ```
 

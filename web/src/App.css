@@ -3856,6 +3856,15 @@ body.drawer-lock {
 .fig-seg {
   fill: color-mix(in srgb, var(--accent, #7aa2ff) 32%, transparent);
 }
+/* RV-086: bir çipi KARDEŞLERİNDEN ayırmak gerektiğinde kullanılır. Dolgu
+   `fig-seg` ile aynı kalır (yazı taşıyabilsin diye saydam), ayrım KONTURLA
+   verilir — kayıt defterinin kuralı: durum renkle değil biçimle kodlanır.
+   `fig-seg-lead`in opak dolgusuna dönmek yerine bu kullanılır. */
+.fig-seg-strong {
+  fill: color-mix(in srgb, var(--accent, #7aa2ff) 32%, transparent);
+  stroke: var(--accent, #8a94dc);
+  stroke-width: 1.5;
+}
 .fig-seg-lead {
   fill: var(--accent, #7aa2ff);
 }

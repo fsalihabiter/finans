@@ -1,0 +1,91 @@
+name: Tests
+
+# RV-069 (REVIEW-006, 2026-11-22) — bu iş akışı neden var:
+#
+# GD-006 ve GD-007 iki "makine kapısı" kurdu (figür render + okunabilirlik, ve
+# künye sözleşmesi M12/M13) ve ikisinin de gerekçesi "gözle denetimden teste
+# geçmek"ti. Ama depoda hiçbir CI testi koşturmuyordu — tek iş akışı backlog
+# senkronuydu. Yani kapılar, yerini almak için kuruldukları insan disiplinine
+# bağlı kalıyordu: biri yerelde `npm test` koşmayı unutursa kapı hiç işlemiyordu.
+#
+# ⚠ INC-001 (issue #74) — DIŞLAMA BİLİNÇLİ VE GÖRÜNÜR:
+# `HealthEndpointTests` (1) + `ObservabilitySecurityTests` (3) ortam hatasıyla
+# kırmızı: `WebApplicationFactory<Program>` Development ortamında ayağa kalkarken
+# `ApplyMigrationsOnStartup: true` yüzünden PostgreSQL arıyor, bulamayınca host
+# hiç başlamıyor. Bu bir KAPSAM borcu değil (INV-08), koşum ortamı sorunu — ve
+# bu diff'ten önce de kırmızıydı. Kalıcı kırmızı bir CI zamanla görmezden gelinir
+# (RV-087'nin alarm yorgunluğu deseniyle aynı), bu yüzden o dört test ADLARIYLA
+# dışlanır. #74 kapandığında aşağıdaki `--filter` satırı SİLİNİR ve bu blok da.
+#
+# Bu iş akışı birleştirmeyi engellemez (required check olarak işaretlenmedi);
+# amacı kapıların gerçekten koştuğunu görünür kılmak.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Aynı dalda üst üste gelen koşumlardan yalnız en sonu sürsün.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: web (vitest + tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sürüm verilmiyor: action, package.json'daki `packageManager: pnpm@11.5.0`
+      # alanını okur. İkisini birden vermek çakışma hatası üretebilir.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Figür render + okunabilirlik kapısı (SC-E30) burada koşar.
+      # `working-directory` + düz script adı kullanılıyor: `--filter` anlambilimine
+      # bağlı kalmamak için (paket adı `@finans/web`, yol filtresi değil).
+      - name: vitest
+        working-directory: web
+        run: pnpm test
+
+      - name: tsc --noEmit
+        working-directory: web
+        run: pnpm exec tsc --noEmit
+
+  backend:
+    name: backend (unit + seed/curriculum)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Çözüm dosyası .slnx (yeni biçim) — açıkça verilir ki keşif belirsizliği olmasın.
+      - run: dotnet restore backend/Finans.slnx
+
+      # Parasal hesapların birim testleri (CLAUDE.md §6 · NFR-1).
+      - name: Application.Tests
+        run: dotnet test backend/tests/Finans.Application.Tests --no-restore --verbosity minimal
+
+      # Künye sözleşmesi M12 + M13 (SC-E31) ve seed yapısal kuralları burada koşar.
+      # INC-001'in DÖRT testi tek tek adlarıyla dışlanır — gerekçe dosyanın başında.
+      # ⚠ Sınıf adıyla dışlamak YANLIŞ olurdu: ObservabilitySecurityTests altı test
+      # taşıyor ve yalnız üçü kırmızı; sınıfı dışlamak üç YEŞİL testi de düşürüyordu
+      # (ölçüldü: 189 yerine 186). Dışlama bu yüzden test adı düzeyinde.
+      - name: Integration.Tests (INC-001'in 4 testi dışlanmış)
+        run: >-
+          dotnet test backend/tests/Finans.Integration.Tests --no-restore --verbosity minimal
+          --filter "FullyQualifiedName!=Finans.Integration.Tests.HealthEndpointTests.Get_health_returns_ok_status&FullyQualifiedName!=Finans.Integration.Tests.ObservabilitySecurityTests.Liveness_health_returns_ok_without_db&FullyQualifiedName!=Finans.Integration.Tests.ObservabilitySecurityTests.Provided_correlation_id_is_echoed_back&FullyQualifiedName!=Finans.Integration.Tests.ObservabilitySecurityTests.Response_carries_generated_correlation_id"

@@ -1083,7 +1083,7 @@ nerede toplandığını görmeyi öğretir (mevcut içerikte bu sınır korunuyo
 **Tuzaklar:** "Düşük F/K = ucuz" · "Yüksek temettü verimi = iyi" · "Oranlar
 sektörler arası karşılaştırılır".
 
-**Figürler (7):** `price-alone-says-little` · `pe-price-per-lira`✳ ·
+**Figürler (9):** `price-alone-says-little` · `pe-price-per-lira`✳ ·
 `low-pe-not-cheap` · `book-value-scale` · `same-ratio-two-firms`✳ ·
 `dividend-yield-slice` · `ratio-context` *(mevcut)* · `sector-bands` ·
 `earnings-jump-distorts`✳.
@@ -1808,10 +1808,11 @@ işlenmiş örnek: iki alımın ağırlıklı ortalaması (aritmetik) → kademe
 kâr demektir" → `Context` gerçekleşmiş ↔ gerçekleşmemiş 🖼 `paper-vs-realized-2` →
 örnek: satmadan kâr/zarar → tuzak "kâğıt üstünde zarar, zarar değildir" →
 `Deep` maliyet bir hedef değildir 🖼 `cost-is-not-target` **(çok panelli)** →
-örnek: fiyat senin maliyetini bilmez → `LiveContext` → `Source`.
+örnek: fiyat senin maliyetini bilmez 🖼 `price-doesnt-know-you`
+*(S4-L3 ile paylaşılır)* → `LiveContext` → `Source`.
 
 **Figürler (6):** `avg-cost-scale`✳ · `staged-buys` · `same-total-different-avg`✳ ·
-`paper-vs-realized-2` · `cost-is-not-target`✳ · `price-doesnt-know-you`.
+`paper-vs-realized-2` · `cost-is-not-target`✳ · `price-doesnt-know-you`*(paylaşılan)*.
 
 **Değerlendirme (9):** Easy — maliyet tanımı · Medium — ağırlıklı ortalama
 hesabı, gerçekleşmiş/gerçekleşmemiş ayrımı · Hard — "ortalamayı düşürmek"
@@ -2459,7 +2460,8 @@ yeşil = içerik doğru" yanılsaması yaratılmaz.
 | **M9** | Ön-koşul zinciri **track içinde** kalır; **setler arası sert kilit yok** (`15` §6.3) |
 | **M10** 🆕 | **Tuzak blokları `DepthTier.Core`** — başlangıç seviyesinde katlanmaz (§2.4; `Example_blocks_declare_a_figure_and_traps_stay_in_core_tier`) |
 | **M11** | **LiveContext token'ı ↔ seed portföyü:** bir derste kullanılan her `{{token}}`'ın seed portföyünde karşılığı olmalı; yoksa satır sessizce düşer (`Type_weight_tokens_have_a_matching_holding_in_the_seed_portfolio`) |
-| **M12** 🆕 | **Künye figür sayısı ↔ figür planı mutabakatı.** Künye başlığındaki sayı (`**Figür planı (N)**`, etkileşimli varsa `N + M` toplamı) figür planı listesindeki **tekil anahtar sayısına** eşit olmalı. Ayrıca aşama planındaki her 🖼 anahtarı listede bulunmalı; listede olup **hiçbir aşamaya bağlı olmayan** anahtar yalnız 🎛 (etkileşimli) ya da `*(fallback)*` işaretliyse kabul edilir. Test künyeyi **dokümandan** okur, seed'den bağımsız çalışır (`Curriculum_figure_counts_match_their_own_figure_plans`) |
+| **M12** | **Künye figür sayısı ↔ figür planı mutabakatı.** Künye başlığındaki sayı (etkileşimli varsa `N + M` toplamı) figür planı listesindeki anahtar sayısına eşit olmalı — **ham sayım**, yineleme ayrı bir ihlal. Başlığın **üç lehçesi de** tanınır: `**Figür planı (N)**`, `**Figürler (N)**`, `**Mevcut figürler (N)**`; her `####` künyesi birini taşımak **zorunda**. Aşama planındaki her 🖼 anahtarı listede bulunmalı; listede olup **hiçbir aşamaya bağlı olmayan** anahtar yalnız kendi kaleminde 🎛 / `*(fallback)*` / "etkileşimli" işaretliyse kabul edilir. `*(mevcut)*` işaretli (ve `Mevcut figürler` künyesindeki) anahtarlar web kayıt defterinde **gerçekten** tanımlı olmalı. Test künyeyi **dokümandan** okur (`Curriculum_figure_counts_match_their_own_figure_plans`) |
+| **M13** 🆕 | **Seed → künye yönü.** Seed'de bir derse bağlı her `FigureKey`, o dersin künye figür planında **da** yazılı olmalı. M4'ün tersi yön: M4 "koddaki figür kayıtta var mı" der, M13 "kullanıcıya görünen figür kanonik künyede var mı" der. Kırmızı bir M12'yi *planı küçülterek* yeşile çevirmeyi engeller (`Every_seeded_figure_appears_in_its_lesson_blueprint`) |
 
 > ⚠ **M12 neden var (GD-006, 2026-11-22):** bu uyumsuzluk **dört GD üst üste**
 > (S0-L7 · S0-L8 · S0-L9 · S0-L10) yalnız GD açılışında, elle yakalandı ve her
@@ -2477,9 +2479,20 @@ yeşil = içerik doğru" yanılsaması yaratılmaz.
 > **S2-L2 aslında doğruydu.** İlk sayım `(N + 1 etkileşimli)` biçimindeki
 > başlıkta etkileşimli figürü toplama katmıyordu.
 >
-> ⚠ **M12'nin kapsamadığı:** künye ↔ **seed** mutabakatı (künyede planlanan her
-> figürün gerçekten seed'e girmiş olması). Henüz yazılmamış dersler (Set 2) bunu
-> kırardı; açık borç olarak duruyor. Kodda var olan figürleri M4 denetler.
+> ⚠ **M12'nin kapsamadığı:** künyede planlanıp **henüz yazılmamış** figürün
+> gerçekten seed'e girmesi (plan → seed yönü). Henüz yazılmamış dersler (Set 2-5)
+> bunu kırardı; **TD-002** olarak duruyor. Ters yön (seed → plan) **M13** ile
+> kapandı; kodda var olan figürün kayıtta tanımlı olmasını M4 denetler.
+>
+> 📌 **M12 REVIEW-006'da genişletildi (RV-066).** İlk hâli yalnız `Figür planı`
+> lehçesini tanıyordu, dolayısıyla 35 künyenin yalnız **18'ini** denetliyor ve
+> kalan 17'sini *sessizce* atlıyordu — ikisi (S1-L1, S1-L2) yayında olan dersler.
+> Üç lehçe birleştirilince **dört birikmiş sapma** ortaya çıktı ve düzeltildi:
+> **S1-L3** (7 ilan ↔ 9 anahtar — GD-006'nın düzelttiği on künyeyle aynı hata,
+> yalnız başka lehçede), **S3-L2** (`price-doesnt-know-you` aşamada tarif edilmiş
+> ama 🖼 işareti yok), ve dokuz künyede aşamaya bağlanmamış son figür → **TD-005**
+> (editöryal karar; sayılı istisna listesi olarak teste yazıldı, yenisi kırmızıya
+> düşer).
 
 ### 9.2 İnsan gözden geçirmesi (İ) — test edilemez
 

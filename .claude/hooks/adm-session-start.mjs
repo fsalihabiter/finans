@@ -87,8 +87,15 @@ try {
       (doctor.open.length ? '\n' + doctor.open.join('\n') : '\n(açık bulgu yok)'));
   }
 
-  // ── Uyarılar ─────────────────────────────────────────────────────────────
+  // ── Uyarılar ve notlar ───────────────────────────────────────────────────
+  // ⚠ RV-087 (REVIEW-006): ikisi AYRI tutulur. Önceki hâlde "oturum yok" notu da
+  // `warn` dizisine giriyordu, dolayısıyla uyarı bloğu HER oturumda basılıyordu ve
+  // normal durum uyarı biçiminde bir satır üretiyordu. S-009'un kök neden teşhisi
+  // "brifing her şeyi söylediği için adm-open gereksiz görünüyor" idi; sürekli
+  // görünen bir uyarı aynı alışkanlığı besler — uyarı sürekliyse sinyal değildir.
+  // Uyarı = eylem gerektiren bir sapma. Not = bağlam.
   const warn = [];
+  const note = [];
   if (openSessionId) {
     warn.push(`⚠ INV-13: state.yaml'da açık bir oturum var (${openSessionId}). Eskimişse adm-close ile kapat — sessizce ÜZERİNE YAZMA, bildir.`);
   } else {
@@ -98,7 +105,7 @@ try {
     // kapanışta diff tabanı elle seçiliyor ve INV-13'ün "tek açık oturum"
     // sözleşmesi hiç işletilmiyor. Hook oturumu KENDİSİ açamaz: koşulsuz
     // çalıştığı için salt soru-cevap turlarında da açardı. O yüzden uyarır.
-    warn.push(
+    note.push(
       '📌 Açık ADM oturumu YOK (state.yaml → session boş). Bu brifing yalnız OKUR: ' +
       'oturumu açmaz, started_at/start_sha yazmaz. İş yapacaksan `adm-open` çalıştır — ' +
       'yoksa kapanışta diff tabanı elle seçilmek zorunda kalır (son dört oturumda böyle oldu). ' +
@@ -107,7 +114,8 @@ try {
   }
   if (blockers.length) warn.push('⛔ Engeller: ' + blockers.join(' · '));
   if (reviewStatus && reviewStatus !== 'not-run' && reviewStatus !== 'clean') warn.push(`⚠ Review durumu: ${reviewStatus}`);
-  if (warn.length) out.push('\n' + warn.join('\n'));
+  if (warn.length) out.push('\n— UYARI —\n' + warn.join('\n'));
+  if (note.length) out.push('\n' + note.join('\n'));
 
   process.stdout.write(out.join('\n') + '\n');
 } catch (err) {
@@ -160,7 +168,13 @@ function scalar(text, key) {
 }
 
 function listItems(text, key) {
-  const inline = text.match(new RegExp(`^${key}:\\s*\\[(.*)\\]\\s*$`, 'm'));
+  // ⚠ RV-071 (REVIEW-006): sondaki açıklama izni `block()`'a eklenmişti ama BURAYA
+  // eklenmemişti. Sonuç: `blockers: [INC-001]  # not` satırı hiçbir şeyle eşleşmiyor,
+  // satır-içi kol boş dönüyor, blok kolu da `[...]` satırının altında girintili
+  // öğe bulamıyor → ENGEL LİSTESİ SESSİZCE BOŞALIYOR ve hook'un en önemli uyarısı
+  // ("⛔ Engeller") hiç basılmıyor. `session:` satırında aylarca fark edilmeyen
+  // hatanın birebir aynısı, aynı dosyada, 70 satır altında.
+  const inline = text.match(new RegExp(`^${key}:\\s*\\[(.*?)\\]\\s*(?:#.*)?$`, 'm'));
   if (inline) return inline[1].split(',').map((s) => s.trim()).filter(Boolean);
   return block(text, key).split(/\r?\n/)
     .map((l) => l.match(/^\s*-\s+(.*)$/)?.[1]?.trim())
