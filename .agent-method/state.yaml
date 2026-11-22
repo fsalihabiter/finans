@@ -9,13 +9,17 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: null       # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
+  gd_id: GD-006     # M12 kuralı + 10 künyenin toplu düzeltmesi — açıldı 2026-11-22.
+                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan kanıt sundu, insan onaylar.
+                    # Tarama düzeltmesi: uyumsuz künye sayısı **11 değil 10** (S2-L2 doğruymuş;
+                    # ilk sayım "(N + 1 etkileşimli)" başlığında etkileşimliyi toplamıyordu).
+                    # Yeni kapsam borcu: TD-002 (künye ↔ seed mutabakatı).
+                    # Önceki durum notu:
                     # GD-005 (S0-L10) 2026-11-22'de KABUL EDİLDİ → **Set 0 TAMAMLANDI (10/10)**.
                     #   Yedi kabul kriteri de ürün sahibi onayıyla kapandı; REVIEW-005'in
                     #   24 bulgusunun tamamı düzeltildikten SONRAKİ hâli kabul edildi.
-                    #   Künye tespiti: figür sayısı 9 → 10 (DÖRDÜNCÜ kez aynı hata;
-                    #   M12 adayı — künye başlığındaki figür sayısı ↔ aşama planındaki
-                    #   🖼 sayısı — hâlâ AÇIK iş, 16 dersin 11'inde uyuşmazlık var).
+                    #   Künye tespiti: figür sayısı 9 → 10 (DÖRDÜNCÜ kez aynı hata).
+                    #   → GD-006 ile KAPANDI: M12 kuralı yazıldı, 10 künye toplu düzeltildi.
                     #   Ders LiveContext taşımıyor; LessonsWithoutLiveContext'in İKİNCİ kaydı.
                     # Sıradaki aday: Faz 6'nın kalan kalemleri (Set 2 "Grafik ve Piyasa
                     # Okuryazarlığı" 8 ders · kavram sözlüğü) — `gh issue list --state open`.

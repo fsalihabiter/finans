@@ -359,6 +359,99 @@ public sealed class EducationSeedTests
     }
 
     /// <summary>
+    /// <b>M12 — künye figür sayısı ↔ figür planı mutabakatı</b> (GD-006).
+    /// <para>
+    /// `16-CURRICULUM.md` D-017 gereği <b>kanonik kaynaktır</b>: ders yazımı oradan
+    /// okunur. Künye başlığındaki figür sayısı ile künyenin kendi figür planı
+    /// birbirinden kaydığında hiçbir test kırılmıyordu — ders yine yayına giriyordu,
+    /// ama GD planlaması yanlış sayıyla başlıyordu. Hata <b>dört GD üst üste</b>
+    /// (S0-L7 · S0-L8 · S0-L9 · S0-L10) yalnız elle yakalandı ve her seferinde
+    /// sadece sıradaki ders düzeltildi; GD-006 taraması 18 künyenin <b>10'unda</b>
+    /// birikmiş uyumsuzluk buldu.
+    /// </para>
+    /// <para>
+    /// ⚠ Bu test künyenin <b>kendi iç tutarlılığını</b> denetler, künye ↔ kod
+    /// mutabakatını değil. İkincisini M4 yapar (seed'deki her `FigureKey` web
+    /// kayıt defterinde tanımlı olmalı). Künyede planlanıp henüz yazılmamış
+    /// dersler (Set 2) bu testi kırmaz — bilinçli kapsam sınırı.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void Curriculum_figure_counts_match_their_own_figure_plans()
+    {
+        var path = Path.Combine(RepoRoot(), ".claude", "docs", "16-CURRICULUM.md");
+        File.Exists(path).Should().BeTrue(
+            $"müfredat künyeleri kanonik kaynaktır (D-017) ve bu kural onları denetler: {path}");
+
+        var doc = File.ReadAllText(path);
+        // Künyeler "#### <ders-id> · <başlık>" ile başlar.
+        var blocks = Regex.Split(doc, @"(?m)^#### ").Skip(1).ToList();
+        var denetlenen = 0;
+
+        foreach (var block in blocks)
+        {
+            var ders = block.Split('\n')[0].Split('·')[0].Trim();
+
+            // Başlık: "**Figür planı (N):**" ya da "**Figür planı (N + M etkileşimli):**"
+            var baslik = Regex.Match(block,
+                @"\*\*Figür planı \((?<n>\d+)(?:\s*\+\s*(?<m>\d+)\s*etkileşimli)?\)");
+            if (!baslik.Success) continue; // künye değil (bölüm girişi vb.)
+            denetlenen++;
+
+            var beyan = int.Parse(baslik.Groups["n"].Value)
+                      + (baslik.Groups["m"].Success ? int.Parse(baslik.Groups["m"].Value) : 0);
+
+            // Plan paragrafı: başlıktan sonraki İLK boş satıra kadar.
+            var kalan = block[baslik.Index..];
+            var son = kalan.IndexOf("\n\n", StringComparison.Ordinal);
+            var plan = son < 0 ? kalan : kalan[..son];
+
+            var anahtarlar = Regex.Matches(plan, @"`(?<k>[a-z0-9-]+)`")
+                .Select(m => m.Groups["k"].Value).Distinct().ToList();
+
+            anahtarlar.Count.Should().Be(beyan,
+                $"'{ders}' künyesinin başlığı {beyan} figür ilan ediyor ama figür planı " +
+                $"{anahtarlar.Count} anahtar listeliyor — başlıktaki sayaç eskimiş olabilir (M12)");
+
+            // Aşama planındaki 🖼 anahtarları: başlıktan ÖNCEKİ "Aşama planı" bölümü.
+            var asamaBas = block.IndexOf("**Aşama planı", StringComparison.Ordinal);
+            if (asamaBas < 0 || asamaBas > baslik.Index) continue;
+            var asama = block[asamaBas..baslik.Index];
+            var asamaAnahtar = Regex.Matches(asama, @"🖼\s*`(?<k>[a-z0-9-]+)`")
+                .Select(m => m.Groups["k"].Value).Distinct().ToList();
+
+            foreach (var k in asamaAnahtar)
+            {
+                anahtarlar.Should().Contain(k,
+                    $"'{ders}' aşama planı `{k}` figürünü gösteriyor ama figür planı listesinde yok — " +
+                    "aşama figürsüz kalır ya da plan eksik kalır (M12)");
+            }
+
+            // Listede olup aşamada olmayan anahtar YALNIZ işaretliyse kabul edilir:
+            // 🎛 (etkileşimli, kendi satırı yok) ya da *(fallback)* (başka figürün yerine geçer).
+            foreach (var k in anahtarlar.Except(asamaAnahtar))
+            {
+                var yer = plan.IndexOf($"`{k}`", StringComparison.Ordinal);
+                var once = plan[Math.Max(0, yer - 4)..yer];
+                var sonra = plan[Math.Min(plan.Length, yer + k.Length + 2)
+                                ..Math.Min(plan.Length, yer + k.Length + 28)];
+                // 🎛 BMP dışı bir karakter (surrogate çifti) — char sabiti olamaz, string aranır.
+                var isaretli = once.Contains("🎛", StringComparison.Ordinal)
+                               || sonra.Contains("fallback", StringComparison.OrdinalIgnoreCase)
+                               || sonra.Contains("etkileşimli", StringComparison.OrdinalIgnoreCase);
+                isaretli.Should().BeTrue(
+                    $"'{ders}' figür planında `{k}` var ama hiçbir aşamaya bağlı değil; " +
+                    "kendi aşaması olmayan figür 🎛 (etkileşimli) ya da *(fallback)* diye " +
+                    "işaretlenmeli, yoksa plan ile aşamalar sessizce ayrışır (M12)");
+            }
+        }
+
+        denetlenen.Should().BeGreaterThanOrEqualTo(18,
+            "müfredatta en az 18 ders künyesi figür planı taşıyor; daha azı ayrıştırmanın " +
+            "bozulduğunu gösterir (künye biçimi değiştiyse bu testin regex'i de güncellenmeli)");
+    }
+
+    /// <summary>
     /// RV-064 (REVIEW-005): ders kaydı yalnız "yok ise ekle" ile yazıldığı sürece metin
     /// düzeltmeleri çalışan kurulumlara inmiyordu — S0-L10'un özeti, gövde düzeltildikten
     /// sonra bile eski hâliyle ekranda duruyordu. Bu test mutabakatı kilitler: seed ikinci

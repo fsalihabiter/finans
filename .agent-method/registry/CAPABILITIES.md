@@ -88,8 +88,15 @@ capabilities:
       kararı, yapısal taşıma ve kaydın kendi geçmişi seed tarafından geri alınmaz.
       Yeni bir içerik alanı eklenirse HEM karşılaştırmaya HEM kopyaya eklenmeli; eksik
       bırakılan alan sessizce eskimiş kalır (bu `Heading`'de bir kez, ders özetinde bir kez oldu).
-      Ders eklerken künye `16-CURRICULUM.md`'den okunur; yapısal sözleşme testleri M1-M10
+      Ders eklerken künye `16-CURRICULUM.md`'den okunur; yapısal sözleşme testleri **M1-M12**
       + tavsiye/kurum adı makine kapısı (RV-062).
+      📌 **Künye artık makine tarafından da okunuyor** (M12, GD-006): başlıktaki figür
+      sayısı ↔ figür planı ↔ aşama planı mutabakatı testle korunuyor. Yani
+      `16-CURRICULUM.md` yalnız insan dokümanı değil, **testi olan bir sözleşme**;
+      künye biçimi değişirse (`**Figür planı (N):**`, 🖼, 🎛, `*(fallback)*`)
+      `Curriculum_figure_counts_match_their_own_figure_plans` regex'i de güncellenmeli.
+      ⚠ Künye ↔ seed mutabakatı hâlâ **açık** (TD-002): planlanıp yazılmamış figür
+      ne M12'ye ne M4'e takılır.
     tests: backend/tests/Finans.Integration.Tests/EducationSeedTests.cs (+ EducationApiTests)
     last_verified_ref: ac61b7e
 

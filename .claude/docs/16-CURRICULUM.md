@@ -350,7 +350,7 @@ her yolda bir yıl sonra elde ne var, hangisinde belirsizlik vardı;
 **Tuzaklar:** "Yatırım kazanç garantisidir" · "Kısa vadede kazanan iyi
 yatırımcıdır" · "Yastık altı da bir yatırımdır".
 
-**Figür planı (7):** `three-actions`✳ · `ten-thousand-three-paths`✳ ·
+**Figür planı (8):** `three-actions`✳ · `ten-thousand-three-paths`✳ ·
 `capital-to-use` · `money-at-work`✳ · `no-guarantee` · `value-vs-zero-sum`✳ ·
 `hold-vs-flip` · `risk-premium-intro` — ✳ = çok panelli.
 
@@ -412,7 +412,7 @@ aritmetiği; (b) iki kişi 12 ay boyunca, biriken tutar farkı adım adım.
 **Tuzaklar:** "Kalanı biriktiririm" · "Zamla birikim otomatik artar" ·
 "Birikim oranı düşükse yatırım anlamsızdır".
 
-**Figür planı (7):** `three-buckets`✳ · `monthly-split` · `savings-rate-bar` ·
+**Figür planı (8):** `three-buckets`✳ · `monthly-split` · `savings-rate-bar` ·
 `two-savers`✳ · `leftover-trap` · `pay-yourself-first` · `lifestyle-creep` ·
 `rate-vs-return-lever`✳.
 
@@ -473,7 +473,7 @@ maliyet dönüşümü, adım adım.
 **Tuzaklar:** "Fon da kazandırsın" · "Faizden yüksek getiri varsa borç iyidir"
 (kesin ↔ belirsiz asimetrisi) · "Nakit tutmak hiçbir şey kaybettirmez".
 
-**Figür planı (7):** `shock-event` · `with-without-buffer`✳ · `buffer-traits` ·
+**Figür planı (9):** `shock-event` · `with-without-buffer`✳ · `buffer-traits` ·
 `liquidity-traded-away` · `monthly-to-yearly` · `debt-cost-ladder` ·
 `one-lira-two-jobs`✳ · `certain-vs-uncertain`✳ · `two-costs-of-cash`.
 
@@ -537,7 +537,7 @@ oran/limit verilmez; verilen her kurumsal rakam kaynaklı ve tarihlidir.
 **Tuzaklar:** "Rakam aynıysa kayıp yok" · "Resmî oran benim enflasyonum" ·
 "Enflasyon her kalemi eşit etkiler".
 
-**Figür planı (7 + 1 etkileşimli):** `same-basket-two-dates`✳ · `basket-price-up` ·
+**Figür planı (8 + 1 etkileşimli):** `same-basket-two-dates`✳ · `basket-price-up` ·
 `amount-vs-power` · `standing-still` · **`inflation-slider` (etkileşimli)** ·
 `erosion-curve` *(fallback)* · `index-basket` · `personal-basket` ·
 `compounded-erosion`✳.
@@ -601,7 +601,7 @@ alıp satınca ne kaybettirdiği (aritmetik).
 **Tuzaklar:** "Fon tek bir varlıktır" · "Her varlık istenildiği an nakde döner"
 · "Altın ve döviz de faiz getirir".
 
-**Figür planı (8):** `asset-class-map` · `deposit-lending` · `equity-ownership` ·
+**Figür planı (9):** `asset-class-map` · `deposit-lending` · `equity-ownership` ·
 `same-money-three-forms`✳ · `store-of-value` · `fund-wrapper`✳ ·
 `ownership-lending-axis`✳ · `liquidity-axis` · `bid-ask-spread`.
 
@@ -662,7 +662,7 @@ toplam değer.
 **Tuzaklar:** "Temettü bedava" · "Yüksek temettü her zaman iyi" · "Fiyat
 değişmediyse getiri yoktur".
 
-**Figür planı (8):** `two-return-sources`✳ · `rent-plus-value` ·
+**Figür planı (9):** `two-return-sources`✳ · `rent-plus-value` ·
 `capital-gain-line` · `cash-flow-drip` · `total-return-sum`✳ ·
 `dividend-not-free`✳ · `who-uses-your-capital` · `equity-vs-debt-return`✳ ·
 `paper-vs-realized`.
@@ -1249,7 +1249,7 @@ noktaya indiğinde ne kayboldu.
 **Tuzaklar:** "Çizginin her noktası gerçek bir fiyattır" · "Eksende olmayan gün
 yoktur" · "Yatay çizgi = hiçbir şey olmadı".
 
-**Figür planı (8):** `axes-anatomy`✳ · `one-dot-one-day` · `reading-a-value` ·
+**Figür planı (9):** `axes-anatomy`✳ · `one-dot-one-day` · `reading-a-value` ·
 `dots-to-line`✳ · `line-connects-closes` · `why-close` · `chart-checklist`✳ ·
 `missing-days` · `same-data-daily-weekly`✳.
 
@@ -1380,7 +1380,7 @@ gün içi yolculuk.
 **Tuzaklar:** "Uzun fitil sinyaldir" · "Yeşil mum = kazandırdı" · "Aynı kapanış
 = aynı gün" · "Mum grafiği daha ileri seviye ⇒ daha doğru".
 
-**Figür planı (11):** `intraday-path`✳ · `four-prices-one-day`✳ ·
+**Figür planı (12):** `intraday-path`✳ · `four-prices-one-day`✳ ·
 `candle-anatomy`✳ · `build-a-candle`✳ · `read-a-candle` · `body-and-wick` ·
 `wick-is-a-record` · `candle-color-is-relative`✳ · `green-but-lower`✳ ·
 `line-vs-candle`✳ · `same-close-different-day`✳ · `equal-open-close`.
@@ -1507,7 +1507,7 @@ gerçekleşme fiyatı.
 **Tuzaklar:** "Yüksek hacim = güçlü hareket" · "Ekrandaki fiyattan istediğim
 büyüklükte satarım" · "Hacim düşük ⇒ kimse ilgilenmiyor ⇒ ucuz".
 
-**Figür planı (9):** `volume-bars` · `same-move-different-volume`✳ ·
+**Figür planı (8):** `volume-bars` · `same-move-different-volume`✳ ·
 `order-book-depth`✳ · `order-eats-the-book`✳ · `thin-vs-deep-market`✳ ·
 `spread-as-cost`✳ · `exit-without-discount` · `volume-story-trap`✳.
 
@@ -1575,7 +1575,7 @@ yasak ve **tuzak** olarak işlenir.
 **Tuzaklar:** "Zaten belliydi" · "Bu formasyon şunu gösterir" · "Yıllardır işe
 yarıyor" · "Grafiği okumayı bilen geleceği görür".
 
-**Figür planı (10):** `pattern-seeking-mind`✳ · `obvious-in-hindsight`✳ ·
+**Figür planı (11):** `pattern-seeking-mind`✳ · `obvious-in-hindsight`✳ ·
 `hindsight-feeling` · `two-stories-one-chart`✳ · `pattern-promise` ·
 `random-walk-looks-real`✳ · `line-drawn-after`✳ · `rule-breaks-out-of-sample` ·
 `two-approaches`✳ · `four-questions`✳ · `nirengi-shows-not-predicts`.
@@ -2458,6 +2458,28 @@ yeşil = içerik doğru" yanılsaması yaratılmaz.
 | **M8** | MiniMarkdown alt kümesi dışına çıkılmaz *(link, T6.8 indikten sonra izinli)* |
 | **M9** | Ön-koşul zinciri **track içinde** kalır; **setler arası sert kilit yok** (`15` §6.3) |
 | **M10** 🆕 | **Tuzak blokları `DepthTier.Core`** — başlangıç seviyesinde katlanmaz (§2.4; `Example_blocks_declare_a_figure_and_traps_stay_in_core_tier`) |
+| **M11** | **LiveContext token'ı ↔ seed portföyü:** bir derste kullanılan her `{{token}}`'ın seed portföyünde karşılığı olmalı; yoksa satır sessizce düşer (`Type_weight_tokens_have_a_matching_holding_in_the_seed_portfolio`) |
+| **M12** 🆕 | **Künye figür sayısı ↔ figür planı mutabakatı.** Künye başlığındaki sayı (`**Figür planı (N)**`, etkileşimli varsa `N + M` toplamı) figür planı listesindeki **tekil anahtar sayısına** eşit olmalı. Ayrıca aşama planındaki her 🖼 anahtarı listede bulunmalı; listede olup **hiçbir aşamaya bağlı olmayan** anahtar yalnız 🎛 (etkileşimli) ya da `*(fallback)*` işaretliyse kabul edilir. Test künyeyi **dokümandan** okur, seed'den bağımsız çalışır (`Curriculum_figure_counts_match_their_own_figure_plans`) |
+
+> ⚠ **M12 neden var (GD-006, 2026-11-22):** bu uyumsuzluk **dört GD üst üste**
+> (S0-L7 · S0-L8 · S0-L9 · S0-L10) yalnız GD açılışında, elle yakalandı ve her
+> seferinde sadece sıradaki dersin künyesi düzeltildi. GD-006 taraması 18 künyenin
+> **10'unda** birikmiş uyumsuzluk buldu ve hepsini düzeltti; onunda da yanlış olan
+> tek şey **başlıktaki sayaçtı** (figür planı listesi ile aşama planı birbiriyle
+> zaten tutarlıydı). Künye D-017 gereği kanonik kaynaktır: başlıktaki sayı
+> yanlışsa GD planlaması yanlış sayıyla başlar ve hiçbir test kırılmaz.
+>
+> Düzeltilenler: S0-L1 (7→8) · S0-L2 (7→8) · S0-L3 (7→9) · S0-L4 (7+1→8+1) ·
+> S0-L5 (8→9) · S0-L6 (8→9) · S2-L1 (8→9) · S2-L3 (11→12) · **S2-L5 (9→8, tek
+> ters yön)** · S2-L6 (10→11).
+>
+> 📌 Önceki notlarda bu sayı **11** diye geçiyordu; tarama bunu düzeltti —
+> **S2-L2 aslında doğruydu.** İlk sayım `(N + 1 etkileşimli)` biçimindeki
+> başlıkta etkileşimli figürü toplama katmıyordu.
+>
+> ⚠ **M12'nin kapsamadığı:** künye ↔ **seed** mutabakatı (künyede planlanan her
+> figürün gerçekten seed'e girmiş olması). Henüz yazılmamış dersler (Set 2) bunu
+> kırardı; açık borç olarak duruyor. Kodda var olan figürleri M4 denetler.
 
 ### 9.2 İnsan gözden geçirmesi (İ) — test edilemez
 
