@@ -29,7 +29,7 @@ capabilities:
       sınıflandırması), `FundReturnFor` (iki havuz getirisi),
       `VestedPortfolioValueFor` (değer), `SplitTotalFundValue` (eski tek değerin
       bölünmesi). Bu kural beş yüzeyde aynı: liste · özet · detay · değer serisi · senaryo.
-    last_verified_ref: 6d5a399
+    last_verified_ref: 1bbf7d7
 
   - capability: Sabit birim fiyatlı varlıklar
     location: backend/src/Finans.Application/Portfolio/AssetPricing.cs
@@ -42,7 +42,7 @@ capabilities:
       pozisyonu fiyatsız kalıyor, toplam görünen satırların toplamına eşit olmuyordu.
       Yeni sabit fiyatlı tür eklenecekse tek yer burasıdır.
     tests: backend/tests/Finans.Integration.Tests/PortfolioHistoryApiTests.cs
-    last_verified_ref: 6d5a399
+    last_verified_ref: 1bbf7d7
 
   - capability: Holdings & transactions CRUD
     location: backend/src/Finans.Infrastructure/Services/HoldingService.cs (+ HoldingMapping, PortfolioService)

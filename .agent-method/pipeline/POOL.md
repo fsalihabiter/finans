@@ -92,7 +92,7 @@ kanıt dosyaları. Uygulama notları issue gövdelerinde duruyor. T-BES çapraz 
 Taşımadan önceki kaynakların tam hâli git geçmişindedir:
 
 ```bash
-git show c584ba1:.agent-method/pipeline/POOL.md
+git show f3df082:.agent-method/pipeline/POOL.md
 ```
 
 ```bash

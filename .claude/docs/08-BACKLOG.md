@@ -22,7 +22,7 @@
 | Kapsam (test) borcu | `.agent-method/pipeline/TEST_DEBT.md` |
 | Tamamlanmış görevlerin tarih sıralı çalışma günlüğü | `.claude/tasks/TASKLOG.md` (dondurulmuş; issue gövdeleri bunun özetini taşır) |
 | Bu dosyanın taşınmadan önceki tam hali | `git show ac61b7e:.claude/docs/08-BACKLOG.md` |
-| POOL tablosunun taşınmadan önceki tam hali | `git show c584ba1:.agent-method/pipeline/POOL.md` |
+| POOL tablosunun taşınmadan önceki tam hali | `git show f3df082:.agent-method/pipeline/POOL.md` |
 
 Eski `T*` görev ID'leri (T6.16, T7.2, T9.1, TM.3 …) **korunmuştur** — issue
 başlıklarında önek olarak duruyorlar, TASKLOG/müfredat referansları geçerli:

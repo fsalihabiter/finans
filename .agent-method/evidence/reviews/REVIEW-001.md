@@ -3,8 +3,8 @@ review_id: REVIEW-001
 runtime: claude-code
 timestamp: "2026-09-20"
 scope: "GD-001 — S0-L7 dersi, figürler, D-017 test kuralı, SPIKE-001 ölçüm düzeneği"
-base_ref: 30c0bc9
-head_ref: 929771a
+base_ref: 4342767
+head_ref: 10be368
 active_gd: GD-001
 reviewers:
   - content-compliance
@@ -25,7 +25,7 @@ findings:
     status: resolved
     resolution:
       resolved_at: "2026-09-20"
-      evidence_ref: "a09d089 · EducationSeedTests.No_block_including_sources_predicts_or_ranks_instruments"
+      evidence_ref: "f25922a · EducationSeedTests.No_block_including_sources_predicts_or_ranks_instruments"
       note: "Kullanıcı kararı. Tarama Lesson.Summary ve Lesson.BodyMarkdown alanlarını da kapsıyor. Genişletilince mevcut içerikte bir false positive çıktı (\"Neden yüksek getiri\" — sıralama regexi kelime sınırı yoktu) → regex düzeltildi."
   - id: RV-002
     severity: medium
@@ -39,7 +39,7 @@ findings:
     status: resolved
     resolution:
       resolved_at: "2026-09-20"
-      evidence_ref: "a09d089 · EducationSeedTests (LiveContext istisna listesi denetimi)"
+      evidence_ref: "f25922a · EducationSeedTests (LiveContext istisna listesi denetimi)"
       note: "Kullanıcı kararı (\"RV-001 ve RV-002yi şimdi kapat\"). Listedeki her slug için gerçek bir dersin varlığı doğrulanıyor; ders yeniden adlandırılırsa test kırmızıya döner."
   - id: RV-003
     severity: low
@@ -63,7 +63,7 @@ findings:
 
 # REVIEW-001 — GD-001 (S0-L7) · 2026-09-20
 
-**Kapsam:** `30c0bc9..929771a` — 5 dosya, +994/−17.
+**Kapsam:** `4342767..10be368` — 5 dosya, +994/−17.
 Değişimin niteliği karışık: **içerik/seed** (ders metni, quiz, kavramlar) ·
 **test kuralı değişikliği** (D-017) · **UI/SVG** (9 figür) · **yeni test aracı**
 (SPIKE-001 ölçüm düzeneği). Seçilen bakış açıları bu karışıma göre belirlendi;

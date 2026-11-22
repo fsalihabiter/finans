@@ -3,8 +3,8 @@ review_id: REVIEW-003
 runtime: claude-code
 timestamp: "2026-11-18"
 scope: "GD-003 — S0-L8 'Vade, hedef ve portföy': ders içeriği + test, seed (ders, ön-koşul, 4 kavram), 9 figür, yapısal test sayımları, künye düzeltmesi"
-base_ref: df6c2d4
-head_ref: "WORKTREE (commit edilmemiş, df6c2d4 üzerinde)"
+base_ref: 854fc6b
+head_ref: "WORKTREE (commit edilmemiş, 854fc6b üzerinde)"
 active_gd: GD-003
 reviewers:
   - content-correctness
@@ -76,7 +76,7 @@ findings:
     status: resolved
     resolution:
       resolved_at: "2026-11-22"
-      evidence_ref: "122be9e · EducationContent.cs (S0-L8 tuzak bloğu) · EducationSeedTests 22/22 (M7)"
+      evidence_ref: "96052e3 · EducationContent.cs (S0-L8 tuzak bloğu) · EducationSeedTests 22/22 (M7)"
       note: "Ürün sahibi metni okuyup onayladı ('okudum metni ve iyi duruyor onaylıyorum'). Bulgunun gerektirdiği insan kararı budur: 'bedeli daha sessiz ödenir' yerine bedel adlandırıldı (alım gücü erimesi) ve karar okura iade edildi; D-002 açısından yeterli bulundu."
   - id: RV-016
     severity: low
@@ -115,7 +115,7 @@ findings:
 # REVIEW-003 — GD-003 (S0-L8 · Vade, hedef ve portföy)
 
 ## Kapsam
-`df6c2d4` → commit edilmemiş çalışma ağacı. Değişiklik türü: eğitim içeriği + seed verisi +
+`854fc6b` → commit edilmemiş çalışma ağacı. Değişiklik türü: eğitim içeriği + seed verisi +
 SVG figürleri + yapısal testler (migration yok). Bakış açıları sırayla yürütüldü (tek ajan).
 
 ## Doğrulananlar (bulgu yok)

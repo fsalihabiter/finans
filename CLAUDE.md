@@ -305,7 +305,7 @@ okunur ve oraya yazılır.
 **112 kapalı issue** olarak geriye dönük girildi (`gh issue list --state closed`),
 uygulama notları gövdelerinde. TASKLOG tarih sıralı çalışma günlüğü olarak
 yerinde kalır (dondurulmuş); taşınmadan önceki tabloların tam hâli git
-geçmişindedir (`ac61b7e` → 08-BACKLOG, `c584ba1` → POOL).
+geçmişindedir (`ac61b7e` → 08-BACKLOG, `f3df082` → POOL).
 
 ---
 

@@ -3,8 +3,8 @@ review_id: REVIEW-002
 runtime: claude-code
 timestamp: "2026-09-22"
 scope: "GD-002 — BES iki fon havuzu, migration + veri taşıma, okuma yolu, nakit kuralı, detay para birimi, geri linki"
-base_ref: 929771a
-head_ref: 4bc094e
+base_ref: 10be368
+head_ref: 4c68bca
 active_gd: GD-002
 reviewers:
   - correctness
@@ -96,7 +96,7 @@ findings:
 
 # REVIEW-002 — GD-002 (BES iki havuz + düzeltmeler) · 2026-09-22
 
-**Kapsam:** `929771a..4bc094e` — 23 dosya, +3316/−47 (migration Designer dosyaları dahil).
+**Kapsam:** `10be368..4c68bca` — 23 dosya, +3316/−47 (migration Designer dosyaları dahil).
 Değişimin niteliği **karışık ve yüksek riskli**: DB migration **+ veri taşıma**, parasal hesap,
 okuma yolunun beş yüzeyi, API sözleşmesi (DTO alanları), web. Bakış açıları buna göre:
 correctness · data-integrity · migration-safety · rollback · api-contract · ui-regression ·

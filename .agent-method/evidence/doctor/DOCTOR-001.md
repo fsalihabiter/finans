@@ -63,7 +63,7 @@ findings:
     resolution:
       resolved_at: "2026-09-22"
       evidence_ref: "S-003 (dizin silindi; `git status` temiz)"
-      note: "Silmeden ÖNCE kayıp iş kontrolü yapıldı: çalışma ağacı temiz (`git status --porcelain` boş), stash yok, tek dal `main`, HEAD 30c0bc9 ve bu commit kök reponun main'inin ATASI (`git merge-base --is-ancestor` doğruladı). Yani klonda kökte bulunmayan hiçbir commit/değişiklik yoktu → 16 MB silindi."
+      note: "Silmeden ÖNCE kayıp iş kontrolü yapıldı: çalışma ağacı temiz (`git status --porcelain` boş), stash yok, tek dal `main`, HEAD 4342767 ve bu commit kök reponun main'inin ATASI (`git merge-base --is-ancestor` doğruladı). Yani klonda kökte bulunmayan hiçbir commit/değişiklik yoktu → 16 MB silindi."
   - id: DR-006
     severity: low
     evidence: strong
