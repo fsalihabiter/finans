@@ -9,11 +9,17 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-006     # M12 kuralı + 10 künyenin toplu düzeltmesi — açıldı 2026-11-22.
-                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan kanıt sundu, insan onaylar.
-                    # Tarama düzeltmesi: uyumsuz künye sayısı **11 değil 10** (S2-L2 doğruymuş;
-                    # ilk sayım "(N + 1 etkileşimli)" başlığında etkileşimliyi toplamıyordu).
-                    # Yeni kapsam borcu: TD-002 (künye ↔ seed mutabakatı).
+  gd_id: null       # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
+                    # GD-006 (M12 + 10 künyenin toplu düzeltmesi) 2026-11-22'de KABUL EDİLDİ.
+                    #   Künye başlığındaki figür sayısı artık TESTLE korunuyor; kuralın iki
+                    #   kolda da kırmızıya düştüğü bilerek bozularak kanıtlandı.
+                    #   Tarama düzeltmesi: uyumsuz künye sayısı **11 değil 10** (S2-L2
+                    #   doğruymuş; ilk elle sayım "(N + 1 etkileşimli)" başlığında etkileşimli
+                    #   figürü toplama katmıyordu — kuralın gerekçesini doğrulayan ayrıntı).
+                    #   M11 de kural tablosuna eklendi: kodda vardı, tabloda yoktu.
+                    #   Yeni kapsam borcu: **TD-002** — künye ↔ seed mutabakatı denetlenmiyor;
+                    #   planlanıp hiç yazılmamış figür ne M12'ye ne M4'e takılır. Set 2
+                    #   bitmeden yazılamaz (8 ders künyede planlı, henüz yazılmamış).
                     # Önceki durum notu:
                     # GD-005 (S0-L10) 2026-11-22'de KABUL EDİLDİ → **Set 0 TAMAMLANDI (10/10)**.
                     #   Yedi kabul kriteri de ürün sahibi onayıyla kapandı; REVIEW-005'in
