@@ -9,12 +9,12 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-004     # S0-L9 "Fiyat nereden çıkıyor?" — açıldı 2026-11-22, ürün
-                    # sahibinin "sonraki adımla devam et" talimatıyla. Issue #10.
-                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan önerdi, insan onaylar.
-                    # Künye düzeltmesi tespit edildi: figür sayısı 9 → 10 (üçüncü kez
-                    # aynı hata; M12 kuralı adayı §5'te).
-                    # GD-003 (S0-L8) 2026-11-22'de kabul edildi ve kapandı → Set 0 8/10.
+  gd_id: null       # GD-004 (S0-L9) 2026-11-22'de KABUL EDİLDİ ve kapandı → status: done.
+                    # Altı kriter de ürün sahibi onayıyla ("Hepsini onaylıyorum").
+                    # AC-4 bir çelişkiyle kabul edildi (kaynak teyidi) → issue #195.
+                    # Set 0 artık 9/10. INV-04/INV-05: done GD aktif bırakılmaz.
+                    # Sıradaki aday: S0-L10 "Bir alım nasıl gerçekleşir?" (issue #11)
+                    # — GD-005 olarak açmak ürün sahibinin kararı.
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
