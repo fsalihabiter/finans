@@ -23,18 +23,22 @@ session:            # current open session; cleared by adm-close
   #   tuzak-katman düzeltmesi (18 yer, kural → 16 §2.4 + M10) + D-021.
   #   Commit'lendi: cbfa9a6 (S0-L8 + müfredat) · 41dc9f0 (ajan araç zinciri) +
   #   kapanış commit'i. main'de, push edilmedi.
-  #   Sıradaki: compose seed doğrulaması + tarayıcı teyidi →
-  #   REVIEW-003'ün 5 açık bulgusu + GD-003 kabulü (INV-06).
-  #   ⚠ Tutarsızlık (S-006'da bildirildi): GD-003.md §3 compose+tarayıcı teyidini
-  #   [x] (2026-11-22, §7) işaretliyor; yukarıdaki özet hâlâ "bekliyor" diyor.
-  #   Kanonik olan GD dosyası. Düzeltme kullanıcı kararı.
+  #   Yukarıdaki "sıradaki" satırı 2026-11-22'de ESKİDİ: compose seed doğrulaması
+  #   + tarayıcı teyidi YAPILDI ve b55bc58 ile commit'lendi (GD-003.md §7 kanıtı).
+  #   S-006 bunu tutarsızlık olarak bildirmişti; push sırasında b55bc58 görülünce
+  #   çözüldü. Kalan: AC-1..AC-6 insan kabulü (issue #76-#81) + REVIEW-003'ün
+  #   5 açık bulgusu (#5-#9). AC-2 için b55bc58'in notu: seed portföyünde
+  #   5 LiveContext token'ının 3'ü çözülüyor — karar ürün sahibinde.
   # S-006 (asgari kanıt notu, adm-open'sız) 2026-11-22T11:40:00Z →
   #   evidence/sessions/S-006.md
   #   Görev takibi GitHub Issues'a taşındı (D-022): 78 açık + 112 kapalı issue,
   #   12 milestone, 17 etiket, 27 blocked-by; POOL.md → işaretçi; generated/BACKLOG.md
   #   projeksiyonu + CI senkronu. Ürün koduna dokunulmadı; GD-003 in-progress.
-  #   Commit: 795a41f (taşıma) + geriye dönük 112 kapalı issue turu. Push edilmedi.
-  #   Sıradaki: push → pano kurulumu (gh auth refresh -s project) → GD-003.
+  #   Commit: 795a41f (taşıma) · 29cf27f (geriye dönük 112 kapalı issue).
+  #   origin/main'e push edildi; adm-backlog-sync.yml CI'da doğrulandı.
+  #   ⚠ b55bc58 bu oturumun işi DEĞİL (başka oturum, GD-003 doğrulama kanıtı) —
+  #   S-006 §"Gözlendi, bu oturuma ait değil".
+  #   Sıradaki: pano kurulumu (gh auth refresh -s project) → GD-003 kabulü.
   id: null
   runtime: null
   started_at: null

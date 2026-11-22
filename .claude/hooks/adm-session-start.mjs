@@ -71,7 +71,7 @@ try {
   if (backlog) {
     out.push(`\n— SIRADAKİ AÇIK İŞLER (prio:1 · kanonik: GitHub Issues, D-022) —`);
     out.push(backlog.rows.length ? backlog.rows.join('\n') : '(prio:1 etiketli açık issue yok)');
-    out.push(`Tümü: \`gh issue list --state open\` · projeksiyon: ${backlog.total} açık issue, üretim ${backlog.generatedAt || '?'}${backlog.stale ? ' ⚠ (7 günden eski — `bash .github/scripts/gen-backlog.sh`)' : ''}`);
+    out.push(`Tümü: \`gh issue list --state open\` · projeksiyon: ${backlog.total} açık issue, son değişiklik ${backlog.generatedAt || '?'}${backlog.stale ? ' ⚠ (30 günden beri değişmedi — CI senkronu kırılmış olabilir: `gh run list --workflow adm-backlog-sync.yml`)' : ''}`);
   }
 
   // ── Son oturum kanıtı (en yeni closed_at) ────────────────────────────────
@@ -203,10 +203,12 @@ function openWork(file) {
     rows.push(`  ${c[1]} ${c[2]}${blocked}`);
     if (rows.length >= 6) break;
   }
+  // Damga artik son ICERIK degisikligini gosterir (uretici idempotent), o yuzden
+  // esik genis: aylardir hic degismemesi CI senkronunun kirildigina isarettir.
   let stale = false;
   if (generatedAt) {
     const age = Date.now() - Date.parse(generatedAt);
-    stale = Number.isFinite(age) && age > 7 * 864e5;
+    stale = Number.isFinite(age) && age > 30 * 864e5;
   }
   return { rows, total, generatedAt, stale };
 }

@@ -51,6 +51,8 @@ done_body=$(gh issue list --repo "$REPO" --state closed --limit 1000 --json numb
 now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 mkdir -p "$(dirname "$OUT")"
+TMP="$OUT.tmp"
+trap 'rm -f "$TMP"' EXIT
 {
   echo "<!-- GENERATED FILE — DO NOT EDIT BY HAND. -->"
   echo "# BACKLOG — GitHub Issues projeksiyonu"
@@ -93,8 +95,16 @@ mkdir -p "$(dirname "$OUT")"
   echo "- **Kapanmış işlerin tam listesi** → \`gh issue list --state closed\` (yukarıda yalnız faz bazlı sayım var); tarihsel notlar \`.claude/tasks/TASKLOG.md\` ve git geçmişindedir."
   echo "- **Kararlar** → \`.agent-method/decisions/D-NNN-*.md\` (kanonik, taşınmadı)."
   echo "- **Döngü gerekçesi / kabul kriterleri** → \`.agent-method/cycles/GD-NNN.md\` (kanonik)."
-  echo "- **Fikirler** → \`.agent-method/pipeline/IDEAS.md\` (POOL'a yükseltme insan kararıdır)."
+  echo "- **Fikirler** → \`.agent-method/pipeline/IDEAS.md\` (issue'ya yükseltme insan kararıdır)."
   echo "- **Test borcu** → \`.agent-method/pipeline/TEST_DEBT.md\` (INV-08)."
-} > "$OUT"
+} > "$TMP"
 
-echo "yazıldı: $OUT ($total açık issue)"
+# Idempotent: YALNIZ icerik degistiyse yaz. Uretim damgasi her kosuda degisir,
+# onu karsilastirmanin disinda tutmazsak her issue olayi bos bir commit uretir.
+if [ -f "$OUT" ] && cmp -s <(sed '/^> Üretim:/d' "$TMP") <(sed '/^> Üretim:/d' "$OUT"); then
+  echo "değişiklik yok: $OUT (içerik aynı; üretim damgası korundu)"
+  exit 0
+fi
+
+mv -f "$TMP" "$OUT"
+echo "yazıldı: $OUT ($total açık · $done_total kapalı issue)"

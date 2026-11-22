@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T11:15:07Z · **78 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-22T11:17:15Z · **78 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -152,5 +152,5 @@ gh issue list --repo fsalihabiter/finans --state closed --limit 200
 - **Kapanmış işlerin tam listesi** → `gh issue list --state closed` (yukarıda yalnız faz bazlı sayım var); tarihsel notlar `.claude/tasks/TASKLOG.md` ve git geçmişindedir.
 - **Kararlar** → `.agent-method/decisions/D-NNN-*.md` (kanonik, taşınmadı).
 - **Döngü gerekçesi / kabul kriterleri** → `.agent-method/cycles/GD-NNN.md` (kanonik).
-- **Fikirler** → `.agent-method/pipeline/IDEAS.md` (POOL'a yükseltme insan kararıdır).
+- **Fikirler** → `.agent-method/pipeline/IDEAS.md` (issue'ya yükseltme insan kararıdır).
 - **Test borcu** → `.agent-method/pipeline/TEST_DEBT.md` (INV-08).
