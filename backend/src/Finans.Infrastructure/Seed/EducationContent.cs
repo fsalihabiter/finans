@@ -3319,9 +3319,10 @@ internal static class EducationContent
         **%2 geride** başladın. Bu, makasın **maliyet** tarafıdır: alıp satmanın
         kendisinin bir bedeli vardır ve bu bedel fiyat hareketinden bağımsızdır.
 
-        Makas ne kadar genişse bu bedel o kadar büyür. Ve bu bedel **işlem başına**
-        doğar: iki işlem iki kez, on işlem on kez ödenir. Kaç işlem yapacağın senin
-        kararın; buradaki tek nokta, her birinin bir bedeli olduğu.
+        Makas ne kadar genişse bu bedel o kadar büyür. Ve bu bedel **tur başına**
+        doğar — bir alım ile onu izleyen satımın toplamında bir kez: iki tur iki kez,
+        beş tur beş kez. Kaç tur yapacağın senin kararın; buradaki tek nokta, her
+        birinin bir bedeli olduğu.
         """, "spread-cost"),
 
         Trap("""
@@ -3569,17 +3570,18 @@ internal static class EducationContent
         ## Aracı kurum: senin adına emri ileten taraf
 
         Sen borsaya doğrudan emir veremezsin. Arada **aracı kurum** vardır: emri senin
-        adına iletir, hesabını tutar, takası yürütür ve sana ekranı sağlar.
+        adına iletir, hesabını tutar, takasta seni temsil eder ve sana ekranı sağlar.
 
-        Yaptığı işin karşılığında bir ücret alır — buna **komisyon** denir. Genellikle
-        işlem tutarının küçük bir yüzdesidir ve **her işlemde** alınır.
+        Yaptığı işin karşılığında bir ücret alır — buna **komisyon** denir. İşlem
+        tutarının bir yüzdesi olarak hesaplanır ve **her işlemde** alınır.
 
         > Bu derste geçen komisyon oranları **kurgusaldır** ve yalnızca aritmetiği
         > göstermek içindir. Gerçek oranlar kuruma, ürüne ve tutara göre değişir;
         > bu ders hiçbir kurumu adlandırmaz ve karşılaştırmaz.
 
         Dikkat edilecek ayrım: borsa **eşleştirir**, aracı kurum **iletir ve kaydı
-        tutar.** İkisi ayrı taraflardır.
+        tutar**, takası ise **merkezi bir takas kuruluşu** yürütür. Üçü ayrı
+        taraflardır: aracı kurum takasın bir tarafıdır, yürütücüsü değil.
         """, "broker-role"),
 
         Core("""
@@ -3591,17 +3593,28 @@ internal static class EducationContent
         | | Piyasa emri | Limit emri |
         |---|---|---|
         | Söylediğin | "Şimdi al" | "Şu fiyattan ya da daha iyisinden al" |
-        | Garanti eden | **Gerçekleşmeyi** | **Fiyatı** |
-        | Garanti etmeyen | Fiyatı | Gerçekleşmeyi |
+        | Öne aldığı | **Gerçekleşmeyi** | **Fiyatı** |
+        | Karşılığında bıraktığı | Fiyat kesinliği | Gerçekleşme kesinliği |
 
-        **Piyasa emri** o anda duran en iyi karşı kotasyondan işlem görür: hemen
-        gerçekleşir, ama hangi fiyattan gerçekleşeceğini önceden bilemezsin.
+        **Piyasa emri** o anda duran en iyi karşı kotasyondan başlayarak işlem görür.
+        Karşı tarafta emir varsa hemen gerçekleşir. Ama "şimdi al" demek karşı tarafı
+        var etmez: ortada satmaya razı kimse yoksa emir de gerçekleşmez. Önceki derste
+        gördüğün **ince** piyasa tam bu durumdur.
+
+        Fiyatını da önceden bilemezsin, çünkü ekranda duran en iyi kotasyonun
+        **arkasında belirli bir miktar** vardır. Emrin o miktardan büyükse kalanı bir
+        sonraki — yani daha uzak — seviyeden karşılanır; ayrıca emir borsaya varana
+        kadar kotasyon değişebilir.
 
         **Limit emri** bir sınır koyar: "en fazla bu kadar öderim". Fiyat oraya
         gelmezse emir **bekler** — ve hiç gerçekleşmeyebilir.
 
-        İkisi arasındaki şey bir **takastır**, bir üstünlük sırası değil: kesin
-        gerçekleşme ile kesin fiyat arasında seçim yaparsın. Hangisinin uygun olduğu
+        Üçüncü bir sonuç da var ve ikisi için de geçerli: emrin **bir kısmı**
+        gerçekleşip kalanı defterde bekleyebilir. "Ya hepsi ya hiçbiri" diye bir kural
+        yoktur.
+
+        İkisi arasındaki şey bir **takastır**, bir üstünlük sırası değil: gerçekleşmeyi
+        öne almakla fiyatı öne almak arasında seçim yaparsın. Hangisinin uygun olduğu
         duruma bağlıdır ve bu dersin konusu seçimi yapmak değil, **takası görmektir.**
         """, "market-vs-limit"),
 
@@ -3626,7 +3639,7 @@ internal static class EducationContent
         - Kimse o seviyeye inmezse → emir **hiç gerçekleşmez.** İkinci kişi beklediği
           şeyi alamaz.
 
-        Aynı an, aynı varlık, iki farklı sonuç. Fark, neyin garanti edildiğinde.
+        Aynı an, aynı varlık, iki farklı sonuç. Fark, neyin öne alındığında.
         """, "two-orders-one-moment"),
 
         Trap("""
@@ -3638,14 +3651,17 @@ internal static class EducationContent
         Burada görülmeyen şey şu: **limit emrinin bedeli, hiç gerçekleşmeme
         ihtimalidir.**
 
-        - Fiyat senin koyduğun sınıra hiç gelmezse, emir sonsuza kadar bekler.
+        - Fiyat senin koyduğun sınıra hiç gelmezse, emir **geçerlilik süresi** boyunca
+          bekler ve sonunda gerçekleşmemiş olarak kapanır. Emri verirken ne kadar
+          geçerli olacağını da söylersin: gün sonuna kadar, belirli bir tarihe kadar
+          ya da sen iptal edene kadar.
         - Bu sırada almak istediğin şeyi **almamış** olursun.
         - "Daha iyi fiyat" diye beklerken elde edilen şey bazen **hiçbir şeydir.**
 
         Tersi de doğrudur: piyasa emrinin bedeli, fiyatı önceden bilmemektir. Hareketli
         bir anda beklediğinden farklı bir seviyeden gerçekleşebilir.
 
-        Yani ortada "iyi" ve "kötü" emir türü yok; **neyi garanti etmek istediğine göre
+        Yani ortada "iyi" ve "kötü" emir türü yok; **neyi öne almak istediğine göre
         değişen bir takas** var. Hangisinin senin durumuna uyduğunu ders söylemez —
         ikisinin neyi verip neyi almadığını söyler.
         """),
@@ -3663,11 +3679,14 @@ internal static class EducationContent
           mesafede saklıdır.
 
         Bu yüzden "komisyonu düşük" demek, "maliyeti düşük" demekle **aynı şey
-        değildir.** Toplam maliyeti görmek için ikisini birlikte toplamak gerekir:
+        değildir.** Maliyeti görmek için ikisini birlikte toplamak gerekir:
 
-        > **Tur maliyeti = alış komisyonu + satış komisyonu + makas**
+        > **Bir turun en belirgin maliyeti = alış komisyonu + satış komisyonu + makas**
 
-        Üçü de aynı cebe dokunur; ikisi faturada, biri fiyatın içinde.
+        Üçü de aynı cebe dokunur; ikisi faturada, biri fiyatın içinde. Bu üçü listenin
+        **tamamı değildir** — ürüne ve piyasaya göre vergi, borsa ve takas payları ya
+        da asgari komisyon gibi kalemler de eklenebilir. Buradaki nokta bütün kalemleri
+        saymak değil: **faturada hiç görünmeyen bir maliyet olduğunu** görmek.
         """, "round-trip-cost"),
 
         ExDeep("""
@@ -3687,11 +3706,12 @@ internal static class EducationContent
 
         Oran olarak: 70 ÷ 10.000 = **%0,7.**
 
-        Şimdi dikkat: yalnız komisyona bakan biri **%0,4** görür. Gerçek maliyet
-        **%0,7** — yani görünen kısım, toplamın ancak **yarısından biraz fazlası.**
+        Şimdi dikkat: yalnız komisyona bakan biri **%0,4** görür. Bu üç kalemin toplamı
+        ise **%0,7** — yani görünen kısım, toplamın ancak **yarısından biraz fazlası.**
 
-        Fiyat hiç kıpırdamadı, piyasada hiçbir şey olmadı. Sırf girip çıkmak bu kadara
-        mal oldu. Ve bu bedel **tur başına** doğar: iki tur iki kez, beş tur beş kez.
+        Fiyat hiç kıpırdamadı, piyasada hiçbir şey olmadı; bu 70 ₺ yalnızca girip
+        çıkmanın bedeli. Bu bedel **tur başına** doğar, yani tur sayısıyla birlikte
+        büyür. Kaç tur yapacağın senin kararın.
         """, "cost-stack"),
 
         Ctx("""
@@ -3700,7 +3720,8 @@ internal static class EducationContent
         Emir eşleşti, ekranda "gerçekleşti" yazıyor. Bitti mi? Henüz değil.
 
         İşlemin **gerçekleştiği gün** ile alınan şeyin ve paranın fiilen el değiştirdiği
-        **takas günü** aynı gün olmayabilir. Aradaki süreye **valör** denir.
+        gün aynı gün olmayabilir. Bu ikinci güne **valör günü** (takas günü) denir;
+        ikisi arasındaki süre de **takas süresidir.**
 
         Diyelim takas iki iş günü sonra tamamlanıyor:
 
@@ -3712,7 +3733,7 @@ internal static class EducationContent
 
         Pratik sonucu şu: ekranda bir şeyin görünmesi, onun üzerinde **her işlemi
         hemen** yapabileceğin anlamına gelmez. Özellikle satıştan sonra paranın
-        çekilebilir hâle gelmesi bir gün alabilir.
+        çekilebilir hâle gelmesi takas tamamlanana kadar sürebilir.
         """, "settlement-clock"),
 
         Trap("""
@@ -3740,20 +3761,26 @@ internal static class EducationContent
         Borsanın işlem gördüğü saatler sınırlıdır. Ama haberler, gelişmeler ve insanların
         fikirleri o saatlerle sınırlı değildir.
 
-        Seans kapalıyken bir şey olduğunda ne olur? **Hiçbir işlem gerçekleşmez** —
-        çünkü eşleştirecek bir düzen açık değildir. Ama insanların ne ödemeye razı
-        olduğu değişmiş olabilir.
+        Seans kapalıyken bir şey olduğunda ne olur? **O borsada hiçbir işlem
+        gerçekleşmez** — çünkü eşleştirecek düzen açık değildir. Her piyasanın saatleri
+        aynı değil: aynı varlık başka bir yerde işlem görüyor olabilir, döviz gibi
+        kalemlerde ise günün çok daha büyük bölümü açıktır. Ama insanların ne ödemeye
+        razı olduğu da değişmiş olabilir.
 
-        Açılışta bu birikmiş fikir farkı bir anda karşılaşır. Sonuç: fiyat, kapanış
-        seviyesinin **yanından devam etmek yerine** biraz uzağından başlayabilir.
-        Aradaki bu atlamaya **boşluk** denir.
+        Açılışta bu birikmiş fikir farkı bir anda karşılaşır — açılış fiyatı tek tek
+        eşleşmelerle değil, biriken emirlerin **topluca** değerlendirildiği bir açılış
+        adımında oluşur. Sonuç: fiyat, kapanış seviyesinin **yanından devam etmek
+        yerine** biraz uzağından başlayabilir. Aradaki bu atlamaya **boşluk** denir.
 
-        Boşluk, "bir şey bozuldu" demek değildir; **kapalıyken biriken** arz-talep
-        farkının tek seferde fiyata yansımasıdır. Grafik derslerinde bu boşlukları
-        okumayı ayrıca göreceğiz.
+        Boşluk, "bir şey bozuldu" demek değildir; çoğu zaman **kapalıyken biriken**
+        arz-talep farkının tek seferde fiyata yansımasıdır. Tek nedeni de bu değildir:
+        temettü gibi kayıt düzeltmeleri de boşluk üretir ve bunlar bir fikir
+        değişikliği değildir. Boşluk **iki yöne de** olabilir. Grafik derslerinde bu
+        boşlukları okumayı ayrıca göreceğiz.
 
-        Bir not: limit emrin defterde beklerken seans kapanırsa, açılışta beklediğinden
-        farklı bir ortamda karşılaşabilir. Beklemenin bedeli burada da görünür.
+        Bir not: defterde bekleyen bir emir seans kapanışını aşarsa, açılışta farklı
+        bir ortamda karşılaşır. Bu ikisi için de geçerli — o anda verilen bir piyasa
+        emri de açılışta beklenmedik bir seviyeden gerçekleşebilir.
         """, "after-hours-world"),
 
         Core("""
@@ -3768,7 +3795,7 @@ internal static class EducationContent
 
         | Yapan | Nerede |
         |---|---|
-        | Emir iletmek, işlem yapmak, takas | aracı kurum ve borsa |
+        | Emir iletmek, eşleştirmek, takası yürütmek | aracı kurum · borsa · takas kuruluşu |
         | Kaydı tutmak, hesaplamak, anlatmak | Nirengi |
 
         Bu ayrım önemli, çünkü beklentiyi doğru kurar: burada bir düğmeye bastığında
@@ -4557,7 +4584,8 @@ internal static class EducationContent
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
                 "Makas 0,20 ₺'den 0,90 ₺'ye çıktı. Bu neyi değiştirir?",
                 "Makas, giriş ile çıkış arasındaki mesafedir; genişlemesi alıp satmanın bedelinin artması demektir. " +
-                "Varlığın değeri ya da yönü hakkında bir şey söylemez. Bu bedel işlem başına doğar: iki işlem iki kez ödenir.",
+                "Varlığın değeri ya da yönü hakkında bir şey söylemez. Bu bedel tur başına doğar: bir alım ile " +
+                "onu izleyen satımın toplamında bir kez.",
                 [("Alıp satmanın bedeli artar", true),
                  ("Varlığın değeri düşmüştür", false),
                  ("Fiyatın yükseleceğini gösterir", false),
@@ -4625,12 +4653,13 @@ internal static class EducationContent
                  ("Sen → takas → aracı kurum → borsa → eşleşme", false)]),
 
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
-                "Piyasa emri neyi garanti eder?",
-                "Piyasa emri o anda duran en iyi karşı kotasyondan işlem görür: gerçekleşmesi kesindir, " +
-                "ama hangi fiyattan gerçekleşeceği önceden belli değildir. Fiyatı garanti eden tür limit emridir — " +
-                "o da gerçekleşmeyi garanti etmez.",
-                [("Gerçekleşmeyi — ama fiyatı değil", true),
-                 ("Fiyatı — ama gerçekleşmeyi değil", false),
+                "Piyasa emri neyi öne alır?",
+                "Piyasa emri gerçekleşmeyi öne alır: karşı tarafta emir varsa o anda duran en iyi karşı " +
+                "kotasyondan hemen işlem görür, ama hangi fiyattan göreceği önceden belli değildir. Fiyatı öne " +
+                "alan tür limit emridir — o da gerçekleşeceğini söylemez. Hiçbir emir türü ikisini birlikte " +
+                "veremez; ortada satmaya razı kimse yoksa piyasa emri de gerçekleşmez.",
+                [("Gerçekleşmeyi — fiyat kesinliğini bırakarak", true),
+                 ("Fiyatı — gerçekleşme kesinliğini bırakarak", false),
                  ("Hem fiyatı hem gerçekleşmeyi", false),
                  ("Komisyonun düşük olmasını", false)]),
 
@@ -4643,10 +4672,12 @@ internal static class EducationContent
 
             // ── Orta: toplam maliyet · valör ─────────────────────────────────
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
-                "10.000 ₺'lik alım + satış turu; komisyon %0,2 (kurgusal), makas %0,3. Toplam maliyet nedir?",
-                "Komisyon her iki işlemde ayrı alınır: 20,00 + 20,00 = 40,00 ₺. Makas 10.000 üzerinden " +
-                "30,00 ₺. Toplam 70,00 ₺, yani %0,7. Yalnız komisyona bakan biri %0,4 görür — gerçek " +
-                "maliyetin ancak yarısından biraz fazlası.",
+                "10.000 ₺'lik alım + satış turu; komisyon %0,2 (kurgusal), makas %0,3. Bu üç kalemin " +
+                "toplamı nedir?",
+                "Komisyon her iki işlemde ayrı alınır: 20,00 + 20,00 = 40,00 ₺. Makas tur başına bir kez, " +
+                "10.000 üzerinden 30,00 ₺. Üçünün toplamı 70,00 ₺, yani %0,7. Yalnız komisyona bakan biri " +
+                "%0,4 görür — bu üçlünün ancak yarısından biraz fazlası. Not: ürüne ve piyasaya göre vergi ya " +
+                "da borsa payları gibi kalemler de eklenebilir; bu üçü listenin tamamı değildir.",
                 [("70,00 ₺ — yani %0,7", true),
                  ("40,00 ₺ — yani %0,4", false),
                  ("30,00 ₺ — yani %0,3", false),
@@ -4654,9 +4685,10 @@ internal static class EducationContent
 
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
                 "Satış emrin gerçekleşti. Para ne zaman kullanılabilir hâle gelir?",
-                "İşlemin gerçekleşmesi ile takasın tamamlanması ayrı anlardır; aradaki süreye valör denir. " +
-                "Ekranda bakiye görünse bile takas tamamlanana kadar çekilebilir olmayabilir. Bu yüzden " +
-                "paraya belli bir gün ihtiyaç varsa satış günü değil TAKAS günü hesaba katılır.",
+                "İşlemin gerçekleşmesi ile takasın tamamlanması ayrı anlardır; paranın ve kalemin fiilen el " +
+                "değiştirdiği güne valör (takas) günü denir. Ekranda bakiye görünse bile takas tamamlanana " +
+                "kadar çekilebilir olmayabilir. Bu yüzden paraya belli bir gün ihtiyaç varsa satış günü değil " +
+                "TAKAS günü hesaba katılır.",
                 [("Takas tamamlandığında — işlem anıyla aynı gün olmayabilir", true),
                  ("İşlem gerçekleştiği anda, her zaman", false),
                  ("Aracı kurum komisyonu tahsil ettiğinde", false),
@@ -4664,9 +4696,10 @@ internal static class EducationContent
 
             new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Medium,
                 "Bir alım-satım turunun maliyetine hangileri girer? (Birden fazla doğru)",
-                "Tur maliyeti üç parçadan oluşur: alış komisyonu, satış komisyonu ve makas. İlk ikisi " +
-                "faturada görünür, makas ise fiyatın içinde saklıdır ve hiçbir yerde \"masraf\" diye yazmaz. " +
-                "Fiyatın sonradan yükselmesi ya da düşmesi bir maliyet değil, ayrı bir sonuçtur.",
+                "Bir turun en belirgin üç maliyet kalemi bunlar: alış komisyonu, satış komisyonu ve makas. " +
+                "İlk ikisi faturada görünür, makas ise fiyatın içinde saklıdır ve hiçbir yerde \"masraf\" diye " +
+                "yazmaz. Ürüne ve piyasaya göre vergi ya da borsa payları gibi kalemler de eklenebilir. " +
+                "Fiyatın sonradan yükselmesi ya da düşmesi ise bir maliyet değil, ayrı bir sonuçtur.",
                 [("Alış komisyonu", true),
                  ("Satış komisyonu", true),
                  ("Alış-satış makası", true),
@@ -4675,9 +4708,11 @@ internal static class EducationContent
             // ── Zor: limit emrinin bedeli · açılış boşluğu ───────────────────
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
                 "Limit emrinin bedeli nedir?",
-                "Limit emri fiyatı garanti eder ama gerçekleşmeyi garanti etmez: fiyat senin koyduğun sınıra " +
-                "hiç gelmezse emir defterde bekler ve hiç gerçekleşmeyebilir. \"Daha iyi fiyat\" diye beklerken " +
-                "elde edilen şey bazen hiçbir şeydir. Bu yüzden ortada iyi/kötü emir türü değil, bir takas vardır.",
+                "Limit emri fiyatı öne alır ama gerçekleşeceğini söylemez: fiyat senin koyduğun sınıra hiç " +
+                "gelmezse emir geçerlilik süresi boyunca bekler ve gerçekleşmemiş olarak kapanır. \"Daha iyi " +
+                "fiyat\" diye beklerken elde edilen şey bazen hiçbir şeydir. Diğer üç seçenek emir türünün " +
+                "etkilemediği şeyler: komisyon kurumun tarifesine, makas piyasadaki kotasyonlara, takas süresi " +
+                "ise piyasa kurallarına bağlıdır — hangi emir türünü verdiğin bunları değiştirmez.",
                 [("Hiç gerçekleşmeme ihtimali", true),
                  ("Komisyonunun daha yüksek olması", false),
                  ("Makası genişletmesi", false),
@@ -4685,9 +4720,10 @@ internal static class EducationContent
 
             new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
                 "Açılışta fiyat neden kapanış seviyesinden uzakta başlayabilir?",
-                "Seans kapalıyken hiçbir işlem gerçekleşmez — eşleştirecek düzen açık değildir. Ama insanların " +
-                "ne ödemeye razı olduğu değişebilir. Açılışta bu birikmiş fark tek seferde fiyata yansır ve " +
-                "arada bir boşluk oluşur. Boşluk \"bir şey bozuldu\" demek değildir.",
+                "O borsada seans kapalıyken hiçbir işlem gerçekleşmez — eşleştirecek düzen açık değildir. Ama " +
+                "insanların ne ödemeye razı olduğu değişebilir. Açılışta bu birikmiş fark tek seferde fiyata " +
+                "yansır ve arada bir boşluk oluşur; boşluk iki yöne de olabilir. Boşluk \"bir şey bozuldu\" " +
+                "demek değildir ve tek nedeni de bu değildir — temettü gibi kayıt düzeltmeleri de boşluk üretir.",
                 [("Kapalıyken biriken arz-talep farkı açılışta tek seferde yansıdığı için", true),
                  ("Borsa açılış fiyatını kendisi belirlediği için", false),
                  ("Kapalıyken işlemler devam ettiği için", false),
@@ -4696,12 +4732,13 @@ internal static class EducationContent
             new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Hard,
                 "\"Komisyonu düşük, demek ki maliyeti düşük\" cümlesi neden eksik? (Birden fazla doğru)",
                 "Komisyon maliyetin yalnız GÖRÜNEN parçasıdır; makas fiyatın içinde saklıdır ve ekstrede " +
-                "ayrı satır olarak yazmaz. Örnekteki turda komisyon %0,4 iken toplam %0,7'ydi. Ayrıca bu bedel " +
-                "tur başına doğar, yani işlem sayısıyla birlikte büyür. Komisyonun kendisi yanlış ölçü değildir — " +
-                "tek başına EKSİK ölçüdür.",
+                "ayrı satır olarak yazmaz. Örnekteki turda komisyon %0,4 iken üç kalemin toplamı %0,7'ydi. " +
+                "Üstelik liste bu üçle de bitmez: ürüne ve piyasaya göre vergi ya da borsa payları eklenebilir. " +
+                "Komisyonun kendisi yanlış ölçü değildir — tek başına EKSİK ölçüdür. (Bu bedel tur başına " +
+                "doğduğu için tur sayısıyla birlikte de büyür.)",
                 [("Makas da bir maliyettir ve ekranda yazmaz", true),
-                 ("Toplam maliyet komisyon + makastır", true),
-                 ("Bu bedel her turda yeniden doğar", true),
+                 ("Komisyon, maliyetin yalnız bir parçasıdır", true),
+                 ("Ürüne göre vergi gibi başka kalemler de girebilir", true),
                  ("Komisyon aslında hiç maliyet değildir", false)]),
         ]);
 

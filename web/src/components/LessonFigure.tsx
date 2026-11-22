@@ -1998,7 +1998,18 @@ function WeightStack({
   w: number;
   parts: { name: string; share: number; label: string }[];
 }) {
-  const classes = ["fig-seg-lead", "fig-seg", "fig-bar-muted"];
+  // RV-055 (REVIEW-005): hiçbir bant OPAK dolgu kullanmaz. Önceden sınıflar
+  // ["fig-seg-lead", "fig-seg", "fig-bar-muted"] olarak DİZİ SIRASINA göre
+  // dağıtılıyordu; bu iki ayrı soruna yol açıyordu:
+  //   (1) Opak aksan dolgunun üzerine yazılan `name` okunmuyordu — RV-039'un
+  //       (spread-cost) birebir aynı deseni; çözüm orada da fig-seg-lead'i
+  //       kaldırmaktı, çünkü çip bilgi taşımıyor, yazıyı çerçeveliyor.
+  //   (2) Vurgu, kalemin büyüklüğüyle değil sırasıyla belirleniyordu:
+  //       cost-stack'te en vurgulu ton en küçük kaleme (alış komisyonu),
+  //       en sessiz ton ise metnin "asıl gözden kaçan" dediği makasa düşüyordu
+  //       — figür gözü anlatımın tersine çekiyordu.
+  // Üç bant artık aynı sessiz tonda; hangisinin büyük olduğunu bant genişliği
+  // ve etiket söylüyor, renk bir yargı taşımıyor.
   // Başlangıç noktaları önceden hesaplanır (render sırasında değişken mutasyonu yok).
   const starts = parts.map((_, i) => x + parts.slice(0, i).reduce((sum, q) => sum + w * q.share, 0));
   return (
@@ -2008,7 +2019,7 @@ function WeightStack({
         const x0 = starts[i];
         return (
           <g key={p.name}>
-            <rect x={x0} y={y} width={Math.max(pw - 2, 2)} height="22" rx="3" className={classes[i % classes.length]} />
+            <rect x={x0} y={y} width={Math.max(pw - 2, 2)} height="22" rx="3" className="fig-seg" />
             <text x={x0 + pw / 2} y={y + 15} className="fig-label" textAnchor="middle">
               {p.name}
             </text>
@@ -2326,7 +2337,11 @@ function OrderJourney() {
     >
       {stops.map((p, i) => (
         <g key={p.t}>
-          <rect x={p.x} y={34} width={54} height="40" rx="6" className={i === 4 ? "fig-seg-lead" : "fig-seg"} opacity={0.9} />
+          {/* RV-053 (REVIEW-005): 5. durak önceden fig-seg-lead ile vurgulanıyordu;
+              opak aksan dolgunun üzerindeki fig-value yazısı okunmuyordu — RV-039'un
+              aynı deseni. "Takas en önemli durak" vurgusunu metin (anlatım + altyazı)
+              taşıyor, dolayısıyla beş kutu da aynı sessiz tonda. */}
+          <rect x={p.x} y={34} width={54} height="40" rx="6" className="fig-seg" opacity={0.9} />
           <text x={p.x + 27} y={28} className="fig-label" textAnchor="middle">{i + 1}</text>
           <text x={p.x + 27} y={52} className="fig-value" textAnchor="middle">{p.t}</text>
           <text x={p.x + 27} y={88} className="fig-label" textAnchor="middle">{p.s}</text>
@@ -2385,24 +2400,24 @@ function BrokerRole() {
   );
 }
 
-/** S0-L10 · İki emir türü (çok panelli): neyi garanti eder, neyi etmez. */
+/** S0-L10 · İki emir türü (çok panelli): hangisi neyi öne alır, karşılığında neyi bırakır. */
 function MarketVsLimit() {
   return (
     <Figure
-      label="İki panel yan yana: piyasa emri gerçekleşmeyi garanti eder, limit emri fiyatı garanti eder"
-      caption="İkisi bir takastır, bir üstünlük sırası değil: kesin gerçekleşme ile kesin fiyat arasında seçim."
+      label="İki panel yan yana: piyasa emri gerçekleşmeyi öne alır, limit emri fiyatı öne alır"
+      caption="İkisi bir takastır, bir üstünlük sırası değil: gerçekleşmeyi öne almakla fiyatı öne almak arasında seçim."
       height={156}
     >
       <Panel x={8} y={14} w={146} h={112} title="Piyasa emri" />
       <text x={81} y={52} className="fig-label" textAnchor="middle">“şimdi al”</text>
       <rect x={28} y={62} width={106} height="20" rx="4" className="fig-seg" />
-      <text x={81} y={76} className="fig-value" textAnchor="middle">gerçekleşme ✓</text>
+      <text x={81} y={76} className="fig-value" textAnchor="middle">gerçekleşme önde</text>
       <text x={81} y={104} className="fig-label" textAnchor="middle">fiyat önceden belli değil</text>
 
       <Panel x={166} y={14} w={146} h={112} title="Limit emri" />
       <text x={239} y={52} className="fig-label" textAnchor="middle">“en fazla şu fiyattan”</text>
       <rect x={186} y={62} width={106} height="20" rx="4" className="fig-seg" />
-      <text x={239} y={76} className="fig-value" textAnchor="middle">fiyat ✓</text>
+      <text x={239} y={76} className="fig-value" textAnchor="middle">fiyat önde</text>
       <text x={239} y={104} className="fig-label" textAnchor="middle">gerçekleşmeyebilir</text>
 
       <text x={160} y={146} className="fig-label" textAnchor="middle">ikisini birden garanti etmek mümkün değil</text>
@@ -2415,7 +2430,7 @@ function TwoOrdersOneMoment() {
   return (
     <Figure
       label="Aynı kotasyonda iki emir: piyasa emri hemen eşleşiyor, limit emri defterde bekliyor"
-      caption="Aynı an, aynı varlık, iki sonuç. Fark, neyin garanti edildiğinde."
+      caption="Aynı an, aynı varlık, iki sonuç. Fark, neyin öne alındığında."
       height={158}
     >
       <text x={160} y={22} className="fig-label" textAnchor="middle">alış 99,85 ₺ · satış 100,15 ₺</text>
@@ -2426,7 +2441,22 @@ function TwoOrdersOneMoment() {
       <text x={81} y={108} className="fig-label" textAnchor="middle">hemen gerçekleşti</text>
 
       <Panel x={166} y={32} w={146} h={96} title="Limit emri" />
-      <rect x={186} y={66} width={106} height="20" rx="4" className="fig-bar-muted" />
+      {/* RV-054 (REVIEW-005): limit emri çipi önceden fig-bar-muted idi; iki emir
+          türü yan yana bir TAKAS olarak çizilmeli, biri soluklaştırılmamalı
+          (künye yasal notu · RV-016/026/027/028 ailesi). İki panel artık aynı
+          tonda; "henüz gerçekleşmedi" bilgisi RENKLE değil kesikli çerçeveyle
+          kodlanıyor — biçim durumu anlatır, ton yargı taşır. */}
+      <rect
+        x={186}
+        y={66}
+        width={106}
+        height="20"
+        rx="4"
+        className="fig-seg"
+        stroke="currentColor"
+        strokeDasharray="3 3"
+        strokeOpacity={0.45}
+      />
       <text x={239} y={80} className="fig-value" textAnchor="middle">99,90 ₺</text>
       <text x={239} y={108} className="fig-label" textAnchor="middle">defterde bekliyor</text>
 
@@ -2479,8 +2509,8 @@ function CostStack() {
           { name: "makas", share: 30 / 70, label: "30 ₺" },
         ]}
       />
-      <text x={160} y={110} className="fig-big" textAnchor="middle">toplam 70 ₺ · %0,7</text>
-      <text x={160} y={136} className="fig-label" textAnchor="middle">yalnız komisyona bakan %0,4 görür — toplamın yarısından biraz fazlası</text>
+      <text x={160} y={110} className="fig-big" textAnchor="middle">üç kalem 70 ₺ · %0,7</text>
+      <text x={160} y={136} className="fig-label" textAnchor="middle">yalnız komisyona bakan %0,4 görür — bu üçlünün yarısından biraz fazlası</text>
     </Figure>
   );
 }
@@ -2490,7 +2520,7 @@ function SettlementClock() {
   return (
     <Figure
       label="Bir zaman ekseninde işlem günü ve takas günü ayrı iki nokta olarak işaretli"
-      caption="İşlem anı ile mülkiyet anı aynı değildir. Aradaki süreye valör denir."
+      caption="İşlem anı ile mülkiyet anı aynı değildir. Para ve kalemin el değiştirdiği gün: valör günü."
       height={140}
     >
       <line x1="30" y1="74" x2="290" y2="74" className="fig-axis" />
@@ -2501,7 +2531,7 @@ function SettlementClock() {
       <text x={240} y={54} className="fig-value" textAnchor="middle">takas</text>
       <text x={240} y={96} className="fig-label" textAnchor="middle">fiilen el değiştirir</text>
       <rect x={76} y={70} width={158} height="8" rx="3" className="fig-seg" opacity={0.6} />
-      <text x={155} y={118} className="fig-label" textAnchor="middle">aradaki süre: valör (örnek — piyasaya göre değişir)</text>
+      <text x={155} y={118} className="fig-label" textAnchor="middle">aradaki süre: takas süresi (örnek — piyasaya göre değişir)</text>
     </Figure>
   );
 }
@@ -2510,8 +2540,8 @@ function SettlementClock() {
 function AfterHoursWorld() {
   return (
     <Figure
-      label="Üç panel: kapanış, kapalıyken biriken fikir farkı ve açılışta oluşan fiyat boşluğu"
-      caption="Kapalıyken işlem olmaz ama fikirler değişir; açılışta fark tek seferde yansır."
+      label="Üç panel: kapanış, kapalıyken biriken fikir farkı ve açılışta oluşan fiyat boşluğu — boşluk iki yöne de olabilir"
+      caption="Kapalıyken o borsada işlem olmaz ama fikirler değişir; açılışta fark tek seferde yansır."
       height={152}
     >
       <Panel x={6} y={14} w={96} h={100} title="Kapanış" />
@@ -2525,12 +2555,17 @@ function AfterHoursWorld() {
       <text x={160} y={88} className="fig-label" textAnchor="middle">değişiyor</text>
 
       <Panel x={218} y={14} w={96} h={100} title="Açılış" />
-      <circle cx={236} cy={78} r="4" className="fig-dot-steady" opacity={0.45} />
-      <circle cx={262} cy={52} r="5" className="fig-dot-steady" />
-      <line x1={244} y1={74} x2={256} y2={58} className="fig-line-flat" />
-      <text x={266} y={100} className="fig-label" textAnchor="middle">boşluk</text>
+      {/* RV-063 (REVIEW-005): boşluk önceden yalnız YUKARI yönde çiziliyordu
+          (kapanış cy=78 → açılış cy=52), bu da "boşluk = fiyat yukarı atlar"
+          izlenimi bırakabiliyordu. Metin yön söylemiyor; figür de söylemesin:
+          iki yön de eşit ağırlıkta ve aynı tonda çizilir. */}
+      <circle cx={234} cy={78} r="4" className="fig-dot-steady" opacity={0.45} />
+      <circle cx={268} cy={54} r="5" className="fig-dot-steady" opacity={0.75} />
+      <circle cx={268} cy={102} r="5" className="fig-dot-steady" opacity={0.75} />
+      <line x1={242} y1={75} x2={260} y2={58} className="fig-line-flat" />
+      <line x1={242} y1={81} x2={260} y2={98} className="fig-line-flat" />
 
-      <text x={160} y={140} className="fig-label" textAnchor="middle">boşluk “bir şey bozuldu” demek değil — biriken farkın yansıması</text>
+      <text x={160} y={140} className="fig-label" textAnchor="middle">boşluk iki yöne de olabilir — biriken farkın yansıması, bir arıza değil</text>
     </Figure>
   );
 }

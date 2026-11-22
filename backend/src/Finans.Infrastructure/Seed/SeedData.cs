@@ -25,6 +25,53 @@ public static class SeedData
     public static Guid Id(string key) =>
         new(MD5.HashData(Encoding.UTF8.GetBytes("finans-seed:" + key)));
 
+    /// <summary>
+    /// Ders kaydını <b>mutabık kılar</b>: yoksa ekler, varsa yazılı içerik alanlarını
+    /// günceller. <c>true</c> dönerse bir şey değişti (çağıran <c>changed</c>'ı işaretler).
+    /// </summary>
+    /// <remarks>
+    /// RV-064 (REVIEW-005): ders kaydı daha önce yalnız <i>yok ise ekle</i> ile
+    /// yazılıyordu, bu yüzden metin düzeltmeleri (başlık · özet · gövde · süre)
+    /// <b>çalışan kurulumlara hiç inmiyordu</b> — S0-L10'un özeti, ders gövdesi
+    /// düzeltildikten sonra bile "piyasa emri … garanti eder" diye kalmıştı ve ekranda
+    /// öyle görünüyordu. Aynı mutabakat <c>LessonSections</c> için T6.7'de gelmişti
+    /// (bkz. bölüm seed'indeki MUTABAKAT notu); dersler o turda atlanmıştı.
+    /// <para>Ders kaydı <b>yazılı içeriktir, kullanıcı verisi değildir</b>: ilerleme
+    /// <c>LessonProgress</c>'te, deneme kayıtları <c>QuizAttempts</c>'ta durur ve
+    /// ikisi de buradan etkilenmez — üzerine yazmak güvenlidir.</para>
+    /// <para>⚠ <c>IsPublished</c>, <c>TrackId</c> ve <c>CreatedAtUtc</c> bilerek
+    /// DIŞARIDA bırakıldı: ilki bir işletme kararı olabilir (seed onu sessizce geri
+    /// almamalı), ikincisi yapısal bir taşımadır, üçüncüsü kaydın kendi geçmişidir.
+    /// Yeni bir içerik alanı eklenirse HEM karşılaştırmaya HEM kopyaya eklenmeli —
+    /// eksik bırakılan alan sessizce eskimiş kalır.</para>
+    /// </remarks>
+    private static bool UpsertLesson(FinansDbContext db, Lesson? current, Lesson desired)
+    {
+        if (current is null)
+        {
+            db.Lessons.Add(desired);
+            return true;
+        }
+
+        if (current.Slug == desired.Slug
+            && current.OrderIndex == desired.OrderIndex
+            && current.Title == desired.Title
+            && current.Summary == desired.Summary
+            && current.BodyMarkdown == desired.BodyMarkdown
+            && current.EstimatedMinutes == desired.EstimatedMinutes
+            && current.Level == desired.Level)
+            return false; // birebir aynı → dokunma
+
+        current.Slug = desired.Slug;
+        current.OrderIndex = desired.OrderIndex;
+        current.Title = desired.Title;
+        current.Summary = desired.Summary;
+        current.BodyMarkdown = desired.BodyMarkdown;
+        current.EstimatedMinutes = desired.EstimatedMinutes;
+        current.Level = desired.Level;
+        return true;
+    }
+
     public static async Task SeedAsync(FinansDbContext db, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
@@ -536,29 +583,27 @@ public static class SeedData
         }
 
         // ── S0-L1 · Yatırım nedir, ne değildir? ─────────────────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l1"), ct))
+        var desired_lesson_s0l1 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l1"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "yatirim-nedir",
-                OrderIndex = 1,
-                Title = "Yatırım nedir, ne değildir?",
-                Summary = "Saklamak, biriktirmek, yatırmak — ve yatırımı şans oyunundan ayıran şey.",
-                BodyMarkdown =
-                    "## Yatırım nedir?\n\n" +
-                    "Yatırım, biriktirdiğin parayı **değer üretmesi umuduyla** bir kullanıma vermendir; " +
-                    "karşılığında bir **getiri** beklersin ama bu getiri **belirsizdir**. İşte bu " +
-                    "belirsizlik (risk), yatırımı hem saklamaktan hem de sonucu baştan belli bir " +
-                    "ödünç ilişkisinden ayırır.",
-                EstimatedMinutes = 6,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l1"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "yatirim-nedir",
+            OrderIndex = 1,
+            Title = "Yatırım nedir, ne değildir?",
+            Summary = "Saklamak, biriktirmek, yatırmak — ve yatırımı şans oyunundan ayıran şey.",
+            BodyMarkdown =
+                "## Yatırım nedir?\n\n" +
+                "Yatırım, biriktirdiğin parayı **değer üretmesi umuduyla** bir kullanıma vermendir; " +
+                "karşılığında bir **getiri** beklersin ama bu getiri **belirsizdir**. İşte bu " +
+                "belirsizlik (risk), yatırımı hem saklamaktan hem de sonucu baştan belli bir " +
+                "ödünç ilişkisinden ayırır.",
+            EstimatedMinutes = 6,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l1.Id, ct), desired_lesson_s0l1))
             changed = true;
-        }
 
         // ── Kavram etiketi: "Yatırım" (S0-L1 tanıtır) ───────────────────────────
         if (!await db.ConceptTags.AnyAsync(t => t.Id == Id("tag-investment"), ct))
@@ -578,28 +623,26 @@ public static class SeedData
         }
 
         // ── S0-L2 · Paranın haritası — gelir, gider, birikim ────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l2"), ct))
+        var desired_lesson_s0l2 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l2"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "paranin-haritasi",
-                OrderIndex = 2,
-                Title = "Paranın haritası — gelir, gider, birikim",
-                Summary = "Yatırılacak para nereden çıkar? Üç kova, birikim oranı ve \"önce kendine öde\".",
-                BodyMarkdown =
-                    "## Paranın haritası\n\n" +
-                    "Gelir üç kovaya dağılır: **zorunlu gider**, **isteğe bağlı gider** ve **birikim**. " +
-                    "Yatırım hep üçüncü kovadan başlar. Birikim oranı (birikim ÷ gelir) gelirin ne kadarının " +
-                    "geleceğe aktarıldığını gösterir; yolun başında en güçlü kaldıraç bu orandır.",
-                EstimatedMinutes = 6,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l2"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "paranin-haritasi",
+            OrderIndex = 2,
+            Title = "Paranın haritası — gelir, gider, birikim",
+            Summary = "Yatırılacak para nereden çıkar? Üç kova, birikim oranı ve \"önce kendine öde\".",
+            BodyMarkdown =
+                "## Paranın haritası\n\n" +
+                "Gelir üç kovaya dağılır: **zorunlu gider**, **isteğe bağlı gider** ve **birikim**. " +
+                "Yatırım hep üçüncü kovadan başlar. Birikim oranı (birikim ÷ gelir) gelirin ne kadarının " +
+                "geleceğe aktarıldığını gösterir; yolun başında en güçlü kaldıraç bu orandır.",
+            EstimatedMinutes = 6,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l2.Id, ct), desired_lesson_s0l2))
             changed = true;
-        }
 
         // Ön-koşul: S0-L2, S0-L1'i ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -640,29 +683,27 @@ public static class SeedData
         }
 
         // ── S0-L3 · Acil durum fonu ve borç ─────────────────────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l3"), ct))
+        var desired_lesson_s0l3 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l3"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "acil-durum-fonu-ve-borc",
-                OrderIndex = 3,
-                Title = "Acil durum fonu ve borç",
-                Summary = "Yatırımdan önceki basamak: bir tampon kurmak ve borcun gerçek yıllık maliyetini görmek.",
-                BodyMarkdown =
-                    "## Acil durum fonu ve borç\n\n" +
-                    "**Acil durum fonu (tampon)**, beklenmedik bir gideri varlık satmadan karşılamak için önceden " +
-                    "ayrılan, elinin altındaki paradır. Bir borcun maliyeti ise aylık orandan değil, **yıllık " +
-                    "bileşik** maliyetinden okunur. Ders kesin bir maliyet ile belirsiz bir getiriyi ayırt etmenin " +
-                    "çerçevesini verir — karar senindir.",
-                EstimatedMinutes = 7,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l3"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "acil-durum-fonu-ve-borc",
+            OrderIndex = 3,
+            Title = "Acil durum fonu ve borç",
+            Summary = "Yatırımdan önceki basamak: bir tampon kurmak ve borcun gerçek yıllık maliyetini görmek.",
+            BodyMarkdown =
+                "## Acil durum fonu ve borç\n\n" +
+                "**Acil durum fonu (tampon)**, beklenmedik bir gideri varlık satmadan karşılamak için önceden " +
+                "ayrılan, elinin altındaki paradır. Bir borcun maliyeti ise aylık orandan değil, **yıllık " +
+                "bileşik** maliyetinden okunur. Ders kesin bir maliyet ile belirsiz bir getiriyi ayırt etmenin " +
+                "çerçevesini verir — karar senindir.",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l3.Id, ct), desired_lesson_s0l3))
             changed = true;
-        }
 
         // Ön-koşul: S0-L3, S0-L2'yi ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -703,29 +744,27 @@ public static class SeedData
         }
 
         // ── S0-L4 · Bekleyen para neden erir? (enflasyon sezgisi + kaydırıcı) ────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l4"), ct))
+        var desired_lesson_s0l4 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l4"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "bekleyen-para-neden-erir",
-                OrderIndex = 4,
-                Title = "Bekleyen para neden erir?",
-                Summary = "Enflasyon sezgisi: rakam sabit dursa da alım gücü sessizce erir. Kendin kaydırıcıyla dene.",
-                BodyMarkdown =
-                    "## Bekleyen para neden erir?\n\n" +
-                    "**Enflasyon**, aynı sepetin fiyatının zamanla artmasıdır. Cüzdandaki **tutar** sabit kalsa " +
-                    "bile, o paranın **alım gücü** (kaç sepet alabildiği) düşer. Ders bu sezgiyi formülsüz kurar; " +
-                    "bir kaydırıcıyla verilen oran ve sürede alım gücünün nasıl eridiğini kendin görürsün. " +
-                    "Reel getiri hesabı ileride (Set 1).",
-                EstimatedMinutes = 7,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l4"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "bekleyen-para-neden-erir",
+            OrderIndex = 4,
+            Title = "Bekleyen para neden erir?",
+            Summary = "Enflasyon sezgisi: rakam sabit dursa da alım gücü sessizce erir. Kendin kaydırıcıyla dene.",
+            BodyMarkdown =
+                "## Bekleyen para neden erir?\n\n" +
+                "**Enflasyon**, aynı sepetin fiyatının zamanla artmasıdır. Cüzdandaki **tutar** sabit kalsa " +
+                "bile, o paranın **alım gücü** (kaç sepet alabildiği) düşer. Ders bu sezgiyi formülsüz kurar; " +
+                "bir kaydırıcıyla verilen oran ve sürede alım gücünün nasıl eridiğini kendin görürsün. " +
+                "Reel getiri hesabı ileride (Set 1).",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l4.Id, ct), desired_lesson_s0l4))
             changed = true;
-        }
 
         // Ön-koşul: S0-L4, S0-L3'ü ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -766,31 +805,29 @@ public static class SeedData
         }
 
         // ── S0-L5 · Nereye yatırılır? — varlık türleri turu ─────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l5"), ct))
+        var desired_lesson_s0l5 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l5"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "varlik-turleri-turu",
-                OrderIndex = 5,
-                Title = "Nereye yatırılır? — varlık türleri turu",
-                Summary = "Para yatırılınca bir başka şeye dönüşür: alacağa, paya, metale. Varlık sınıfları, " +
-                    "ortaklık↔alacaklılık ve likidite eksenleri.",
-                BodyMarkdown =
-                    "## Nereye yatırılır? — varlık türleri turu\n\n" +
-                    "Para \"yatırıldığında\" bir başka **şeye** dönüşür — bir alacağa, bir paya, bir metale. " +
-                    "Bu ders yaygın **varlık sınıflarını** (mevduat, hisse, altın, döviz, fon, BES) tanıtır; " +
-                    "her varlıkta **ortak mı** olduğunu yoksa birine **borç mu** verdiğini ayırt etmeyi ve " +
-                    "**likiditeyi** (ne kadar hızlı nakde döndüğünü) okumayı öğretir. Sınıflar **sıralanmaz, " +
-                    "karşılaştırılmaz** — yalnızca ne oldukları gösterilir.",
-                EstimatedMinutes = 8,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l5"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "varlik-turleri-turu",
+            OrderIndex = 5,
+            Title = "Nereye yatırılır? — varlık türleri turu",
+            Summary = "Para yatırılınca bir başka şeye dönüşür: alacağa, paya, metale. Varlık sınıfları, " +
+                "ortaklık↔alacaklılık ve likidite eksenleri.",
+            BodyMarkdown =
+                "## Nereye yatırılır? — varlık türleri turu\n\n" +
+                "Para \"yatırıldığında\" bir başka **şeye** dönüşür — bir alacağa, bir paya, bir metale. " +
+                "Bu ders yaygın **varlık sınıflarını** (mevduat, hisse, altın, döviz, fon, BES) tanıtır; " +
+                "her varlıkta **ortak mı** olduğunu yoksa birine **borç mu** verdiğini ayırt etmeyi ve " +
+                "**likiditeyi** (ne kadar hızlı nakde döndüğünü) okumayı öğretir. Sınıflar **sıralanmaz, " +
+                "karşılaştırılmaz** — yalnızca ne oldukları gösterilir.",
+            EstimatedMinutes = 8,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l5.Id, ct), desired_lesson_s0l5))
             changed = true;
-        }
 
         // Ön-koşul: S0-L5, S0-L4'ü ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -831,31 +868,29 @@ public static class SeedData
         }
 
         // ── S0-L6 · Getiri nereden gelir? ───────────────────────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l6"), ct))
+        var desired_lesson_s0l6 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l6"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "getiri-nereden-gelir",
-                OrderIndex = 6,
-                Title = "Getiri nereden gelir?",
-                Summary = "Getirinin iki kaynağı: değer artışı (fiyat yükselmesi) ve nakit akışı (faiz·temettü·" +
-                    "kira). Toplam getiri ikisinin toplamıdır; getiri bedava değildir.",
-                BodyMarkdown =
-                    "## Getiri nereden gelir?\n\n" +
-                    "Bir yatırımın getirisi temelde **iki kaynaktan** gelir: **değer artışı** (sahip olduğun şeyin " +
-                    "fiyatının yükselmesi — satana kadar kâğıt üstünde) ve **nakit akışı** (varlığın elindeyken " +
-                    "ödediği faiz, temettü ya da kira — satmadan cebe girer). **Toplam getiri = değer artışı + nakit " +
-                    "akışı.** Getiri bedava değildir: karşılığında sermayeni bir kullanıma verir ve bir risk taşırsın. " +
-                    "Örneklerde şirket adı geçmez; ders bir strateji önermez.",
-                EstimatedMinutes = 7,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l6"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "getiri-nereden-gelir",
+            OrderIndex = 6,
+            Title = "Getiri nereden gelir?",
+            Summary = "Getirinin iki kaynağı: değer artışı (fiyat yükselmesi) ve nakit akışı (faiz·temettü·" +
+                "kira). Toplam getiri ikisinin toplamıdır; getiri bedava değildir.",
+            BodyMarkdown =
+                "## Getiri nereden gelir?\n\n" +
+                "Bir yatırımın getirisi temelde **iki kaynaktan** gelir: **değer artışı** (sahip olduğun şeyin " +
+                "fiyatının yükselmesi — satana kadar kâğıt üstünde) ve **nakit akışı** (varlığın elindeyken " +
+                "ödediği faiz, temettü ya da kira — satmadan cebe girer). **Toplam getiri = değer artışı + nakit " +
+                "akışı.** Getiri bedava değildir: karşılığında sermayeni bir kullanıma verir ve bir risk taşırsın. " +
+                "Örneklerde şirket adı geçmez; ders bir strateji önermez.",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l6.Id, ct), desired_lesson_s0l6))
             changed = true;
-        }
 
         // Ön-koşul: S0-L6, S0-L5'i ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -896,34 +931,32 @@ public static class SeedData
         }
 
         // ── S0-L7 · Risk ne demek? ──────────────────────────────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l7"), ct))
+        var desired_lesson_s0l7 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l7"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "risk-ne-demek",
-                OrderIndex = 7,
-                Title = "Risk ne demek?",
-                Summary = "Risk, kayıp değil sonucun belirsizliğidir; oynaklık bu belirsizliğin genişliğini " +
-                    "gösterir. Yüksek getiri beklentisi belirsizliğin karşılığıdır — bu yüzden \"garantili " +
-                    "yüksek getiri\" kendi içinde çelişkilidir.",
-                BodyMarkdown =
-                    "## Risk ne demek?\n\n" +
-                    "Yatırımda **risk**, sonucun önceden tam olarak bilinememesidir — sonuçların bir **aralığa** " +
-                    "yayılmasıdır; kaybın kendisi değildir. **Oynaklık** bu aralığın genişliğini gösterir ve yön " +
-                    "bildirmez. Belirsizliği taşımanın karşılığı **risk primi**dir: yüksek getiri beklentisi, " +
-                    "yüksek belirsizliğin fiyatıdır. Bu yüzden **\"garantili yüksek getiri\"** ifadesi kendi " +
-                    "içinde çelişir. Bir vaat karşısında üç soru sorulur: **parayı kim ödüyor · kaynağı ne · " +
-                    "kim güvence veriyor ve sınırı ne.** Ders hiçbir kurum, kişi, platform ya da ürün adı " +
-                    "anmaz; yalnız kalıpları tarif eder.",
-                EstimatedMinutes = 7,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l7"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "risk-ne-demek",
+            OrderIndex = 7,
+            Title = "Risk ne demek?",
+            Summary = "Risk, kayıp değil sonucun belirsizliğidir; oynaklık bu belirsizliğin genişliğini " +
+                "gösterir. Yüksek getiri beklentisi belirsizliğin karşılığıdır — bu yüzden \"garantili " +
+                "yüksek getiri\" kendi içinde çelişkilidir.",
+            BodyMarkdown =
+                "## Risk ne demek?\n\n" +
+                "Yatırımda **risk**, sonucun önceden tam olarak bilinememesidir — sonuçların bir **aralığa** " +
+                "yayılmasıdır; kaybın kendisi değildir. **Oynaklık** bu aralığın genişliğini gösterir ve yön " +
+                "bildirmez. Belirsizliği taşımanın karşılığı **risk primi**dir: yüksek getiri beklentisi, " +
+                "yüksek belirsizliğin fiyatıdır. Bu yüzden **\"garantili yüksek getiri\"** ifadesi kendi " +
+                "içinde çelişir. Bir vaat karşısında üç soru sorulur: **parayı kim ödüyor · kaynağı ne · " +
+                "kim güvence veriyor ve sınırı ne.** Ders hiçbir kurum, kişi, platform ya da ürün adı " +
+                "anmaz; yalnız kalıpları tarif eder.",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l7.Id, ct), desired_lesson_s0l7))
             changed = true;
-        }
 
         // Ön-koşul: S0-L7, S0-L6'yı ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -964,33 +997,31 @@ public static class SeedData
         }
 
         // ── S0-L8 · Vade, hedef ve portföy (GD-003) ─────────────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l8"), ct))
+        var desired_lesson_s0l8 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l8"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "vade-hedef-ve-portfoy",
-                OrderIndex = 8,
-                Title = "Vade, hedef ve portföy",
-                Summary = "Vade, paraya ne zaman ihtiyaç duyulacağından gelir; her hedefin kendi vadesi vardır. " +
-                    "Portföy kalemlerin toplamıdır ve her kalem miktar, maliyet, değer ve ağırlık alanlarıyla " +
-                    "okunur. Ağırlıklar fiyatlarla birlikte, işlem yapılmadan da kayar.",
-                BodyMarkdown =
-                    "## Vade, hedef ve portföy\n\n" +
-                    "**Vade**, bir parayı ne zaman kullanmayı planladığına kadar geçecek süredir; tercihten değil " +
-                    "**ihtiyaçtan** gelir ve her hedefin ayrı bir vadesi vardır. **Portföy**, bütün kalemlerin " +
-                    "toplamıdır. Her kalem beş alanla okunur: **kalem · miktar · maliyet · değer · ağırlık.** " +
-                    "**Ağırlık** = kalemin değeri ÷ portföyün toplam değeri; tüm ağırlıkların toplamı %100'dür. " +
-                    "Fiyatlar değiştikçe ağırlıklar hiç işlem yapılmadan da **kayar.** Kalem sayısının çok olması " +
-                    "çeşitlilik demek değildir. Ders kişiye özel bir vade ya da dağılım önermez.",
-                EstimatedMinutes = 8,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l8"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "vade-hedef-ve-portfoy",
+            OrderIndex = 8,
+            Title = "Vade, hedef ve portföy",
+            Summary = "Vade, paraya ne zaman ihtiyaç duyulacağından gelir; her hedefin kendi vadesi vardır. " +
+                "Portföy kalemlerin toplamıdır ve her kalem miktar, maliyet, değer ve ağırlık alanlarıyla " +
+                "okunur. Ağırlıklar fiyatlarla birlikte, işlem yapılmadan da kayar.",
+            BodyMarkdown =
+                "## Vade, hedef ve portföy\n\n" +
+                "**Vade**, bir parayı ne zaman kullanmayı planladığına kadar geçecek süredir; tercihten değil " +
+                "**ihtiyaçtan** gelir ve her hedefin ayrı bir vadesi vardır. **Portföy**, bütün kalemlerin " +
+                "toplamıdır. Her kalem beş alanla okunur: **kalem · miktar · maliyet · değer · ağırlık.** " +
+                "**Ağırlık** = kalemin değeri ÷ portföyün toplam değeri; tüm ağırlıkların toplamı %100'dür. " +
+                "Fiyatlar değiştikçe ağırlıklar hiç işlem yapılmadan da **kayar.** Kalem sayısının çok olması " +
+                "çeşitlilik demek değildir. Ders kişiye özel bir vade ya da dağılım önermez.",
+            EstimatedMinutes = 8,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l8.Id, ct), desired_lesson_s0l8))
             changed = true;
-        }
 
         // Ön-koşul: S0-L8, S0-L7'yi ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -1032,35 +1063,33 @@ public static class SeedData
         }
 
         // ── S0-L9 · Fiyat nereden çıkıyor? (GD-004) ─────────────────────────────
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l9"), ct))
+        var desired_lesson_s0l9 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l9"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "fiyat-nereden-cikiyor",
-                OrderIndex = 9,
-                Title = "Fiyat nereden çıkıyor?",
-                Summary = "Fiyat ölçülmez, oluşur: bir alıcı ile bir satıcının anlaştığı noktadır. Ekrandaki son " +
-                    "işlem fiyatı olmuş bir anlaşmanın kaydıdır; senin alabileceğin fiyat ayrı bir sayıdır. " +
-                    "Alış ile satış kotasyonu arasındaki makas, alıp satmanın kendi bedelidir.",
-                BodyMarkdown =
-                    "## Fiyat nereden çıkıyor?\n\n" +
-                    "Bir **fiyat**, bir alıcı ile bir satıcının aynı sayıda anlaştığı **noktadır** — ölçülen bir " +
-                    "büyüklük değil, oluşan bir sonuçtur. Alıcı ve satıcı niyetlerinin buluştuğu düzene **piyasa** " +
-                    "denir. Ekranda görünen **son işlem fiyatı** geçmişe ait bir kayıttır; senin alabileceğin sayı " +
-                    "**satış kotasyonu**, satabileceğin sayı **alış kotasyonudur.** İkisi arasındaki farka **makas** " +
-                    "denir ve bu fark, fiyat hiç kıpırdamasa bile alıp satmanın **bedelidir.** Fiyatı **arz ve talep** " +
-                    "hareket ettirir; her satışın karşısında bir alış olduğu için \"herkes sattı\" diye bir an olmaz. " +
-                    "Az işlem gören (**ince**) bir piyasada fiyat daha gürültülüdür ve daha az şey anlatır. " +
-                    "Ders mekanizmayı anlatır; nereden, ne zaman, neyi alıp satman gerektiğini söylemez.",
-                EstimatedMinutes = 7,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l9"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "fiyat-nereden-cikiyor",
+            OrderIndex = 9,
+            Title = "Fiyat nereden çıkıyor?",
+            Summary = "Fiyat ölçülmez, oluşur: bir alıcı ile bir satıcının anlaştığı noktadır. Ekrandaki son " +
+                "işlem fiyatı olmuş bir anlaşmanın kaydıdır; senin alabileceğin fiyat ayrı bir sayıdır. " +
+                "Alış ile satış kotasyonu arasındaki makas, alıp satmanın kendi bedelidir.",
+            BodyMarkdown =
+                "## Fiyat nereden çıkıyor?\n\n" +
+                "Bir **fiyat**, bir alıcı ile bir satıcının aynı sayıda anlaştığı **noktadır** — ölçülen bir " +
+                "büyüklük değil, oluşan bir sonuçtur. Alıcı ve satıcı niyetlerinin buluştuğu düzene **piyasa** " +
+                "denir. Ekranda görünen **son işlem fiyatı** geçmişe ait bir kayıttır; senin alabileceğin sayı " +
+                "**satış kotasyonu**, satabileceğin sayı **alış kotasyonudur.** İkisi arasındaki farka **makas** " +
+                "denir ve bu fark, fiyat hiç kıpırdamasa bile alıp satmanın **bedelidir.** Fiyatı **arz ve talep** " +
+                "hareket ettirir; her satışın karşısında bir alış olduğu için \"herkes sattı\" diye bir an olmaz. " +
+                "Az işlem gören (**ince**) bir piyasada fiyat daha gürültülüdür ve daha az şey anlatır. " +
+                "Ders mekanizmayı anlatır; nereden, ne zaman, neyi alıp satman gerektiğini söylemez.",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l9.Id, ct), desired_lesson_s0l9))
             changed = true;
-        }
 
         // Ön-koşul: S0-L9, S0-L8'i ister (track içi zincir).
         if (!await db.LessonPrerequisites.AnyAsync(
@@ -1106,36 +1135,38 @@ public static class SeedData
         // ── S0-L10 · Bir alım nasıl gerçekleşir? (GD-005) ───────────────────────
         // Set 0'ın SON dersi. ⚠ LiveContext bloğu YOK (künye kararı); beyan
         // EducationSeedTests.LessonsWithoutLiveContext'te gerekçesiyle duruyor.
-        if (!await db.Lessons.AnyAsync(l => l.Id == Id("lesson-s0l10"), ct))
+        var desired_lesson_s0l10 = new Lesson
         {
-            db.Lessons.Add(new Lesson
-            {
-                Id = Id("lesson-s0l10"),
-                TrackId = Id("track-ilk-adimlar"),
-                Slug = "bir-alim-nasil-gerceklesir",
-                OrderIndex = 10,
-                Title = "Bir alım nasıl gerçekleşir?",
-                Summary = "Bir emir beş duraktan geçer: sen, aracı kurum, borsa, eşleşme, takas. Piyasa emri " +
-                    "gerçekleşmeyi, limit emri fiyatı garanti eder — ikisi bir takastır. Tur maliyeti komisyon " +
-                    "ve makasın toplamıdır; biri faturada, biri fiyatın içinde.",
-                BodyMarkdown =
-                    "## Bir alım nasıl gerçekleşir?\n\n" +
-                    "Bir alım emri beş duraktan geçer: **sen → aracı kurum → borsa → eşleşme → takas.** " +
-                    "**Borsa** fiyatı belirlemez, emirleri fiyat ve zaman önceliğiyle **eşleştirir**; " +
-                    "**aracı kurum** emri senin adına iletir ve karşılığında **komisyon** alır. İki temel " +
-                    "**emir türü** bir takas sunar: **piyasa emri** gerçekleşmeyi garanti eder ama fiyatı değil, " +
-                    "**limit emri** fiyatı garanti eder ama gerçekleşmeyi değil. Bir turun maliyeti **komisyon + " +
-                    "makastır**; komisyon faturada görünür, makas fiyatın içinde saklıdır. İşlemin gerçekleştiği " +
-                    "an ile **takasın** tamamlandığı an aynı değildir (**valör**). Seans kapalıyken biriken " +
-                    "arz-talep farkı açılışta **boşluk** olarak görünebilir. " +
-                    "⚠ Nirengi bir aracı kurum değildir, emir iletmez — yalnız kaydını tutar.",
-                EstimatedMinutes = 7,
-                Level = LessonLevel.Beginner,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("lesson-s0l10"),
+            TrackId = Id("track-ilk-adimlar"),
+            Slug = "bir-alim-nasil-gerceklesir",
+            OrderIndex = 10,
+            Title = "Bir alım nasıl gerçekleşir?",
+            // RV-042 / RV-045 / RV-049 (REVIEW-005): özet ve gövde, ders metniyle
+            // aynı dili konuşmalı — "garanti eder" mutlaklığı ve "tur maliyeti =
+            // komisyon + makas" tam-liste iması burada da düzeltildi.
+            Summary = "Bir emir beş duraktan geçer: sen, aracı kurum, borsa, eşleşme, takas. Piyasa emri " +
+                "gerçekleşmeyi öne alır, limit emri fiyatı — ikisi bir takastır. Bir turun en belirgin " +
+                "maliyeti komisyon ile makasın toplamıdır; biri faturada, biri fiyatın içinde.",
+            BodyMarkdown =
+                "## Bir alım nasıl gerçekleşir?\n\n" +
+                "Bir alım emri beş duraktan geçer: **sen → aracı kurum → borsa → eşleşme → takas.** " +
+                "**Borsa** fiyatı belirlemez, emirleri fiyat ve zaman önceliğiyle **eşleştirir**; " +
+                "**aracı kurum** emri senin adına iletir ve karşılığında **komisyon** alır, takası ise " +
+                "merkezi bir takas kuruluşu yürütür. İki temel **emir türü** bir takas sunar: **piyasa " +
+                "emri** gerçekleşmeyi öne alır ama fiyatı önceden bildirmez, **limit emri** fiyatı öne " +
+                "alır ama gerçekleşeceğini söylemez. Bir turun en belirgin maliyeti **komisyon + " +
+                "makastır**; komisyon faturada görünür, makas fiyatın içinde saklıdır. İşlemin " +
+                "gerçekleştiği an ile **takasın** tamamlandığı **valör günü** aynı değildir. Seans " +
+                "kapalıyken biriken arz-talep farkı açılışta **boşluk** olarak görünebilir. " +
+                "⚠ Nirengi bir aracı kurum değildir, emir iletmez — yalnız kaydını tutar.",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s0l10.Id, ct), desired_lesson_s0l10))
             changed = true;
-        }
 
         // Ön-koşul: S0-L10, S0-L9'u ister (track içi zincir — Set 0'ın son halkası).
         if (!await db.LessonPrerequisites.AnyAsync(

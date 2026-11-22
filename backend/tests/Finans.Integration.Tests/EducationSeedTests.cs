@@ -358,6 +358,108 @@ public sealed class EducationSeedTests
             all.Should().NotContainEquivalentOf(banned, $"eğitim içeriği tavsiye vermez (yasak ifade: {banned})");
     }
 
+    /// <summary>
+    /// RV-064 (REVIEW-005): ders kaydı yalnız "yok ise ekle" ile yazıldığı sürece metin
+    /// düzeltmeleri çalışan kurulumlara inmiyordu — S0-L10'un özeti, gövde düzeltildikten
+    /// sonra bile eski hâliyle ekranda duruyordu. Bu test mutabakatı kilitler: seed ikinci
+    /// turda yazılı içeriği tazeler, ama <b>işletme kararı olan alanları</b> geri almaz.
+    /// </summary>
+    [Fact]
+    public async Task Reseeding_refreshes_authored_lesson_text_but_not_operational_fields()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var lesson = await db.Lessons.SingleAsync(l => l.Slug == "bir-alim-nasil-gerceklesir");
+        var authoredSummary = lesson.Summary;
+        var authoredTitle = lesson.Title;
+        var createdAt = lesson.CreatedAtUtc;
+
+        // Bir kurulumun "eskimiş" hâlini taklit et: metin eski sürümde kalmış,
+        // ayrıca işletme tarafı dersi yayından almış.
+        lesson.Summary = "ESKİ ÖZET — piyasa emri gerçekleşmeyi garanti eder";
+        lesson.Title = "ESKİ BAŞLIK";
+        lesson.EstimatedMinutes = 99;
+        lesson.IsPublished = false;
+        await db.SaveChangesAsync();
+
+        await SeedData.SeedAsync(db);
+
+        var after = await db.Lessons.SingleAsync(l => l.Slug == "bir-alim-nasil-gerceklesir");
+        after.Summary.Should().Be(authoredSummary, "yazılı içerik seed'den tazelenmeli (RV-064)");
+        after.Title.Should().Be(authoredTitle, "başlık da yazılı içeriktir — T6.7'de atlanmış ve sessizce eskimişti");
+        after.EstimatedMinutes.Should().Be(7, "süre tahmini de künyeden gelir");
+
+        after.IsPublished.Should().BeFalse(
+            "yayın durumu bir İŞLETME kararıdır; seed onu sessizce geri almamalı (UpsertLesson bilerek dışarıda bırakır)");
+        after.CreatedAtUtc.Should().Be(createdAt, "kaydın kendi geçmişi seed turlarıyla değişmemeli");
+
+        // Ders sayısı artmadı: mutabakat yeni satır üretmez.
+        (await db.Lessons.CountAsync(l => l.Slug == "bir-alim-nasil-gerceklesir")).Should().Be(1);
+    }
+
+    /// <summary>
+    /// RV-062 (REVIEW-005) · <c>16</c> §9.1 M7a/M7b + §12-K3a: S0-L10'un künyesi üç
+    /// 🔴 kural koyuyordu (aracı kurum adı/tarife yasağı · "kurgusal" etiketi ·
+    /// Nirengi cümlesi) ve bunların <b>hiçbirinin makine karşılığı yoktu</b> — koruma
+    /// tamamen insan okumasına dayanıyordu. Bu test o boşluğu kapatır.
+    /// </summary>
+    [Fact]
+    public async Task Brokerage_naming_and_fictional_rate_labels_are_machine_checked()
+    {
+        await using var db = NewContext();
+        await SeedData.SeedAsync(db);
+
+        var sections = await db.LessonSections.ToListAsync();
+        var lessons = await db.Lessons.ToListAsync();
+        var corpus = string.Join("\n", sections.Select(s => s.BodyMarkdown));
+
+        // ── M7b: aracı kurum / şirket adı yasağı ─────────────────────────────
+        // Tam bir kurum listesi tutulamaz; onun yerine Türkçe aracı kurum ve şirket
+        // adlarının TAŞIYICI kalıpları yasaklanır. §12-K3a muafiyeti düzenleyici,
+        // borsa ve takas kuruluşu adlarını (SPK · Borsa İstanbul · Takasbank) serbest
+        // bırakır — bu kalıplar onları yakalamaz, çünkü ders onları ünvansız anar.
+        foreach (var pattern in new[] { "Menkul Değerler", "Yatırım Menkul", "A.Ş.", "A.Ş ", "Aracı Kurumu " })
+        {
+            corpus.Should().NotContainEquivalentOf(pattern,
+                $"eğitim içeriği tek bir şirketi/aracı kurumu adlandırmaz (M7b · §12-K3a muafiyeti ünvan " +
+                $"taşımayan düzenleyici/borsa/takas kuruluşu adlarıyla sınırlıdır) — bulunan kalıp: {pattern}");
+        }
+
+        // ── M7a: grafik/tahmin kalıpları — ANLATIMDA yasak, Trap'te serbest ───
+        // Trap blokları ve quiz çeldiricileri yanılgının kendisini öğretir (§9.1 M7a).
+        var narrative = string.Join("\n", sections
+            .Where(s => s.Kind != SectionKind.Trap)
+            .Select(s => s.BodyMarkdown));
+        foreach (var pattern in new[] { "hedef fiyat", "sinyal verdi", "formasyon", "destek kırıldı", "direnç kırıldı" })
+        {
+            narrative.Should().NotContainEquivalentOf(pattern,
+                $"grafik/tahmin kalıbı anlatım metninde geçmez (M7a; Trap bloğunda serbesttir) — " +
+                $"bulunan kalıp: {pattern}");
+        }
+
+        // ── S0-L10 künyesi · 🔴 kural 1: Nirengi'nin sınırı AÇIKÇA yazılı ─────
+        // Kullanıcı beklentisini yanlış kurmak bu derste doğrudan yasal risktir:
+        // uygulama emir iletmez ve bunu derste söylemek zorundadır (künye yasal notu).
+        var s0l10 = lessons.Single(l => l.Slug == "bir-alim-nasil-gerceklesir");
+        var s0l10Body = string.Join("\n", sections
+            .Where(s => s.LessonId == s0l10.Id)
+            .OrderBy(s => s.OrderIndex)
+            .Select(s => s.BodyMarkdown));
+
+        s0l10Body.Should().ContainEquivalentOf("Nirengi bir aracı kurum değildir, emir iletmez",
+            "S0-L10 künyesi bu cümlenin derste AÇIKÇA geçmesini şart koşuyor (13. aşama, yasal not)");
+
+        // ── 🔴 kural 2: komisyon oranı geçen her yerde "kurgusal" etiketi ─────
+        // Etiketsiz bir oran gerçek bir tarife sanılabilir → reklam/yanıltma riski.
+        foreach (var s in sections.Where(s => s.LessonId == s0l10.Id && s.BodyMarkdown.Contains("%0,2")))
+        {
+            s.BodyMarkdown.Should().ContainEquivalentOf("kurgusal",
+                $"'{s.Heading}' aşaması komisyon oranı veriyor ama kurgusal olduğunu söylemiyor " +
+                "(künye 🔴 kuralı: oran kurgusal VE etiketli)");
+        }
+    }
+
     [Fact]
     public async Task Section_seed_backfills_databases_that_already_have_lessons()
     {

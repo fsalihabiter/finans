@@ -45,7 +45,15 @@
 - summary: "Portföyünle Öğren" modülü: eğitim şeması + seed içeriği, katmanlı anlatım (L1/L2/L3), tanılama testi ve uyarlanabilir render, çok set desteği, Set 0 "İlk Adımlar" (10 ders) ve Set 2 "Grafik ve Piyasa Okuryazarlığı" (8 ders), kavram sözlüğü.
 - entry_criteria: Faz 5 kapalı; eğitim şeması + endpoint'leri hazır.
 - exit_criteria (backlog DoD): 35 ders seviyeye uyarlanmış derinlikte okunabiliyor; çok set + "Buradan başla"; "Senin portföyünde" gerçek/etiketli demo veriyle çalışıyor; kullanıcı fiyat ve mum grafiği okuyabiliyor, kalemini ölçütle karşılaştırabiliyor; tanılama seviyeyi belirliyor ve `RiskAttitude` hiçbir yerde görünmüyor; quiz + ilerleme + kavram ustalığı kayıtlı; sözlük aranabilir; her ders kaynak bloğu taşıyor; SC-E1–E10 + SC-E19–E28 yeşil.
-- durum notu: 17 görev `[x]`, 2 `[~]` (T6.16 Set 0 ders 6/10, T5E.4 ConceptTag derin bağlantısı), 16 açık.
+- durum notu (2026-11-22): **Set 0 "İlk Adımlar" TAMAMLANDI — 10/10 ders yayında**
+  (son halka GD-005 · S0-L10, ürün sahibi kabulüyle kapandı). Seed: 15 ders ·
+  187 bölüm · 15 quiz · 117 soru · 40 kavram. Kalan büyük parçalar: **Set 2
+  "Grafik ve Piyasa Okuryazarlığı" (8 ders)** ve **kavram sözlüğü**; ayrıca
+  T5E.4 (ConceptTag derin bağlantısı) `[~]`. Güncel kalem listesi kanonik
+  olarak GitHub Issues'ta (D-022).
+  ⚠ Faz kapanışından önce iki borç: **TD-001** (29 figür render testsiz — dört
+  bulgu otomatik testten kaçtı) ve **M12 adayı** (künye figür sayısı ↔ aşama
+  planı uyuşmazlığı, 16 dersin 11'inde).
 
 ## PHASE-007 — Kişiselleşme & Erişim (Faz 7)
 - status: planned

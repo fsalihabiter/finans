@@ -960,8 +960,13 @@ toplam maliyeti — **yüzde** olarak; (b) limit emrinin gerçekleşmediği sena
 hesabı, valör · Hard — limit emrinin bedeli, açılış boşluğunun nedeni.
 
 **Kaynaklar:** SPK — yatırım hizmetleri ve emir iletimi ⟨doğrulanacak⟩ ·
-Borsa İstanbul — seans saatleri ve takas süresi ⟨doğrulanacak⟩ · Takasbank —
-takas süreci ⟨doğrulanacak⟩.
+Borsa İstanbul — seans saatleri ve pazar yapısı ⟨doğrulanacak⟩ · Takasbank —
+takas süreci ve takas süresi ⟨doğrulanacak⟩.
+
+> ⚠ **Düzeltme (2026-11-22, RV-044):** takas süresi önce Borsa İstanbul'a
+> bağlanmıştı; takası yürüten ve süresini belirleyen merkezi kuruluş olduğu için
+> **Takasbank**'a taşındı. Ders gövdesi de buna göre düzeltildi: aracı kurum
+> takasın **tarafıdır** (müşterisini temsil eder), **yürütücüsü değildir.**
 
 **⚠ Yasal not:** 🔴 **Aracı kurum adı, tarifesi ve karşılaştırması YASAK**
 (reklam riski + §6.2). Komisyon **kurgusal ve etiketli** bir oranla anlatılır.
@@ -2449,7 +2454,7 @@ yeşil = içerik doğru" yanılsaması yaratılmaz.
 | **M6** | Her dersin **≥1 `ConceptTag`**'i var **ve** her `ConceptTag` **en az bir derste** tanıtılıyor (boşta kavram yok) |
 | **M7** | Tavsiye / tahmin / **enstrüman sıralaması** taraması — `Source` blokları **dahil** *(mevcut test genişletilir)* |
 | **M7a** 🆕 | **Grafik/tahmin kalıbı taraması** (Set 2 ile geldi): "formasyon ⇒ …", "sinyal verdi", "boşluk kapanır", "destek/direnç kırıldı ⇒ …", "hedef fiyat" kalıpları **anlatım metninde yasak**. `Trap` bloklarında ve quiz **çeldiricilerinde serbest** — orada yanlışın kendisi öğretiliyor. Test bu ayrımı `SectionKind`'a bakarak yapar |
-| **M7b** 🆕 | **Ölçüt beyaz listesi** (§12-K3): metinde geçebilen tek özel ad **geniş endeks** adlarıdır (beyaz liste dosyada tutulur). Tek şirket · fon · aracı kurum adı **hâlâ yasak**; endeks adı geçen cümlede **eylem fiili** (al/sat/geç/kaydır) bulunamaz |
+| **M7b** 🆕 | **Ölçüt beyaz listesi** (§12-K3): anlatımda geçebilen tek özel ad **geniş endeks** adlarıdır (beyaz liste dosyada tutulur). Tek şirket · fon · aracı kurum adı **hâlâ yasak**; endeks adı geçen cümlede **eylem fiili** (al/sat/geç/kaydır) bulunamaz. **Muafiyet (RV-061, 2026-11-22):** `Source` bloklarında **düzenleyici, borsa ve takas/saklama kuruluşu** adları *kaynak gösterimi* amacıyla izinlidir (örn. SPK · Borsa İstanbul · Takasbank) — bunlar kullanıcının seçtiği bir hizmet sağlayıcı değil, piyasanın altyapısı ve denetleyicisidir, dolayısıyla reklam riski taşımazlar. **Aracı kurum · fon · tek şirket adı bu muafiyetin dışındadır** ve `Source` bloğunda da yasaktır (kanonik karar: **D-023**) |
 | **M8** | MiniMarkdown alt kümesi dışına çıkılmaz *(link, T6.8 indikten sonra izinli)* |
 | **M9** | Ön-koşul zinciri **track içinde** kalır; **setler arası sert kilit yok** (`15` §6.3) |
 | **M10** 🆕 | **Tuzak blokları `DepthTier.Core`** — başlangıç seviyesinde katlanmaz (§2.4; `Example_blocks_declare_a_figure_and_traps_stay_in_core_tier`) |
@@ -2514,6 +2519,7 @@ ama ekranındaki grafiği okuyamayan bir noktada bırakılıyordu.
 | **K1** | Eksik halka nasıl kapanır | **Yeni Set 2 — "Grafik ve Piyasa Okuryazarlığı" (8 ders)** + Set 0'a **2 ders** (fiyat oluşumu · alım mekaniği). Müfredat **25 → 35 ders** | Grafik okuma bağımsız bir beceridir; mevcut setlerin içine serpiştirilirse ne öğretilir ne denetlenebilir. Set 0'ın iki dersi ön koşuldur: grafikteki nokta **bir anlaşmadır** — bunu bilmeyen ekseni okuyamaz |
 | **K2** | Set sırası | Yeni set **Set 1'den sonra, "Portföyünü Okumak"tan önce** → eski Set 2/3/4 **3/4/5**'e kaydı | Nirengi'nin kendi **Değer Seyri** grafiğini okumak, portföy derslerinin ön koşuludur. Kod etkisi yok: Set 2-4 içerikleri henüz yazılmamıştı (T6.11/12/13 açık) |
 | **K3** | Endeks adı kullanılabilir mi | **Geniş endeks adları izinli** (ölçüt işlevi görür), **tek şirket · fon · aracı kurum adı yasak** kalır; endeks geçen cümlede **eylem fiili yok** (M7b) | "Piyasaya göre" öğretmenin başka yolu yok — ölçüt adsız anlatılamaz. Endeks alınıp satılması önerilen bir enstrüman değil, bir **ölçü birimidir**. ⚠ **Lansman öncesi hukuk incelemesinde ayrıca teyit edilecek** (`14` §6) |
+| **K3a** 🆕 | Kaynak gösterirken kurum adı geçebilir mi | **`Source` bloklarında düzenleyici · borsa · takas/saklama kuruluşu adları izinli** (SPK · Borsa İstanbul · Takasbank gibi). **Aracı kurum · fon · tek şirket adı yasak kalır** — `Source` bloğunda da | Kaynak göstermek dersin dayanağını denetlenebilir kılar (İ2) ve adsız kaynak gösterimi diye bir şey yok. Bu üç tür kurum kullanıcının **seçtiği bir hizmet sağlayıcı değil**: ikisi piyasanın altyapısı, biri denetleyicisi — dolayısıyla reklam/yönlendirme riski taşımazlar. Karar RV-061 ile açıldı (2026-11-22): S0-L9 ve S0-L10 künyeleri bu adları zaten istiyordu, M7b ise harfiyen yasaklıyordu. Kanonik karar: **D-023**. ⚠ **Lansman öncesi hukuk incelemesinde teyit edilecek** |
 | **K4** | Teknik analiz nasıl ele alınır | **Bir ders konusu olarak** (S2-L6): ne iddia ettiği **tanım** düzeyinde anlatılır; sinyal **üretilmez**, "işe yaramaz" da **denmez** | Konuyu yok saymak kullanıcıyı korumaz — dışarıda zaten karşılaşacak. Taraf tutmak ise kaynaklandırılamayan bir hükümdür. Öğretilen şey **iddiayı sınama becerisi** |
 | **K5** | `period-selection` kavramı | Tanıtım **S2-L2'ye taşındı** (sezgi turu); S3-L4 **formül turu** olarak kaldı | §2.3 spirali: sezgi → formül → kendi verisi. Dönem seçimi ilk kez bir **grafikte** görülür |
 | **K6** | Setin etkileşimli aracı | **Ölçek oynatıcısı** (`chart-scale-playground`, S2-L2) — enflasyon kaydırıcısıyla aynı kurallar (saf · istemci · tohumlu · tahminsiz) | Ölçek etkisi anlatılarak değil **oynatılarak** öğrenilir. Mum kurucusu (`build-a-candle`) statik çok panelli figür olarak kalır — ikinci araç yazılmaz (`15` §6.2 "set başına 1") |

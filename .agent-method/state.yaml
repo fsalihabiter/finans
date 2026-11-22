@@ -9,14 +9,16 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-005     # S0-L10 "Bir alım nasıl gerçekleşir?" — açıldı 2026-11-22.
-                    # Issue #11. Bu ders kabul edilince Set 0 TAMAMLANIR (10/10).
-                    # ⚠ Kabul kriterleri (§4) ONAY BEKLİYOR — ajan önerdi, insan onaylar.
-                    # Künye tespitleri: figür sayısı 9 → 10 (DÖRDÜNCÜ kez aynı hata,
-                    # M12 adayı hâlâ açık) · ders LiveContext TAŞIMIYOR ve bu,
-                    # LessonsWithoutLiveContext listesinin İKİNCİ kaydı olacak
-                    # (testin kendi uyarı sinyali — GD-005 §3'te gerekçelendirildi).
-                    # GD-004 (S0-L9) 2026-11-22'de kabul edildi → Set 0 9/10.
+  gd_id: null       # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
+                    # GD-005 (S0-L10) 2026-11-22'de KABUL EDİLDİ → **Set 0 TAMAMLANDI (10/10)**.
+                    #   Yedi kabul kriteri de ürün sahibi onayıyla kapandı; REVIEW-005'in
+                    #   24 bulgusunun tamamı düzeltildikten SONRAKİ hâli kabul edildi.
+                    #   Künye tespiti: figür sayısı 9 → 10 (DÖRDÜNCÜ kez aynı hata;
+                    #   M12 adayı — künye başlığındaki figür sayısı ↔ aşama planındaki
+                    #   🖼 sayısı — hâlâ AÇIK iş, 16 dersin 11'inde uyuşmazlık var).
+                    #   Ders LiveContext taşımıyor; LessonsWithoutLiveContext'in İKİNCİ kaydı.
+                    # Sıradaki aday: Faz 6'nın kalan kalemleri (Set 2 "Grafik ve Piyasa
+                    # Okuryazarlığı" 8 ders · kavram sözlüğü) — `gh issue list --state open`.
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
@@ -60,7 +62,25 @@ blockers: []
 # çerçeve sorunu). INV-18 gereği ikisi de aktif işi durdurmuyor.
 
 review:
-  last_review_id: REVIEW-004
+  last_review_id: REVIEW-005
+  # REVIEW-005 (GD-005 · S0-L10): 24 bulgu — 0 critical · 3 high · 13 medium · 8 low.
+  # TÜMÜ RESOLVED (2026-11-22, ürün sahibi kararı "Hepsini düzelt"). Açık bulgu yok.
+  #   RV-041 (high) makasın birimi S0-L9 "işlem başına" ↔ S0-L10 "tur başına";
+  #           doğru olan S0-L10. Hata RV-034 DÜZELTMESİNDE girdi (regresyon).
+  #   RV-042 (high) "piyasa emri gerçekleşmeyi garanti eder" mutlak → "öne alır"
+  #           + "karşı tarafta emir varsa" koşulu; tablo, anlatım, quiz ve özet.
+  #   RV-064 (high) ders kaydı yalnız "yok ise ekle" ile yazılıyordu → metin
+  #           düzeltmeleri çalışan kuruluma HİÇ inmiyordu. UpsertLesson eklendi.
+  # ⚠ RV-064 statik incelemede değil, DÜZELTME TURUNUN tarayıcı doğrulamasında
+  # bulundu: testler yeşildi ama kullanıcı hâlâ eski özeti görüyordu.
+  # Üç medium figür katmanındaydı ve hepsi kapatılmış desenlerin TEKRARIydı
+  # (RV-039 okunmayan yazı · RV-016/026/027/028 asimetrik vurgu ailesi).
+  # Dersin üç 🔴 kuralı (kurum adı · tarife · kıyas yasağı) TEMİZ çıktı ve artık
+  # makine kapısı da var (RV-062); M7b muafiyeti §12-K3a olarak yazıldı (RV-061).
+  # TD-001 büyüyor: render testsiz figür sayısı 19 → 29 (açık kapsam borcu).
+  # ⚠ Bildirim: REVIEW-004'ün frontmatter'ı review.schema.json'a uymuyor
+  # (id/gd/created/partial yazmış; şema review_id/runtime/timestamp/scope/
+  # active_gd istiyor). Sessizce düzeltilmedi — insan kararı (AGENTS.md §4.2).
   # REVIEW-004 (GD-004 · S0-L9): 20 bulgu — 0 critical · 2 high · 8 medium · 9 low.
   # TÜMÜ RESOLVED (2026-11-22, ürün sahibi kararı "Hepsini düzelt"). Açık bulgu yok.
   #   RV-019 (high) S0-L5 ile S0-L9 ters adlandırıyordu → S0-L5 de düzeltildi

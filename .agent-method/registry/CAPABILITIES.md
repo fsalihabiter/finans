@@ -77,10 +77,19 @@ capabilities:
 
   - capability: Education module (content + delivery)
     location: backend/src/Finans.Domain/Education/ + Finans.Application/Education/ + Finans.Infrastructure/Seed/EducationContent.cs + Services/EducationService.cs
-    entry_points: [IEducationService, ILessonContextService, ContextKeys, IDiagnosticService, EducationContent, SeedSet0Async]
+    entry_points: [IEducationService, ILessonContextService, ContextKeys, IDiagnosticService, EducationContent, SeedSet0Async, UpsertLesson]
     status: healthy
     scope: all
-    notes: İçerik kodda seed; idempotent **mutabakat** (metin/katman/figür değişikliği çalışan DB'ye iner). Ders eklerken künye `16-CURRICULUM.md`'den okunur; yapısal sözleşme testleri M1-M9.
+    notes: >-
+      İçerik kodda seed; idempotent **mutabakat** — yazılı içerik değişikliği çalışan DB'ye iner.
+      Mutabakat İKİ katmanda ayrı ayrı kurulu: **bölümler** (metin · katman · figür, T6.7) ve
+      **ders kaydı** (başlık · slug · özet · gövde · süre · seviye, `UpsertLesson`, RV-064).
+      ⚠ Ders kaydında `IsPublished` · `TrackId` · `CreatedAtUtc` bilerek DIŞARIDA — işletme
+      kararı, yapısal taşıma ve kaydın kendi geçmişi seed tarafından geri alınmaz.
+      Yeni bir içerik alanı eklenirse HEM karşılaştırmaya HEM kopyaya eklenmeli; eksik
+      bırakılan alan sessizce eskimiş kalır (bu `Heading`'de bir kez, ders özetinde bir kez oldu).
+      Ders eklerken künye `16-CURRICULUM.md`'den okunur; yapısal sözleşme testleri M1-M10
+      + tavsiye/kurum adı makine kapısı (RV-062).
     tests: backend/tests/Finans.Integration.Tests/EducationSeedTests.cs (+ EducationApiTests)
     last_verified_ref: ac61b7e
 
@@ -135,7 +144,7 @@ capabilities:
     location: web/src/components/MiniMarkdown.tsx + LessonFigure.tsx
     status: healthy
     scope: web/education
-    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8) — yeni figür yazmadan önce bakılır.
+    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8, S0-L10'da `cost-stack` olarak yeniden kullanıldı) — yeni figür yazmadan önce bakılır. ⚠ **Ton kuralı:** yazı taşıyan dolgu OPAK olmaz (`fig-seg-lead` üzerine metin okunmuyor — RV-039, RV-053, RV-055) ve bir seçenek/kalem diğerinden daha vurgulu çizilmez (RV-016/026/027/028, RV-054). Durum bilgisi renkle değil **biçimle** kodlanır (kesikli çerçeve gibi).
     last_verified_ref: ac61b7e
 
   - capability: Backlog projection (GitHub Issues -> generated/BACKLOG.md)
