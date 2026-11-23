@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-23T14:52:11Z · **65 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-23T17:33:45Z · **66 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -106,6 +106,12 @@
 | #70 | TM.4 — Varlık detay + varlık ekle (alttan kayan overlay) | Feature | — | mobile | — | #69 | — |
 | #71 | TM.5 — Analiz / Hisse / Eğitim ekranları (web paritesi) | Feature | — | mobile | — | #69 | — |
 | #72 | TM.6 — Token saklama (expo-secure-store) + Jest/RTL + Maestro E2E | Feature | — | mobile, infra | — | #67 | — |
+
+## ~ Milestone atanmamış  ·  1 açık
+
+| # | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
+|---|---|---|---|---|---|---|---|
+| #196 | Değer Seyri rozeti: hangi ölçü doğru ölçü? (katkıdan arındırma / TWR) | — | 3 | web | — | — | — |
 
 ---
 
