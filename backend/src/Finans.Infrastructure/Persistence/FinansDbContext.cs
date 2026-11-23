@@ -87,7 +87,27 @@ public class FinansDbContext(DbContextOptions<FinansDbContext> options) : DbCont
         else
         {
             // Sqlite/InMemory'de inet/IPAddress yerel eşlemesi yok → string'e çevir.
-            var ipConverter = new ValueConverter<IPAddress, string>(
+            //
+            // ⚠ CS8620: iki özellik de `IPAddress?` (RefreshToken.CreatedByIp,
+            // AuditLog.IpAddress). Yerel değişken `ValueConverter<IPAddress, string>`
+            // olarak yazıldığında `PropertyBuilder<IPAddress?>.HasConversion<string>`
+            // aşırı yüklemesi seçiliyor ve o `ValueConverter<IPAddress?, string>`
+            // beklediği için null-atanabilirlik uyarısı veriyordu. Çalışma zamanında
+            // sorun YOKTU: EF Core dönüştürücüyü null değerler için hiç çağırmaz,
+            // null'ı doğrudan NULL olarak yazar/okur.
+            //
+            // Çözüm: yerel değişken TABAN `ValueConverter` tipiyle bildiriliyor.
+            // Böylece jenerik olmayan `HasConversion(ValueConverter?)` aşırı yüklemesi
+            // seçiliyor, varyans denetimi devreye girmiyor ve dönüştürücünün KENDİSİ
+            // birebir aynı kalıyor — yani davranış değişmiyor, yalnız bildirim tipi.
+            //
+            // 📌 Alternatif (`ValueConverter<IPAddress?, string>` + null işleme) de
+            // çalışırdı ve mutasyonla denendi: null'a boş dizgi yazan bir dönüştürücü
+            // bile kolonu bozmuyor, çünkü EF o lambda'yı null için HİÇ çağırmıyor.
+            // Yani iki seçenek arasında null açısından fark yok; bu biçim sadece daha
+            // az hareketli parça içerdiği için seçildi. (Önceki yorum burada "null
+            // işleme eklenirse denetim kaydı bozulur" diyordu — o iddia yanlıştı.)
+            ValueConverter ipConverter = new ValueConverter<IPAddress, string>(
                 ip => ip.ToString(),
                 text => IPAddress.Parse(text));
             modelBuilder.Entity<RefreshToken>().Property(x => x.CreatedByIp).HasConversion(ipConverter);

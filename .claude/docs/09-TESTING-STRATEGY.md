@@ -216,6 +216,7 @@ Bu senaryo **iki katmanda** test edilebilir: hesaplama kısmı **unit** (sadece
 | SC-14 | NFR-4, `11`§5 | **Güvenlik:** Eşik üstü istek → **429** (rate limit) | Integration | [ ] |
 | SC-15 | NFR-4, `11`§4 | **Güvenlik:** Hata yanıtında stack trace / iç detay sızmıyor | Integration | [x] (T0.13 ObservabilitySecurityTests.Exception_handler_masks_internal_details) |
 | SC-16 | NFR-4 | **Güvenlik:** Token'sız/expired istek → 401 (Faz 5+) | Integration | [ ] |
+| SC-20 🆕 | `11`§2, `12`§7, `03`§B | **Denetim kaydı IP eşlemesi:** PostgreSQL dışı sağlayıcıda (Sqlite/InMemory) `IPAddress` kolonları string'e çevrilir — `RefreshToken.CreatedByIp` ve `AuditLog.IpAddress` IPv4 **ve** IPv6 için yuvarlak gider; **IP yoksa kolon gerçek SQL NULL kalır** ("bilinmiyor" ile bir yer tutucu adres karışmaz). ⚠ Kapsam: testin null kolu dönüştürücünün null işlemesini DEĞİL, EF'in null kısa-devresinin korunduğunu sabitler (mutasyonla ölçüldü); özellik non-nullable yapılır ya da `HasDefaultValue` eklenirse kırılır | Integration (Sqlite, 3) | [x] (2026-11-22; `IpAddressConversionTests` 3/3. CS8620 düzeltilirken yazıldı — o ana kadar bu iki kolona **hiçbir test dokunmuyordu**, yani paketin yeşil olması dönüştürücünün çalıştığını kanıtlamıyordu. Yuvarlak gidişin kırmızıya düştüğü mutasyonla doğrulandı) |
 | SC-P1 | NFR-6/10, `10`§2 | **Performans:** N eşzamanlı kullanıcı `summary` → p95 bütçe içinde (cache isabet/ıska) | Yük (k6/NBomber) | [ ] |
 
 > Durum: `[ ]` yazılmadı · `[~]` test var, kod devam · `[x]` yeşil.
