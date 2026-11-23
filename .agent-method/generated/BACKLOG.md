@@ -7,7 +7,7 @@
 > **Kanonik backlog kaynağı: GitHub Issues** → https://github.com/fsalihabiter/finans/issues (D-022).
 > Bu dosya çevrimdışı/ajan okuması için anlık görüntüdür.
 >
-> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-23T14:51:55Z · **66 açık issue**
+> Üretim: `.github/scripts/gen-backlog.sh` · 2026-11-23T14:52:11Z · **65 açık issue**
 >
 > Sütunlar: **Üst** = üst issue (alt-görev ilişkisi) · **Engelleyen** =
 > bu iş başlayamadan kapanması gereken issue’lar (`blocked by`).
@@ -19,7 +19,7 @@
 | #73 | T-LLM.1 — Deterministik yorum çekirdeği (D-018 uygulaması) | Feature | 2 | backend | — | — | — |
 | #75 | INC-002 — INV-04 ile GD "review" durumu çelişiyor (ADM çerçeve sorunu) | Bug | 5 | adm | — | — | — |
 
-## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  33 açık
+## PHASE-006 — Eğitim MVP + Kavram Sözlüğü  ·  32 açık
 
 | # | Başlık | Tür | Önc. | Alan | Üst | Engelleyen | Etiket |
 |---|---|---|---|---|---|---|---|
@@ -36,7 +36,6 @@
 | #20 | T6.3 — Kavram sözlüğü /egitim/sozluk (aranabilir InfoTip indeksi) | Feature | 2 | web, education | — | — | — |
 | #22 | T6.23 — Grafik SVG öğeleri (ChartFrame/SeriesPath/Candle/VolumeBars/BookLadder/RangeBrush) | Feature | 2 | web | — | — | — |
 | #23 | T6.24 — Set 2 içerik turu (8 ders) | Feature | 3 | education | — | #22 | — |
-| #24 | S2-L1 — "Grafik neyi gösterir?" (eksenleri okumak) | Task | 3 | education | #23 | — | — |
 | #25 | S2-L2 — "Aynı veri, üç görüntü" (ölçek ve dönem) ⭐ | Task | 3 | education | #23 | — | — |
 | #26 | S2-L3 — "Mum grafiği: bir mumun anatomisi" ⭐ | Task | 3 | education | #23 | — | — |
 | #27 | S2-L4 — "Zaman dilimi: aynı hikâye, farklı mum" | Task | 3 | education | #23 | — | — |
@@ -110,7 +109,7 @@
 
 ---
 
-## Tamamlananlar — 126 kapalı issue
+## Tamamlananlar — 127 kapalı issue
 
 > Faz 0-5 ve Faz 6'nın bitmiş kalemleri 2026-11-22'de **geriye dönük**
 > kapalı issue olarak girildi (D-022). Uygulama notları issue gövdelerinde;
@@ -125,7 +124,7 @@
 | PHASE-003 — LLM Yorum Katmanı | 12 |
 | PHASE-004 — Hisse Temel Analiz | 5 |
 | PHASE-005 — Değer Seyri + Senaryo v1 | 6 |
-| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 40 |
+| PHASE-006 — Eğitim MVP + Kavram Sözlüğü | 41 |
 
 Listelemek için:
 
