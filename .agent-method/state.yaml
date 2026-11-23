@@ -171,11 +171,26 @@ session:            # current open session; cleared by adm-close
   #   main'de, PUSH EDİLMEDİ.
   #   Sıradaki: S2-L2 "Aynı veri, üç görüntü — ölçek ve dönem" (etkileşimli
   #   araç chart-scale-playground / SC-E27 orada).
-  # S-012 AÇIK — adm-open ile açıldı (üst üste İKİNCİ kez; desen tutuyor).
-  id: S-012
-  runtime: claude-code
-  started_at: "2026-11-23T16:20:00Z"
-  start_sha: d1c9d0b
+  # S-012 kapandı 2026-11-23T20:45:00Z → evidence/sessions/S-012.md
+  #   ✅ adm-open üst üste İKİNCİ kez çalıştırıldı; desen tutuyor.
+  #   start_sha d1c9d0b · end_sha 3526830 · 10 dosya · 1 commit.
+  #   GD-009 (S2-L2) AÇIK KALDI — backend indi, DERS YAZILMADI (INV-07).
+  #   Oturumun değeri yazılan kodda değil YAZILMAYANDA: hazırlık iki tuzağı
+  #   önledi. (1) Künyenin istediği "iki dönemdeki getiri" için hazır alan
+  #   (ChangeRatio) katkılarla KİRLİ çıktı — kullanılsaydı ders yanlış rakam
+  #   öğretecekti; yerine günlük serinin Value/Cost çiftinden özetin formülüyle
+  #   türetildi. (2) Künye `nominal-return`ü S1-L1'in tanıttığı kavram sayıyor,
+  #   seed'de hiç yoktu → S2-L2 tanıtılmamış bir kavramı pekiştirecekti;
+  #   TD-006'nın ilk somut kurbanı, ürün sahibi kararıyla seed'e eklendi.
+  #   INC-005 çözüldü ("Etiketle" kararı): rozet adıyla duruyor, formüle
+  #   dokunulmadı, etiket testle korunuyor. Ölçü kararı → issue #196.
+  #   ⚠ Süreç hatası ve düzeltmesi: commit `git add -A` ile iki işi birden
+  #   topladı ve ilk mesaj yalnız birini anlatıyordu; push edilmemişti →
+  #   mesaj düzeltildi (amend) + CI projeksiyonu üzerine rebase edildi.
+  #   Doğrulama: Application 312/312 · web 371/371 · tsc temiz · derleme 0 hata.
+  #   ⚠ Integration TAM KOŞTURULMADI: seed sayımları henüz güncellenmedi,
+  #   çünkü ders içeriği inmedi (bu test borcu DEĞİL — INV-08).
+  #   Sıradaki: GD-009'un ders tarafı — figürler → oynatıcı → 15 aşama → quiz.
 
 blockers: []
 # DOCTOR-001: 6/6 bulgu kapandı (DR-001..004 → S-001, DR-005/DR-006 → S-003).
