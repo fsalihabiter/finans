@@ -60,14 +60,20 @@
   kapılarının gerçekten koştuğu artık görünür.
   Yeni borçlar: **TD-004** (figürlerde görsel bozulma — tarayıcı düzeyi) ve
   **TD-005** (9 künyede planın son figürü aşamaya bağsız — editöryal karar).
-  ⚠ **Kapsam uyuşmazlığı — insan kararı bekliyor (bildirildi, düzeltilmedi):**
-  çıkış ölçütü "**35 ders**" diyor ve müfredat künyeleri de tam 35 ders
-  planlıyor (S0 10 · S1 5 · S2 8 · S3 4 · S4 4 · S5 4). Seed'de bugün **15**
-  ders var (S0'ın 10'u + S1'in 5'i). Oysa bu notun "kalan büyük parçalar"
-  satırı yalnız Set 2 (8 ders) + sözlük diyor → 15 + 8 = **23 ≠ 35**; Set 3/4/5
-  (12 ders) hiçbir yerde sayılmıyor. Ya çıkış ölçütü Sets 0-5'in tamamını
-  kastediyor (bu durumda faz, notun ima ettiğinin ~3 katı) ya da ölçüt
-  daraltılmalı. `adm-phase` bunu kendi başına karara bağlamaz.
+  📌 **Kapsam ÇÖZÜLDÜ — [D-024](../decisions/D-024-phase-006-keeps-35-lesson-exit-criterion.md):**
+  çıkış ölçütü "**35 ders**" KORUNUR; faz bilinçli olarak büyük kabul edilir ve
+  bölünmez (ürün sahibi kararı 2026-11-23). Bu yüzden yukarıdaki "kalan büyük
+  parçalar" satırı **eksikti** ve şöyle okunur:
+  **gerçek kalan kapsam = 20 ders + kavram sözlüğü** —
+  Set 2 "Grafik ve Piyasa Okuryazarlığı" (8) · Set 3 "Portföy Yönetimi" (4) ·
+  Set 4 "Davranışsal" (4) · Set 5 "TR'ye özgü" (4).
+  Seed'de bugün **15** ders var (S0'ın 10'u + S1'in 5'i; `SeedData.cs`'de 15
+  `new Lesson` ile doğrulandı) → **15/35**.
+  ⚠ Set 2 kalan işin tamamı DEĞİL, yalnız **sıradaki dalga**dır. Planlama
+  bundan sonra 20 ders üzerinden konuşur; faz kapanışı uzak bir ufuk ve
+  motivasyon faz kapanışıyla değil **set kapanışlarıyla** sağlanır (CLAUDE.md §4,
+  Set 0'ın 10/10 kapanışı bunun kanıtı). GD sayısı eşiği (15) aşarsa bu bir
+  bölme önerisi değil, D-024'ün gözden geçirilme tetikleyicisidir.
 
 ## PHASE-007 — Kişiselleşme & Erişim (Faz 7)
 - status: planned

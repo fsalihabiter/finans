@@ -42,7 +42,10 @@ active:
                     # SIRADAKİ (ürün sahibi kararı): **Set 2 "Grafik ve Piyasa
                     # Okuryazarlığı" — 8 ders.** Künyeler yazılı ve artık M12+M13 ile
                     # korunuyor; ~70 figür gelecek, render kapısı onları otomatik kapsar.
-                    # Set 2 bitince TD-002'nin kalan yarısı (plan→seed) yazılabilir.
+                    # ⚠ **D-024:** çıkış ölçütü 35 derste KALIYOR, faz bilinçli olarak
+                    # büyük. Gerçek kalan kapsam **20 ders + sözlük** (Set 2 · 3 · 4 · 5),
+                    # seed 15/35. Set 2 kalan işin tamamı değil, sıradaki DALGA.
+                    # TD-002'nin kalan yarısı Set 2'yi değil **Set 5**'i bekliyor.
                     # Kalem listesi kanonik olarak GitHub Issues'ta (D-022).
 
 session:            # current open session; cleared by adm-close
