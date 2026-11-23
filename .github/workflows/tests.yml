@@ -61,9 +61,16 @@ jobs:
         working-directory: web
         run: pnpm test
 
-      - name: tsc --noEmit
+      # ⚠ Bu adım eskiden `tsc --noEmit` idi ve ÜÇ OTURUM boyunca kör kaldı.
+      # Sebep: çıplak `tsc` kök `web/tsconfig.json`'ı okur, o dosya ise yalnız
+      # `references` taşıyan bir çözüm dosyasıdır — `noUnusedLocals` /
+      # `noUnusedParameters` gibi katı bayraklar `tsconfig.app.json`'da yaşıyor
+      # ve oraya YALNIZ proje referanslarını izleyen `tsc -b` ulaşıyor.
+      # Sonuç: yeşil CI'ın altında `docker compose build` kırıktı (INC-006).
+      # Kapı artık uygulamanın GERÇEK derleme komutu: `tsc -b && vite build`.
+      - name: build (tsc -b + vite)
         working-directory: web
-        run: pnpm exec tsc --noEmit
+        run: pnpm build
 
   backend:
     name: backend (unit + seed/curriculum)

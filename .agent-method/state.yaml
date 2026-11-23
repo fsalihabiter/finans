@@ -191,6 +191,11 @@ session:            # current open session; cleared by adm-close
   #   ⚠ Integration TAM KOŞTURULMADI: seed sayımları henüz güncellenmedi,
   #   çünkü ders içeriği inmedi (bu test borcu DEĞİL — INV-08).
   #   Sıradaki: GD-009'un ders tarafı — figürler → oynatıcı → 15 aşama → quiz.
+  # S-013 AÇIK — adm-open ile açıldı (üst üste ÜÇÜNCÜ kez).
+  id: S-013
+  runtime: claude-code
+  started_at: "2026-11-23T21:05:00Z"
+  start_sha: 5ef3a39
 
 blockers: []
 # DOCTOR-001: 6/6 bulgu kapandı (DR-001..004 → S-001, DR-005/DR-006 → S-003).

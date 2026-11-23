@@ -2080,7 +2080,7 @@ function TimeHorizonRuler() {
       caption="Vade, paraya ne zaman ihtiyaç duyacağına kadar geçecek süredir. Bölge sınırları kabadır; asıl soru 'ne zaman lazım?'"
       height={132}
     >
-      {zones.map((z, i) => (
+      {zones.map((z) => (
         <g key={z.name}>
           {/* TD-001 (GD-007): ilk bölge fig-seg-lead ile vurgulanıyordu ve üzerindeki
               yazı opak dolguda okunmuyordu (RV-039 deseni) → üç bölge de aynı sınıfa indi.
