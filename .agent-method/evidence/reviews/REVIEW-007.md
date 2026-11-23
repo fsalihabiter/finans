@@ -34,7 +34,16 @@ findings:
       yanlış iddia dersin kendi tezini çürütüyor. Üstelik doğrusu daha
       öğreticidir: piyasa grafiğinde gün yok, Değer Seyri'nde gün var ama
       nokta taşınmış — iki grafiğin noktaları AYNI TÜRDEN ŞEY DEĞİL.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7 — düzeltme turu"
+      note: >-
+        13. aşamanın son paragrafı yeniden yazıldı: birinci kural (çizgi
+        çizilmiştir) korunuyor, ikinci kural TERSİNE DÖNÜYOR ve fark dersin
+        özü hâline getirildi — "bir grafiğin her noktası aynı türden şey olmak
+        zorunda değil; bu nokta nereden geldi?". Kaynak bloğuna da aynı olgu
+        yazıldı (seri her takvim gününü kapsar, son bilinen fiyat taşınır).
   - id: RV-090
     severity: medium
     evidence: proven
@@ -53,7 +62,15 @@ findings:
       düşecek — guard o noktada ya gevşetilir (koruma kaybolur) ya da ders
       yanlış yazılır. Olumlu biçimleri hedeflemek gerekir (`boşluk kapanır`,
       `boşluk kapanacak`, `boşluğu kapatır`), olumsuzu serbest bırakarak.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7 — mutasyon çifti"
+      note: >-
+        Kalıplar olumlu çekimlerle değiştirildi (kapanır · kapanacak · kapatır ·
+        kapatacak). İKİ YÖNLÜ kanıtlandı: "Boşluk kapanır." sokulunca kapı
+        KIRMIZI, "Boşluk kapanmak zorunda değildir." sokulunca YEŞİL — yani
+        hem koruma duruyor hem yanlış pozitif kalktı.
   - id: RV-091
     severity: medium
     evidence: proven
@@ -70,7 +87,16 @@ findings:
       yatay görünüyor" konusunu işliyor ve düz/dar aralıklı seri çizmek tam
       oradaki figürlerin işi. Render kapısı da yakalamaz: şekil çizilmediğinde
       `aria-label` ve `figcaption` yerinde kalır, test yeşil geçer.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7 — mutasyon"
+      note: >-
+        Dejenere aralıkta değer çerçevenin ortasına oturuyor. Düzeltme
+        KAPIYA BAĞLANDI: `priceScale` test dikişi olarak dışa açıldı
+        (`FIGURE_KEYS` gerekçesi) ve iki test eklendi — dejenere aralık +
+        normal aralığın uçları. Koruma kaldırılınca test düşüyor (227'de 1
+        kırmızı), yani kapı gerçek.
   - id: RV-092
     severity: low
     evidence: strong
@@ -86,7 +112,14 @@ findings:
       figür) ve yinelenen eksen etiketi olağandır. Çakışan anahtar React'te
       sessiz yanlış eşleştirme üretir; dizin tabanlı anahtar bu sınıfı tümden
       kapatır.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        Üç anahtar da dizin tabanlı. ⚠ Makine kanıtı YOK: yinelenen anahtar
+        React'te uyarı üretir, test düşürmez — düzeltme yapısal, mutasyonla
+        gösterilemedi.
   - id: RV-093
     severity: low
     evidence: proven
@@ -103,7 +136,14 @@ findings:
       bağlantısı 404 verirdi) ama AGENTS.md §4.2 "sessizce düzeltme — bildir"
       diyor ve bu sapma ne künyeye ne GD'ye not düşüldü. Karar ya metne ya
       künyeye yazılmalı.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        Uç nokta künyedeki adıyla metne yazıldı (GET /api/portfolio/history).
+        Depo-içi doküman BAĞLANTISI bilinçli olarak konmadı — kullanıcıya
+        görünen metinde 404 verirdi; künye ile tek fark bu ve artık yazılı.
   - id: RV-094
     severity: low
     evidence: strong
@@ -120,7 +160,15 @@ findings:
       (M6 yalnız TANITILAN etiketleri denetliyor), dolayısıyla künye ile ders
       arasındaki bu yön sessizce eskiyebilir — M12/M13'ün figürler için
       kapattığı boşluğun kavramlardaki karşılığı.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        12. aşamaya kavramı adlandıran bir paragraf eklendi: 7 ₺'lik aralık bir
+        OYNAKLIK ölçüsü olarak tanıtılıyor ve haftalık gösterimin oynaklığı da
+        gizlediği söyleniyor. Makine karşılığının yokluğu ayrı bir iş —
+        TD-006 olarak kaydedildi.
   - id: RV-095
     severity: low
     evidence: proven
@@ -135,7 +183,11 @@ findings:
       kapısı yalnız `rect`/`circle` incelediği için bu kayma teste de
       görünmez; `fig-mark-neutral` gibi şekilden bağımsız bir ad ya da ayrı
       bir ok sınıfı doğru olur.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: "`fig-mark-neutral` sınıfı eklendi; iki ok onu kullanıyor."
   - id: RV-096
     severity: low
     evidence: strong
@@ -149,7 +201,14 @@ findings:
       ikisi birlikte okunan bir çift oldu. XML özeti uyarıyor ama ders yazarı
       yardımcıyı listeden seçiyor, özeti değil. `ExCtx` + `ExDeep` adlandırması
       (mevcut çağrıları yeniden adlandırarak) belirsizliği tümden kaldırır.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        Adlar katmanlarına oturtuldu: eski `ExDeep` (Context) → `ExCtx`
+        (14 çağrı), eski `ExL3` (Deep) → `ExDeep` (2 çağrı). Artık
+        Ctx/ExCtx = L2, Deep/ExDeep = L3. Yapısal sayımlar değişmedi.
   - id: RV-097
     severity: medium
     evidence: proven
@@ -168,7 +227,19 @@ findings:
       sinyal ya da tahmin öğretmez" — yasal çerçeveyi taşıyan bir cümle) ve
       düzeltilmesi gerektiğinde inmeyecek. Üç track de aynı durumda: sorun
       GD-008'de doğmadı ama GD-008 onu üçüncü kez tekrarladı.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        `UpsertTrack` eklendi (slug · başlık · açıklama · sıra · seviye;
+        IsPublished ve CreatedAtUtc bilerek dışarıda) ve ÜÇ track de ona
+        bağlandı. Düzeltme ikinci bir kusur ortaya çıkardı: eski "temeller"
+        kolu açıklamayı yalnız BAŞLIK farklıysa güncelliyordu, yani ad bir kez
+        düzeldikten sonra açıklama bir daha hiç mutabakata girmiyordu — o da
+        kapandı. ⚠ "temeller" track'i YOKTAN VAR EDİLMİYOR: kaydı dersleriyle
+        birlikte `SeedEducationAsync` kuruyor ve o metot erken dönüyor;
+        burada eklemek derssiz bir track bırakırdı.
   - id: RV-098
     severity: low
     evidence: heuristic
@@ -182,7 +253,13 @@ findings:
       duruyor — okur "fiyat ekseni var, ölçeği yok" görüyor. 8. aşamanın dört
       sorusuyla (özellikle "hangi para birimi") hafif bir çelişki. Ya eksen
       etiketlenmeli ya da çizgi hiç çizilmemeli.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        Dikey eksene iki tick eklendi (100 ₺ · 103 ₺); kılavuz çizgisi kapalı
+        kaldı, yani figürün vurgusu yatay eksende duruyor.
   - id: RV-099
     severity: low
     evidence: proven
@@ -197,7 +274,14 @@ findings:
       söylemiyor. REVIEW-006'nın (RV-076) dersi tam buydu: kapının SINIRLARI
       yazılı değilse, kapı olduğundan geniş sanılır ve bir sonraki okur ona
       güvenir.
-    status: open
+    status: resolved
+    resolution:
+      resolved_at: "2026-11-23"
+      evidence_ref: "GD-008 §7"
+      note: >-
+        Dört sınır da yazıldı: alt çizgi istisnası (gerekçesiyle), 120 karakter
+        üst sınırı (gerekçesiyle), `***üçlü***` boşluğu ve kapının yalnız
+        SATIR İÇİ biçimi denetlediği.
 ---
 
 # REVIEW-007 — GD-008 · Set 2 açılışı + S2-L1
@@ -224,20 +308,21 @@ REVIEW-006'nın bulgularının tamamı `resolved`; taşınan açık bulgu **yok*
 | Önem | Adet | Durum |
 |---|---|---|
 | critical | 0 | — |
-| **high** | **1** | RV-089 — **açık** |
-| medium | 3 | RV-090 · RV-091 · RV-097 — açık |
-| low | 7 | RV-092 · RV-093 · RV-094 · RV-095 · RV-096 · RV-098 · RV-099 — açık |
+| high | 1 | RV-089 — **resolved** |
+| medium | 3 | RV-090 · RV-091 · RV-097 — **resolved** |
+| low | 7 | RV-092 · RV-093 · RV-094 · RV-095 · RV-096 · RV-098 · RV-099 — **resolved** |
 
-⚠ **INV-18:** açık `high` bulgu varken GD **tamamlanamaz.**
+📌 **ÜRÜN SAHİBİ KARARI "Hepsini düzelt" (2026-11-23) → 11/11 RESOLVED.**
+Açık bulgu kalmadı; INV-18 artık GD-008'i bloke etmiyor.
 
-## 4. Tek bir şey değişecekse
+## 4. Tek bir şey değişecekse → YAPILDI
 
 **RV-089.** Ders, uygulamanın kendi grafiği hakkında **yanlış** bir şey
-söylüyor ve yanlışlık dersin konusunun tam merkezinde. Doğrusunu yazmak ayrıca
-daha iyi bir ders veriyor: piyasa grafiğinde hafta sonunun noktası **yok**,
-Değer Seyri'nde **var** — ama o nokta yeni bir anlaşma değil, **taşınmış** bir
-değer. Yani iki grafiğin noktaları aynı türden şey değil ve sorulacak soru hep
-aynı kalıyor: *bu nokta nereden geldi?*
+söylüyordu ve yanlışlık dersin konusunun tam merkezindeydi. Doğrusu ayrıca daha
+iyi bir ders veriyor: piyasa grafiğinde hafta sonunun noktası **yok**, Değer
+Seyri'nde **var** — ama o nokta yeni bir anlaşma değil, **taşınmış** bir değer.
+Yani iki grafiğin noktaları aynı türden şey değil ve sorulacak soru hep aynı
+kalıyor: *bu nokta nereden geldi?* Bu cümle artık dersin kapanış fikri.
 
 ## 5. İncelendi, temiz
 
@@ -266,12 +351,32 @@ Bulgu çıkmayan ama bakılan yerler — "bakılmadı" ile karışmasın diye ya
 - **İki kapının mutasyon kanıtı.** M7a ve yeni markdown kapısı bilerek
   bozularak kırmızıya düşürüldü, sonra geri alındı.
 
-## 6. Düzeltmelerin açabileceği yeni iş
+## 6. Düzeltmelerin açtığı yeni iş
 
-- RV-090'ın düzeltmesi guard'ı **olumlu kalıplara** daraltır; olumsuz cümle
-  serbest kalır. Bu, guard'ın "kehaneti reddeden anlatımı engellememesi"
-  kuralını yazılı hâle getirir ve SC-E25'in kapsam notu buna göre güncellenir.
-- RV-094 bir boşluğa işaret ediyor: **"pekiştirilen kavram" iddiasının makine
-  karşılığı yok.** M12/M13 bunu figürler için kapattı; kavramların aynı
-  mutabakatı (künyedeki pekiştirilen liste ↔ ders metni) bugün hiçbir testte
-  yok. Bu bir **test borcu adayıdır**, bu incelemenin bulgusu değil.
+- **TD-006 (yeni).** RV-094 bir boşluğa işaret etti ve düzeltme onu kapatmıyor:
+  künyenin **"pekiştirilen kavram"** iddiasının hiçbir makine karşılığı yok.
+  M6 yalnız TANITILAN etiketleri denetliyor; M12/M13'ün figürler için kapattığı
+  mutabakatın kavramlardaki karşılığı eksik. Borç olarak kaydedildi.
+- **SC-E25 kapsam notu** güncellendi: guard kehaneti REDDEDEN anlatımı
+  engellemez — yalnız olumlu çekimler yasak (RV-090'ın dersi).
+
+## 7. Düzeltme sonrası doğrulama
+
+| Paket | Sonuç |
+|---|---|
+| web (vitest) | **370/370** (`LessonFigure` 227: 110×2 + 5 + yeni 2) |
+| `tsc --noEmit` | temiz |
+| Application | **308/308** |
+| Integration | **196/196** (EducationSeed 27/27) |
+| `dotnet build` | 0 hata · **0 derleyici uyarısı** |
+
+**Üç mutasyon** (yeşil test bir şey kanıtlamaz; kırmızıya düşebilen test kanıtlar):
+
+1. `"Boşluk kapanır."` bir `Core` bloğuna sokuldu → M7a kapısı **KIRMIZI**.
+2. `"Boşluk kapanmak zorunda değildir."` sokuldu → **YEŞİL** — RV-090'ın
+   yanlış pozitifi gerçekten kalkmış (koruma dururken olumsuz cümle serbest).
+3. `priceScale`in `hi === lo` koruması kaldırıldı → yeni test **KIRMIZI**
+   (227'de 1); geri konunca yeşil.
+
+⚠ **Mutasyonla gösterilemeyen tek düzeltme RV-092** (React anahtarları):
+yinelenen anahtar uyarı üretir, test düşürmez. Düzeltme yapısal.

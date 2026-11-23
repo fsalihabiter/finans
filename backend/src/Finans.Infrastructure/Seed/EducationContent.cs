@@ -50,13 +50,16 @@ internal static class EducationContent
     private static Blk Ctx(string body, string? fig = null) => new(DepthTier.Context, SectionKind.Explain, body, fig);
     private static Blk Deep(string body, string? fig = null) => new(DepthTier.Deep, SectionKind.Explain, body, fig);
     private static Blk Ex(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Example, body, fig);
-    private static Blk ExDeep(string body, string? fig = null) => new(DepthTier.Context, SectionKind.Example, body, fig);
+    private static Blk ExCtx(string body, string? fig = null) => new(DepthTier.Context, SectionKind.Example, body, fig);
     /// <summary>
     /// L3 (Deep) katmanında örnek — künye "Deep/Example" dediğinde (ilk kullanım:
-    /// S2-L1 §12). <see cref="ExDeep"/> adına rağmen <b>Context</b> katmanındadır;
-    /// bu yüzden ayrı bir yardımcı gerekti.
+    /// S2-L1 §12).
+    /// <para>📌 RV-096: bu yardımcı eskiden <c>ExL3</c> adındaydı ve <c>ExDeep</c>
+    /// adı <b>Context</b> katmanını üretiyordu. Yan yana duran iki ad tam da
+    /// yanlış seçimi davet ediyordu; adlar katmanlarına oturtuldu —
+    /// <c>Ctx</c>/<c>ExCtx</c> = L2, <c>Deep</c>/<c>ExDeep</c> = L3.</para>
     /// </summary>
-    private static Blk ExL3(string body, string? fig = null) => new(DepthTier.Deep, SectionKind.Example, body, fig);
+    private static Blk ExDeep(string body, string? fig = null) => new(DepthTier.Deep, SectionKind.Example, body, fig);
     private static Blk Trap(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Trap, body, fig);
     private static Blk Live(string body) => new(DepthTier.Core, SectionKind.LiveContext, body, null);
 
@@ -301,7 +304,7 @@ internal static class EducationContent
         """),
 
         // ── 8. Dönem örneği + görsel ─────────────────────────────────────────
-        ExDeep("""
+        ExCtx("""
         ## Örnek: aynı varlık, üç farklı pencere
 
         Bir varlığın beş yıllık seyrini düşün. Yıllık reel getirileri sırasıyla:
@@ -605,7 +608,7 @@ internal static class EducationContent
         """),
 
         // ── 8. Para birimi örneği ────────────────────────────────────────────
-        ExDeep("""
+        ExCtx("""
         ## Örnek: dört kalem, tek eksen
 
         Bir portföyde dört kalem var ve hepsi TL cinsinden: vadeli mevduat,
@@ -1369,7 +1372,7 @@ internal static class EducationContent
         şans oyununda pasta sabittir, yalnızca el değiştirir.
         """, "value-vs-zero-sum"),
 
-        ExDeep("""
+        ExCtx("""
         ## Aynı varlık, iki farklı davranış
 
         İlginç olan şu: aynı varlıkla hem yatırım hem spekülasyon yapılabilir —
@@ -1761,7 +1764,7 @@ internal static class EducationContent
         bakacağız.
         """, "one-lira-two-jobs"),
 
-        ExDeep("""
+        ExCtx("""
         ## Karşılaştırma çerçevesi: neyi neyle kıyaslıyorsun?
 
         Diyelim bir borcun yıllık gerçek maliyeti **%60** (kesin: ödemezsen bu gider
@@ -1961,7 +1964,7 @@ internal static class EducationContent
         kelimesi önemli — bir sonraki adımda nedenini göreceğiz.
         """, "index-basket"),
 
-        ExDeep("""
+        ExCtx("""
         ## Kişisel sepet: neden herkesin enflasyonu farklı?
 
         TÜFE **ortalama** bir sepeti ölçer. Ama senin sepetin ortalamadan farklıysa,
@@ -2007,7 +2010,7 @@ internal static class EducationContent
         gücünün önemli bir kısmını götürebilir. Zaman, enflasyonun tarafındadır.
         """, "compounded-erosion"),
 
-        ExDeep("""
+        ExCtx("""
         ## Adım adım: alım gücü kaç yılda yarıya iner?
 
         "Alım gücüm ne zaman yarıya iner?" sorusunun kaba bir cevabı vardır. Yıllık
@@ -2240,7 +2243,7 @@ internal static class EducationContent
         Hızlı erişim bazen değerli, bazen gereksizdir; bu sana ve ihtiyacına bağlıdır.
         """, "liquidity-axis"),
 
-        ExDeep("""
+        ExCtx("""
         ## Aynı varlık, iki fiyat: alış-satış makası
 
         Likiditenin somut bir yüzü **alış-satış makasıdır.** Bir varlığın aynı anda
@@ -2475,7 +2478,7 @@ internal static class EducationContent
         verdiğini sormak gerekir.
         """, "who-uses-your-capital"),
 
-        ExDeep("""
+        ExCtx("""
         ## Ortak olmak ↔ borç vermek: getiri şekli
 
         Aynı **A şirketine** iki farklı biçimde para verebilirsin — ve getirinin
@@ -2754,7 +2757,7 @@ internal static class EducationContent
         kendisidir.**
         """, "three-questions"),
 
-        ExDeep("""
+        ExCtx("""
         ## Aynı vaadin iki hâli
 
         "Paran güvende" cümlesi, arkasındaki yapıya göre tamamen farklı iki şey olabilir.
@@ -3038,7 +3041,7 @@ internal static class EducationContent
         senin girdiğin işlemlerden ve güncel fiyatlardan **hesaplanır.**
         """, "app-screen-map"),
 
-        ExDeep("""
+        ExCtx("""
         ## Aynı portföy, iki baz para birimi
 
         Nirengi'de toplamı hangi para biriminde göreceğini sen seçersin: TL, USD ya
@@ -3376,7 +3379,7 @@ internal static class EducationContent
         pazarlığın nerede dengelendiğidir.**
         """, "supply-demand-scale"),
 
-        ExDeep("""
+        ExCtx("""
         ## Aynı varlık, iki farklı yerde
 
         Bir varlık birden fazla yerde işlem görüyorsa, aynı anda **biraz farklı**
@@ -3695,7 +3698,7 @@ internal static class EducationContent
         saymak değil: **faturada hiç görünmeyen bir maliyet olduğunu** görmek.
         """, "round-trip-cost"),
 
-        ExDeep("""
+        ExCtx("""
         ## İşlenmiş örnek: 10.000 ₺'lik bir turun maliyeti
 
         **Kurgusal** bir komisyon oranıyla hesaplayalım: **%0,2.** Kotasyonlar
@@ -4023,7 +4026,7 @@ internal static class EducationContent
         bir sonraki dersinin konusudur.
         """, "chart-checklist"),
 
-        ExDeep("""
+        ExCtx("""
         ## Tatil ve hafta sonu: eksende olmayan günler
 
         Yatay eksenin takvimle birebir aynı olduğunu sanmak kolaydır. Değildir.
@@ -4094,7 +4097,7 @@ internal static class EducationContent
         karşılaştırmaktır.
         """, "same-data-daily-weekly"),
 
-        ExL3("""
+        ExDeep("""
         ## Sıklık düşünce kaybolan hareket
 
         Yukarıdaki serinin **2. haftasını** tek tek okuyalım: 107 · 103 · 108 ·
@@ -4113,6 +4116,10 @@ internal static class EducationContent
         |---|---|---|
         | Günlük | 107 · 103 · 108 · 106 · 110 | hafta içi aralık 7 ₺ |
         | Haftalık | 110 | önceki haftaya göre 6 ₺ |
+
+        Bu 7 ₺'lik aralık bir **oynaklık** ölçüsüdür: fiyatın bir dönem içinde ne
+        kadar gezindiğini anlatır. Haftalık gösterim o gezinmeyi tek noktaya
+        indirdiği için **oynaklığı da gizler** — seri aynı kaldığı hâlde.
 
         103'e inen gün ve 108'e çıkan gün haftalık grafikte **hiç görünmez.** İki
         grafik de doğrudur ve ikisi de aynı veridir; **sordukları soru** farklıdır.
@@ -4133,10 +4140,19 @@ internal static class EducationContent
         bugünün hizası, dikey eksende o günün toplam değeri. Grafiğin solundaki her
         nokta da aynı şeyin daha önceki bir günkü hâlidir.
 
-        Dersin iki kuralı burada da geçerli: noktaların **arasındaki çizgi
-        çizilmiştir** (iki gün arasında portföyünün her an o değerde olduğunu
-        söylemez) ve **eksende olmayan günler** vardır — fiyat alınamayan günlerde
-        o günün noktası yoktur.
+        Dersin **birinci** kuralı burada da geçerli: noktaların arasındaki çizgi
+        **çizilmiştir** — iki gün arasında portföyünün her an o değerde olduğunu
+        söylemez.
+
+        **İkinci kural ise tersine döner** ve farkı görmek öğreticidir. Piyasa
+        grafiğinde hafta sonunun noktası **yoktur**; Değer Seyri'nde **vardır.**
+        Çünkü bu seri **her takvim günü** için hesaplanır: işlem olmayan günlerde
+        kalemlerin **en son bilinen fiyatı taşınır.** Yani hafta sonundaki nokta
+        yeni bir anlaşmanın kaydı değil, **taşınmış** bir değerdir.
+
+        Buradan dersin özü çıkıyor: bir grafiğin her noktası **aynı türden şey
+        olmak zorunda değil.** Sorulacak soru hep aynı kalıyor: **bu nokta nereden
+        geldi?**
         """),
 
         Src("""
@@ -4156,8 +4172,10 @@ internal static class EducationContent
         gibi adsız etiketlerle anılır.
 
         **Hesaplar kodda yapılır.** Uygulamadaki Değer Seyri serisi — her günün
-        portföy değeri — kodda deterministik olarak üretilir (**portföy geçmişi**
-        uç noktası). **Sayılar bir dil modeli tarafından üretilmez**; dil modeli
+        portföy değeri — kodda deterministik olarak üretilir; uç noktası
+        **GET /api/portfolio/history**. Seri **her takvim gününü** kapsar ve işlem
+        olmayan günlerde son bilinen fiyat taşınır (bu yüzden Değer Seyri'nde
+        eksik gün yoktur — piyasa grafiğinden ayrıldığı yer tam burası). **Sayılar bir dil modeli tarafından üretilmez**; dil modeli
         varsa yalnız hesaplanmış sonuçları açıklar.
 
         **Bu bir yatırım tavsiyesi değildir.** Ders bir grafiğin nasıl okunduğunu

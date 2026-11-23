@@ -2955,11 +2955,24 @@ function ThinMarket() {
  * renginde (`fig-line-neutral`): mint/coral "iyi/kötü" okunurdu.
  * ─────────────────────────────────────────────────────────────────────────── */
 
-type Plot = { x: number; y: number; w: number; h: number };
+export type Plot = { x: number; y: number; w: number; h: number };
 
-/** Değer → piksel (dikey eksen; büyük değer yukarıda). */
-const priceScale = (p: Plot, lo: number, hi: number) => (v: number) =>
-  p.y + p.h - ((v - lo) / (hi - lo)) * p.h;
+/**
+ * Değer → piksel (dikey eksen; büyük değer yukarıda).
+ *
+ * RV-091: `lo === hi` (düz seri) sıfıra bölerdi → `Infinity`/`NaN` koordinat →
+ * şekil hiç çizilmez, üstelik render kapısı bunu GÖRMEZ (`aria-label` ve
+ * `figcaption` yerinde kalır, test yeşil geçer). Risk teorik değil: setin bir
+ * sonraki dersi "grafik yatay görünüyor" konusunu işliyor ve düz seri çiziyor.
+ * Dejenere aralıkta değer çerçevenin ORTASINA oturur — düz bir seri için
+ * doğru resim de budur.
+ *
+ * **Test dikişi** (`FIGURE_KEYS` ile aynı gerekçe): dışa açık, çünkü dejenere
+ * aralık davranışı figürün İÇİNDEN doğrulanamıyor — şekil çizilmediğinde render
+ * kapısı yeşil kalıyor.
+ */
+export const priceScale = (p: Plot, lo: number, hi: number) => (v: number) =>
+  hi === lo ? p.y + p.h / 2 : p.y + p.h - ((v - lo) / (hi - lo)) * p.h;
 
 /** Sıra numarası → piksel (yatay eksen; n nokta eşit aralıklı). */
 const timeScale = (p: Plot, n: number) => (i: number) =>
@@ -2969,14 +2982,20 @@ const timeScale = (p: Plot, n: number) => (i: number) =>
 const linePath = (pts: { x: number; y: number }[]) =>
   pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
 
-/** Küçük sağ ok (yön göstergesi) — ucu (x, y) noktasında. */
+/**
+ * Küçük sağ ok (yön göstergesi) — ucu (x, y) noktasında.
+ *
+ * RV-095: dolgu sınıfı `fig-dot-neutral` DEĞİL `fig-mark-neutral` — biri "nokta"
+ * diyordu ve şekli yanlış tarif ediyordu. Render kapısı yalnız `rect`/`circle`
+ * incelediği için bu kayma teste hiç görünmezdi.
+ */
 function ArrowRight({ x, y }: { x: number; y: number }) {
-  return <path d={`M${x - 7} ${y - 4} L${x} ${y} L${x - 7} ${y + 4} Z`} className="fig-dot-neutral" />;
+  return <path d={`M${x - 7} ${y - 4} L${x} ${y} L${x - 7} ${y + 4} Z`} className="fig-mark-neutral" />;
 }
 
 /** Yukarı ok — ucu (x, y) noktasında. */
 function ArrowUp({ x, y }: { x: number; y: number }) {
-  return <path d={`M${x - 4} ${y + 7} L${x} ${y} L${x + 4} ${y + 7} Z`} className="fig-dot-neutral" />;
+  return <path d={`M${x - 4} ${y + 7} L${x} ${y} L${x + 4} ${y + 7} Z`} className="fig-mark-neutral" />;
 }
 
 /**
@@ -3002,19 +3021,22 @@ function ChartFrame({
   const bottom = plot.y + plot.h;
   return (
     <>
+      {/* RV-092: anahtarlar ETİKETTEN değil DİZİNDEN. Yinelenen eksen etiketi
+          (iki "100 ₺", tekrar eden gün adı) olağandır ve çakışan anahtar React'te
+          sessiz yanlış eşleştirme üretir — bu yardımcı ~60 figür daha taşıyacak. */}
       {grid &&
-        yTicks.map((t) => (
-          <line key={`g-${t.label}`} x1={plot.x} y1={t.y} x2={plot.x + plot.w} y2={t.y} className="fig-grid" />
+        yTicks.map((t, i) => (
+          <line key={`g${i}`} x1={plot.x} y1={t.y} x2={plot.x + plot.w} y2={t.y} className="fig-grid" />
         ))}
       <line x1={plot.x} y1={plot.y - 6} x2={plot.x} y2={bottom} className="fig-axis" />
       <line x1={plot.x} y1={bottom} x2={plot.x + plot.w + 6} y2={bottom} className="fig-axis" />
-      {yTicks.map((t) => (
-        <text key={`y-${t.label}`} x={plot.x - 5} y={t.y + 3} className="fig-value" textAnchor="end">
+      {yTicks.map((t, i) => (
+        <text key={`y${i}`} x={plot.x - 5} y={t.y + 3} className="fig-value" textAnchor="end">
           {t.label}
         </text>
       ))}
-      {xTicks.map((t) => (
-        <text key={`x-${t.label}`} x={t.x} y={bottom + 13} className="fig-value" textAnchor="middle">
+      {xTicks.map((t, i) => (
+        <text key={`x${i}`} x={t.x} y={bottom + 13} className="fig-value" textAnchor="middle">
           {t.label}
         </text>
       ))}
@@ -3358,9 +3380,13 @@ function MissingDays() {
           )}
         </g>
       ))}
+      {/* RV-098: dikey eksen etiketsiz çiziliyordu — "fiyat ekseni var, ölçeği
+          yok" görüntüsü, dersin 8. aşamasıyla (eksenlerin ne gösterdiği yazılı
+          olmalı) çelişiyordu. İki tick yeterli; kılavuz çizgisi yine kapalı. */}
       <ChartFrame
         plot={plot}
         grid={false}
+        yTicks={[100, 103].map((v) => ({ y: py(v), label: `${v} ₺` }))}
         xTicks={["Cum", "Pzt", "Sal"].map((g, i) => ({ x: px(i), label: g }))}
       />
       <path d={linePath(seri.map((v, i) => ({ x: px(i), y: py(v) })))} className="fig-line-neutral" fill="none" />

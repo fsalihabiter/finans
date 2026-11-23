@@ -331,9 +331,18 @@ public sealed class EducationSeedTests
         // `*(Derin)*` tam böyle çıktı ve ancak TARAYICIDA görüldü; aynı kalıp
         // S0-L9'da **yayındaydı** ("*fiyat neyse değer odur.*"). Yani bu tek bir
         // dikkatsizlik değil, kapısı olmayan bir hata sınıfıydı.
-        // ⚠ Alt çizgili italik (`_x_`) bilerek taranmıyor: LiveContext token'ları
-        // (`{{total_value}}`, `{{real_return}}`) alt çizgi taşıyor ve satırda iki
-        // token varsa kalıp yanlış pozitif üretir.
+        // ⚠ KAPININ SINIRLARI (RV-099 — yazılı olmayan sınır, olduğundan geniş
+        // sanılır; REVIEW-006/RV-076'nın dersi):
+        //   · Alt çizgili italik (`_x_`) BİLEREK taranmıyor: LiveContext token'ları
+        //     (`{{total_value}}`, `{{real_return}}`) alt çizgi taşıyor ve satırda
+        //     iki token varsa kalıp yanlış pozitif üretir.
+        //   · `{1,120}` üst sınırı var: 120 karakterden UZUN bir italik aralık
+        //     kapıdan kaçar. Sınır bilinçli — sınırsız `[^*\n]+` iki ayrı cümledeki
+        //     bağımsız yıldızları tek aralık sanabilir.
+        //   · `***üçlü***` biçimi yakalanmaz (iç yıldız `(?!\*)` koluna takılır);
+        //     MiniMarkdown onu da ham basar ama bugün içerikte örneği yok.
+        //   · Yalnız SATIR İÇİ biçim; blok düzeyi (başlık, liste, alıntı, tablo)
+        //     bu testin başka kollarında denetleniyor.
         const string tekYildiz = @"(?<!\*)\*(?!\*)[^*\n]{1,120}(?<!\*)\*(?!\*)";
         const string satirIciKod = @"`[^`\n]+`";
 
@@ -760,12 +769,18 @@ public sealed class EducationSeedTests
             .Select(s => s.BodyMarkdown));
         // GD-008: "boşluk kapanır" SC-E25'in listesinde vardı ama testte YOKTU. Set 2
         // içeriği inmeye başladığı için eklendi — boşluğun kapanacağını söylemek bir
-        // kehanettir ve S0-L10 "boşluk" kavramını zaten tanıtıyor (yani kalıp artık
-        // yazılabilir hâle geldi). Çekimleri de kapatılır: kapanır/kapanacak/kapatır.
+        // kehanettir ve S0-L10 "boşluk" kavramını zaten tanıtıyor.
+        //
+        // ⚠ RV-090'ın (REVIEW-007) düzelttiği şey: ilk hâl gövdeyi `boşluk kapan`
+        // diye arıyordu ve bu, kehaneti REDDEDEN cümleyi de yakalıyordu —
+        // "boşluk kapanmaz" ve "boşluk kapanmak zorunda değildir" yasaklı dizeyi
+        // İÇERİR. Oysa o cümleler guard'ın korumak istediği anlatımın ta kendisi;
+        // S2-L4/L5 boşluk konusunu işlerken onları yazmak zorunda. Bu yüzden yalnız
+        // OLUMLU çekimler yasak: kapanır / kapanacak / kapatır / kapatacak.
         foreach (var pattern in new[]
                  {
                      "hedef fiyat", "sinyal verdi", "formasyon", "destek kırıldı", "direnç kırıldı",
-                     "boşluk kapan", "boşluğu kapat", "boşluk kapat",
+                     "boşluk kapanır", "boşluk kapanacak", "boşluğu kapatır", "boşluğu kapatacak",
                  })
         {
             narrative.Should().NotContainEquivalentOf(pattern,

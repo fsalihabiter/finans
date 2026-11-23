@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { FIGURE_KEYS, LessonFigure } from "./LessonFigure";
+import { FIGURE_KEYS, LessonFigure, priceScale } from "./LessonFigure";
 
 /* ───────────────────────────────────────────────────────────────────────────
  * TD-001 (GD-007) — figür render kapısı · REVIEW-006 ile GENİŞLETİLDİ.
@@ -206,6 +206,33 @@ describe("Figür kayıt defteri — render kapısı (TD-001)", () => {
       `(RV-039/053/055/065 deseni). Yazıyı kutunun dışına taşı, dolguyu saydam ` +
       `tona indir ya da yazıyı fig-label yap. İhlaller: ${ihlaller.join(" · ")}`,
     ).toHaveLength(0);
+  });
+});
+
+/**
+ * RV-091 (REVIEW-007) — `ChartFrame` ölçeğinin DEJENERE aralığı.
+ *
+ * Render kapısı bunu göremez: `priceScale` `Infinity`/`NaN` döndürdüğünde şekil
+ * çizilmez ama `svg[role="img"]`, `aria-label` ve `figcaption` yerinde kalır,
+ * yani kapı yeşil geçer ve kullanıcı BOŞ bir çerçeve görür. Risk teorik değil —
+ * setin bir sonraki dersi (S2-L2) "grafik yatay görünüyor" konusunu işliyor ve
+ * düz/dar aralıklı seri çiziyor.
+ */
+describe("priceScale — grafik figürlerinin dikey ölçeği (RV-091)", () => {
+  const plot = { x: 0, y: 10, w: 100, h: 80 };
+
+  it("düz seride (lo === hi) sıfıra BÖLMEZ — değer çerçevenin ortasına oturur", () => {
+    const py = priceScale(plot, 100, 100);
+    expect(Number.isFinite(py(100)), "dejenere aralık sonlu bir koordinat vermeli").toBe(true);
+    expect(py(100)).toBe(50); // y + h/2
+  });
+
+  it("normal aralıkta uçları çerçeveye oturtur ve büyük değeri YUKARI koyar", () => {
+    const py = priceScale(plot, 90, 110);
+    expect(py(90)).toBe(90); // alt kenar (y + h)
+    expect(py(110)).toBe(10); // üst kenar (y)
+    expect(py(100)).toBe(50); // orta
+    expect(py(110)).toBeLessThan(py(90));
   });
 });
 

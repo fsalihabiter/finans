@@ -72,6 +72,39 @@ public static class SeedData
         return true;
     }
 
+    /// <summary>
+    /// Track kaydının MUTABAKATI (RV-097) — <see cref="UpsertLesson"/>'ın track
+    /// karşılığı. Başlık · açıklama · slug · sıra · seviye düzeltmeleri çalışan
+    /// kurulumlara iner; eskiden track'ler yalnız "yoksa ekle" ile kuruluyordu,
+    /// yani kullanıcıya görünen set açıklaması (yasal çerçeveyi taşıyan cümle
+    /// dahil) bir daha hiç güncellenmiyordu.
+    /// <para>⚠ <c>IsPublished</c> ve <c>CreatedAtUtc</c> bilerek DIŞARIDA:
+    /// ilki işletme kararı, ikincisi kaydın kendi geçmişi — seed geri almaz
+    /// (ders kaydındaki aynı ayrım, RV-064).</para>
+    /// </summary>
+    private static bool UpsertTrack(FinansDbContext db, LearningTrack? current, LearningTrack desired)
+    {
+        if (current is null)
+        {
+            db.LearningTracks.Add(desired);
+            return true;
+        }
+
+        if (current.Slug == desired.Slug
+            && current.Title == desired.Title
+            && current.Description == desired.Description
+            && current.OrderIndex == desired.OrderIndex
+            && current.Level == desired.Level)
+            return false; // birebir aynı → dokunma
+
+        current.Slug = desired.Slug;
+        current.Title = desired.Title;
+        current.Description = desired.Description;
+        current.OrderIndex = desired.OrderIndex;
+        current.Level = desired.Level;
+        return true;
+    }
+
     public static async Task SeedAsync(FinansDbContext db, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
@@ -554,34 +587,42 @@ public static class SeedData
         // ── Yeniden adlandırma: "Temeller" artık Set 0 değil (ad çakışması, 15 §6) ──
         // Set 0 eklenince "Temeller" adı yanıltıcı oldu (asıl temeller Set 0). Slug
         // KORUNUR (yatırım-kavramları değil, "temeller") — kalıcı bağlantılar kırılmasın.
+        // ⚠ Bu track'i YOKTAN VAR ETME, yalnız mutabakat et: kaydı SeedEducationAsync
+        // dersleriyle BİRLİKTE kuruyor ve o metot "track var mı?" kapısıyla erken
+        // dönüyor — burada eklemek derssiz bir track bırakırdı. (RV-097: eski hâl
+        // açıklamayı yalnız BAŞLIK farklıysa güncelliyordu, yani ad bir kez
+        // düzeldikten sonra açıklama bir daha hiç mutabakata girmiyordu.)
         var temeller = await db.LearningTracks.FirstOrDefaultAsync(t => t.Id == Id("track-temeller"), ct);
-        if (temeller is not null && temeller.Title != "Yatırım Kavramları")
+        if (temeller is not null && UpsertTrack(db, temeller, new LearningTrack
         {
-            temeller.Title = "Yatırım Kavramları";
-            temeller.Description =
+            Id = Id("track-temeller"),
+            Slug = "temeller", // KORUNUR (yatırım-kavramları değil) — kalıcı bağlantılar kırılmasın
+            Title = "Yatırım Kavramları",
+            Description =
                 "Enflasyon ve reel getiri, çeşitlendirme, hisse okuma (F/K · PD/DD), " +
-                "risk-getiri dengesi ve bileşik getiri. Yatırımın temel kavramları, sıra sıra.";
+                "risk-getiri dengesi ve bileşik getiri. Yatırımın temel kavramları, sıra sıra.",
+            Level = LessonLevel.Beginner,
+            OrderIndex = 1,
+        }))
             changed = true;
-        }
 
         // ── Track "İlk Adımlar" (OrderIndex 0) — Set 0 ──────────────────────────
-        if (!await db.LearningTracks.AnyAsync(t => t.Id == Id("track-ilk-adimlar"), ct))
+        var desiredTrackIlkAdimlar = new LearningTrack
         {
-            db.LearningTracks.Add(new LearningTrack
-            {
-                Id = Id("track-ilk-adimlar"),
-                Slug = "ilk-adimlar",
-                Title = "İlk Adımlar",
-                Description =
-                    "Sıfırdan başla: yatırım nedir, para nereye gider, risk ne demek, " +
-                    "fiyat nasıl oluşur. Jargon yok, formül yok — her kavram somut bir sahneyle.",
-                Level = LessonLevel.Beginner,
-                OrderIndex = 0, // Set 0 → en başta (T6.15 "Buradan başla" bunu giriş seti sayar)
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("track-ilk-adimlar"),
+            Slug = "ilk-adimlar",
+            Title = "İlk Adımlar",
+            Description =
+                "Sıfırdan başla: yatırım nedir, para nereye gider, risk ne demek, " +
+                "fiyat nasıl oluşur. Jargon yok, formül yok — her kavram somut bir sahneyle.",
+            Level = LessonLevel.Beginner,
+            OrderIndex = 0, // Set 0 → en başta (T6.15 "Buradan başla" bunu giriş seti sayar)
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertTrack(db, await db.LearningTracks.FirstOrDefaultAsync(
+                t => t.Id == desiredTrackIlkAdimlar.Id, ct), desiredTrackIlkAdimlar))
             changed = true;
-        }
 
         // ── S0-L1 · Yatırım nedir, ne değildir? ─────────────────────────────────
         var desired_lesson_s0l1 = new Lesson
@@ -1236,24 +1277,25 @@ public static class SeedData
         var changed = false;
 
         // ── Track "Grafik ve Piyasa Okuryazarlığı" (OrderIndex 2) — Set 2 ───────
-        if (!await db.LearningTracks.AnyAsync(t => t.Id == Id("track-grafik-ve-piyasa"), ct))
+        var desiredTrackGrafik = new LearningTrack
         {
-            db.LearningTracks.Add(new LearningTrack
-            {
-                Id = Id("track-grafik-ve-piyasa"),
-                Slug = "grafik-ve-piyasa",
-                Title = "Grafik ve Piyasa Okuryazarlığı",
-                Description =
-                    "Bir grafiğe baktığında ne gördüğünü bil — ve ne göremeyeceğini de bil. " +
-                    "Eksenleri okumak, ölçeğin görüntüyü nasıl değiştirdiği, mum grafiği, " +
-                    "hacim ve emir defteri. Okuma becerisi öğretir; sinyal ya da tahmin öğretmez.",
-                Level = LessonLevel.Beginner,
-                OrderIndex = 2,
-                IsPublished = true,
-                CreatedAtUtc = now,
-            });
+            Id = Id("track-grafik-ve-piyasa"),
+            Slug = "grafik-ve-piyasa",
+            Title = "Grafik ve Piyasa Okuryazarlığı",
+            Description =
+                "Bir grafiğe baktığında ne gördüğünü bil — ve ne göremeyeceğini de bil. " +
+                "Eksenleri okumak, ölçeğin görüntüyü nasıl değiştirdiği, mum grafiği, " +
+                "hacim ve emir defteri. Okuma becerisi öğretir; sinyal ya da tahmin öğretmez.",
+            Level = LessonLevel.Beginner,
+            OrderIndex = 2,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        // Mutabakatlı (RV-097): set açıklaması yasal çerçeveyi taşıyan bir cümle
+        // içeriyor ("sinyal ya da tahmin öğretmez") — düzeltilirse inmek zorunda.
+        if (UpsertTrack(db, await db.LearningTracks.FirstOrDefaultAsync(
+                t => t.Id == desiredTrackGrafik.Id, ct), desiredTrackGrafik))
             changed = true;
-        }
 
         // ── S2-L1 · Grafik neyi gösterir? — eksenleri okumak ────────────────────
         var desired_lesson_s2l1 = new Lesson

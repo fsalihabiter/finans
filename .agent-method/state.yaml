@@ -159,9 +159,17 @@ blockers: []
 review:
   last_review_id: REVIEW-007
   # REVIEW-007 (GD-008 · 3e306b5..1f88908): 11 bulgu —
-  # 0 critical · **1 high** · 3 medium · 7 low. **HEPSİ `open`.**
-  # ⚠ INV-18: açık high varken GD-008 TAMAMLANAMAZ. Bulgu durumlarını ajan
-  # değiştirmez; insan kararı bekliyor (INV-06).
+  # 0 critical · 1 high · 3 medium · 7 low.
+  # 📌 ÜRÜN SAHİBİ KARARI "Hepsini düzelt" (2026-11-23) → **11/11 RESOLVED.**
+  # Açık bulgu kalmadı; INV-18 artık GD-008'i bloke etmiyor.
+  # Düzeltme sonrası: web 370/370 · tsc temiz · Application 308/308 ·
+  # Integration 196/196 · derleyici uyarısı 0.
+  # Üç mutasyon: "Boşluk kapanır." → kırmızı · "Boşluk kapanmak zorunda
+  # değildir." → YEŞİL (RV-090'ın yanlış pozitifi kalktı) · priceScale
+  # koruması kaldırılınca yeni test kırmızı. RV-092 (React anahtarı)
+  # mutasyonla gösterilemedi — yinelenen anahtar uyarı üretir, test düşürmez.
+  # Yeni borç: **TD-006** (künyenin "pekiştirilen kavram" iddiasının makine
+  # karşılığı yok; Türkçe çekim sorunu → kavram sözlüğüyle birlikte ele alınacak).
   # RV-089 (high) — ders, uygulamanın KENDİ grafiği hakkında yanlış konuşuyor:
   # "Senin portföyünde" bloğu Değer Seyri'nde "eksende olmayan günler" olduğunu
   # söylüyor, oysa `PortfolioValueHistoryService` HER takvim günü için nokta

@@ -3916,6 +3916,11 @@ body.drawer-lock {
 .fig-dot-neutral {
   fill: var(--accent, #7aa2ff);
 }
+/* Şekilden bağımsız nötr işaret dolgusu (ok ucu, üçgen) — RV-095: oklar
+   "nokta" sınıfıyla boyanıyordu ve sınıf adı şekli yanlış tarif ediyordu. */
+.fig-mark-neutral {
+  fill: var(--accent, #7aa2ff);
+}
 /* İçi boş nokta: "burada veri YOK" (eksende olmayan gün). */
 .fig-dot-hollow {
   fill: var(--panel-2, #1a2240);
