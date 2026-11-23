@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
 using Finans.Application.Portfolio;
 using Finans.Domain.Enums;
@@ -14,10 +14,25 @@ namespace Finans.Application.Education;
 /// <para><b>CLAUDE.md §3.1:</b> tüm sayılar koddan gelir; LLM burada yok.</para>
 /// <para><b>Yeni hesap yazılmaz:</b> değerler mevcut <see cref="IPortfolioService"/>
 /// özetinden türetilir (tek dış çağrı, ders başına).</para>
+/// <para><b>İkinci çağrı YALNIZ gerekirse</b> (GD-009): geçmiş serisi sadece
+/// <see cref="ContextKeys.ReturnRatio6mAgo"/> token'ını GERÇEKTEN içeren ders
+/// metinlerinde istenir. Diğer bütün dersler eskisi gibi tek çağrıyla çözülür —
+/// "ders başına tek dış çağrı" ilkesi kural olarak korunur, istisnası ölçülüdür.
+/// Geçmiş servisi kendi içinde cache'li ve cache anahtarı <c>UserId</c> içerir
+/// (<c>10</c> §3), yani ikinci çağrı ne per-user izolasyonu ne bütçeyi bozar.</para>
 /// <para><b>Biçim TR:</b> binlik nokta, ondalık virgül (CLAUDE.md §8).</para>
 /// </remarks>
-public sealed partial class LessonContextService(IPortfolioService portfolio) : ILessonContextService
+public sealed partial class LessonContextService(
+    IPortfolioService portfolio,
+    IPortfolioHistoryService history) : ILessonContextService
 {
+    /// <summary>
+    /// <see cref="ContextKeys.ReturnRatio6mAgo"/> için geriye bakış — altı ay.
+    /// Künye (§S2-L2 · 14. aşama) "iki farklı dönem" diyor; altı ay hem çoğu
+    /// portföyde veri bulunan hem de farkın görünür olduğu bir pencere.
+    /// </summary>
+    private const int EarlierReturnLookbackMonths = 6;
+
     /// <summary>Fiyat bu süreden eskiyse bağlam <see cref="LessonContextState.Stale"/> sayılır.</summary>
     private static readonly TimeSpan StaleAfter = TimeSpan.FromHours(24);
 
@@ -46,7 +61,10 @@ public sealed partial class LessonContextService(IPortfolioService portfolio) : 
 
     public async Task<LessonContextResult> ResolveAsync(string templateBody, CancellationToken ct = default)
     {
-        var (values, state, asOf) = await BuildValuesAsync(ct);
+        // Geçmiş serisi PAHALI bir çağrı değil ama gereksiz de olmamalı: yalnız
+        // metin o token'ı gerçekten istiyorsa çekilir (GD-009).
+        var needsHistory = templateBody.Contains(ContextKeys.ReturnRatio6mAgo, StringComparison.OrdinalIgnoreCase);
+        var (values, state, asOf) = await BuildValuesAsync(needsHistory, ct);
 
         // Çözülemeyen token ham hâliyle ASLA gösterilmez — içeren satır tamamen düşer.
         // (Örn. BES'i olmayan kullanıcıda {{bes_state_share}} cümlesi anlamsız kalırdı.)
@@ -77,7 +95,7 @@ public sealed partial class LessonContextService(IPortfolioService portfolio) : 
     }
 
     private async Task<(Dictionary<string, string> Values, LessonContextState State, DateTime? AsOf)>
-        BuildValuesAsync(CancellationToken ct)
+        BuildValuesAsync(bool needsHistory, CancellationToken ct)
     {
         PortfolioSummaryDto? summary = null;
         try
@@ -99,7 +117,59 @@ public sealed partial class LessonContextService(IPortfolioService portfolio) : 
             ? LessonContextState.Stale
             : LessonContextState.Own;
 
-        return (OwnValues(summary), state, summary.AsOf);
+        var values = OwnValues(summary);
+        if (needsHistory)
+            await AddEarlierReturnAsync(values, ct);
+
+        return (values, state, summary.AsOf);
+    }
+
+    /// <summary>
+    /// <see cref="ContextKeys.ReturnRatio6mAgo"/> — altı ay önceki ÖLÇÜM.
+    /// </summary>
+    /// <remarks>
+    /// Günlük seri her gün için hem <c>Value</c> hem <c>Cost</c> taşıyor, yani
+    /// özetin kullandığı formül herhangi bir güne uygulanabiliyor; yeni bir hesap
+    /// yazılmıyor, var olan bir hesap BAŞKA BİR GÜNDE okunuyor.
+    /// <para>Token üç durumda EKLENMEZ ve o satır sessizce düşer (NFR-5): seri
+    /// alınamadı · seri altı ay geriye gitmiyor · o gün maliyet sıfır. Üçü de
+    /// "bilmiyorum" demektir ve uydurmaktansa susmak doğrudur.</para>
+    /// <para>⚠ <c>ChangeRatio</c> BİLEREK kullanılmıyor — gerekçe
+    /// <see cref="ContextKeys.ReturnRatio6mAgo"/> özetinde ve INC-005'te.</para>
+    /// </remarks>
+    private async Task AddEarlierReturnAsync(Dictionary<string, string> values, CancellationToken ct)
+    {
+        PortfolioHistoryDto history_;
+        try
+        {
+            // period = null → tüm seri (uçlar korunarak seyrekleştirilmiş olabilir).
+            history_ = await history.GetHistoryAsync(period: null, ct: ct);
+        }
+        catch
+        {
+            return; // Seri alınamadı → token çözülmez, ders yine okunur.
+        }
+
+        var points = history_.Points;
+        if (points.Count == 0)
+            return;
+
+        var target = DateOnly.FromDateTime(DateTime.UtcNow.Date).AddMonths(-EarlierReturnLookbackMonths);
+        if (points[0].Date > target)
+            return; // Portföy o kadar eski değil → olmayan ölçüm uydurulmaz.
+
+        // Hedef günü AŞMAYAN son nokta (seri seyrek olabilir; uçlar korunur).
+        PortfolioHistoryPointDto? earlier = null;
+        foreach (var p in points)
+        {
+            if (p.Date > target) break;
+            earlier = p;
+        }
+
+        if (earlier is null || earlier.Cost <= 0m)
+            return;
+
+        values[ContextKeys.ReturnRatio6mAgo] = Percent((earlier.Value - earlier.Cost) / earlier.Cost);
     }
 
     private static Dictionary<string, string> OwnValues(PortfolioSummaryDto s)
@@ -148,6 +218,10 @@ public sealed partial class LessonContextService(IPortfolioService portfolio) : 
     {
         [ContextKeys.ConcentrationTop2] = Percent(0.62m),
         [ContextKeys.ReturnRatio] = Percent(0.31m),
+        // Demo'da ÖNCEKİ ölçüm bilerek DAHA YÜKSEK: "bugün daha iyi görünüyor"
+        // izlenimi dersin öğrettiği şeyin tersi olurdu (tek yönlü örnek zımnen
+        // yön öğretir — TD-003 · RV-063 sınıfı). Sayı aşağı da gidebilir.
+        [ContextKeys.ReturnRatio6mAgo] = Percent(0.38m),
         [ContextKeys.RealReturn] = Percent(-0.04m),
         [ContextKeys.CashWeight] = Percent(0.08m),
         [ContextKeys.StockWeight] = Percent(0.24m),

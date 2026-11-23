@@ -115,6 +115,7 @@ public static class SeedData
         // kapılarıyla çalışır → çalışan kurulumlar da bir sonraki açılışta güncellenir.
         await SeedSet0Async(db, now, ct); // T6.16: "İlk Adımlar" seti + "Temeller"→"Yatırım Kavramları"
         await SeedSet2Async(db, now, ct); // GD-008: "Grafik ve Piyasa Okuryazarlığı" seti (S2-L1…)
+        await BackfillLegacyConceptsAsync(db, ct); // GD-009: künyede olup seed'de olmayan etiketler
         await SeedEducationSectionsAsync(db, ct);
         await SeedRemainingQuizzesAsync(db, ct);
     }
@@ -1361,6 +1362,131 @@ public static class SeedData
                 });
                 changed = true;
             }
+        }
+
+        // ── S2-L2 · Aynı veri, üç görüntü — ölçek ve dönem ──────────────────────
+        var desired_lesson_s2l2 = new Lesson
+        {
+            Id = Id("lesson-s2l2"),
+            TrackId = Id("track-grafik-ve-piyasa"),
+            Slug = "olcek-ve-donem",
+            OrderIndex = 2,
+            Title = "Aynı veri, üç görüntü",
+            Summary = "Grafik yalan söylemez; ölçek söyler. Y ekseni sıfırdan başlamayınca " +
+                "küçük bir hareket dağ gibi görünür, başlangıç tarihi değişince aynı seri " +
+                "başka bir hikâye anlatır. Üç tercih — eksen aralığı, dönem penceresi ve " +
+                "doğrusal/logaritmik ölçek — aynı veriden farklı izlenimler üretir.",
+            BodyMarkdown =
+                "## Aynı veri, üç görüntü\n\n" +
+                "Bir grafiğe bakarken gördüğün şey yalnız veri değildir: veriyi **nasıl " +
+                "çizdiğinin** sonucudur. Üç tercih görüntüyü değiştirir ve üçü de grafiğin " +
+                "kendisinde yazılı olmayabilir.\n\n" +
+                "**Eksen aralığı.** Dikey eksen sıfırdan başlamak zorunda değildir. 100 ₺'den " +
+                "102 ₺'ye giden bir seri, eksen 0-120 arasındayken neredeyse düz görünür; " +
+                "eksen 99-103 arasına **kırpılınca** aynı 2 ₺ kocaman bir çıkışa dönüşür. " +
+                "Veri değişmedi, **ölçek** değişti.\n\n" +
+                "**Dönem penceresi.** Aynı seriden farklı başlangıç tarihleri seçerek farklı " +
+                "yüzdeler okunabilir; hepsi doğru, hepsi farklı. Bir dönemi \"en iyi göründüğü " +
+                "için\" seçmek bu yüzden bir anlatım tercihidir.\n\n" +
+                "**Doğrusal ve logaritmik ölçek.** Doğrusal eksende eşit **mesafe** eşit " +
+                "**tutar** demektir; logaritmik eksende eşit mesafe eşit **oran** demektir. " +
+                "Uzun dönemli serilerde oranları karşılaştırmak için logaritmik ölçek daha " +
+                "dürüst bir resim verir — karmaşıklık için değil, **dürüstlük** için vardır.\n\n" +
+                "⚠ Bu ders hiçbir grafiği **yorumlamaz**; yalnız görüntünün nasıl kurulduğunu " +
+                "gösterir. Örnek seriler **kurgusaldır** ve öyle etiketlenmiştir.",
+            EstimatedMinutes = 9,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s2l2.Id, ct), desired_lesson_s2l2))
+            changed = true;
+
+        // Ön-koşul: S2-L1 → S2-L2 (track İÇİ zincir — M9). S2-L1'de yoktu, çünkü
+        // setin ilk dersiydi; setler arası kilit yine YOK.
+        if (!await db.LessonPrerequisites.AnyAsync(
+                p => p.LessonId == Id("lesson-s2l2") && p.PrerequisiteLessonId == Id("lesson-s2l1"), ct))
+        {
+            db.LessonPrerequisites.Add(new LessonPrerequisite
+            {
+                LessonId = Id("lesson-s2l2"),
+                PrerequisiteLessonId = Id("lesson-s2l1"),
+            });
+            changed = true;
+        }
+
+        // S2-L2 dört kavram tanıtır. Pekiştirilenler (`volatility` S0-L7,
+        // `nominal-return` S1-L1) seed'de zaten var — yeniden eklenmez.
+        var s2l2Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-chart-scale", "chart-scale", "Grafik Ölçeği"),
+            ("tag-axis-truncation", "axis-truncation", "Eksen Kırpma"),
+            ("tag-log-scale", "log-scale", "Logaritmik Ölçek"),
+            ("tag-period-selection", "period-selection", "Dönem Seçimi"),
+        };
+        foreach (var (tagId, key, label) in s2l2Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s2l2") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s2l2"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Eski içeriğin eksik kalmış kavram etiketleri (GD-009).
+    /// </summary>
+    /// <remarks>
+    /// <b>Neden ayrı bir metot:</b> <see cref="SeedEducationAsync"/> "hiç track var mı?"
+    /// kapısıyla korunuyor, yani eğitimi zaten almış kurulumlara oradan HİÇBİR ŞEY
+    /// inmez. Kendi kapısı olan bu metot çalışan kurulumlara da iner (T6.1 deseni).
+    /// <para>📌 <b>Neden gerekti:</b> künye (<c>16-CURRICULUM.md</c> §3 kavram haritası
+    /// + §S1-L1) <c>nominal-return</c>'ü S1-L1'in <b>tanıttığı</b> kavram sayıyor ve
+    /// S2-L2'nin onu pekiştirdiğini yazıyor; seed'de böyle bir etiket hiç yoktu.
+    /// Yani S2-L2 <i>hiç tanıtılmamış</i> bir kavramı pekiştirecekti. Künye kanoniktir
+    /// (D-017) ve S1-L1 metni nominal/reel ayrımını zaten öğretiyor → eksik olan seed.
+    /// Bu, <b>TD-006</b>'nın ("pekiştirilen kavram iddiasının makine karşılığı yok")
+    /// işaret ettiği sınıfın ilk somut kurbanı.</para>
+    /// </remarks>
+    private static async Task BackfillLegacyConceptsAsync(FinansDbContext db, CancellationToken ct)
+    {
+        var changed = false;
+
+        if (!await db.ConceptTags.AnyAsync(t => t.Id == Id("tag-nominal-return"), ct))
+        {
+            db.ConceptTags.Add(new ConceptTag
+            {
+                Id = Id("tag-nominal-return"),
+                Key = "nominal-return",
+                Label = "Nominal Getiri",
+            });
+            changed = true;
+        }
+
+        if (!await db.LessonConceptTags.AnyAsync(
+                lt => lt.LessonId == Id("lesson-enflasyon") && lt.ConceptTagId == Id("tag-nominal-return"), ct)
+            && await db.Lessons.AnyAsync(l => l.Id == Id("lesson-enflasyon"), ct))
+        {
+            db.LessonConceptTags.Add(new LessonConceptTag
+            {
+                LessonId = Id("lesson-enflasyon"),
+                ConceptTagId = Id("tag-nominal-return"),
+            });
+            changed = true;
         }
 
         if (changed)

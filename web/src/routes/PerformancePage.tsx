@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { formatDate, formatPercent } from "@finans/shared";
 import type { Holding, PortfolioHistoryPeriod } from "@finans/shared";
 import { ASSET_META } from "../lib/assetMeta";
+import { InfoTip } from "../components/InfoTip";
 import { KpiGrid } from "../components/KpiGrid";
 import { PortfolioSkeleton } from "../components/Skeleton";
 import { EmptyState } from "../components/EmptyState";
@@ -112,11 +113,25 @@ export function PerformancePage() {
             <div className="card-head">
               <h3>Değer Seyri</h3>
               <div className="chart-head-right">
+                {/* INC-005: bu yüzde ADSIZ duruyordu ve hemen yukarıdaki KPI
+                    şeridinde "Getiri" diye adı konmuş BAŞKA bir yüzde var.
+                    İkisi farklı sorulara cevap veriyor: bu, dönem içindeki değer
+                    değişimi (eklenen para DAHİL); oradaki, maliyete göre kazanç.
+                    Sayı yanlış değildi, adsızdı — ad ve tanım eklendi. */}
                 {history.data?.changeRatio != null && (
-                  <span
-                    className={`tnum chart-change ${history.data.changeRatio >= 0 ? "up" : "down"}`}
-                  >
-                    {history.data.changeRatio >= 0 ? "▲" : "▼"} {formatPercent(history.data.changeRatio)}
+                  <span className="chart-change-wrap">
+                    <span className="chart-change-label">dönem değişimi</span>
+                    <span
+                      className={`tnum chart-change ${history.data.changeRatio >= 0 ? "up" : "down"}`}
+                    >
+                      {history.data.changeRatio >= 0 ? "▲" : "▼"} {formatPercent(history.data.changeRatio)}
+                    </span>
+                    <InfoTip label="Dönem değişimi">
+                      Seçili dönemde portföyünün toplam değeri ne kadar değişti — bu dönemde
+                      eklediğin para da buna dahildir. Yukarıdaki "Getiri" ise maliyetine göre
+                      kazancındır. İkisi farklı soruya cevap verir; grafikteki "Yatırılan"
+                      çizgisi aradaki farkı gösterir.
+                    </InfoTip>
                   </span>
                 )}
                 <div className="periods" role="group" aria-label="Dönem">

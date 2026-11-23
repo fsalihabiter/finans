@@ -20,6 +20,21 @@ public static class ContextKeys
     /// <summary>Portföyün nominal getiri oranı.</summary>
     public const string ReturnRatio = "return_ratio";
 
+    /// <summary>
+    /// <b>Aynı</b> kümülatif getiri oranı, ALTI AY ÖNCE ölçülmüş hâli (S2-L2).
+    /// Formül <see cref="ReturnRatio"/> ile birebir aynı — <c>(değer − maliyet) /
+    /// maliyet</c> — yalnız günü farklı; günlük seride her gün için hem değer hem
+    /// maliyet zaten duruyor, dolayısıyla yeni bir hesap yazılmıyor.
+    /// <para>🔴 <b>Neden `ChangeRatio` DEĞİL (INC-005):</b> geçmiş uç noktasının
+    /// `ChangeRatio` alanı <c>(son değer − ilk değer) / ilk değer</c>'dir ve
+    /// dönem içinde EKLENEN PARAYI da içerir. Katkı yapan kullanıcıda o sayı
+    /// getiri değil "portföy ne kadar büyüdü"dür; derste getiri diye göstermek
+    /// yanlış rakam öğretmek olurdu (CLAUDE.md §8).</para>
+    /// <para>Seri altı ay geriye gitmiyorsa token ÇÖZÜLMEZ → satır düşer:
+    /// olmayan bir ölçüm uydurulmaz.</para>
+    /// </summary>
+    public const string ReturnRatio6mAgo = "return_ratio_6m_ago";
+
     /// <summary>Enflasyondan arındırılmış getiri oranı.</summary>
     public const string RealReturn = "real_return";
 

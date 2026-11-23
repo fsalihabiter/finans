@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithProviders } from "../test/renderWithProviders";
 import { PerformancePage } from "./PerformancePage";
 
@@ -78,5 +78,30 @@ describe("PerformancePage", () => {
     // Dönem değişim rozeti (+%4,0) ve "geçmiş, tahmin değil" çerçevesi (CLAUDE.md §2).
     expect(screen.getByText(/\+%4,0/)).toBeInTheDocument();
     expect(screen.getByText(/gelecek performansın göstergesi değildir/)).toBeInTheDocument();
+  });
+
+  /**
+   * INC-005 — rozetin ADI. Kusur sayının değeri değil, isimsizliğiydi: ekranda
+   * "Getiri" diye adı konmuş (maliyet bazlı, doğru) bir yüzdenin hemen altında
+   * ADSIZ ikinci bir yüzde duruyordu ve bu ikincisi dönem içinde eklenen parayı
+   * da içeriyor. İki sayı aynı şey sanılıyordu.
+   *
+   * Bu test adın ve tanımın sessizce kaybolmasını engeller — kusurun kendisi
+   * zaten "yazılı olmamak"tı, dolayısıyla korunması gereken şey de yazı.
+   */
+  it("dönem değişimi rozeti ADIYLA ve tanımıyla gelir (INC-005)", async () => {
+    mockApi();
+    renderWithProviders(<PerformancePage />);
+
+    await waitFor(() => expect(screen.getByText(/\+%4,0/)).toBeInTheDocument());
+
+    // 1) Rozetin adı var.
+    expect(screen.getByText("dönem değişimi")).toBeInTheDocument();
+
+    // 2) Tanım, farkı AÇIKÇA söylüyor: eklenen para dahil + "Getiri"den farklı.
+    fireEvent.click(screen.getByRole("button", { name: "Dönem değişimi nedir?" }));
+    const tip = await screen.findByRole("tooltip");
+    expect(tip.textContent).toMatch(/eklediğin para da buna dahildir/);
+    expect(tip.textContent).toMatch(/Getiri.*maliyetine göre kazanc/s);
   });
 });

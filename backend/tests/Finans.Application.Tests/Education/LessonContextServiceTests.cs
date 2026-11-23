@@ -44,8 +44,34 @@ public sealed class LessonContextServiceTests
             slices, asOf ?? DateTime.UtcNow);
     }
 
-    private static LessonContextService NewService(PortfolioSummaryDto? summary, bool throws = false) =>
-        new(new StubPortfolio(summary, throws));
+    /// <summary>
+    /// Geçmiş serisi sahtesi (GD-009). <c>points</c> null ise çağrı patlar —
+    /// "seri alınamadı" kolunu denemek için.
+    /// </summary>
+    private sealed class StubHistory(IReadOnlyList<PortfolioHistoryPointDto>? points) : IPortfolioHistoryService
+    {
+        public int Calls { get; private set; }
+
+        public Task<PortfolioHistoryDto> GetHistoryAsync(
+            string? period, CurrencyCode? baseCurrency = null, CancellationToken ct = default)
+        {
+            Calls++;
+            if (points is null) throw new InvalidOperationException("geçmiş servisi çöktü");
+            return Task.FromResult(new PortfolioHistoryDto(
+                CurrencyCode.TRY, period ?? "all", points, ChangeRatio: 9.99m, // ChangeRatio BİLEREK saçma
+                FirstDate: points.Count > 0 ? points[0].Date : null, AsOf: DateTime.UtcNow));
+        }
+    }
+
+    /// <summary>Bugünden <paramref name="monthsAgo"/> ay önceki gün için bir nokta.</summary>
+    private static PortfolioHistoryPointDto Point(int monthsAgo, decimal value, decimal cost) =>
+        new(DateOnly.FromDateTime(DateTime.UtcNow.Date).AddMonths(-monthsAgo), value, cost);
+
+    private static LessonContextService NewService(
+        PortfolioSummaryDto? summary,
+        bool throws = false,
+        IReadOnlyList<PortfolioHistoryPointDto>? history = null) =>
+        new(new StubPortfolio(summary, throws), new StubHistory(history ?? []));
 
     [Fact]
     public async Task Resolves_tokens_from_own_portfolio()
@@ -180,5 +206,70 @@ public sealed class LessonContextServiceTests
 
         Assert.Equal(b.Body, a.Body);
         Assert.Equal(b.State, a.State);
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────
+     * GD-009 — {{return_ratio_6m_ago}} (S2-L2 · 14. aşama)
+     *
+     * Ders "aynı portföy, iki ölçüm tarihi, iki farklı getiri" diyor. Sayının
+     * ÖZETLE AYNI FORMÜLDEN gelmesi bu dersin tezinin kendisi: fark ölçüm
+     * tarihinden doğmalı, hesaptan değil.
+     * ⚠ Geçmiş uç noktasının `ChangeRatio` alanı KULLANILMAZ — katkılarla
+     * kirlidir (INC-005). Sahte servis oraya bilerek saçma bir sayı (9,99)
+     * koyuyor: biri onu kullanmaya kalkarsa test bağırır.
+     * ─────────────────────────────────────────────────────────────────────── */
+
+    [Fact]
+    public async Task Earlier_return_uses_the_same_formula_as_the_summary_not_change_ratio()
+    {
+        // 6 ay önce: değer 110, maliyet 100 → %10. ChangeRatio (9,99) kullanılırsa
+        // çıktı %999 olurdu; bugünkü oran ise özetten geliyor (%25).
+        var svc = NewService(Summary(returnRatio: 0.25m), history:
+        [
+            Point(12, 100m, 100m),
+            Point(6, 110m, 100m),
+            Point(0, 125m, 100m),
+        ]);
+
+        var result = await svc.ResolveAsync("Bugün {{return_ratio}} · altı ay önce {{return_ratio_6m_ago}}");
+
+        Assert.Equal(LessonContextState.Own, result.State);
+        Assert.Equal("Bugün %25 · altı ay önce %10", result.Body);
+    }
+
+    [Fact]
+    public async Task Earlier_return_is_omitted_when_the_series_is_younger_than_the_lookback()
+    {
+        // Portföy iki aylık → altı ay önceki ölçüm YOK. Uydurmak yerine satır düşer.
+        var svc = NewService(Summary(), history: [Point(2, 110m, 100m), Point(0, 120m, 100m)]);
+
+        var result = await svc.ResolveAsync(
+            "Altı ay önce {{return_ratio_6m_ago}} idi.\nToplam {{total_value}}.");
+
+        Assert.Equal("Toplam 100.000 ₺.", result.Body);
+    }
+
+    [Fact]
+    public async Task Earlier_return_is_omitted_when_the_history_call_fails()
+    {
+        // NFR-5: geçmiş servisi çökse bile ders okunabilir kalır.
+        var svc = new LessonContextService(new StubPortfolio(Summary()), new StubHistory(null));
+
+        var result = await svc.ResolveAsync(
+            "Altı ay önce {{return_ratio_6m_ago}} idi.\nToplam {{total_value}}.");
+
+        Assert.Equal("Toplam 100.000 ₺.", result.Body);
+    }
+
+    [Fact]
+    public async Task History_is_not_fetched_for_lessons_that_do_not_ask_for_it()
+    {
+        // "Ders başına tek dış çağrı" ilkesi: ikinci çağrının istisnası ÖLÇÜLÜ.
+        var stub = new StubHistory([Point(6, 110m, 100m)]);
+        var svc = new LessonContextService(new StubPortfolio(Summary()), stub);
+
+        await svc.ResolveAsync("Yoğunlaşman {{concentration_top2}}, toplam {{total_value}}.");
+
+        Assert.Equal(0, stub.Calls);
     }
 }
