@@ -81,6 +81,7 @@ public static class SeedData
         // eğitimi ZATEN almış DB'ler sonraki içeriği ondan alamaz. Bu adımlar kendi
         // kapılarıyla çalışır → çalışan kurulumlar da bir sonraki açılışta güncellenir.
         await SeedSet0Async(db, now, ct); // T6.16: "İlk Adımlar" seti + "Temeller"→"Yatırım Kavramları"
+        await SeedSet2Async(db, now, ct); // GD-008: "Grafik ve Piyasa Okuryazarlığı" seti (S2-L1…)
         await SeedEducationSectionsAsync(db, ct);
         await SeedRemainingQuizzesAsync(db, ct);
     }
@@ -1214,6 +1215,116 @@ public static class SeedData
             await db.SaveChangesAsync(ct);
     }
 
+    /// <summary>
+    /// <b>Set 2 — "Grafik ve Piyasa Okuryazarlığı"</b> (GD-008, künye
+    /// <c>16-CURRICULUM.md</c> §Set 2). Kendi kapısıyla çalışır: çalışan
+    /// kurulumlar da bir sonraki açılışta bu seti alır (T6.1 deseni).
+    /// <para>
+    /// ⚠ Track <c>OrderIndex = 2</c> — künye böyle veriyor ve mevcut track'ler
+    /// 0 (<c>ilk-adimlar</c>) ile 1 (<c>temeller</c>) olduğu için **eski
+    /// setlerin sırası kaymıyor**. Issue #21 "OrderIndex kayması" diyordu;
+    /// kanonik künye (D-017) kaymaya gerek bırakmıyor — GD-008 §8'de bildirildi.
+    /// </para>
+    /// <para>
+    /// ⚠ <b>Ön-koşul yok (M9):</b> Set 2, Set 0/1'e kilitlenmez (künye §6.3) ve
+    /// S2-L1 setin ilk dersidir. Künyedeki "Ön bilgi" satırı <i>kavram</i>
+    /// bağımlılığıdır, ders kilidi değil.
+    /// </para>
+    /// </summary>
+    private static async Task SeedSet2Async(FinansDbContext db, DateTime now, CancellationToken ct)
+    {
+        var changed = false;
+
+        // ── Track "Grafik ve Piyasa Okuryazarlığı" (OrderIndex 2) — Set 2 ───────
+        if (!await db.LearningTracks.AnyAsync(t => t.Id == Id("track-grafik-ve-piyasa"), ct))
+        {
+            db.LearningTracks.Add(new LearningTrack
+            {
+                Id = Id("track-grafik-ve-piyasa"),
+                Slug = "grafik-ve-piyasa",
+                Title = "Grafik ve Piyasa Okuryazarlığı",
+                Description =
+                    "Bir grafiğe baktığında ne gördüğünü bil — ve ne göremeyeceğini de bil. " +
+                    "Eksenleri okumak, ölçeğin görüntüyü nasıl değiştirdiği, mum grafiği, " +
+                    "hacim ve emir defteri. Okuma becerisi öğretir; sinyal ya da tahmin öğretmez.",
+                Level = LessonLevel.Beginner,
+                OrderIndex = 2,
+                IsPublished = true,
+                CreatedAtUtc = now,
+            });
+            changed = true;
+        }
+
+        // ── S2-L1 · Grafik neyi gösterir? — eksenleri okumak ────────────────────
+        var desired_lesson_s2l1 = new Lesson
+        {
+            Id = Id("lesson-s2l1"),
+            TrackId = Id("track-grafik-ve-piyasa"),
+            Slug = "grafik-neyi-gosterir",
+            OrderIndex = 1,
+            Title = "Grafik neyi gösterir?",
+            Summary = "Bir fiyat grafiğinin iki ekseni vardır: yatayda zaman, dikeyde fiyat. " +
+                "Her nokta o gün gerçekleşmiş bir anlaşmanın kaydıdır; noktaları birleştiren " +
+                "çizgi ise ölçülmüş değil, çizilmiştir. Grafiğe bakarken dört soru sorulur: " +
+                "hangi varlık, hangi para birimi, hangi dönem, hangi sıklık.",
+            BodyMarkdown =
+                "## Grafik neyi gösterir?\n\n" +
+                "Bir fiyat grafiği iki soruyu birlikte yanıtlar: **ne zaman** (yatay eksen) ve " +
+                "**kaça** (dikey eksen). Grafikteki her **nokta** bir olgudur — o gün, o fiyattan " +
+                "gerçekleşmiş bir anlaşmanın kaydı. Günlük grafiklerde bu genellikle **kapanış** " +
+                "fiyatıdır: günün son anlaşması. Noktaları birleştiren **çizgi** ise bir ölçüm " +
+                "değil, bir **varsayımdır**: iki kapanış arasındaki yol çizilmiştir, gün içinde " +
+                "fiyatın gerçekten o yoldan geçtiğini söylemez.\n\n" +
+                "Bu yüzden bir grafiğe bakarken dört şey sorulur: **hangi varlık**, **hangi para " +
+                "birimi**, **hangi dönem**, **hangi sıklık**. Dördü söylenmemişse grafik eksik " +
+                "konuşuyor demektir. **Sıklık** özellikle önemlidir: aynı seri günlük yerine " +
+                "haftalık çizildiğinde ara günler tek noktaya iner ve gün içi hareket görünmez " +
+                "olur — veri kaybolmaz, **gösterilmez**. Eksende olmayan günler de vardır: hafta " +
+                "sonu ve tatillerde işlem olmadığı için o günlerin noktası yoktur.\n\n" +
+                "⚠ Bu ders yalnız **okuma** öğretir. Bir grafiğin yönünü yorumlamak, örüntü " +
+                "aramak ya da bundan sonrası hakkında bir şey söylemek bu dersin — ve Nirengi'nin " +
+                "— konusu değildir. Örnek seriler **kurgusaldır** ve öyle etiketlenmiştir.",
+            EstimatedMinutes = 7,
+            Level = LessonLevel.Beginner,
+            IsPublished = true,
+            CreatedAtUtc = now,
+        };
+        if (UpsertLesson(db, await db.Lessons.FirstOrDefaultAsync(l => l.Id == desired_lesson_s2l1.Id, ct), desired_lesson_s2l1))
+            changed = true;
+
+        // Kavramlar: S2-L1 dört kavram TANITIR. Künyedeki pekiştirilenler
+        // (`last-price` S0-L9 · `volatility` S0-L7) ve ön bilgi olarak anılan
+        // `position` (S0-L8) seed'de zaten var — burada yeniden eklenmez.
+        var s2l1Concepts = new (string TagId, string Key, string Label)[]
+        {
+            ("tag-chart-axes", "chart-axes", "Grafik Eksenleri"),
+            ("tag-price-point", "price-point", "Fiyat Noktası"),
+            ("tag-line-chart", "line-chart", "Çizgi Grafik"),
+            ("tag-data-frequency", "data-frequency", "Veri Sıklığı"),
+        };
+        foreach (var (tagId, key, label) in s2l1Concepts)
+        {
+            if (!await db.ConceptTags.AnyAsync(t => t.Id == Id(tagId), ct))
+            {
+                db.ConceptTags.Add(new ConceptTag { Id = Id(tagId), Key = key, Label = label });
+                changed = true;
+            }
+            if (!await db.LessonConceptTags.AnyAsync(
+                    lt => lt.LessonId == Id("lesson-s2l1") && lt.ConceptTagId == Id(tagId), ct))
+            {
+                db.LessonConceptTags.Add(new LessonConceptTag
+                {
+                    LessonId = Id("lesson-s2l1"),
+                    ConceptTagId = Id(tagId),
+                });
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await db.SaveChangesAsync(ct);
+    }
+
     private static async Task SeedEducationSectionsAsync(FinansDbContext db, CancellationToken ct)
     {
         // Ders kimlikleri deterministik (Id(...)) — slug'a değil kimliğe bağlanmak,
@@ -1230,6 +1341,7 @@ public static class SeedData
             (Id("lesson-s0l8"), EducationContent.LessonS0L8), // GD-003 — Set 0 Ders 8
             (Id("lesson-s0l9"), EducationContent.LessonS0L9), // GD-004 — Set 0 Ders 9
             (Id("lesson-s0l10"), EducationContent.LessonS0L10), // GD-005 — Set 0 Ders 10 (son)
+            (Id("lesson-s2l1"), EducationContent.LessonS2L1), // GD-008 — Set 2 Ders 1 (setin açılışı)
             (Id("lesson-enflasyon"), EducationContent.Lesson1),
             (Id("lesson-cesitlendirme"), EducationContent.Lesson2),
             (Id("lesson-fk-pddd"), EducationContent.Lesson3),

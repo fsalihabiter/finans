@@ -2942,7 +2942,497 @@ function ThinMarket() {
   );
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+ * Set 2 · S2-L1 — "Grafik neyi gösterir? — eksenleri okumak" (GD-008)
+ *
+ * `ChartFrame` GD-008 §2'nin **Extract** kalemi: dokuz figürün altısı aynı
+ * zaman/fiyat iskeletini paylaşıyor ve Set 2'nin kalan yedi dersi (~60 figür)
+ * de bunu kullanacak. Ölçekler saf fonksiyon; dönüşümlü grup (`<g transform>`)
+ * kullanılmaz — render kapısı ham koordinat karşılaştırır (LessonFigure.test).
+ *
+ * ⚠ Künye yasal notu: örnek seriler **kurgusal ve etiketlidir**, varlık adı
+ * geçmez ve **hiçbir grafik yönü yorumlanmaz**. Bu yüzden seri nötr aksan
+ * renginde (`fig-line-neutral`): mint/coral "iyi/kötü" okunurdu.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+type Plot = { x: number; y: number; w: number; h: number };
+
+/** Değer → piksel (dikey eksen; büyük değer yukarıda). */
+const priceScale = (p: Plot, lo: number, hi: number) => (v: number) =>
+  p.y + p.h - ((v - lo) / (hi - lo)) * p.h;
+
+/** Sıra numarası → piksel (yatay eksen; n nokta eşit aralıklı). */
+const timeScale = (p: Plot, n: number) => (i: number) =>
+  n <= 1 ? p.x + p.w / 2 : p.x + (i / (n - 1)) * p.w;
+
+/** Noktaları birleştiren yol — "çizgi" figürlerinin tamamı bunu kullanır. */
+const linePath = (pts: { x: number; y: number }[]) =>
+  pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+
+/** Küçük sağ ok (yön göstergesi) — ucu (x, y) noktasında. */
+function ArrowRight({ x, y }: { x: number; y: number }) {
+  return <path d={`M${x - 7} ${y - 4} L${x} ${y} L${x - 7} ${y + 4} Z`} className="fig-dot-neutral" />;
+}
+
+/** Yukarı ok — ucu (x, y) noktasında. */
+function ArrowUp({ x, y }: { x: number; y: number }) {
+  return <path d={`M${x - 4} ${y + 7} L${x} ${y} L${x + 4} ${y + 7} Z`} className="fig-dot-neutral" />;
+}
+
+/**
+ * Zaman–fiyat çerçevesi: iki eksen, yatay kılavuz, iki eksenin etiketleri.
+ *
+ * Etiketlerin **piksel** konumu çağırandan gelir (kendi ölçeğini o kuruyor);
+ * çerçeve ölçek varsaymaz. `axisNames` eksen adlarını basar — yer olmayan
+ * panelli figürlerde kapatılır, ad o zaman panel başlığında durur.
+ */
+function ChartFrame({
+  plot,
+  yTicks = [],
+  xTicks = [],
+  grid = true,
+  axisNames = false,
+}: {
+  plot: Plot;
+  yTicks?: { y: number; label: string }[];
+  xTicks?: { x: number; label: string }[];
+  grid?: boolean;
+  axisNames?: boolean;
+}) {
+  const bottom = plot.y + plot.h;
+  return (
+    <>
+      {grid &&
+        yTicks.map((t) => (
+          <line key={`g-${t.label}`} x1={plot.x} y1={t.y} x2={plot.x + plot.w} y2={t.y} className="fig-grid" />
+        ))}
+      <line x1={plot.x} y1={plot.y - 6} x2={plot.x} y2={bottom} className="fig-axis" />
+      <line x1={plot.x} y1={bottom} x2={plot.x + plot.w + 6} y2={bottom} className="fig-axis" />
+      {yTicks.map((t) => (
+        <text key={`y-${t.label}`} x={plot.x - 5} y={t.y + 3} className="fig-value" textAnchor="end">
+          {t.label}
+        </text>
+      ))}
+      {xTicks.map((t) => (
+        <text key={`x-${t.label}`} x={t.x} y={bottom + 13} className="fig-value" textAnchor="middle">
+          {t.label}
+        </text>
+      ))}
+      {axisNames && (
+        <>
+          <text x={plot.x - 40} y={plot.y - 9} className="fig-label">
+            fiyat ↑
+          </text>
+          <text x={plot.x + plot.w + 6} y={bottom + 26} className="fig-label" textAnchor="end">
+            zaman →
+          </text>
+        </>
+      )}
+    </>
+  );
+}
+
+/** S2-L1 · 2. aşama — boş grafik: iki eksen, iki soru (çok panelli). */
+function AxesAnatomy() {
+  const panels = [
+    { x: 28, title: "Yatay eksen", axis: "zaman", soru: "«ne zaman?»" },
+    { x: 188, title: "Dikey eksen", axis: "fiyat", soru: "«kaç para?»" },
+  ];
+
+  return (
+    <Figure
+      label="Boş bir fiyat grafiğinin iki ekseni: yatay eksen zamanı, dikey eksen fiyatı gösterir"
+      caption="Her fiyat grafiği iki soruya yer ayırır: yatay eksen ne zaman, dikey eksen kaç para. Veri konmadan önce grafik bu iki sorudan ibarettir."
+      height={150}
+    >
+      {panels.map((p, i) => {
+        const plot: Plot = { x: p.x, y: 44, w: 104, h: 56 };
+        const bottom = plot.y + plot.h;
+        const vurguluYatay = i === 0;
+        return (
+          <g key={p.axis}>
+            <text x={p.x + 52} y={24} className="fig-label" textAnchor="middle">
+              {p.title}
+            </text>
+            {/* İki eksen her panelde var; vurgulanan eksen nötr aksanla kalınlaşır. */}
+            <line x1={plot.x} y1={plot.y - 6} x2={plot.x} y2={bottom} className="fig-axis" />
+            <line x1={plot.x} y1={bottom} x2={plot.x + plot.w} y2={bottom} className="fig-axis" />
+            {vurguluYatay ? (
+              <>
+                <line x1={plot.x} y1={bottom} x2={plot.x + plot.w - 8} y2={bottom} className="fig-line-neutral" />
+                <ArrowRight x={plot.x + plot.w} y={bottom} />
+              </>
+            ) : (
+              <>
+                <line x1={plot.x} y1={plot.y + 2} x2={plot.x} y2={bottom} className="fig-line-neutral" />
+                <ArrowUp x={plot.x} y={plot.y - 6} />
+              </>
+            )}
+            <text
+              x={vurguluYatay ? plot.x + plot.w : plot.x + 8}
+              y={vurguluYatay ? bottom + 14 : plot.y + 6}
+              className="fig-label"
+              textAnchor={vurguluYatay ? "end" : "start"}
+            >
+              {p.axis}
+            </text>
+            <text x={p.x + 52} y={128} className="fig-value" textAnchor="middle">
+              {p.soru}
+            </text>
+          </g>
+        );
+      })}
+    </Figure>
+  );
+}
+
+/** S2-L1 · 3. aşama — tek nokta: bir gün, bir fiyat. */
+function OneDotOneDay() {
+  const plot: Plot = { x: 44, y: 16, w: 250, h: 86 };
+  const px = timeScale(plot, 5);
+  const py = priceScale(plot, 90, 110);
+  const gunler = ["12 Mart", "13 Mart", "14 Mart", "15 Mart", "16 Mart"];
+  const cx = px(2);
+  const cy = py(100);
+
+  return (
+    <Figure
+      label="Grafiğe konmuş tek bir nokta: 14 Mart günü 100 lira"
+      caption="Bir nokta bir dilek değil, olmuş bir anlaşmadır: 14 Mart'ta alıcı ve satıcı 100 ₺'de buluştu. Seri kurgusaldır, varlık adsızdır."
+      height={142}
+    >
+      <ChartFrame
+        plot={plot}
+        yTicks={[90, 100, 110].map((v) => ({ y: py(v), label: `${v} ₺` }))}
+        xTicks={gunler.map((g, i) => ({ x: px(i), label: g }))}
+        axisNames
+      />
+      <line x1={plot.x} y1={cy} x2={cx} y2={cy} className="fig-line-guide" />
+      <line x1={cx} y1={cy} x2={cx} y2={plot.y + plot.h} className="fig-line-guide" />
+      <circle cx={cx} cy={cy} r="5" className="fig-dot-neutral" />
+      <text x={cx + 10} y={cy - 8} className="fig-label">
+        14 Mart · 100 ₺
+      </text>
+    </Figure>
+  );
+}
+
+/** S2-L1 · 4. aşama — bir değeri eksenlerden okuma (adım adım). */
+function ReadingAValue() {
+  const plot: Plot = { x: 44, y: 12, w: 250, h: 78 };
+  const px = timeScale(plot, 5);
+  const py = priceScale(plot, 90, 110);
+  const cx = px(3);
+  const cy = py(106);
+  const bottom = plot.y + plot.h;
+
+  return (
+    <Figure
+      label="Bir noktanın değerini iki adımda okuma: aşağı inip tarihi, sola gidip fiyatı bulmak"
+      caption="Okuma iki iz düşümdür: aşağı inersen tarihi, sola gidersen fiyatı bulursun. Burada nokta 15 Mart · 106 ₺."
+      height={146}
+    >
+      <ChartFrame
+        plot={plot}
+        yTicks={[90, 100, 110].map((v) => ({ y: py(v), label: `${v} ₺` }))}
+        xTicks={["12 Mart", "13 Mart", "14 Mart", "15 Mart", "16 Mart"].map((g, i) => ({ x: px(i), label: g }))}
+      />
+      <circle cx={cx} cy={cy} r="5" className="fig-dot-neutral" />
+      {/* 1. adım: aşağı → tarih */}
+      <line x1={cx} y1={cy} x2={cx} y2={bottom} className="fig-line-guide" />
+      <circle cx={cx + 16} cy={(cy + bottom) / 2} r="9" className="fig-card" />
+      <text x={cx + 16} y={(cy + bottom) / 2 + 4} className="fig-label" textAnchor="middle">
+        1
+      </text>
+      {/* 2. adım: sola → fiyat */}
+      <line x1={plot.x} y1={cy} x2={cx} y2={cy} className="fig-line-guide" />
+      {/* Rozet kılavuz çizgisinin ÜSTÜNE oturur: çizginin altına konunca iki kesikli
+          çizginin oluşturduğu dikdörtgenin içinde boşlukta duruyor gibi görünüyordu
+          (tarayıcı kontrolü, 2026-11-23). */}
+      <circle cx={(plot.x + cx) / 2} cy={cy - 11} r="9" className="fig-card" />
+      <text x={(plot.x + cx) / 2} y={cy - 7} className="fig-label" textAnchor="middle">
+        2
+      </text>
+      <text x={14} y={122} className="fig-value">
+        1. noktadan aşağı in → tarihi oku (15 Mart)
+      </text>
+      <text x={14} y={136} className="fig-value">
+        2. noktadan sola git → fiyatı oku (106 ₺)
+      </text>
+    </Figure>
+  );
+}
+
+/** S2-L1 · 5. aşama — nokta bulutundan çizgiye (çok panelli). */
+function DotsToLine() {
+  const seri = [100, 104, 101, 107, 105];
+  const paneller = [
+    { x: 8, title: "yalnız nokta", dots: true, line: false },
+    { x: 112, title: "nokta + çizgi", dots: true, line: true },
+    { x: 216, title: "yalnız çizgi", dots: false, line: true },
+  ];
+
+  return (
+    <Figure
+      label="Aynı beş kapanış üç biçimde: yalnız noktalar, noktalar ve çizgi, yalnız çizgi"
+      caption="Üç panelin verisi aynı beş kapanış. Değişen tek şey gösterim: çizgi veriyi çoğaltmaz, yalnızca noktaları birleştirir."
+      height={140}
+    >
+      {paneller.map((p) => {
+        const plot: Plot = { x: p.x + 16, y: 34, w: 72, h: 60 };
+        const px = timeScale(plot, seri.length);
+        const py = priceScale(plot, 98, 109);
+        const pts = seri.map((v, i) => ({ x: px(i), y: py(v) }));
+        return (
+          <g key={p.title}>
+            <text x={p.x + 48} y={22} className="fig-value" textAnchor="middle">
+              {p.title}
+            </text>
+            <ChartFrame plot={plot} grid={false} />
+            {p.line && <path d={linePath(pts)} className="fig-line-neutral" fill="none" />}
+            {p.dots && pts.map((pt, i) => <circle key={i} cx={pt.x} cy={pt.y} r="3" className="fig-dot-neutral" />)}
+          </g>
+        );
+      })}
+      <text x={160} y={126} className="fig-label" textAnchor="middle">
+        Üçünün verisi de aynı beş kapanış.
+      </text>
+    </Figure>
+  );
+}
+
+/** S2-L1 · 6. aşama (tuzak) — aradaki yol çizilmiştir, veri değildir. */
+function LineConnectsCloses() {
+  const plot: Plot = { x: 44, y: 22, w: 250, h: 80 };
+  const px = timeScale(plot, 3);
+  const py = priceScale(plot, 96, 110);
+  const pts = [100, 106, 103].map((v, i) => ({ x: px(i), y: py(v) }));
+  // Birinci ve ikinci kapanış ARASINDA gün içinde olabilecek bir yol — grafikte
+  // yoktur. Tek yönlü çizilmemesi için hem aşağı hem yukarı kıvrılıyor (TD-003).
+  const araYol = `M${pts[0].x} ${pts[0].y} L${pts[0].x + 24} ${pts[0].y + 16} L${pts[0].x + 48} ${
+    pts[0].y - 10
+  } L${pts[0].x + 76} ${pts[0].y + 8} L${pts[1].x} ${pts[1].y}`;
+
+  return (
+    <Figure
+      label="İki kapanışı birleştiren düz çizgi ile o iki gün arasında olabilecek gerçek yolun karşılaştırması"
+      caption="Grafikte yalnız noktalar veridir; aralarındaki düz çizgiyi program çizer. Kesikli yol da bir örnek — grafik aradaki yolu hiç göstermez."
+      height={148}
+    >
+      <ChartFrame
+        plot={plot}
+        yTicks={[100, 106].map((v) => ({ y: py(v), label: `${v} ₺` }))}
+        xTicks={["1. gün", "2. gün", "3. gün"].map((g, i) => ({ x: px(i), label: g }))}
+      />
+      <path d={araYol} className="fig-line-guide" fill="none" />
+      <path d={linePath(pts)} className="fig-line-neutral" fill="none" />
+      {pts.map((pt, i) => (
+        <circle key={i} cx={pt.x} cy={pt.y} r="5" className="fig-dot-neutral" />
+      ))}
+      <text x={14} y={128} className="fig-value">
+        düz çizgi: çizilmiş
+      </text>
+      <text x={306} y={128} className="fig-value" textAnchor="end">
+        kesikli yol: grafikte yok
+      </text>
+    </Figure>
+  );
+}
+
+/** S2-L1 · 7. aşama — kapanış: o günün son işlemi. */
+function WhyClose() {
+  const solPlot: Plot = { x: 30, y: 38, w: 108, h: 58 };
+  const sagPlot: Plot = { x: 206, y: 38, w: 84, h: 58 };
+  const gunIci = [100, 103, 99, 104, 101, 105, 102];
+  const solX = timeScale(solPlot, gunIci.length);
+  const solY = priceScale(solPlot, 97, 107);
+  const sagY = priceScale(sagPlot, 97, 107);
+
+  return (
+    <Figure
+      label="Bir günün yedi işleminden yalnız sonuncusunun grafiğe tek nokta olarak girmesi"
+      caption="Bir günde çok işlem olur. Günlük grafiğe bunlardan biri girer: son işlem, yani kapanış. Diğerleri olmadı değil — bu grafikte görünmüyor."
+      height={142}
+    >
+      <text x={84} y={24} className="fig-value" textAnchor="middle">
+        bir günün işlemleri
+      </text>
+      <text x={248} y={24} className="fig-value" textAnchor="middle">
+        grafiğe giren nokta
+      </text>
+      <ChartFrame plot={solPlot} grid={false} />
+      {gunIci.map((v, i) => {
+        const son = i === gunIci.length - 1;
+        return (
+          <circle
+            key={i}
+            cx={solX(i)}
+            cy={solY(v)}
+            r={son ? 5 : 3}
+            className={son ? "fig-dot-neutral" : "fig-dot-hollow"}
+          />
+        );
+      })}
+      <text x={solPlot.x + solPlot.w} y={solPlot.y + solPlot.h + 14} className="fig-value" textAnchor="end">
+        son işlem: 102 ₺
+      </text>
+      <line x1={148} y1={67} x2={190} y2={67} className="fig-line-guide" />
+      <ArrowRight x={198} y={67} />
+      <ChartFrame plot={sagPlot} grid={false} />
+      <circle cx={sagPlot.x + sagPlot.w / 2} cy={sagY(102)} r="5" className="fig-dot-neutral" />
+      <text x={248} y={sagPlot.y + sagPlot.h + 14} className="fig-value" textAnchor="middle">
+        kapanış: 102 ₺
+      </text>
+    </Figure>
+  );
+}
+
+/** S2-L1 · 8. aşama — grafiğin dört sorusu (çok panelli). */
+function ChartChecklist() {
+  const kartlar = [
+    { x: 8, y: 20, soru: "Hangi varlık?", not: "adı yazılı mı?" },
+    { x: 166, y: 20, soru: "Hangi para birimi?", not: "₺ · $ · €" },
+    { x: 8, y: 74, soru: "Hangi dönem?", not: "1 ay · 1 yıl · 5 yıl" },
+    { x: 166, y: 74, soru: "Hangi sıklık?", not: "günlük · haftalık" },
+  ];
+
+  return (
+    <Figure
+      label="Bir grafiğe bakmadan önce sorulacak dört soru: hangi varlık, hangi para birimi, hangi dönem, hangi sıklık"
+      caption="Aynı eksenler çok farklı şeyler anlatabilir. Bu dört sorunun cevabı grafiğin kendisinde yazılı olmalı; yoksa ne gördüğünü bilmiyorsun."
+      height={136}
+    >
+      {kartlar.map((k) => (
+        <g key={k.soru}>
+          <rect x={k.x} y={k.y} width="146" height="44" rx="8" className="fig-card" />
+          <text x={k.x + 12} y={k.y + 19} className="fig-label">
+            {k.soru}
+          </text>
+          <text x={k.x + 12} y={k.y + 34} className="fig-value">
+            {k.not}
+          </text>
+        </g>
+      ))}
+    </Figure>
+  );
+}
+
+/** S2-L1 · 9. aşama — eksende olmayan günler. */
+function MissingDays() {
+  const gunler = [
+    { ad: "Cum", islem: true },
+    { ad: "Cmt", islem: false },
+    { ad: "Paz", islem: false },
+    { ad: "Pzt", islem: true },
+    { ad: "Sal", islem: true },
+  ];
+  const plot: Plot = { x: 44, y: 62, w: 250, h: 44 };
+  const px = timeScale(plot, 3);
+  const py = priceScale(plot, 98, 105);
+  const seri = [100, 103, 101];
+
+  return (
+    <Figure
+      label="Hafta sonu günleri takvimde var ama fiyat grafiğinin yatay ekseninde yok"
+      caption="Hafta sonu takvimde var, eksende yok. Grafik işlem olan günleri sıralar — araya çizilen düz parça iki iş günü arasındaki boşluktur."
+      height={150}
+    >
+      {gunler.map((g, i) => (
+        <g key={g.ad}>
+          <rect
+            x={10 + i * 62}
+            y={14}
+            width="52"
+            height="26"
+            rx="6"
+            className="fig-card"
+            strokeDasharray={g.islem ? undefined : "3 3"}
+          />
+          <text x={36 + i * 62} y={31} className={g.islem ? "fig-label" : "fig-value"} textAnchor="middle">
+            {g.ad}
+          </text>
+          {!g.islem && (
+            <text x={36 + i * 62} y={52} className="fig-value" textAnchor="middle">
+              işlem yok
+            </text>
+          )}
+        </g>
+      ))}
+      <ChartFrame
+        plot={plot}
+        grid={false}
+        xTicks={["Cum", "Pzt", "Sal"].map((g, i) => ({ x: px(i), label: g }))}
+      />
+      <path d={linePath(seri.map((v, i) => ({ x: px(i), y: py(v) })))} className="fig-line-neutral" fill="none" />
+      {seri.map((v, i) => (
+        <circle key={i} cx={px(i)} cy={py(v)} r="4" className="fig-dot-neutral" />
+      ))}
+      <text x={160} y={138} className="fig-value" textAnchor="middle">
+        Eksende olmayan gün yok değildir — işlem olmamıştır.
+      </text>
+    </Figure>
+  );
+}
+
+/** S2-L1 · 11. aşama — aynı seri, günlük ve haftalık (çok panelli). */
+function SameDataDailyWeekly() {
+  // Haftalık noktalar bilerek TEK YÖNLÜ DEĞİL (104 → 110 → 105): sıklık dersi
+  // "aşağı hareket kaybolmaz" demek zorunda, yoksa figür zımnen yön öğretir
+  // (TD-003 · RV-063 sınıfı: bir olguyu yalnız bir yönde göstermek).
+  const gunluk = [100, 103, 101, 106, 104, 107, 103, 108, 106, 110, 108, 112, 109, 107, 105];
+  // Haftalık nokta = o haftanın SON kapanışı (5'inci, 10'uncu, 15'inci gün).
+  const haftalik = [gunluk[4], gunluk[9], gunluk[14]];
+  const solPlot: Plot = { x: 26, y: 36, w: 116, h: 62 };
+  const sagPlot: Plot = { x: 202, y: 36, w: 90, h: 62 };
+  // Aynı dikey ölçek — farklı ölçek karşılaştırmayı yanıltırdı (konusu S2-L2).
+  const solY = priceScale(solPlot, 98, 114);
+  const sagY = priceScale(sagPlot, 98, 114);
+  const solX = timeScale(solPlot, gunluk.length);
+  const sagX = timeScale(sagPlot, haftalik.length);
+  const solPts = gunluk.map((v, i) => ({ x: solX(i), y: solY(v) }));
+  const sagPts = haftalik.map((v, i) => ({ x: sagX(i), y: sagY(v) }));
+
+  return (
+    <Figure
+      label="Aynı on beş günlük seri: solda günlük on beş nokta, sağda haftalık üç nokta"
+      caption="Aynı on beş kapanış, iki sıklık. Haftalık gösterim yalnız hafta sonundaki değeri alır; aradaki günler kaybolur. Seri kurgusaldır."
+      height={134}
+    >
+      <text x={84} y={24} className="fig-value" textAnchor="middle">
+        günlük · 15 nokta
+      </text>
+      <text x={247} y={24} className="fig-value" textAnchor="middle">
+        haftalık · 3 nokta
+      </text>
+      <ChartFrame plot={solPlot} grid={false} />
+      <path d={linePath(solPts)} className="fig-line-neutral" fill="none" />
+      {solPts.map((pt, i) => (
+        <circle key={i} cx={pt.x} cy={pt.y} r="2" className="fig-dot-neutral" />
+      ))}
+      <ChartFrame plot={sagPlot} grid={false} />
+      <path d={linePath(sagPts)} className="fig-line-neutral" fill="none" />
+      {sagPts.map((pt, i) => (
+        <circle key={i} cx={pt.x} cy={pt.y} r="4" className="fig-dot-neutral" />
+      ))}
+      <text x={160} y={122} className="fig-value" textAnchor="middle">
+        Aynı veri — haftalıkta gün hareketi görünmüyor.
+      </text>
+    </Figure>
+  );
+}
+
 const FIGURES: Record<string, () => React.JSX.Element> = {
+  // Set 2 — Grafik ve Piyasa Okuryazarlığı (GD-008)
+  // S2-L1 · Grafik neyi gösterir? — 9 figür, 4'ü çok panelli
+  "axes-anatomy": AxesAnatomy,
+  "one-dot-one-day": OneDotOneDay,
+  "reading-a-value": ReadingAValue,
+  "dots-to-line": DotsToLine,
+  "line-connects-closes": LineConnectsCloses,
+  "why-close": WhyClose,
+  "chart-checklist": ChartChecklist,
+  "missing-days": MissingDays,
+  "same-data-daily-weekly": SameDataDailyWeekly,
   // Set 0 — İlk Adımlar (T6.16)
   // S0-L8 · Vade, hedef ve portföy (GD-003)
   "time-horizon-ruler": TimeHorizonRuler,

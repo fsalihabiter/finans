@@ -43,7 +43,7 @@ const num = (el: Element, attr: string) => Number.parseFloat(el.getAttribute(att
  * koruması içerik N'i geçtiği anda korumayı bırakır. Eşitlik iki yönde de
  * kıskaçtır: figür eklendiğinde ya da silindiğinde bu sayı da elle değişmeli.
  */
-const BEKLENEN_FIGUR_SAYISI = 101;
+const BEKLENEN_FIGUR_SAYISI = 110;
 
 /**
  * App.css'te **alfa taşımayan** dolgu sınıfları (`fill: var(--x)`), yani üzerine

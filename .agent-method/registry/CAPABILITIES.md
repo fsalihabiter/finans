@@ -82,7 +82,7 @@ capabilities:
 
   - capability: Education module (content + delivery)
     location: backend/src/Finans.Domain/Education/ + Finans.Application/Education/ + Finans.Infrastructure/Seed/EducationContent.cs + Services/EducationService.cs
-    entry_points: [IEducationService, ILessonContextService, ContextKeys, IDiagnosticService, EducationContent, SeedSet0Async, UpsertLesson]
+    entry_points: [IEducationService, ILessonContextService, ContextKeys, IDiagnosticService, EducationContent, SeedSet0Async, SeedSet2Async, UpsertLesson]
     status: healthy
     scope: all
     notes: >-
@@ -93,8 +93,20 @@ capabilities:
       kararı, yapısal taşıma ve kaydın kendi geçmişi seed tarafından geri alınmaz.
       Yeni bir içerik alanı eklenirse HEM karşılaştırmaya HEM kopyaya eklenmeli; eksik
       bırakılan alan sessizce eskimiş kalır (bu `Heading`'de bir kez, ders özetinde bir kez oldu).
-      Ders eklerken künye `16-CURRICULUM.md`'den okunur; yapısal sözleşme testleri **M1-M12**
-      + tavsiye/kurum adı makine kapısı (RV-062).
+      Ders eklerken künye `16-CURRICULUM.md`'den okunur; yapısal sözleşme testleri **M1-M13**
+      + tavsiye/kurum adı makine kapısı (RV-062, M7a/M7b).
+      📌 **Set başına bir `SeedSet*Async`** (GD-008): her set kendi track'ini + derslerini
+      kendi kapısıyla kurar (T6.1 deseni; çalışan kurulumlar da alır) ve `SeedAsync`'e
+      sırayla bağlanır. Set 2 `OrderIndex = 2` ile sıraya **kaymasız** girdi — mevcut
+      track'ler 0 ve 1 (issue #21'in "OrderIndex kayması" notu eskimiş, GD-008 §8).
+      Setin ilk dersi `LessonPrerequisite` TAŞIMAZ: ön-koşul zinciri track içinde kalır,
+      setler arası sert kilit yoktur (M9).
+      ⚠ **Bir derse ait içerik beş yere dağılır** ve beşi birlikte inmek zorundadır:
+      `EducationContent.LessonSxLy` (aşamalar) · `RemainingQuizzes()` (9 soru) ·
+      `SeedSet*Async` (ders + kavram) · `SeedEducationSectionsAsync` tuple listesi
+      (aşama kurucusunun KAYDI — atlanırsa ders bölümsüz kalır ve yalnız sayım testi
+      bağırır) · `LessonFigure.tsx` + `FIGURES`. "Boş ders iskeleti" bu yüzden
+      kurulamaz: sözleşme her ders için üç derinlik katmanı, quiz ve kaynak bloğu ister.
       📌 **Künye artık makine tarafından da okunuyor** (M12, GD-006): başlıktaki figür
       sayısı ↔ figür planı ↔ aşama planı mutabakatı testle korunuyor. Yani
       `16-CURRICULUM.md` yalnız insan dokümanı değil, **testi olan bir sözleşme**;
@@ -163,7 +175,7 @@ capabilities:
     location: web/src/components/MiniMarkdown.tsx + LessonFigure.tsx
     status: healthy
     scope: web/education
-    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcı: `WeightStack` (ağırlık yığını; GD-003/S0-L8, S0-L10'da `cost-stack` olarak yeniden kullanıldı) — yeni figür yazmadan önce bakılır. ⚠ **Ton kuralı:** yazı taşıyan dolgu OPAK olmaz (RV-039, RV-053, RV-055, RV-065) ve bir seçenek/kalem diğerinden daha vurgulu çizilmez (RV-016/026/027/028, RV-054). Durum bilgisi renkle değil **biçimle** kodlanır (kesikli çerçeve, kontur — `fig-seg-strong`). 📌 **İlk kural testli, ama SINIRLI** (GD-007 + REVIEW-006): `LessonFigure.test.tsx` kayıttaki **101** figürün her birini çizip hem render ediyor mu (svg · aria-label · şekil · altyazı) hem de opak dolgunun üzerine yazı düşmüş mü diye bakar; liste `FIGURE_KEYS` ile kayıt defterinden **türetilir**, elle tutulmaz, yani yeni figür otomatik kapsanır. **Kapının sınırlarını bilerek yaz:** yalnız *tam opak* üç dolgu sınıfı (`fig-seg-lead` · `fig-bar-pos` · `fig-bar-neg`) ve yalnız `opacity ≥ 0,9`; yalnız `rect` ve `circle` (`path`/`polygon` DEĞİL); yazının **tahmini** kapladığı alan (jsdom `getBBox` vermez) ve **gerçek kontrast oranı ölçülmez**. ⚠ Bu satır REVIEW-006'dan önce kuralı *genel* olarak "TESTLİ" ilan ediyordu; o sırada `fig-bar-pos`/`fig-bar-neg` üzerinde **10 canlı ihlal** vardı ve kapı onları göremiyordu (RV-065/RV-076). Bu dosya CLAUDE.md §11.5 gereği **kod yazmadan önce** okunur, bu yüzden kapsam burada abartılmaz. Vurgu/niyet kuralı hâlâ insan incelemesinde — **TD-003**; görsel bozulma — **TD-004**.
+    notes: dangerouslySetInnerHTML YOK; şema beyaz-listeli bağlantı (safeHref); figürler elle yazılmış SVG kayıt defteri — seed anahtarlarıyla test mutabakatı (M4). Yeni ders figürü buraya eklenir (D-012). Çok panelli figürler için ortak yardımcılar: `WeightStack` (ağırlık yığını; GD-003/S0-L8, S0-L10'da `cost-stack` olarak yeniden kullanıldı) ve **`ChartFrame`** (zaman/fiyat ekseni + `priceScale`/`timeScale`/`linePath`/`ArrowRight`/`ArrowUp`; GD-008/S2-L1'de dokuz figürün altısı, Set 2'nin kalan yedi dersi de bunu kullanacak — ölçek saf fonksiyon, `<g transform>` YOK çünkü render kapısı ham koordinat karşılaştırır) — yeni figür yazmadan önce bakılır. ⚠ **Ton kuralı:** yazı taşıyan dolgu OPAK olmaz (RV-039, RV-053, RV-055, RV-065) ve bir seçenek/kalem diğerinden daha vurgulu çizilmez (RV-016/026/027/028, RV-054). Durum bilgisi renkle değil **biçimle** kodlanır (kesikli çerçeve, kontur — `fig-seg-strong`). 📌 **Nötr seri kuralı (GD-008):** yönü yorumlanmayan grafik serileri `fig-line-neutral`/`fig-dot-neutral` ile çizilir — `fig-line-steady` (mint) ve `fig-line-volatile` (coral) "iyi/kötü" okunur, grafik okuma dersinde taraf tutar. Aynı sebeple örnek seriler **tek yönlü olmamalı** (GD-008'de haftalık seri 104/110/111'den 104/110/105'e çevrildi — RV-063 sınıfı). 📌 **İlk kural testli, ama SINIRLI** (GD-007 + REVIEW-006): `LessonFigure.test.tsx` kayıttaki **110** figürün her birini çizip hem render ediyor mu (svg · aria-label · şekil · altyazı) hem de opak dolgunun üzerine yazı düşmüş mü diye bakar; liste `FIGURE_KEYS` ile kayıt defterinden **türetilir**, elle tutulmaz, yani yeni figür otomatik kapsanır. **Kapının sınırlarını bilerek yaz:** yalnız *tam opak* üç dolgu sınıfı (`fig-seg-lead` · `fig-bar-pos` · `fig-bar-neg`) ve yalnız `opacity ≥ 0,9`; yalnız `rect` ve `circle` (`path`/`polygon` DEĞİL); yazının **tahmini** kapladığı alan (jsdom `getBBox` vermez) ve **gerçek kontrast oranı ölçülmez**. ⚠ Bu satır REVIEW-006'dan önce kuralı *genel* olarak "TESTLİ" ilan ediyordu; o sırada `fig-bar-pos`/`fig-bar-neg` üzerinde **10 canlı ihlal** vardı ve kapı onları göremiyordu (RV-065/RV-076). Bu dosya CLAUDE.md §11.5 gereği **kod yazmadan önce** okunur, bu yüzden kapsam burada abartılmaz. Vurgu/niyet kuralı hâlâ insan incelemesinde — **TD-003**; görsel bozulma — **TD-004**.
     last_verified_ref: HEAD   # REVIEW-006 (2026-11-22) ile yeniden doğrulandı
 
   - capability: Backlog projection (GitHub Issues -> generated/BACKLOG.md)

@@ -99,6 +99,9 @@ public sealed class EducationSeedTests
                 "time-horizon", "portfolio", "position", "weight", // Set 0 Ders 8 "Vade, hedef ve portföy"
                 "market", "supply-demand", "last-price", "bid-ask", "spread", // Set 0 Ders 9 "Fiyat nereden çıkıyor"
                 "exchange", "broker", "order", "order-type", "settlement", "commission", // Set 0 Ders 10 "Bir alım nasıl gerçekleşir"
+                // Set 2 Ders 1 "Grafik neyi gösterir?" (GD-008) — last-price ve
+                // volatility PEKİŞTİRİLİR, yeniden eklenmez (yukarıda zaten var).
+                "chart-axes", "price-point", "line-chart", "data-frequency",
             });
 
         // F/K dersi iki etikete bağlı (F/K + PD/DD); diğerleri tekil.
@@ -141,7 +144,7 @@ public sealed class EducationSeedTests
 
         // Bağımsız (derse bağlı olmayan) test yok — her quiz bir derse bağlı.
         // T6.1: 1→5 · T6.16 (Set 0 L1-L6): 5→11.
-        (await db.Quizzes.CountAsync()).Should().Be(15);
+        (await db.Quizzes.CountAsync()).Should().Be(16);
         (await db.Quizzes.CountAsync(q => q.LessonId == null)).Should().Be(0);
     }
 
@@ -167,15 +170,18 @@ public sealed class EducationSeedTests
 
         // T6.16 — Set 0: S0-L1..L6. +1 track, +6 ders, +16 kavram, +6 quiz
         // (54 soru, 192 seçenek), +78 bölüm, +5 ön-koşul (S0 zinciri).
-        (await db.LearningTracks.CountAsync()).Should().Be(2);
-        (await db.Lessons.CountAsync()).Should().Be(15);
-        (await db.ConceptTags.CountAsync()).Should().Be(40);
-        (await db.LessonConceptTags.CountAsync()).Should().Be(40);
+        // GD-008 — Set 2 açılışı: +1 track (grafik-ve-piyasa), +1 ders (S2-L1),
+        // +4 kavram, +1 quiz (9 soru, 34 seçenek), +14 bölüm. Ön-koşul YOK: Set 2
+        // Set 0/1 e kilitlenmez ve S2-L1 setin ilk dersi (M9, künye §6.3).
+        (await db.LearningTracks.CountAsync()).Should().Be(3);
+        (await db.Lessons.CountAsync()).Should().Be(16);
+        (await db.ConceptTags.CountAsync()).Should().Be(44);
+        (await db.LessonConceptTags.CountAsync()).Should().Be(44);
         (await db.LessonPrerequisites.CountAsync()).Should().Be(13);
-        (await db.Quizzes.CountAsync()).Should().Be(15);
-        (await db.QuizQuestions.CountAsync()).Should().Be(117);   // + S0-L10 9
-        (await db.QuizOptions.CountAsync()).Should().Be(418);     // + S0-L10 34 (1 doğru-yanlış 2 şıklı, 8×4)
-        (await db.LessonSections.CountAsync()).Should().Be(187);  // + S0-L10 14
+        (await db.Quizzes.CountAsync()).Should().Be(16);
+        (await db.QuizQuestions.CountAsync()).Should().Be(126);   // + S2-L1 9 (GD-008)
+        (await db.QuizOptions.CountAsync()).Should().Be(452);     // + S2-L1 34 (1 doğru-yanlış 2 şıklı, 8×4)
+        (await db.LessonSections.CountAsync()).Should().Be(201);  // + S2-L1 14 (GD-008)
         (await db.UserLessonProgress.CountAsync()).Should().Be(0);  // seed ilerleme yazmaz
     }
 
@@ -318,10 +324,29 @@ public sealed class EducationSeedTests
 
         var bodies = await db.LessonSections.Select(s => s.BodyMarkdown).ToListAsync();
 
+        // GD-008 — MiniMarkdown'ın TANIDIĞI satır-içi belirteç yalnız İKİSİ:
+        // `**kalın**` ve `[metin](hedef)` (`MiniMarkdown.tsx` → `renderInline`).
+        // Başka her şey HAM METİN olarak ekrana düşer: hiçbir şey patlamaz, hiçbir
+        // test bağırmaz, kullanıcı yıldızları görür. S2-L1'in açılışındaki
+        // `*(Derin)*` tam böyle çıktı ve ancak TARAYICIDA görüldü; aynı kalıp
+        // S0-L9'da **yayındaydı** ("*fiyat neyse değer odur.*"). Yani bu tek bir
+        // dikkatsizlik değil, kapısı olmayan bir hata sınıfıydı.
+        // ⚠ Alt çizgili italik (`_x_`) bilerek taranmıyor: LiveContext token'ları
+        // (`{{total_value}}`, `{{real_return}}`) alt çizgi taşıyor ve satırda iki
+        // token varsa kalıp yanlış pozitif üretir.
+        const string tekYildiz = @"(?<!\*)\*(?!\*)[^*\n]{1,120}(?<!\*)\*(?!\*)";
+        const string satirIciKod = @"`[^`\n]+`";
+
         foreach (var body in bodies)
         {
             // MiniMarkdown alt kümesi (T6.8 ile tablo + link EKLENDİ; kod bloğu hâlâ yok).
             body.Should().NotContain("```", "kod bloğu MiniMarkdown'da desteklenmiyor");
+
+            Regex.IsMatch(body, tekYildiz).Should().BeFalse(
+                "tek yıldızlı italik MiniMarkdown'da YOK — ekranda ham yıldız görünür; " +
+                "vurgu için **kalın** kullanılır");
+            Regex.IsMatch(body, satirIciKod).Should().BeFalse(
+                "satır-içi kod (ters tırnak) MiniMarkdown'da YOK — ham tırnak görünür");
 
             // Başlıklar yalnız ## / ### (h1/h2 yok).
             foreach (var line in body.Split('\n').Where(l => l.TrimStart().StartsWith('#')))
@@ -349,6 +374,20 @@ public sealed class EducationSeedTests
                 lines[0].Should().NotMatchRegex(
                     @"^\|(?:\s*:?-+:?\s*\|)+$",
                     "hizalama satırı başlık satırından SONRA gelir");
+            }
+        }
+
+        // Ders kaydının KENDİ alanları da kullanıcıya gösteriliyor (RV-001'in dersi):
+        // `BodyMarkdown` bölümsüz derste doğrudan render edilir, `Summary` ders
+        // listesinde okunur. Satır-içi belirteç kuralı onlar için de geçerli.
+        foreach (var lesson in await db.Lessons.ToListAsync())
+        {
+            foreach (var (alan, metin) in new[] { ("Summary", lesson.Summary), ("BodyMarkdown", lesson.BodyMarkdown) })
+            {
+                Regex.IsMatch(metin, tekYildiz).Should().BeFalse(
+                    $"'{lesson.Slug}'.{alan}: tek yıldızlı italik MiniMarkdown'da YOK");
+                Regex.IsMatch(metin, satirIciKod).Should().BeFalse(
+                    $"'{lesson.Slug}'.{alan}: satır-içi kod MiniMarkdown'da YOK");
             }
         }
 
@@ -719,7 +758,15 @@ public sealed class EducationSeedTests
         var narrative = string.Join("\n", sections
             .Where(s => s.Kind != SectionKind.Trap)
             .Select(s => s.BodyMarkdown));
-        foreach (var pattern in new[] { "hedef fiyat", "sinyal verdi", "formasyon", "destek kırıldı", "direnç kırıldı" })
+        // GD-008: "boşluk kapanır" SC-E25'in listesinde vardı ama testte YOKTU. Set 2
+        // içeriği inmeye başladığı için eklendi — boşluğun kapanacağını söylemek bir
+        // kehanettir ve S0-L10 "boşluk" kavramını zaten tanıtıyor (yani kalıp artık
+        // yazılabilir hâle geldi). Çekimleri de kapatılır: kapanır/kapanacak/kapatır.
+        foreach (var pattern in new[]
+                 {
+                     "hedef fiyat", "sinyal verdi", "formasyon", "destek kırıldı", "direnç kırıldı",
+                     "boşluk kapan", "boşluğu kapat", "boşluk kapat",
+                 })
         {
             narrative.Should().NotContainEquivalentOf(pattern,
                 $"grafik/tahmin kalıbı anlatım metninde geçmez (M7a; Trap bloğunda serbesttir) — " +
@@ -764,9 +811,9 @@ public sealed class EducationSeedTests
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
-        (await db.LessonSections.CountAsync()).Should().Be(187);
-        (await db.Quizzes.CountAsync()).Should().Be(15);
-        (await db.Lessons.CountAsync()).Should().Be(15); // dersler çoğaltılmadı
+        (await db.LessonSections.CountAsync()).Should().Be(201);
+        (await db.Quizzes.CountAsync()).Should().Be(16);
+        (await db.Lessons.CountAsync()).Should().Be(16); // dersler çoğaltılmadı
     }
 
     [Fact]
@@ -780,16 +827,16 @@ public sealed class EducationSeedTests
 
         // "Eski sürüm" simülasyonu: LiveContext blokları henüz yokmuş gibi sil.
         var live = await db.LessonSections.Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
-        live.Should().HaveCount(13);
+        live.Should().HaveCount(14);
         db.LessonSections.RemoveRange(live);
         await db.SaveChangesAsync();
-        (await db.LessonSections.CountAsync()).Should().Be(174); // diğer bloklar yerinde
+        (await db.LessonSections.CountAsync()).Should().Be(187); // diğer bloklar yerinde
 
         await SeedData.SeedAsync(db); // "bir sonraki açılış"
 
         // Eksik blok tipi geriye dönük geldi, var olanlar çoğaltılmadı.
-        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(13);
-        (await db.LessonSections.CountAsync()).Should().Be(187);
+        (await db.LessonSections.CountAsync(s => s.Kind == SectionKind.LiveContext)).Should().Be(14);
+        (await db.LessonSections.CountAsync()).Should().Be(201);
     }
 
     [Fact]
@@ -821,7 +868,7 @@ public sealed class EducationSeedTests
         after.BodyMarkdown.Should().Be(original);
         after.DepthTier.Should().Be(DepthTier.Core, "tuzak bloğu başlangıç seviyesine de görünmeli");
         after.FigureKey.Should().BeNull();
-        (await db.LessonSections.CountAsync()).Should().Be(187); // çoğaltma yok
+        (await db.LessonSections.CountAsync()).Should().Be(201); // çoğaltma yok
     }
 
     [Fact]
@@ -900,7 +947,7 @@ public sealed class EducationSeedTests
         var live = await db.LessonSections
             .Where(s => s.Kind == SectionKind.LiveContext).ToListAsync();
 
-        live.Should().HaveCount(13); // 5 (Set 1) + S0-L1..L6 + S0-L8 + S0-L9
+        live.Should().HaveCount(14); // 5 (Set 1) + S0-L1..L6 + S0-L8 + S0-L9 + S2-L1
         foreach (var s in live)
         {
             var tokens = System.Text.RegularExpressions.Regex

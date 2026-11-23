@@ -3893,6 +3893,36 @@ body.drawer-lock {
   fill: var(--coral, #ef7a72);
 }
 
+/* Grafik okuma figürleri (S2-L1, GD-008) — zaman/fiyat çerçevesi.
+   Seri NÖTR aksan rengindedir: `fig-line-steady` (mint) ve `fig-line-volatile`
+   (coral) "iyi/kötü" anlamı taşıyor, bu derste ise hiçbir grafik yönü
+   yorumlanmıyor (künye yasal notu · TD-003'ün taraf tutma sınıfı). */
+.fig-grid {
+  stroke: var(--line, #26304f);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.fig-line-neutral {
+  stroke: var(--accent, #8a94dc);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+/* Eksene iz düşüren kılavuz ve "çizilmiş" (veri olmayan) yol. */
+.fig-line-guide {
+  stroke: var(--muted, #9aa6c4);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.fig-dot-neutral {
+  fill: var(--accent, #7aa2ff);
+}
+/* İçi boş nokta: "burada veri YOK" (eksende olmayan gün). */
+.fig-dot-hollow {
+  fill: var(--panel-2, #1a2240);
+  stroke: var(--muted, #9aa6c4);
+  stroke-width: 1.5;
+}
+
 /* Tanılama testi (T6.6) — onboarding */
 .diagnostic-progress {
   margin: 10px 0 0;

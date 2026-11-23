@@ -1,4 +1,4 @@
-using Finans.Domain.Education;
+﻿using Finans.Domain.Education;
 using Finans.Domain.Enums;
 
 namespace Finans.Infrastructure.Seed;
@@ -51,6 +51,12 @@ internal static class EducationContent
     private static Blk Deep(string body, string? fig = null) => new(DepthTier.Deep, SectionKind.Explain, body, fig);
     private static Blk Ex(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Example, body, fig);
     private static Blk ExDeep(string body, string? fig = null) => new(DepthTier.Context, SectionKind.Example, body, fig);
+    /// <summary>
+    /// L3 (Deep) katmanında örnek — künye "Deep/Example" dediğinde (ilk kullanım:
+    /// S2-L1 §12). <see cref="ExDeep"/> adına rağmen <b>Context</b> katmanındadır;
+    /// bu yüzden ayrı bir yardımcı gerekti.
+    /// </summary>
+    private static Blk ExL3(string body, string? fig = null) => new(DepthTier.Deep, SectionKind.Example, body, fig);
     private static Blk Trap(string body, string? fig = null) => new(DepthTier.Core, SectionKind.Trap, body, fig);
     private static Blk Live(string body) => new(DepthTier.Core, SectionKind.LiveContext, body, null);
 
@@ -3239,7 +3245,7 @@ internal static class EducationContent
         Trap("""
         ## "Fiyat = değer" yanılgısı
 
-        En sık yapılan eşitleme budur: *fiyat neyse değer odur.*
+        En sık yapılan eşitleme budur: **fiyat neyse değer odur.**
 
         Oysa ikisi farklı türden şeylerdir:
 
@@ -3832,6 +3838,332 @@ internal static class EducationContent
         hangi emir türünü kullanman, nereden işlem yapman ya da ne zaman alıp satman
         gerektiğini söylemez. Piyasa ve limit emri burada bir **takas** olarak tanıtılır,
         bir seçim kuralı olarak değil. Karar senindir.
+        """));
+
+    /// <summary>
+    /// Set 2 · Ders 1 — "Grafik neyi gösterir? — eksenleri okumak" (GD-008).
+    /// Künye: <c>16-CURRICULUM.md</c> §S2-L1. 14 aşama · 9 figür (4 çok panelli).
+    /// Tanıtılan: chart-axes · price-point · line-chart · data-frequency.
+    /// Pekiştirilen: last-price · volatility.
+    /// <para>🔴 <b>Yasal (künye yasal notu, D-002):</b> ders yalnız <b>okuma</b>
+    /// öğretir. Hiçbir grafik yönü yorumlanmaz, örüntü/sinyal/tahmin dili geçmez
+    /// (M7a), örnek serilerde <b>varlık adı yoktur</b> ("A varlığı") ve seriler
+    /// kurgusal olduğu <b>metinde de</b> yazılıdır.</para>
+    /// <para>Örnek sayılar figürlerle BİREBİR aynıdır (<c>LessonFigure.tsx</c>
+    /// §S2-L1): 14 Mart · 100 ₺ · 15 Mart · 106 ₺ · beş kapanış 100/104/101/107/105 ·
+    /// on beş günlük seri ve haftalık 104/110/105.</para>
+    /// </summary>
+    public static IEnumerable<LessonSection> LessonS2L1(Guid id) => Build(id,
+
+        Intro("""
+        ## Bu derste ne öğreneceksin?
+
+        Bir fiyat grafiği ilk bakışta bir "çizgi"dir. Oysa o çizgi iki sorunun
+        kesiştiği yerde duruyor: **ne zaman** ve **kaça**. Bu dersi bitirdiğinde
+        bir grafiğe baktığında ne gördüğünü — ve neyi göremediğini — bileceksin.
+
+        Bitirdiğinde şunları yapabileceksin:
+
+        - Bir grafiğin iki eksenini **okumak** ve herhangi bir noktanın değerini
+          eksenlerden **çıkarmak**
+        - Bir noktanın "o gün olmuş bir anlaşma" olduğunu **açıklamak**
+        - Çizginin kendi başına veri **olmadığını** görmek — noktaları birleştiren
+          bir varsayım olduğunu
+        - **(Derin katman)** Veri sıklığı değişince aynı serinin nasıl farklı göründüğünü
+          **karşılaştırmak**
+
+        > Bu ders grafiğin **nasıl okunduğunu** anlatır. Bir grafiğin yönünü
+        > yorumlamak, örüntü aramak ya da bundan sonrası hakkında bir şey söylemek
+        > bu dersin konusu değildir.
+        """),
+
+        Core("""
+        ## Boş bir grafik: iki eksen, iki soru
+
+        Bir fiyat grafiğinde henüz hiç veri yokken bile iki şey vardır: iki eksen.
+        Her eksen bir soruya yer ayırır.
+
+        - **Yatay eksen — zaman.** Soru: **ne zaman?** Soldan sağa gidildikçe tarih
+          ilerler: solda eski, sağda yeni.
+        - **Dikey eksen — fiyat.** Soru: **kaç para?** Aşağıdan yukarı çıkıldıkça
+          değer büyür: aşağıda az, yukarıda çok.
+
+        Grafikte bir şey gördüğünde, gördüğün şey her zaman bu iki sorunun bir
+        cevap çiftidir: bir **an** ve o anda geçerli olan bir **sayı**.
+
+        Eksenlerin bu yerleşimi bir doğa kanunu değil, yaygın bir **kuraldır** —
+        ama o kadar yaygındır ki bir grafikte aksini görürsen bu bir uyarıdır:
+        eksenlerin ne gösterdiğini okumadan hiçbir grafiğe güvenmemek gerekir.
+        """, "axes-anatomy"),
+
+        Ex("""
+        ## Tek nokta koyalım: 14 Mart, 100 ₺
+
+        Boş çerçeveye tek bir nokta koyalım. Örnek **kurgusaldır** ve varlık
+        adsızdır — buna "A varlığı" diyelim.
+
+        Nokta, 14 Mart hizasında ve 100 ₺ yüksekliğinde duruyor. İki şeyi birlikte
+        söylüyor:
+
+        - **Ne kadar sağda?** 14 Mart → olayın **zamanı**.
+        - **Ne kadar yukarıda?** 100 ₺ → olayın **fiyatı**.
+
+        Bu noktanın anlamı önemli: bir **dilek** ya da bir **değerlendirme** değil,
+        **olmuş bir şeyin kaydıdır.** 14 Mart'ta bir alıcı ile bir satıcı 100 ₺'de
+        anlaştı; o anlaşma gerçekleşti ve grafiğe bu nokta olarak girdi.
+
+        Dolayısıyla grafikte gördüğün her nokta geçmişe aittir. Grafik **olmuş
+        olanı** gösterir; başka bir şey göstermez.
+        """, "one-dot-one-day"),
+
+        Ex("""
+        ## Bir değeri eksenlerden okuma (adım adım)
+
+        Grafikte bir nokta görüyorsun ve "bu kaç?" diye soruyorsun. Cevap iki **iz
+        düşümle** okunur. Aynı kurgusal seride, bu kez başka bir noktayı okuyalım:
+
+        1. **Noktadan aşağı in.** Yatay eksene vardığın yer **tarihi** verir → 15 Mart.
+        2. **Noktadan sola git.** Dikey eksene vardığın yer **fiyatı** verir → 106 ₺.
+
+        Yani nokta şunu söylüyor: **15 Mart'ta 106 ₺.**
+
+        | Adım | Nereye bakılır | Ne okunur |
+        |---|---|---|
+        | 1 | aşağı → yatay eksen | 15 Mart |
+        | 2 | sola → dikey eksen | 106 ₺ |
+
+        Bir uyarı: dikey eksende genellikle her sayı yazılı değildir — örneğin
+        yalnız 90, 100 ve 110 yazar. Aradaki değerler **göz kararı** okunur ve bu
+        bir **yaklaşıklıktır.** "Tam 106 mı, 105 mi?" sorusunun cevabı grafikte
+        değil, sayının kendisinde durur. Grafik bir ölçü aletidir, hassas bir
+        tartı değil.
+        """, "reading-a-value"),
+
+        Core("""
+        ## Noktalar çoğalınca: nokta bulutundan çizgiye
+
+        Tek nokta tek günü anlatır. Beş gün üst üste koyalım — kurgusal beş
+        kapanış: **100 · 104 · 101 · 107 · 105 ₺.**
+
+        Önce ortaya beş ayrı nokta çıkar. Sonra alışıldık bir şey yapılır: noktalar
+        **birleştirilir** ve ortaya bir **çizgi grafik** çıkar.
+
+        Çizgi neden çiziliyor? Çünkü göz sırayı takip etmekte zorlanır; birleşmiş
+        noktalar "önce bu, sonra bu" ilişkisini bir bakışta verir. Çizgi bir
+        **okuma kolaylığıdır.**
+
+        Burada dikkat edilecek nokta şu: çizgi çizildiğinde **yeni bir veri
+        eklenmez.** Beş noktalı grafikte de, çizgili grafikte de ortada **beş**
+        ölçülmüş sayı vardır. Değişen tek şey gösterimdir.
+        """, "dots-to-line"),
+
+        Trap("""
+        ## Yaygın yanılgı: "çizginin her yeri veridir"
+
+        En sık yapılan hata budur: çizginin üzerinde herhangi bir yere parmak basıp
+        "demek ki o anda fiyat buydu" demek.
+
+        Aslında olan şu: grafikte **yalnız noktalar** ölçülmüş değerlerdir.
+        Noktaların **arasındaki yol** program tarafından çizilir — en basit
+        biçimde, iki noktayı birleştiren düz bir parça olarak.
+
+        İki kapanış arasında gün içinde fiyat yukarı da aşağı da gitmiş olabilir,
+        birkaç kez yön değiştirmiş de olabilir. Günlük kapanış grafiği bunların
+        **hiçbirini** göstermez — çünkü o günden grafiğe giren tek bir sayı var.
+
+        > Kısaca: nokta **ölçümdür**, aradaki çizgi **çizimdir.** Çizginin ortasını
+        > okumak, grafiğin söylemediği bir şeyi ona söyletmektir.
+
+        Bu yüzden "çizgi düzgün çıkmış" ya da "çizgi kırılmış" gibi izlenimler
+        çoğu zaman sıklık ve ölçek tercihinin sonucudur, verinin kendisinin değil.
+        """, "line-connects-closes"),
+
+        Core("""
+        ## Kapanış nedir, neden onu birleştiriyoruz
+
+        Bir günde tek bir işlem olmaz; onlarca, binlerce anlaşma gerçekleşir ve her
+        birinin kendi fiyatı vardır. Günlük bir grafikte ise o günün yerinde **tek
+        bir nokta** durur. Hangisi?
+
+        Yaygın tercih **kapanış**tır: o günün **son** işlem fiyatı. Kurgusal bir
+        günde yedi işlem olduysa ve son işlem 102 ₺'den geçtiyse, günlük grafiğe
+        **102 ₺** girer.
+
+        Neden sonuncusu? Çünkü günün sonunda ulaşılan nokta, o güne ait bilgilerin
+        tamamı ortaya çıktıktan sonraki hâldir. Bu bir **sözleşmedir**, bir kanun
+        değil: aynı günü anlatmak için açılış, en yüksek ya da ortalama fiyat da
+        seçilebilirdi.
+
+        Önemli olan şunu bilmek: bir günün **tek sayıya indirilmesi** bir seçimdir
+        ve o seçim geri kalan bütün işlemleri grafiğin dışında bırakır. Bir günün
+        dört sayısını birlikte gösteren bir biçim de vardır; onu bu setin ilerleyen
+        derslerinde göreceksin.
+        """, "why-close"),
+
+        Ctx("""
+        ## Grafiğin dört sorusu
+
+        Aynı iki eksen çok farklı şeyler anlatabilir. Bir grafiğe bakmadan önce
+        dört sorunun cevabı bilinmelidir — ve bu cevaplar **grafiğin kendisinde**
+        yazılı olmalıdır.
+
+        | Soru | Neden değiştirir |
+        |---|---|
+        | **Hangi varlık?** | Adı yazılmamış bir seri hiçbir şeyin kaydı değildir |
+        | **Hangi para birimi?** | Aynı varlık, iki para biriminde iki farklı seyir çizer |
+        | **Hangi dönem?** | Bir hafta ile beş yıl aynı veriden iki ayrı resim çıkarır |
+        | **Hangi sıklık?** | Günlük ve haftalık gösterim aynı seriyi farklı gösterir |
+
+        **Para birimi** en kolay gözden kaçandır: bir varlığın fiyatı liradan
+        dolara çevrildiğinde ortaya çıkan grafik, varlığın kendisi kadar **kurun**
+        da hikâyesini taşır. Yani grafikte iki şey birbirine karışmış olur.
+
+        Bu dört soru bir kontrol listesidir: cevabı olmayan bir grafik eksik
+        konuşuyor demektir. Dönem ve ölçeğin görüntüyü nasıl değiştirdiği bu setin
+        bir sonraki dersinin konusudur.
+        """, "chart-checklist"),
+
+        ExDeep("""
+        ## Tatil ve hafta sonu: eksende olmayan günler
+
+        Yatay eksenin takvimle birebir aynı olduğunu sanmak kolaydır. Değildir.
+
+        Kurgusal bir haftayı alalım: **Cuma · Cumartesi · Pazar · Pazartesi ·
+        Salı.** Piyasada işlem yalnız Cuma, Pazartesi ve Salı günü olur. Günlük
+        grafikte de bu üç günün noktası görünür — Cumartesi ve Pazar **eksende
+        hiç yoktur.**
+
+        Sonuç şu: Cuma'nın noktası ile Pazartesi'nin noktası **yan yana** durur,
+        aralarında iki günlük bir boşluk olmasına rağmen. Aradaki düz parça iki
+        takvim gününü kapsar ama o günlerden grafiğe hiçbir şey girmemiştir.
+
+        Buradan çıkan iki okuma kuralı:
+
+        - **Eksende olmayan gün "yok" değildir** — o gün işlem olmamıştır.
+        - Yan yana iki nokta **bir gün arayla** olmak zorunda değildir; resmî
+          tatiller bu boşluğu daha da büyütür.
+        """, "missing-days"),
+
+        Trap("""
+        ## Yaygın yanılgı: "grafik yatay ⇒ hiçbir şey olmadı"
+
+        Bir grafik düz görünüyorsa, "demek ki bu dönemde hiçbir şey olmadı" demek
+        çekicidir. Oysa "yatay görünmek" verinin değil, **gösterimin** bir
+        özelliğidir.
+
+        Aynı kurgusal seriyi düşün: fiyat 100 ₺'den 101 ₺'ye gitmiş olsun.
+
+        - Dikey eksen **0 ile 200 ₺** arasında çizilirse bu hareket neredeyse
+          görünmez — grafik dümdüzdür.
+        - Dikey eksen **99 ile 102 ₺** arasında çizilirse aynı hareket kocaman bir
+          çıkış gibi durur.
+
+        Veri iki durumda da aynıdır: **1 ₺.** Değişen tek şey eksenin aralığıdır.
+
+        > Yani "yatay" ve "sert" bir grafiğin kendi hakkındaki ifadesi değil,
+        > eksenin seçiminin sonucudur.
+
+        Aynı şey dönem için de geçerlidir: bir yıllık grafikte göze çarpmayan bir
+        hareket, bir haftalık grafikte grafiğin tamamını kaplayabilir. Ölçeğin ve
+        dönemin bu gücü bu setin bir sonraki dersinin konusudur.
+        """),
+
+        Deep("""
+        ## Veri sıklığı: aynı seri, günlük ve haftalık
+
+        **Veri sıklığı**, grafikte bir noktanın kaç zaman aralığını temsil ettiğini
+        söyler: günlük grafikte bir nokta bir gün, haftalık grafikte bir nokta bir
+        haftadır.
+
+        On beş günlük kurgusal bir seri alalım (hepsi kapanış, ₺):
+
+        - **1. hafta:** 100 · 103 · 101 · 106 · 104 → haftanın son kapanışı **104**
+        - **2. hafta:** 107 · 103 · 108 · 106 · 110 → **110**
+        - **3. hafta:** 108 · 112 · 109 · 107 · 105 → **105**
+
+        Günlük grafik bu on beş sayının hepsini nokta olarak koyar. Haftalık grafik
+        ise her haftadan **bir** sayı alır — burada haftanın son kapanışı — ve
+        ortaya **üç** nokta çıkar: 104 · 110 · 105.
+
+        İki grafik **aynı veriden** çizilir. Ama günlük olanda on beş, haftalıkta
+        üç nokta vardır; haftalık gösterim hafta içindeki iniş çıkışı **göstermez.**
+        Veri kaybolmamıştır — **gösterilmemiştir.**
+
+        Bu yüzden iki grafiği karşılaştırırken sıklığın aynı olup olmadığına bakmak
+        gerekir; farklı sıklıktaki iki resmi yan yana koymak elmayla armudu
+        karşılaştırmaktır.
+        """, "same-data-daily-weekly"),
+
+        ExL3("""
+        ## Sıklık düşünce kaybolan hareket
+
+        Yukarıdaki serinin **2. haftasını** tek tek okuyalım: 107 · 103 · 108 ·
+        106 · 110 ₺.
+
+        Hafta içinde:
+
+        - en düşük kapanış **103 ₺**, en yüksek kapanış **110 ₺**
+        - yani hafta içi kapanış aralığı **110 − 103 = 7 ₺**
+
+        Haftalık grafikte ise bu haftadan **tek** bir sayı görünür: 110 ₺. Önceki
+        haftanın noktası 104 ₺ olduğu için haftalık grafikte görülen fark
+        **110 − 104 = 6 ₺**'dir.
+
+        | Gösterim | Bu haftadan görünen | Okunan fark |
+        |---|---|---|
+        | Günlük | 107 · 103 · 108 · 106 · 110 | hafta içi aralık 7 ₺ |
+        | Haftalık | 110 | önceki haftaya göre 6 ₺ |
+
+        103'e inen gün ve 108'e çıkan gün haftalık grafikte **hiç görünmez.** İki
+        grafik de doğrudur ve ikisi de aynı veridir; **sordukları soru** farklıdır.
+        Hangi sıklığa baktığını bilmek, gördüğün resmin ne kadarının gerçek
+        hareket, ne kadarının gösterim tercihi olduğunu bilmek demektir.
+        """),
+
+        Live("""
+        ## Senin portföyünde
+
+        Nirengi'de de bir grafik var: **Değer Seyri.** Bu derste öğrendiğin okuma
+        aynen orada da işler, tek farkla — dikey eksende bir varlığın fiyatı değil,
+        **portföyünün toplam değeri** durur.
+
+        - Portföyünün bugünkü toplam değeri **{{total_value}}**.
+
+        Bu sayı, Değer Seyri grafiğinin **en sağdaki noktasıdır**: yatay eksende
+        bugünün hizası, dikey eksende o günün toplam değeri. Grafiğin solundaki her
+        nokta da aynı şeyin daha önceki bir günkü hâlidir.
+
+        Dersin iki kuralı burada da geçerli: noktaların **arasındaki çizgi
+        çizilmiştir** (iki gün arasında portföyünün her an o değerde olduğunu
+        söylemez) ve **eksende olmayan günler** vardır — fiyat alınamayan günlerde
+        o günün noktası yoktur.
+        """),
+
+        Src("""
+        ## Bu bilgiler nereden geliyor?
+
+        **Kaynaklar.** Bu dersin anlattığı şey bir veri değil, bir **gösterim
+        kuralıdır**: fiyat grafiklerinde yatay eksenin zaman, dikey eksenin fiyat
+        olması ve günlük grafiklerde günün kapanış fiyatının kullanılması yaygın
+        piyasa pratiğidir. Ders belirli bir kurumun tanımına ya da yönetmelik
+        maddesine dayanmıyor; **grafiğin nasıl okunduğunu** anlatıyor.
+
+        **Örnek sayılar kurgusaldır.** 14 Mart · 100 ₺, 15 Mart · 106 ₺, beş günlük
+        100 · 104 · 101 · 107 · 105 serisi, bir günün yedi işlemi ve on beş günlük
+        seri ile onun haftalık karşılığı (104 · 110 · 105) dahil olmak üzere bütün
+        rakamlar okumayı göstermek için **seçilmiş örneklerdir.** Derste bilerek
+        **hiçbir varlık, borsa ya da kurum adı geçmez** — örnek seriler "A varlığı"
+        gibi adsız etiketlerle anılır.
+
+        **Hesaplar kodda yapılır.** Uygulamadaki Değer Seyri serisi — her günün
+        portföy değeri — kodda deterministik olarak üretilir (**portföy geçmişi**
+        uç noktası). **Sayılar bir dil modeli tarafından üretilmez**; dil modeli
+        varsa yalnız hesaplanmış sonuçları açıklar.
+
+        **Bu bir yatırım tavsiyesi değildir.** Ders bir grafiğin nasıl okunduğunu
+        anlatır; hiçbir grafiğin **yönünü yorumlamaz**, örüntü aramaz ve bundan
+        sonrası hakkında bir şey söylemez. Grafik burada bir **okuma aracı** olarak
+        tanıtılır, bir karar kuralı olarak değil. Karar senindir.
         """));
 
     // ── 2-5. derslerin mini testleri (T6.1) ──────────────────────────────────
@@ -4740,6 +5072,107 @@ internal static class EducationContent
                  ("Komisyon, maliyetin yalnız bir parçasıdır", true),
                  ("Ürüne göre vergi gibi başka kalemler de girebilir", true),
                  ("Komisyon aslında hiç maliyet değildir", false)]),
+        ]);
+
+        // ── Set 2 · Ders 1 — Grafik neyi gösterir? (9 soru / 3 zorluk) ───────
+        // Künye değerlendirme planı: Easy — eksen tanımı, noktanın anlamı ·
+        // Medium — grafikten değer okuma, sıklık ayrımı · Hard — "çizgi = veri"
+        // tuzağı, kayıp günlerin yorumu. Çeldiriciler dersin tuzaklarından gelir;
+        // tuzak kalıbı soruda SERBESTTİR (M7a) — yanlışın kendisi öğretiliyor.
+        yield return ("lesson-s2l1", "quiz-s2l1", "Grafik Neyi Gösterir — Mini Test",
+        [
+            // ── Kolay: eksenleri ve noktayı tanıyor mu? ──────────────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Bir fiyat grafiğinde yatay eksen neyi gösterir?",
+                "Yatay eksen zamanı gösterir: soldan sağa gidildikçe tarih ilerler (solda eski, sağda yeni). " +
+                "Fiyat dikey eksende durur. İşlem adedi ve para birimi ise ayrı bir eksen değildir — " +
+                "para birimi grafiğin başlığında ya da dikey eksen etiketinde yazılı olmalıdır.",
+                [("Zamanı", true), ("Fiyatı", false), ("İşlem adedini", false), ("Para birimini", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Easy,
+                "Grafikteki bir nokta neyi kaydeder?",
+                "Nokta olmuş bir şeyin kaydıdır: o anda bir alıcı ile bir satıcının anlaştığı fiyat. " +
+                "Bir istek, bir değer biçme ya da bir beklenti değildir — gerçekleşmemiş bir fiyat " +
+                "grafiğe nokta olarak girmez. Bu yüzden grafikte gördüğün her nokta geçmişe aittir.",
+                [("Gerçekleşmiş bir anlaşmanın fiyatını", true),
+                 ("Birinin satmak istediği fiyatı", false),
+                 ("Bir uzmanın varlığa biçtiği değeri", false),
+                 ("O gün beklenen ortalama fiyatı", false)]),
+
+            new SeedQuestion(QuizQuestionType.TrueFalse, QuizDifficulty.Easy,
+                "Günlük bir çizgi grafikte bir günün yerinde genellikle o günün kapanış (son işlem) fiyatı durur.",
+                "Doğru. Bir günde çok işlem olur; günlük grafik o günü tek sayıya indirir ve yaygın tercih " +
+                "kapanıştır. Bu bir sözleşmedir, kanun değil: açılış, en yüksek ya da ortalama fiyat da " +
+                "seçilebilirdi. Önemli olan, tek sayıya indirmenin geri kalan bütün işlemleri grafiğin " +
+                "dışında bıraktığını bilmek.",
+                [("Doğru", true), ("Yanlış", false)]),
+
+            // ── Orta: eksenlerden değer okuyabiliyor, sıklığı ayırıyor mu? ───
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "Bir nokta yatay eksende 15 Mart hizasında, dikey eksende 106 ₺ seviyesinde duruyor. " +
+                "Bu nokta ne söylüyor?",
+                "Okuma iki iz düşümdür: aşağı inersen tarihi (15 Mart), sola gidersen fiyatı (106 ₺) " +
+                "bulursun. Nokta tek bir sayıdır — bir aralık değil. \"Fiyat 100 ile 110 arasında " +
+                "dalgalandı\" bilgisi günlük kapanış grafiğinde YOKTUR; o gün içindeki diğer işlemler " +
+                "grafiğe hiç girmemiştir.",
+                [("15 Mart'ta 106 ₺'den bir işlem olduğunu", true),
+                 ("15 Mart'ta 106 adet işlem olduğunu", false),
+                 ("15 Mart'ta fiyatın 100 ile 110 arasında dalgalandığını", false),
+                 ("106 gün boyunca fiyatın 15 ₺ olduğunu", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Medium,
+                "On beş günlük bir kapanış serisi (üç tam hafta) haftalık olarak çizilirse grafikte kaç nokta olur?",
+                "Haftalık gösterimde bir nokta bir haftayı temsil eder; üç haftadan üç nokta çıkar. " +
+                "On beş, günlük gösterimin nokta sayısıdır. Veri kaybolmaz — gösterilmez: hafta " +
+                "içindeki iniş çıkış haftalık grafikte görünmez.",
+                [("3", true), ("15", false), ("5", false), ("1", false)]),
+
+            new SeedQuestion(QuizQuestionType.MultipleChoice, QuizDifficulty.Medium,
+                "Bir grafiğin kendisinde yazılı olması gereken bilgiler hangileridir? (Birden fazla doğru)",
+                "Dört soru: hangi varlık, hangi para birimi, hangi dönem, hangi sıklık. Cevabı olmayan " +
+                "grafik eksik konuşur. En kolay gözden kaçan para birimidir: bir seri liradan dolara " +
+                "çevrildiğinde grafik varlığın kadar KURUN da hikâyesini taşır. Grafiği çizenin görüşü " +
+                "ise bir okuma bilgisi değildir.",
+                [("Hangi varlığın serisi olduğu", true),
+                 ("Hangi para biriminde çizildiği", true),
+                 ("Hangi dönemi ve hangi sıklığı gösterdiği", true),
+                 ("Grafiği çizen kişinin yorumu", false)]),
+
+            // ── Zor: iki tuzağı gerçek durumda ayırt ediyor mu? ──────────────
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Günlük kapanış grafiğinde iki nokta arasındaki çizginin ortasına bakıp " +
+                "\"o anda fiyat buydu\" demek neden yanlıştır?",
+                "Grafikte yalnız noktalar ölçülmüş değerlerdir; aradaki yolu program çizer — en basit " +
+                "biçimde iki noktayı birleştiren düz bir parça olarak. Gün içinde fiyat yukarı da aşağı " +
+                "da gitmiş, birkaç kez yön değiştirmiş olabilir; günlük grafik bunların hiçbirini " +
+                "göstermez. Nokta ölçümdür, aradaki çizgi çizimdir.",
+                [("Aradaki yol ölçülmedi, çizgi sonradan çizildi", true),
+                 ("Grafikler her zaman birkaç gün gecikmeli gösterilir", false),
+                 ("O günlerde hiç işlem olmamıştır", false),
+                 ("Çizgi kapanışları değil açılışları birleştirir", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Bir grafikte Cuma'nın noktası ile Pazartesi'nin noktası yan yana duruyor. Bu ne anlama gelir?",
+                "Yatay eksen takvimle birebir aynı değildir: işlem olmayan günlerin noktası yoktur, " +
+                "o günler eksende HİÇ görünmez. Eksende olmayan gün \"yok\" değildir — işlem olmamıştır. " +
+                "Resmî tatiller bu boşluğu daha da büyütür, yani yan yana iki nokta bir gün arayla " +
+                "olmak zorunda değildir. Bir veri hatası da yoktur.",
+                [("Hafta sonunda işlem olmadığı için o günlerin noktası yoktur", true),
+                 ("Hafta sonunda fiyatın hiç değişmediğini", false),
+                 ("Grafikte bir veri hatası olduğunu", false),
+                 ("Grafiğin haftalık sıklıkta çizildiğini", false)]),
+
+            new SeedQuestion(QuizQuestionType.SingleChoice, QuizDifficulty.Hard,
+                "Aynı 1 ₺'lik hareket bir grafikte neredeyse görünmezken, başka bir grafikte kocaman " +
+                "duruyor. Bunun nedeni nedir?",
+                "Veri iki grafikte de aynıdır: 1 ₺. Değişen şey dikey eksenin aralığıdır — 0-200 ₺ " +
+                "arasında çizilince hareket dümdüz görünür, 99-102 ₺ arasında çizilince kocaman durur. " +
+                "Yani \"yatay\" ya da \"sert\" olmak verinin değil GÖSTERİMİN özelliğidir; bir grafiğin " +
+                "düz görünmesi \"hiçbir şey olmadı\" demek değildir.",
+                [("Dikey eksenin aralığı farklı seçilmiştir", true),
+                 ("İkinci grafikte daha çok veri noktası vardır", false),
+                 ("İkinci grafik daha yeni verilerle çizilmiştir", false),
+                 ("Birinci grafikte hafta sonları atlanmıştır", false)]),
         ]);
 
         yield return ("lesson-cesitlendirme", "quiz-cesitlendirme", "Çeşitlendirme — Mini Test",

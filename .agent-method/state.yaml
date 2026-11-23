@@ -9,7 +9,10 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: null       # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
+  gd_id: GD-008     # Set 2 açılışı: grafik-ve-piyasa track'i + S2-L1 (in-progress)
+                    # Kabul kriterleri ONAY BEKLİYOR (INV-06).
+                    # Önceki not:
+                    # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
                     # GD-007 (TD-001 figür render kapısı) 2026-11-22'de KABUL EDİLDİ.
                     # Kapı kurulur kurulmaz **7 figürde DAHA** aynı ihlali buldu: desen iki
                     # incelemede üç figürde yakalanmıştı, gerçek sayı ONdu ve yedisi zaten
@@ -135,10 +138,12 @@ session:            # current open session; cleared by adm-close
   #   ⚠ adm-open BEŞİNCİ kez atlandı — S-009'un eklediği hook uyarısı bu oturumda
   #   gerçekten basıldı ve işe yaramadı: oturum doğrudan /adm-review ile açıldı,
   #   brifing ile komut arasına karar anı girmedi. Kök neden hâlâ açık.
-  id: null
-  runtime: null
-  started_at: null
-  start_sha: null
+  # S-011 AÇIK — adm-open ile açıldı (S-006'dan beri ilk kez; beş oturumluk
+  # desen kırıldı). Diff tabanı artık kayıtlı, kapanışta elle seçilmeyecek.
+  id: S-011
+  runtime: claude-code
+  started_at: "2026-11-23T10:01:05Z"
+  start_sha: 3e306b5
 
 blockers: []
 # DOCTOR-001: 6/6 bulgu kapandı (DR-001..004 → S-001, DR-005/DR-006 → S-003).
