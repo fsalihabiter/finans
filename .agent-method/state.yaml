@@ -157,7 +157,27 @@ blockers: []
 #   durdurmuyor.
 
 review:
-  last_review_id: REVIEW-006
+  last_review_id: REVIEW-007
+  # REVIEW-007 (GD-008 · 3e306b5..1f88908): 11 bulgu —
+  # 0 critical · **1 high** · 3 medium · 7 low. **HEPSİ `open`.**
+  # ⚠ INV-18: açık high varken GD-008 TAMAMLANAMAZ. Bulgu durumlarını ajan
+  # değiştirmez; insan kararı bekliyor (INV-06).
+  # RV-089 (high) — ders, uygulamanın KENDİ grafiği hakkında yanlış konuşuyor:
+  # "Senin portföyünde" bloğu Değer Seyri'nde "eksende olmayan günler" olduğunu
+  # söylüyor, oysa `PortfolioValueHistoryService` HER takvim günü için nokta
+  # üretiyor (son bilinen fiyat taşınır). Yanlış, dersin konusunun tam
+  # merkezinde; doğrusu daha öğretici (nokta var ama TAŞINMIŞ).
+  # RV-090 (medium) — bu GD'de eklenen M7a kalıbı DOĞRU cümleyi de yakalıyor:
+  # "boşluk kapanmak zorunda değildir" yasaklı dizeyi içeriyor → guard kehaneti
+  # reddeden anlatımı engelleyecek (S2-L4/L5 bunu yazmak zorunda).
+  # RV-091 (medium) — `priceScale` lo==hi'de sıfıra bölüyor; S2-L2 düz seri
+  # çizen figürlerle geliyor. RV-097 (medium) — track kaydında mutabakat yok
+  # (RV-064'ün ders kaydında kapattığı sınıf, üçüncü kez tekrarlandı).
+  # Bu inceleme ATLANMADI: GD-008 §5'te "atlanmayacak" diye yazılmıştı ve
+  # S-010'un süreç dersi buydu. Yeşil paketlerin görmediği şeyleri buldu.
+  #
+  # — önceki —
+  # last_review_id: REVIEW-006
   # REVIEW-006 (GD-006 + GD-007 inceleme borcu · a0918a7..HEAD): 24 bulgu —
   # 0 critical · 5 high · 9 medium · 10 low. Açık critical yok → INV-18 gereği
   # hiçbir GD tamamlanması bloke değil.
