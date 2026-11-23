@@ -9,8 +9,17 @@ project:
 
 active:
   phase_id: PHASE-006
-  gd_id: GD-008     # Set 2 açılışı: grafik-ve-piyasa track'i + S2-L1 (in-progress)
-                    # Kabul kriterleri ONAY BEKLİYOR (INV-06).
+  gd_id: null       # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
+                    # GD-008 (Set 2 track + S2-L1) 2026-11-23'te ürün sahibi
+                    # kabulüyle KAPANDI. REVIEW-007: 11 bulgu, 11'i resolved.
+                    # Faz 6: **16/35 ders** · Set 2: **1/8**.
+                    # Sıradaki dalga: S2-L2 "Aynı veri, üç görüntü — ölçek ve
+                    # dönem" (slug olcek-ve-donem). Setin etkileşimli aracı
+                    # orada: chart-scale-playground (SC-E27 bugün açık).
+                    # S2-L1 ona iki yerden bilerek köprü kurdu (10. aşamanın
+                    # "ölçek sorusu" tuzağı · 8. aşamanın kapanışı).
+                    # 📌 ChartFrame düz/dar aralıklı seriyi artık güvenle
+                    # çiziyor (RV-091) — S2-L2'nin figürleri tam bunu istiyor.
                     # Önceki not:
                     # Aktif GD yok — sıradaki açılmayı bekliyor (INV-04/05).
                     # GD-007 (TD-001 figür render kapısı) 2026-11-22'de KABUL EDİLDİ.
@@ -138,12 +147,27 @@ session:            # current open session; cleared by adm-close
   #   ⚠ adm-open BEŞİNCİ kez atlandı — S-009'un eklediği hook uyarısı bu oturumda
   #   gerçekten basıldı ve işe yaramadı: oturum doğrudan /adm-review ile açıldı,
   #   brifing ile komut arasına karar anı girmedi. Kök neden hâlâ açık.
-  # S-011 AÇIK — adm-open ile açıldı (S-006'dan beri ilk kez; beş oturumluk
-  # desen kırıldı). Diff tabanı artık kayıtlı, kapanışta elle seçilmeyecek.
-  id: S-011
-  runtime: claude-code
-  started_at: "2026-11-23T10:01:05Z"
-  start_sha: 3e306b5
+  # S-011 kapandı 2026-11-23T15:50:00Z → evidence/sessions/S-011.md
+  #   ✅ **adm-open ÇALIŞTIRILDI** — S-006'dan beri ilk kez; beş oturumluk desen
+  #   (S-006…S-010) kırıldı ve diff tabanı bu kez ELLE SEÇİLMEDİ.
+  #   start_sha 3e306b5 · end_sha 885a551 · 13 dosya · +2011/−68 · 3 commit.
+  #   GD-008 (Set 2 track + S2-L1) açıldı, incelendi ve KABUL EDİLDİ.
+  #   Künye GD-006'dan beri İLK KEZ hiç düzeltilmeden uygulandı (M12/M13 yeşil).
+  #   Doğrulama: web 370/370 · tsc temiz · Application 308/308 ·
+  #   Integration 196/196 · derleyici uyarısı 0. BEŞ mutasyon kanıtı.
+  #   ⚠ Oturumun dersi: paketlerin tamamı yeşilken ÜÇ gerçek kusur geçti ve
+  #   üçü de farklı yoldan yakalandı — (1) niyet ihlali, haftalık örnek seri
+  #   tek yönlüydü (TD-003, hiçbir test göremezdi); (2) ham markdown, yalnız
+  #   TARAYICI gösterdi ve aynı kalıp S0-L9'da YAYINDAYDI (INC-004); (3) yanlış
+  #   olgu, yalnız KAYNAK KODU okumak gösterdi — ders Değer Seyri hakkında
+  #   yanlış konuşuyordu (REVIEW-007/RV-089, high).
+  #   İnceleme sözleşmesi karşılandı: S-008/S-009/S-010'da atlanan adm-review
+  #   bu GD'de çalıştırıldı ve bedelini değil KARŞILIĞINI gösterdi.
+  #   Yeni kayıtlar: INC-004 (açıldı+kapandı) · TD-006 (yeni borç) ·
+  #   SC-E25 kapandı · CAPABILITIES'e ChartFrame + nötr seri kuralı.
+  #   main'de, PUSH EDİLMEDİ.
+  #   Sıradaki: S2-L2 "Aynı veri, üç görüntü — ölçek ve dönem" (etkileşimli
+  #   araç chart-scale-playground / SC-E27 orada).
 
 blockers: []
 # DOCTOR-001: 6/6 bulgu kapandı (DR-001..004 → S-001, DR-005/DR-006 → S-003).

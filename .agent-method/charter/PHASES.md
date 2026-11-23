@@ -69,6 +69,17 @@
   Set 4 "Davranışsal" (4) · Set 5 "TR'ye özgü" (4).
   Seed'de bugün **15** ders var (S0'ın 10'u + S1'in 5'i; `SeedData.cs`'de 15
   `new Lesson` ile doğrulandı) → **15/35**.
+- durum notu (2026-11-23, S-011): **Set 2 AÇILDI** — `grafik-ve-piyasa` track'i
+  ve setin ilk dersi **S2-L1 yayında** (GD-008, ürün sahibi kabulüyle kapandı).
+  Faz ilerlemesi **15/35 → 16/35**; **Set 2: 1/8**. Track sıraya `OrderIndex = 2`
+  ile **kaymasız** girdi (issue #21'in "OrderIndex kayması" notu eskimiş —
+  mevcut track'ler 0 ve 1; GD-008 §8). Künye GD-006'dan beri **ilk kez hiç
+  düzeltilmeden** uygulandı. REVIEW-007 (11 bulgu, 11'i resolved) bir **high**
+  çıkardı: ders, uygulamanın kendi Değer Seyri grafiği hakkında yanlış
+  konuşuyordu — paketlerin hepsinden geçmişti. Yeni kayıtlar: **INC-004**
+  (MiniMarkdown italik, aynı turda kapandı) · **TD-006** (künyenin
+  "pekiştirilen kavram" iddiasının makine karşılığı yok) · **SC-E25** kapandı.
+  Sıradaki dalga: **S2-L2** (setin etkileşimli aracı orada — SC-E27).
   ⚠ Set 2 kalan işin tamamı DEĞİL, yalnız **sıradaki dalga**dır. Planlama
   bundan sonra 20 ders üzerinden konuşur; faz kapanışı uzak bir ufuk ve
   motivasyon faz kapanışıyla değil **set kapanışlarıyla** sağlanır (CLAUDE.md §4,
