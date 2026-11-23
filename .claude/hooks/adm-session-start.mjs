@@ -108,8 +108,8 @@ try {
     note.push(
       '📌 Açık ADM oturumu YOK (state.yaml → session boş). Bu brifing yalnız OKUR: ' +
       'oturumu açmaz, started_at/start_sha yazmaz. İş yapacaksan `adm-open` çalıştır — ' +
-      'yoksa kapanışta diff tabanı elle seçilmek zorunda kalır (son dört oturumda böyle oldu). ' +
-      'Salt soru-cevap / keşif turuysa gerekmez.',
+      'yoksa kapanışta diff tabanı elle seçilmek zorunda kalır (S-006\'dan beri her ' +
+      'oturumda böyle oldu). Salt soru-cevap / keşif turuysa gerekmez.',
     );
   }
   if (blockers.length) warn.push('⛔ Engeller: ' + blockers.join(' · '));

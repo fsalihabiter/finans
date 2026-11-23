@@ -35,8 +35,15 @@ active:
                     #   Künye tespiti: figür sayısı 9 → 10 (DÖRDÜNCÜ kez aynı hata).
                     #   → GD-006 ile KAPANDI: M12 kuralı yazıldı, 10 künye toplu düzeltildi.
                     #   Ders LiveContext taşımıyor; LessonsWithoutLiveContext'in İKİNCİ kaydı.
-                    # Sıradaki aday: Faz 6'nın kalan kalemleri (Set 2 "Grafik ve Piyasa
-                    # Okuryazarlığı" 8 ders · kavram sözlüğü) — `gh issue list --state open`.
+                    # S-010 (2026-11-23): GD açılmadı — iş bir inceleme turu ve onun
+                    # düzeltmeleriydi. REVIEW-006 (24/24 resolved) + test CI + derleyici
+                    # uyarılarının sıfırlanması + INC-001'in kapanışı. Zemin temizlendi:
+                    # **Integration 196/196**, CS uyarısı 0, CI yeşil, dışlanan test yok.
+                    # SIRADAKİ (ürün sahibi kararı): **Set 2 "Grafik ve Piyasa
+                    # Okuryazarlığı" — 8 ders.** Künyeler yazılı ve artık M12+M13 ile
+                    # korunuyor; ~70 figür gelecek, render kapısı onları otomatik kapsar.
+                    # Set 2 bitince TD-002'nin kalan yarısı (plan→seed) yazılabilir.
+                    # Kalem listesi kanonik olarak GitHub Issues'ta (D-022).
 
 session:            # current open session; cleared by adm-close
   # S-003 kapandı 2026-09-22T18:26:27Z → evidence/sessions/S-003.md
@@ -113,6 +120,18 @@ session:            # current open session; cleared by adm-close
   #     `^key:\s*(#.*)?$` yapıldı; uyarı ilk kez çalıştı (S-TEST benzetimiyle
   #     doğrulandı). Yalnız `session:` etkileniyordu — project/active/review
   #     satırlarında sonda açıklama yok.
+  # S-010 (asgari kanıt notu, adm-open'sız) 2026-11-23T08:30:00Z →
+  #   evidence/sessions/S-010.md
+  #   start_sha 17cc3c0 · end_sha ed25edb (d03183c = CI projeksiyonu, sahiplenilmedi).
+  #   `/adm-review` ile açıldı, kullanıcının sıralı kararlarıyla büyüdü:
+  #   REVIEW-006 (24 bulgu, 24'ü resolved) → test CI kurulumu → derleyici
+  #   uyarılarının sıfırlanması → INC-001'in kapanışı.
+  #   **Integration 196/196 — paket ilk kez tamamen yeşil**, CS uyarısı 0,
+  #   CI yeşil ve hiçbir test dışlanmıyor. 27 dosya · +1661/−161 · 6 commit.
+  #   Yeni kural M13 (seed→künye). Yeni borç: TD-004, TD-005.
+  #   ⚠ adm-open BEŞİNCİ kez atlandı — S-009'un eklediği hook uyarısı bu oturumda
+  #   gerçekten basıldı ve işe yaramadı: oturum doğrudan /adm-review ile açıldı,
+  #   brifing ile komut arasına karar anı girmedi. Kök neden hâlâ açık.
   id: null
   runtime: null
   started_at: null
