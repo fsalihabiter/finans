@@ -120,9 +120,14 @@ session:            # current open session; cleared by adm-close
 
 blockers: []
 # DOCTOR-001: 6/6 bulgu kapandı (DR-001..004 → S-001, DR-005/DR-006 → S-003).
-# Açık incident'lar blocker değil: INC-001 (high, ortam — 4 entegrasyon testi
-# kırmızı, sağlık/gözlemlenebilirlik uçları test korumasız), INC-002 (low, ADM
-# çerçeve sorunu). INV-18 gereği ikisi de aktif işi durdurmuyor.
+# INC-001 **KAPANDI 2026-11-23**: kök neden ortam değil test host yapılandırmasıydı
+#   (Development + ApplyMigrationsOnStartup → Program app.Run()'dan önce migrate
+#   ediyor, patlayınca catch yutuyor, host kurulamıyor). Paylaşılan test ayarları
+#   TestHostDefaults'a çıkarıldı, 4 test DbLessWebApplicationFactory'ye taşındı.
+#   **Integration 196/196 — paket ilk kez tamamen yeşil**; CI'daki dışlama filtresi
+#   kaldırıldı. Sağlık/gözlemlenebilirlik uçları artık gerçekten korumalı.
+# Açık incident: INC-002 (low, ADM çerçeve sorunu) — INV-18 gereği aktif işi
+#   durdurmuyor.
 
 review:
   last_review_id: REVIEW-006

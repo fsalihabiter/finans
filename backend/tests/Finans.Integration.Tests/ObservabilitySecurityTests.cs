@@ -15,11 +15,11 @@ namespace Finans.Integration.Tests;
 /// T0.12/T0.13 kapıları: liveness health, CorrelationId, hata maskeleme (stack
 /// sızmaz — 11 §4), log redaksiyonu (12 §3).
 /// </summary>
-public sealed class ObservabilitySecurityTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ObservabilitySecurityTests : IClassFixture<DbLessWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly DbLessWebApplicationFactory _factory;
 
-    public ObservabilitySecurityTests(WebApplicationFactory<Program> factory) => _factory = factory;
+    public ObservabilitySecurityTests(DbLessWebApplicationFactory factory) => _factory = factory;
 
     [Fact]
     public async Task Liveness_health_returns_ok_without_db()

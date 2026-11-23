@@ -27,22 +27,11 @@ public sealed class SqliteWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Açılış migrate/seed'i test'te KAPALI: şemayı testler EnsureCreated ile kurar,
-        // seed'i fixture çalıştırır. (Aksi halde Development config'i Npgsql migration'ı
-        // Sqlite'a uygulamaya çalışıp host'u çökertir.)
-        builder.UseSetting("Database:ApplyMigrationsOnStartup", "false");
-        builder.UseSetting("Database:Seed", "false");
-        // BES plan catch-up arka plan job'ı testlerde KAPALI: testler kendi durumlarını kurar;
-        // arka plan tiki testler sırasında DB'ye yazıp deterministik kurgu bozmasın (T-BES.6b ileri).
-        builder.UseSetting("Bes:PlanCatchUp:Enabled", "false");
-        // LLM anahtarı testlerde ZORLA boş → NoopLlmClient. Development ortamı User Secrets'ı
-        // yüklediği için geliştiricinin makinesinde gerçek anahtar sızıyordu → commentary
-        // testleri CANLI OpenRouter'a çıkıp yaşayan sonuca göre kırılıyordu (2026-07-11 tespiti).
-        // Testler ağsız ve deterministik olmalı (09 §2).
-        builder.UseSetting("Llm:ApiKey", "");
-        // Aynı gerekçeyle Finnhub anahtarı da testlerde ZORLA boş → NotConfiguredStockDataProvider
-        // (geliştirici makinesindeki olası anahtar canlı çağrıya yol açmasın — T4.2).
-        builder.UseSetting("Stocks:ApiKey", "");
+        // Paylaşılan determinizm/güvenlik ayarları (açılış migrate+seed kapalı, BES
+        // arka plan job'ı kapalı, LLM ve Finnhub anahtarları zorla boş) → TestHostDefaults.
+        // INC-001: bu ayarlar eskiden YALNIZ burada duruyordu, bu yüzden düz
+        // WebApplicationFactory kullanan dört test açılışta çöküyordu (TestHostDefaults'a bak).
+        builder.ApplyTestDefaults();
 
         builder.ConfigureTestServices(services =>
         {

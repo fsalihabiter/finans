@@ -9,11 +9,11 @@ namespace Finans.Integration.Tests;
 /// SC: "Servis ayakta mı?" — GET /api/health 200 ve { status: "ok" } döner (T0.7).
 /// WebApplicationFactory ile uçtan uca (gerçek HTTP boru hattı) doğrulama (09 §2-3).
 /// </summary>
-public sealed class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthEndpointTests : IClassFixture<DbLessWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly DbLessWebApplicationFactory _factory;
 
-    public HealthEndpointTests(WebApplicationFactory<Program> factory) => _factory = factory;
+    public HealthEndpointTests(DbLessWebApplicationFactory factory) => _factory = factory;
 
     [Fact]
     public async Task Get_health_returns_ok_status()

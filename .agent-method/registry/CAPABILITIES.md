@@ -180,6 +180,28 @@ capabilities:
       Oturum başı brifingi aynı dosyadan prio:1 satırlarını okur — ağ çağrısı yok.
     last_verified_ref: HEAD
 
+  - capability: Integration test host fixtures
+    location: backend/tests/Finans.Integration.Tests/TestHostDefaults.cs (+ SqliteWebApplicationFactory, DbLessWebApplicationFactory)
+    entry_points: [ApplyTestDefaults, SqliteWebApplicationFactory, DbLessWebApplicationFactory]
+    status: healthy
+    scope: backend/tests
+    notes: >
+      INC-001 kapanışı (2026-11-23). **Yeni test host'u yazmadan önce buraya bak:**
+      paylaşılan determinizm/güvenlik ayarları `ApplyTestDefaults()` içinde — açılış
+      migrate+seed KAPALI, BES catch-up job'ı KAPALI, `Llm:ApiKey` ve `Stocks:ApiKey`
+      ZORLA boş (geliştirici makinesindeki User Secrets canlı çağrıya yol açmasın).
+      Fabrika seçimi: DB gerekiyorsa `SqliteWebApplicationFactory` (in-memory Sqlite,
+      şema `EnsureCreated`), gerekmiyorsa `DbLessWebApplicationFactory`.
+      ⚠ Bu beş ayar eskiden YALNIZ Sqlite fabrikasındaydı; düz
+      `WebApplicationFactory<Program>` kullanan dört test onlardan habersizdi ve
+      Development ortamında açılışta migrate etmeye çalışıp çöküyordu — belirti
+      "server has not been started" olduğu için **iki aydan uzun** ortam hatası
+      sanıldı. Ayarlar tek yerde durduğu sürece tuzak tekrar etmez.
+      📌 "DB'siz çalışır" iddiasını test eden bir senaryoya Sqlite BAĞLAMA: test
+      geçer ama iddiayı kanıtlamaz (`Liveness_health_returns_ok_without_db`).
+    tests: HealthEndpointTests · ObservabilitySecurityTests · tüm API integration testleri
+    last_verified_ref: HEAD
+
   - capability: Test CI (gates actually run)
     location: .github/workflows/tests.yml
     entry_points: [web (vitest + tsc), backend (Application unit + Integration)]

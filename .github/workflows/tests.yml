@@ -8,14 +8,10 @@ name: Tests
 # senkronuydu. Yani kapılar, yerini almak için kuruldukları insan disiplinine
 # bağlı kalıyordu: biri yerelde `npm test` koşmayı unutursa kapı hiç işlemiyordu.
 #
-# ⚠ INC-001 (issue #74) — DIŞLAMA BİLİNÇLİ VE GÖRÜNÜR:
-# `HealthEndpointTests` (1) + `ObservabilitySecurityTests` (3) ortam hatasıyla
-# kırmızı: `WebApplicationFactory<Program>` Development ortamında ayağa kalkarken
-# `ApplyMigrationsOnStartup: true` yüzünden PostgreSQL arıyor, bulamayınca host
-# hiç başlamıyor. Bu bir KAPSAM borcu değil (INV-08), koşum ortamı sorunu — ve
-# bu diff'ten önce de kırmızıydı. Kalıcı kırmızı bir CI zamanla görmezden gelinir
-# (RV-087'nin alarm yorgunluğu deseniyle aynı), bu yüzden o dört test ADLARIYLA
-# dışlanır. #74 kapandığında aşağıdaki `--filter` satırı SİLİNİR ve bu blok da.
+# 📌 INC-001 (issue #74) KAPANDI 2026-11-23 → test dışlama filtresi KALKTI.
+# Kurulduğunda dört test (HealthEndpointTests 1 + ObservabilitySecurityTests 3)
+# adlarıyla dışlanmıştı; kök neden bulunup düzeltildi (TestHostDefaults) ve
+# entegrasyon paketi tamamen yeşile döndü. Artık hiçbir test dışlanmıyor.
 #
 # Bu iş akışı birleştirmeyi engellemez (required check olarak işaretlenmedi);
 # amacı kapıların gerçekten koştuğunu görünür kılmak.
@@ -86,12 +82,7 @@ jobs:
       - name: Application.Tests
         run: dotnet test backend/tests/Finans.Application.Tests --no-restore --verbosity minimal
 
-      # Künye sözleşmesi M12 + M13 (SC-E31) ve seed yapısal kuralları burada koşar.
-      # INC-001'in DÖRT testi tek tek adlarıyla dışlanır — gerekçe dosyanın başında.
-      # ⚠ Sınıf adıyla dışlamak YANLIŞ olurdu: ObservabilitySecurityTests altı test
-      # taşıyor ve yalnız üçü kırmızı; sınıfı dışlamak üç YEŞİL testi de düşürüyordu
-      # (ölçüldü: 189 yerine 186). Dışlama bu yüzden test adı düzeyinde.
-      - name: Integration.Tests (INC-001'in 4 testi dışlanmış)
-        run: >-
-          dotnet test backend/tests/Finans.Integration.Tests --no-restore --verbosity minimal
-          --filter "FullyQualifiedName!=Finans.Integration.Tests.HealthEndpointTests.Get_health_returns_ok_status&FullyQualifiedName!=Finans.Integration.Tests.ObservabilitySecurityTests.Liveness_health_returns_ok_without_db&FullyQualifiedName!=Finans.Integration.Tests.ObservabilitySecurityTests.Provided_correlation_id_is_echoed_back&FullyQualifiedName!=Finans.Integration.Tests.ObservabilitySecurityTests.Response_carries_generated_correlation_id"
+      # Künye sözleşmesi M12 + M13 (SC-E31), seed yapısal kuralları, sağlık ve
+      # gözlemlenebilirlik uçları (SC-15, SC-20) — tamamı, filtresiz.
+      - name: Integration.Tests
+        run: dotnet test backend/tests/Finans.Integration.Tests --no-restore --verbosity minimal
