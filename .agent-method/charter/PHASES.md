@@ -51,9 +51,23 @@
   "Grafik ve Piyasa Okuryazarlığı" (8 ders)** ve **kavram sözlüğü**; ayrıca
   T5E.4 (ConceptTag derin bağlantısı) `[~]`. Güncel kalem listesi kanonik
   olarak GitHub Issues'ta (D-022).
-  ⚠ Faz kapanışından önce iki borç: **TD-001** (29 figür render testsiz — dört
-  bulgu otomatik testten kaçtı) ve **M12 adayı** (künye figür sayısı ↔ aşama
-  planı uyuşmazlığı, 16 dersin 11'inde).
+- durum notu (2026-11-23, S-010): yukarıdaki iki borç **KAPANDI** — TD-001
+  (GD-007: 101 figür render + okunabilirlik kapısı) ve M12 (GD-006: künye figür
+  sayısı makine kapısına bağlandı). REVIEW-006 ikisinin de kapsamını genişletti
+  (M13 eklendi: seed → künye yönü) ve **mühendislik zemini temizlendi**:
+  Integration **196/196** (INC-001 kapandı, dışlanan test yok), derleyici
+  uyarısı 0, test CI kuruldu (`.github/workflows/tests.yml`) — yani faz
+  kapılarının gerçekten koştuğu artık görünür.
+  Yeni borçlar: **TD-004** (figürlerde görsel bozulma — tarayıcı düzeyi) ve
+  **TD-005** (9 künyede planın son figürü aşamaya bağsız — editöryal karar).
+  ⚠ **Kapsam uyuşmazlığı — insan kararı bekliyor (bildirildi, düzeltilmedi):**
+  çıkış ölçütü "**35 ders**" diyor ve müfredat künyeleri de tam 35 ders
+  planlıyor (S0 10 · S1 5 · S2 8 · S3 4 · S4 4 · S5 4). Seed'de bugün **15**
+  ders var (S0'ın 10'u + S1'in 5'i). Oysa bu notun "kalan büyük parçalar"
+  satırı yalnız Set 2 (8 ders) + sözlük diyor → 15 + 8 = **23 ≠ 35**; Set 3/4/5
+  (12 ders) hiçbir yerde sayılmıyor. Ya çıkış ölçütü Sets 0-5'in tamamını
+  kastediyor (bu durumda faz, notun ima ettiğinin ~3 katı) ya da ölçüt
+  daraltılmalı. `adm-phase` bunu kendi başına karara bağlamaz.
 
 ## PHASE-007 — Kişiselleşme & Erişim (Faz 7)
 - status: planned
